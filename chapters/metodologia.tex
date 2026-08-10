@@ -7,6 +7,10 @@
 
 \subsection{Secondo stadio: forecasting probabilistico mediante SDE}
 
+\subsection{Ablation probabilistica mediante Enhanced MC Dropout}
+
+\subsection{Rilevamento label-free delle anomalie climatiche mediante MTGFlow}
+
 \section{Dati e caso di studio}
 
 \subsection{Serie degli impianti fotovoltaici}
@@ -51,6 +55,16 @@
 
 \subsection{Addestramento, validazione ed early stopping}
 
+\section{Ablation: Enhanced MC Dropout}
+
+\subsection{Inserimento del dropout nell'encoder spazio-temporale}
+
+\subsection{Inferenza Monte Carlo con attivazione selettiva del dropout}
+
+\subsection{Media predittiva e intervalli empirici a quantili}
+
+\subsection{Loss puntuale e obiettivi solari ausiliari}
+
 \section{Secondo stadio: ST-GNN probabilistico con SDE}
 
 \subsection{Formulazione del forecasting probabilistico PVGIS-only}
@@ -75,6 +89,20 @@
 
 \subsection{Warm-up del rumore, validazione ed early stopping}
 
+\section{Variante SDE true-minimal}
+
+\subsection{Backbone paralleli di drift e diffusione BiLSTM--GAT}
+
+\subsection{Gate di diffusione dipendenti da località e rappresentazione}
+
+\subsection{Perturbazione Browniana dopo encoder temporale e GAT}
+
+\subsection{Loss puntuale e apprendimento alternato della diffusione}
+
+\subsection{Costruzione degli esempi pseudo-OOD}
+
+\subsection{Inferenza mediante traiettorie stocastiche e quantili empirici}
+
 \section{Inferenza e quantificazione dell'incertezza}
 
 \subsection{Campionamento delle traiettorie Browniane}
@@ -86,6 +114,28 @@
 \subsection{Varianza predittiva totale}
 
 \subsection{Intervalli predittivi dalla miscela gaussiana}
+
+\section{Rilevamento delle anomalie climatiche con MTGFlow}
+
+\subsection{Serie PVGIS per località e split temporale 2005--2019}
+
+\subsection{Variabili climatiche come entità del grafo}
+
+\subsection{Finestratura e forma dei tensori}
+
+\subsection{Grafo dinamico di attenzione tra entità}
+
+\subsection{Condizionamento temporale mediante LSTM}
+
+\subsection{Normalizing flow condizionale e distribuzioni entity-aware}
+
+\subsection{Negative log-likelihood e score di anomalia}
+
+\subsection{Soglie globali e per entità basate sull'IQR}
+
+\subsection{Output temporali e associazione post-hoc al forecasting}
+
+\subsection{Assenza di message passing geografico tra località}
 
 \section{Uso delle anomalie nella pipeline}
 
