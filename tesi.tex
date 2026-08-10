@@ -1,0 +1,40 @@
+\documentclass[12pt,a4paper,oneside]{report}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[italian]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage[hidelinks]{hyperref}
+\usepackage{csquotes}
+\usepackage[backend=biber,style=numeric,sorting=none]{biblatex}
+
+\graphicspath{{figures/}}
+\addbibresource{bibliography.bib}
+
+\title{Titolo della tesi}
+\author{Nome Cognome}
+\date{Anno Accademico 20XX--20XX}
+
+\begin{document}
+
+\hypersetup{pageanchor=false}
+\maketitle
+\clearpage
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+
+\include{chapters/introduzione}
+\include{chapters/stato_arte}
+\include{chapters/metodologia}
+\include{chapters/risultati}
+
+\printbibliography[heading=bibintoc,title={Bibliografia}]
+
+\end{document}

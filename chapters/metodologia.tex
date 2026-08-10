@@ -1,0 +1,104 @@
+\chapter{Metodi}
+\label{chap:metodologia}
+
+\section{Panoramica del percorso metodologico}
+
+\subsection{Primo stadio: forecasting deterministico BiLSTM--GAT}
+
+\subsection{Secondo stadio: forecasting probabilistico mediante SDE}
+
+\section{Dati e caso di studio}
+
+\subsection{Serie degli impianti fotovoltaici}
+
+\subsection{Serie meteorologiche e solari PVGIS}
+
+\subsection{Località e coordinate geografiche}
+
+\subsection{Target di irradianza e produzione fotovoltaica}
+
+\section{Preparazione dei dati}
+
+\subsection{Pulizia e allineamento temporale e geografico}
+
+\subsection{Ricostruzione dell'irradianza sul piano}
+
+\subsection{Feature meteorologiche, solari e temporali}
+
+\subsection{Normalizzazione della produzione fotovoltaica}
+
+\subsection{Finestratura temporale e orizzonte di previsione}
+
+\subsection{Suddivisione cronologica in fit, validation e test}
+
+\section{Primo stadio: modello ST-GNN BiLSTM--GAT}
+
+\subsection{Formulazione del forecasting one-step-ahead}
+
+\subsection{Forma dei tensori di input e output}
+
+\subsection{Encoder temporale BiLSTM}
+
+\subsection{Attention pooling e proiezione latente}
+
+\subsection{Costruzione del grafo geografico mediante distanza Haversine}
+
+\subsection{Message passing con Graph Attention Network}
+
+\subsection{Predizione congiunta di irradianza e potenza fotovoltaica}
+
+\subsection{Vincoli fisici e funzione di perdita}
+
+\subsection{Addestramento, validazione ed early stopping}
+
+\section{Secondo stadio: ST-GNN probabilistico con SDE}
+
+\subsection{Formulazione del forecasting probabilistico PVGIS-only}
+
+\subsection{Grafo geografico sparso e prior gaussiano di distanza}
+
+\subsection{Rappresentazione latente BiLSTM--GAT}
+
+\subsection{Campo di drift neurale}
+
+\subsection{Diffusione scalare dipendente dal grafo}
+
+\subsection{Integrazione Euler--Maruyama}
+
+\subsection{Testa gaussiana eteroschedastica}
+
+\subsection{Negative log-likelihood e obiettivo solare ausiliario}
+
+\subsection{Addestramento alternato di forecasting e diffusione}
+
+\subsection{Generazione degli input pseudo-OOD}
+
+\subsection{Warm-up del rumore, validazione ed early stopping}
+
+\section{Inferenza e quantificazione dell'incertezza}
+
+\subsection{Campionamento delle traiettorie Browniane}
+
+\subsection{Stima dell'incertezza aleatoria}
+
+\subsection{Stima dell'incertezza epistemica}
+
+\subsection{Varianza predittiva totale}
+
+\subsection{Intervalli predittivi dalla miscela gaussiana}
+
+\section{Uso delle anomalie nella pipeline}
+
+\subsection{Associazione post-hoc delle etichette alle predizioni}
+
+\subsection{Valutazione stratificata tra osservazioni normali e anomale}
+
+\subsection{Ablation con training sui soli periodi normali}
+
+\section{Protocollo di valutazione}
+
+\subsection{MAE e RMSE}
+
+\subsection{Copertura e ampiezza degli intervalli predittivi}
+
+\subsection{Metriche diurne e analisi per strato}
