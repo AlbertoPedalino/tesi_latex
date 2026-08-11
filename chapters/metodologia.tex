@@ -3,154 +3,62 @@
 
 \section{Panoramica del percorso metodologico}
 
-\subsection{Primo stadio: forecasting deterministico BiLSTM--GAT}
+La metodologia segue una successione di esperimenti: backbone deterministico BiLSTM--GAT, Enhanced MC Dropout, Deep Ensemble, SDE-Net true-minimal, SDE-Net paper-faithful e rilevamento delle anomalie climatiche mediante MTGFlow.
 
-\subsection{Ablation probabilistica mediante Enhanced MC Dropout}
+\section{Dati e disegno sperimentale}
 
-\subsection{SDE-Net true-minimal}
+\subsection{Serie PVGIS, località geografiche e target}
 
-\subsection{SDE-Net paper-faithful}
+\subsection{Feature, trasformazioni fisiche e normalizzazione}
 
-\subsection{Rilevamento label-free delle anomalie climatiche mediante MTGFlow}
+\subsection{Finestre temporali, split cronologici e training separati per t+1, t+6 e t+12}
 
-\section{Dati e caso di studio}
+\section{Backbone spazio-temporale BiLSTM--GAT}
 
-\subsection{Serie degli impianti fotovoltaici}
+\subsection{Tensori di input, encoder temporale e attention pooling}
 
-\subsection{Serie meteorologiche e solari PVGIS}
+\subsection{Grafo geografico Haversine e Graph Attention Network}
 
-\subsection{Località e coordinate geografiche}
+\subsection{Teste di previsione, funzione di perdita e training}
 
-\subsection{Target di irradianza e produzione fotovoltaica}
+\section{Esperimenti probabilistici preliminari}
 
-\section{Preparazione dei dati}
+\subsection{Enhanced Monte Carlo Dropout}
 
-\subsection{Pulizia e allineamento temporale e geografico}
+\subsection{Deep Ensemble di modelli addestrati indipendentemente}
 
-\subsection{Ricostruzione dell'irradianza sul piano}
-
-\subsection{Feature meteorologiche, solari e temporali}
-
-\subsection{Normalizzazione della produzione fotovoltaica}
-
-\subsection{Finestratura temporale e orizzonte di previsione}
-
-\subsection{Suddivisione cronologica in fit, validation e test}
-
-\section{Primo stadio: modello ST-GNN BiLSTM--GAT}
-
-\subsection{Formulazione del forecasting one-step-ahead}
-
-\subsection{Forma dei tensori di input e output}
-
-\subsection{Encoder temporale BiLSTM}
-
-\subsection{Attention pooling e proiezione latente}
-
-\subsection{Costruzione del grafo geografico mediante distanza Haversine}
-
-\subsection{Message passing con Graph Attention Network}
-
-\subsection{Predizione congiunta di irradianza e potenza fotovoltaica}
-
-\subsection{Vincoli fisici e funzione di perdita}
-
-\subsection{Addestramento, validazione ed early stopping}
-
-\section{Ablation: Enhanced MC Dropout}
-
-\subsection{Inserimento del dropout nell'encoder spazio-temporale}
-
-\subsection{Inferenza Monte Carlo con attivazione selettiva del dropout}
-
-\subsection{Media predittiva e intervalli empirici a quantili}
-
-\subsection{Loss puntuale e obiettivi solari ausiliari}
+\subsection{Previsioni medie, dispersione e intervalli empirici}
 
 \section{SDE-Net true-minimal}
 
-\subsection{Backbone paralleli di drift e diffusione BiLSTM--GAT}
+\subsection{Backbone paralleli di drift e diffusione}
 
-\subsection{Gate di diffusione dipendenti da località e rappresentazione}
+\subsection{Perturbazioni Browniane negli stadi BiLSTM e GAT}
 
-\subsection{Perturbazione Browniana dopo encoder temporale e GAT}
-
-\subsection{Loss puntuale e apprendimento alternato della diffusione}
-
-\subsection{Costruzione degli esempi pseudo-OOD}
-
-\subsection{Inferenza mediante traiettorie stocastiche e quantili empirici}
+\subsection{Training alternato, pseudo-OOD e inferenza a traiettorie}
 
 \section{SDE-Net paper-faithful}
 
-\subsection{Formulazione del forecasting probabilistico PVGIS-only}
+\subsection{Campo di drift, diffusione e integrazione Euler--Maruyama}
 
-\subsection{Grafo geografico sparso e prior gaussiano di distanza}
+\subsection{Testa gaussiana, negative log-likelihood e training}
 
-\subsection{Rappresentazione latente BiLSTM--GAT}
-
-\subsection{Campo di drift neurale}
-
-\subsection{Diffusione scalare dipendente dal grafo}
-
-\subsection{Integrazione Euler--Maruyama}
-
-\subsection{Testa gaussiana eteroschedastica}
-
-\subsection{Negative log-likelihood e obiettivo solare ausiliario}
-
-\subsection{Addestramento alternato di forecasting e diffusione}
-
-\subsection{Generazione degli input pseudo-OOD}
-
-\subsection{Warm-up del rumore, validazione ed early stopping}
-
-\section{Inferenza e quantificazione dell'incertezza}
-
-\subsection{Campionamento delle traiettorie Browniane}
-
-\subsection{Stima dell'incertezza aleatoria}
-
-\subsection{Stima dell'incertezza epistemica}
-
-\subsection{Varianza predittiva totale}
-
-\subsection{Intervalli predittivi dalla miscela gaussiana}
+\subsection{Campionamento e componenti dell'incertezza predittiva}
 
 \section{Rilevamento delle anomalie climatiche con MTGFlow}
 
-\subsection{Serie PVGIS per località e split temporale 2005--2019}
+\subsection{Serie storiche per località, variabili climatiche e finestre}
 
-\subsection{Variabili climatiche come entità del grafo}
+\subsection{Grafo dinamico tra entità e normalizing flow condizionale}
 
-\subsection{Finestratura e forma dei tensori}
+\subsection{Score aggregato della località, score per variabile e soglie IQR}
 
-\subsection{Grafo dinamico di attenzione tra entità}
+\subsection{Modelli indipendenti per località e assenza di message passing geografico}
 
-\subsection{Condizionamento temporale mediante LSTM}
+\section{Analisi post-hoc e protocollo di valutazione}
 
-\subsection{Normalizing flow condizionale e distribuzioni entity-aware}
+\subsection{Allineamento delle predizioni e delle anomalie per località-timestamp}
 
-\subsection{Negative log-likelihood e score di anomalia}
+\subsection{Confronto tra campioni normali e anomali}
 
-\subsection{Soglie globali e per entità basate sull'IQR}
-
-\subsection{Output temporali e associazione post-hoc al forecasting}
-
-\subsection{Assenza di message passing geografico tra località}
-
-\section{Uso delle anomalie nella pipeline}
-
-\subsection{Associazione post-hoc delle etichette alle predizioni}
-
-\subsection{Valutazione stratificata tra osservazioni normali e anomale}
-
-\subsection{Ablation con training sui soli periodi normali}
-
-\section{Protocollo di valutazione}
-
-\subsection{MAE e RMSE}
-
-\subsection{Copertura e ampiezza degli intervalli predittivi}
-
-\subsection{Metriche diurne e analisi per strato}
+\subsection{MAE, RMSE e metriche degli intervalli per orizzonte}

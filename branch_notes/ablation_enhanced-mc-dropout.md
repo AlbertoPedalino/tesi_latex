@@ -2,10 +2,10 @@
 
 ## 1. Scopo dello step
 
-- Funzione principale: valutare una variante probabilistica dello ST-GNN PVGIS-only mediante Monte Carlo Dropout.
-- Posizione nella tesi: metodo di quantificazione dell'incertezza applicato al forecasting spazio-temporale, confrontabile con l'approccio basato su SDE.
+- Funzione principale: valutare progressivamente due metodi di quantificazione dell'incertezza sullo ST-GNN PVGIS-only: Enhanced Monte Carlo Dropout e Deep Ensemble.
+- Posizione nella tesi: esperimenti probabilistici successivi al backbone deterministico e precedenti agli esperimenti SDE-Net.
 - Stato analizzato: codice Python del tip remoto `origin/ablation/enhanced-mc-dropout`, commit `73283af6`.
-- L'architettura produce una previsione puntuale della potenza e usa la variabilità tra passaggi con maschere dropout diverse per stimare dispersione e intervalli predittivi.
+- Il Monte Carlo Dropout usa la variabilità tra passaggi dello stesso modello con maschere dropout diverse; il Deep Ensemble usa invece la variabilità tra modelli addestrati indipendentemente con seed differenti.
 
 ## 2. File di codice rilevanti
 
@@ -32,7 +32,12 @@
 ### `physiq_pv/experiments/pvgis_stgnn_runner.py`
 
 - Responsabilità: configurazione della pipeline e calcolo delle metriche.
-- Contenuto attuale: espone `stgnn_enhanced_dropout`, numero di campioni MC, coverage target e iperparametri di training; produce metriche puntuali e di intervallo, anche per giorno/notte e strati di anomalia.
+- Contenuto attuale: espone `stgnn_enhanced_dropout`, numero di campioni MC, coverage target e iperparametri di training; mantiene separate le modalità MC Dropout e salvataggio dei membri Deep Ensemble; salva per ciascun seed le predizioni allineabili per campione.
+
+### `scripts/analyze_pvgis_deep_ensemble.py`
+
+- Responsabilità: aggregazione post-training dei membri del Deep Ensemble.
+- Contenuto attuale: richiede almeno due file prodotti da modelli addestrati indipendentemente, verifica che coprano gli stessi campioni, combina le predizioni per coppia località-timestamp e calcola media, deviazione standard, quantili empirici e metriche puntuali e di intervallo.
 
 ### `physiq_pv/reporting/daytime_bin_anomaly_report.py`
 
@@ -84,6 +89,17 @@
 - La banda `media ± 1.96*deviazione standard` è mantenuta come diagnostica secondaria.
 - Le metriche comprendono MAE, RMSE, PICP, MPIW, NMPIL e CLC.
 
+### Deep Ensemble
+
+- Ogni membro è uno ST-GNN addestrato indipendentemente con un seed differente sullo stesso protocollo e sullo stesso test set.
+- La modalità `--save-ensemble-predictions` salva per ogni membro l'identificatore del campione, target, previsione media, strato di anomalia e seed.
+- MC Dropout e salvataggio Deep Ensemble sono modalità separate: il runner impedisce di abilitarle contemporaneamente nella stessa esecuzione.
+- Lo script ordina e allinea i membri mediante `sample_id`, verifica l'uguaglianza dei target e costruisce una matrice di predizioni di forma `(numero_modelli, numero_campioni)`.
+- La previsione puntuale è la media tra membri; la dispersione è la deviazione standard tra membri.
+- L'intervallo principale usa i quantili empirici tra le predizioni dei membri; minimi e massimi sono riportati soltanto come intervallo diagnostico.
+- Non viene applicata una riscalatura post-hoc degli intervalli.
+- Le etichette di anomalia sono metadati di valutazione associati ai singoli campioni e non entrano nel training o nella previsione.
+
 ## 5. Elementi nuovi introdotti
 
 - Modalità `stgnn_enhanced_dropout` selezionabile dal runner.
@@ -93,6 +109,10 @@
 - `predict_mc` per media, dispersione e quantili empirici delle predizioni.
 - Output tabellari con limiti dell'intervallo principale e banda gaussiana diagnostica.
 - Metriche di affidabilità e sharpness degli intervalli.
+- Esportazione delle predizioni dei singoli seed per costruire un Deep Ensemble sul medesimo test set.
+- Controlli di allineamento tra membri e aggregazione per campione.
+- Calcolo di media, dispersione e intervalli empirici tra modelli indipendenti.
+- Output riepilogativi e completi per l'analisi post-hoc del Deep Ensemble.
 
 ## 6. Informazioni utili per la tesi
 
@@ -107,15 +127,19 @@
 - Architettura BiLSTM--GAT e grafo geografico usati come backbone.
 - Loss di forecasting, termine solare ausiliario e penalizzazione dei picchi.
 - Metriche puntuali e probabilistiche, anche stratificate per anomalie.
+- Addestramento indipendente dei membri del Deep Ensemble e aggregazione per località-timestamp.
+- Distinzione tra variabilità intra-modello del Monte Carlo Dropout e variabilità tra modelli del Deep Ensemble.
 
 ### Related Work
 
 - Dropout come regolarizzazione delle reti neurali.
 - Monte Carlo Dropout e interpretazione bayesiana approssimata.
+- Deep Ensemble per la quantificazione dell'incertezza epistemica.
 - Incertezza epistemica nel forecasting neurale.
 - Intervalli predittivi tramite quantili empirici di campioni Monte Carlo.
 - Valutazione di coverage e sharpness.
 - Forecasting spazio-temporale con BiLSTM e Graph Attention Network.
+- Confronto tra campionamento stocastico di un singolo modello e aggregazione di modelli indipendenti.
 
 ## 7. Aspetti da chiarire
 
@@ -123,14 +147,16 @@
 - Non è ricavabile dal codice se la dispersione prodotta sia calibrata sui dati reali.
 - Non è presente una separazione esplicita tra componente aleatoria ed epistemica: la deviazione standard rappresenta soltanto la variabilità indotta dalle maschere dropout.
 - Il training non contiene un obiettivo diretto di calibrazione degli intervalli.
+- Il numero di membri del Deep Ensemble e la scelta dei seed dipendono dalla configurazione sperimentale; con pochi membri i quantili empirici risultano necessariamente grossolani.
+- La deviazione standard del Deep Ensemble misura il disaccordo tra i modelli disponibili e non una decomposizione completa dell'incertezza predittiva.
 - Gli anni effettivamente usati dipendono dagli argomenti CLI e non hanno default nel runner.
 - I risultati quantitativi e il confronto con SDE-Net richiedono gli output sperimentali.
 - La nota descrive esclusivamente il tip remoto `73283af6`.
 
 ## 8. Sintesi
 
-- Il branch applica Monte Carlo Dropout allo ST-GNN PVGIS-only.
-- Il dropout è presente nel percorso temporale, latente, spaziale e nella testa PV.
-- La previsione è la media di più passaggi e l'intervallo deriva dai quantili empirici.
+- Il branch valuta Enhanced MC Dropout e Deep Ensemble sul medesimo ST-GNN PVGIS-only.
+- Il Monte Carlo Dropout campiona ripetutamente un modello; il Deep Ensemble combina modelli addestrati indipendentemente.
+- Entrambi costruiscono previsione media, dispersione e intervalli empirici senza usare anomalie nel training.
 - Il backbone mantiene BiLSTM, GAT geografico e previsione non negativa della potenza.
-- Le anomalie sono usate soltanto per valutare separatamente gli errori e gli intervalli.
+- La valutazione è allineata per singola coppia località-timestamp.

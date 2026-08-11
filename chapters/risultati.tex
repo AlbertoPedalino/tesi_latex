@@ -3,76 +3,50 @@
 
 \section{Configurazione della valutazione}
 
-\subsection{Split temporali e orizzonte di previsione}
+\subsection{Split temporali e training separati per t+1, t+6 e t+12}
 
 \subsection{Metriche puntuali e probabilistiche}
 
-\section{Risultati del modello BiLSTM--GAT}
+\section{Accuratezza del forecasting}
 
-\subsection{Previsione dell'irradianza}
+\subsection{Backbone BiLSTM--GAT}
 
-\subsection{Previsione della produzione fotovoltaica}
+\subsection{Enhanced Monte Carlo Dropout}
 
-\subsection{Contributo del grafo geografico}
+\subsection{Deep Ensemble}
 
-\section{Risultati dell'Enhanced MC Dropout}
+\subsection{SDE-Net true-minimal}
 
-\subsection{Accuratezza della previsione puntuale}
+\subsection{SDE-Net paper-faithful}
 
-\subsection{Copertura e ampiezza degli intervalli empirici}
+\section{Quantificazione dell'incertezza}
 
-\subsection{Confronto con le varianti SDE}
+\subsection{Intervalli dell'Enhanced Monte Carlo Dropout}
 
-\section{Risultati di SDE-Net true-minimal}
+\subsection{Intervalli e disaccordo tra membri del Deep Ensemble}
 
-\subsection{Accuratezza della previsione puntuale}
+\subsection{Intervalli delle due varianti SDE-Net}
 
-\subsection{Copertura e ampiezza degli intervalli empirici}
+\section{Rilevamento delle anomalie con MTGFlow}
 
-\subsection{Comportamento della diffusione su dati ID e pseudo-OOD}
+\subsection{Score aggregato per località e score per variabile climatica}
 
-\section{Risultati di SDE-Net paper-faithful}
+\subsection{Soglie IQR e classificazione per località-timestamp}
 
-\subsection{Accuratezza della previsione puntuale}
+\section{Analisi post-hoc forecasting--anomalie}
 
-\subsection{Incertezza aleatoria, epistemica e totale}
+\subsection{MAE e RMSE sui campioni normali e anomali}
 
-\subsection{Copertura e ampiezza degli intervalli predittivi}
+\subsection{Confronto agli orizzonti t+1, t+6 e t+12}
 
-\subsection{Diagnostica della diffusione su dati ID e pseudo-OOD}
+\subsection{Errore in funzione della soglia MTGFlow}
 
-\section{Confronto tra i modelli di forecasting}
+\section{Confronto progressivo degli esperimenti}
 
-\subsection{Forecasting deterministico e probabilistico}
+\subsection{Accuratezza puntuale}
 
-\subsection{Pesi geografici e prior gaussiano di distanza}
+\subsection{Copertura e ampiezza degli intervalli}
 
-\section{Analisi post-hoc rispetto alle anomalie}
-
-\subsection{Errore sui campioni normali}
-
-\subsection{Errore sui campioni rari o anomali}
-
-\subsection{Affidabilità degli intervalli per categoria}
-
-\section{Risultati del rilevamento MTGFlow}
-
-\subsection{Distribuzione degli anomaly score globali}
-
-\subsection{Score e localizzazione per variabile climatica}
-
-\subsection{Soglie IQR e stabilità rispetto al seed}
-
-\subsection{Errore di forecasting su osservazioni normali e anomale}
-
-\section{Studi di ablazione}
-
-\subsection{Feature e componente solare ausiliaria}
-
-\subsection{Componente geografica}
-
-\subsection{Dinamica stocastica e diffusione}
-
-\subsection{Training sui soli periodi normali}
+\subsection{Costo computazionale e complessità dei modelli}
 
 \section{Discussione e limiti}
