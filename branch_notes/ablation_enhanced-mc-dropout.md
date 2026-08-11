@@ -48,7 +48,7 @@
 
 - Input: file NetCDF/xarray annuali PVGIS con serie orarie e nodi corrispondenti alle località geografiche.
 - Feature del set completo: `temperature_2m`, `solar_irradiance_poa`, `wind_speed_10m`, `sin_elev`, `cos_elev`, `kt`, `kt_std_3h`, `dghi_dt`, `dni_norm`, `dhi_norm` e `pv_lag_pvgis`.
-- Target: `pv_power_output`, normalizzato per località mediante una scala stimata sui dati di training.
+- Target: `pv_power_output`, cioè la produzione fotovoltaica teorica associata alla località PVGIS e non una misura reale di impianto; viene normalizzato per località mediante una scala stimata sui dati di training.
 - Temperatura, irradianza, vento e variazione dell'irradianza sono standardizzati usando statistiche di training; la produzione e il suo ritardo sono scalati per località.
 - Il valore normalizzato della potenza è limitato inferiormente a zero e, per default, superiormente a `1.5`.
 - Il dataset costruisce finestre senza attraversare il confine tra anni. La configurazione predefinita usa `T=24` e orizzonte `t+1`.

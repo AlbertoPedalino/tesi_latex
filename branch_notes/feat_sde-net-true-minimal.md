@@ -63,7 +63,7 @@
 
 - Input: serie PVGIS orarie con un nodo per località e coordinate geografiche coerenti tra anni.
 - Feature complete: `temperature_2m`, `solar_irradiance_poa`, `wind_speed_10m`, `sin_elev`, `cos_elev`, `kt_poa`, `kt_poa_std_3h`, `dpoa_dt`, `direct_irradiance_tilted`, `diffuse_irradiance_tilted` e `pv_lag_pvgis`.
-- Target: `pv_power_output` all'orizzonte configurato; default `T=24` e `horizon=1`.
+- Target: `pv_power_output`, ossia la produzione fotovoltaica teorica della località PVGIS e non una misura reale di impianto, all'orizzonte configurato; default `T=24` e `horizon=1`.
 - POA: somma delle componenti diretta e diffusa sul piano inclinato.
 - Feature derivate: geometria solare, POA clear-sky, indice di chiarezza inclinato, deviazione standard mobile a tre ore e differenza temporale della POA.
 - Normalizzazione: statistiche stimate esclusivamente sugli anni di fit; potenza scalata per località tramite il percentile 99 dei valori positivi diurni.

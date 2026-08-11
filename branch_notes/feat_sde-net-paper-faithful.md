@@ -68,7 +68,7 @@
 
 - Input: file NetCDF/xarray annuali PVGIS con griglia oraria regolare, dimensioni temporali e di località coerenti tra anni, coordinate geografiche finite e variabili meteorologiche/solari.
 - Feature del set completo: `temperature_2m`, `solar_irradiance_poa`, `wind_speed_10m`, `sin_elev`, `cos_elev`, `kt_poa`, `kt_poa_std_3h`, `dpoa_dt`, `direct_irradiance_tilted`, `diffuse_irradiance_tilted` e `pv_lag_pvgis`.
-- Target: `pv_power_output` all'orizzonte configurato; il default del runner è una previsione a un'ora dopo una finestra di 24 ore.
+- Target: `pv_power_output`, ossia la produzione fotovoltaica teorica della località PVGIS e non una misura reale di impianto, all'orizzonte configurato; il default del runner è una previsione a un'ora dopo una finestra di 24 ore.
 - La POA viene ricostruita come diretta inclinata più diffusa inclinata. Sono inoltre calcolati geometria solare, POA clear-sky, indice di chiarezza limitato all'intervallo configurato, deviazione standard mobile a tre ore e differenza temporale della POA.
 - Temperatura, POA, vento e variazione della POA sono standardizzati mediante statistiche globali stimate esclusivamente sugli anni di fit. La potenza PV è scalata per località usando il percentile 99 dei valori positivi diurni del fit; non è applicato clipping superiore per default.
 - Lo split predefinito usa 2016–2018 come anni di training dichiarati e 2019 come test. L'anno più recente del gruppo di training è riservato alla validation; pertanto, con i default, le statistiche e i parametri sono stimati su 2016–2017 e la validation è il 2018.
@@ -163,7 +163,7 @@
 ## 7. Aspetti da chiarire
 
 - Il codice non esplicita la motivazione scientifica dei valori scelti per raggio del grafo, scala gaussiana, numero di passi SDE, warm-up, rumore pseudo-OOD e peso della perdita ausiliaria.
-- Non è ricavabile dal solo codice la provenienza esatta dei file PVGIS, il criterio di selezione delle località o la semantica fisica completa di `pv_power_output`.
+- Non sono ricavabili dal solo codice la procedura esatta con cui `pv_power_output` è stato generato nei file PVGIS, la configurazione nominale della simulazione, la sua unità e il criterio di selezione delle località.
 - Il numero effettivo di località e la configurazione finale di un esperimento dipendono dai file e dagli argomenti CLI usati a runtime.
 - La validità empirica, la significatività delle differenze e la capacità di generalizzare non possono essere dedotte senza risultati sperimentali.
 - La corrispondenza scientifica completa con il paper di riferimento richiede un confronto esterno con paper e repository originale; i nomi e i commenti nel codice non sono una prova sufficiente.
