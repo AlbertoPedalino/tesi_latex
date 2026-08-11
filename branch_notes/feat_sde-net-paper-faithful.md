@@ -12,7 +12,7 @@
 ### `physiq_pv/data/pvgis_dataset.py`
 
 - Responsabilità: caricamento degli anni PVGIS, controllo dell'allineamento temporale e geografico, costruzione delle feature, stima delle statistiche di normalizzazione e generazione delle finestre temporali.
-- Contenuto metodologico attuale: `PVGISWindowDataset`, `build_year_raw`, `fit_normalization`, `assemble_feats` e `build_datasets` realizzano split cronologici di fit, validation e test; le finestre non attraversano il confine tra anni ed è disponibile un filtraggio opzionale delle finestre rare per un'ablation di training.
+- Contenuto metodologico attuale: `PVGISWindowDataset`, `build_year_raw`, `fit_normalization`, `assemble_feats` e `build_datasets` realizzano split cronologici di fit, validation e test; le finestre non attraversano il confine tra anni. Il codice espone anche un filtraggio opzionale delle finestre rare, non utilizzato nel percorso sperimentale dichiarato per la tesi.
 
 ### `physiq_pv/data/pvgis_irradiance.py`
 
@@ -145,7 +145,7 @@
 - Regressione gaussiana eteroschedastica e decomposizione aleatoria/epistemica dell'incertezza.
 - Costruzione degli intervalli predittivi dalla miscela delle distribuzioni ottenute dalle traiettorie SDE.
 - Protocollo di validation diurna, early stopping e metriche puntuali/di intervallo.
-- Uso delle etichette di anomalia soltanto per analisi post-hoc e ablation opzionale del training sui periodi normali.
+- Uso delle etichette di anomalia soltanto per l'analisi post-hoc; il filtraggio opzionale del training sui periodi normali resta escluso dal protocollo sperimentale della tesi.
 
 ### Related Work
 

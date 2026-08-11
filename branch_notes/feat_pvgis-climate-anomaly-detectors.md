@@ -96,9 +96,9 @@
 ### Score e soglie
 
 - Score per entità: negativo della log-likelihood della finestra diviso per il numero di entità.
-- Score globale: somma dei contributi delle entità, equivalente alla media delle negative log-likelihood di entità.
+- Score aggregato della località, denominato `global score` nel codice: somma dei contributi delle entità del modello relativo a quella località, equivalente alla media delle negative log-likelihood di entità. Non aggrega località differenti.
 - Lo score della finestra è assegnato al timestamp finale della finestra; vengono salvati anche inizio e fine.
-- Soglia globale per località e seed: `Q3 + 1.5*IQR` sugli score globali di training.
+- Soglia sullo score aggregato, stimata separatamente per località e seed: `Q3 + 1.5*IQR` sugli score di training.
 - Soglia per entità: `0.8*(Q3 + 1.5*IQR)` stimata separatamente per ogni variabile sugli score di training.
 - Una osservazione è anomala quando lo score è maggiore o uguale alla soglia.
 
@@ -106,6 +106,7 @@
 
 - Il manifest contiene tutte le località, ma il runner itera sulle righe e chiama `fit_and_score_mtgflow` separatamente.
 - Ogni modello vede soltanto la serie di una località.
+- Il termine `global` usato internamente indica soltanto l'aggregazione delle entità nel modello della località corrente.
 - Gli output di località diverse sono concatenati soltanto dopo lo scoring.
 - Di conseguenza, il branch consente mappe geografiche post-hoc degli score, ma MTGFlow non apprende interazioni spazio-temporali tra località.
 
@@ -133,8 +134,9 @@
 - LSTM e condizionamento grafo-temporale.
 - Masked Autoregressive Flow condizionale e likelihood esatta.
 - Training mediante massima likelihood anche in presenza potenziale di anomalie.
-- Score globale e localizzazione per entità.
-- Soglia IQR globale e soglie per variabile.
+- Score aggregato per località e score per entità.
+- Soglia IQR sullo score aggregato e soglie per variabile.
+- Interpretazione dello score per entità come associazione statistica alla bassa likelihood, non come identificazione causale dell'evento fisico.
 - Uso di più seed senza mediare direttamente gli score.
 - Join post-hoc con le predizioni PV e metriche separate normali/anomale.
 - Limite spaziale: nessun message passing tra località.

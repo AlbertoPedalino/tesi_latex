@@ -22,7 +22,7 @@
 ### `physiq_pv/data/pvgis_labels.py`
 
 - Responsabilità: associazione delle etichette di anomalia o evento alle predizioni.
-- Contenuto attuale: le label rimangono esterne al tensore del modello; possono inoltre supportare l'ablation opzionale con sole finestre normali.
+- Contenuto attuale: le label rimangono esterne al tensore del modello; il codice espone anche un filtraggio opzionale con sole finestre normali, ma questa funzionalità non appartiene al percorso sperimentale dichiarato per la tesi.
 
 ### `physiq_pv/model/graph_builder.py`
 
@@ -70,7 +70,7 @@
 - Split predefinito della pipeline: 2016--2017 per il fit, 2018 per la validation e 2019 per il test.
 - `PVGISWindowDataset` restituisce `x: (N,T,F)` e `y: (N,)`; il batch è `X: (B,N,T,F)` e `Y: (B,N)`.
 - Le finestre non attraversano anni diversi e le località sono riallineate per identificativo e coordinate.
-- Le anomalie non entrano nel training standard. L'opzione `train_normal_only` filtra intere finestre soltanto in un'ablation esplicita.
+- Le anomalie non entrano nel training standard. L'opzione `train_normal_only` può filtrare intere finestre, ma è una funzionalità opzionale del codice non utilizzata negli esperimenti dichiarati per la tesi.
 
 ## 4. Modello o algoritmo
 
@@ -137,7 +137,7 @@
 - Generazione del pseudo-OOD con rumore gaussiano sulle feature continue.
 - Split cronologico fit/validation/test e selezione del checkpoint.
 - Inferenza con traiettorie multiple e intervalli a quantili empirici.
-- Uso post-hoc delle anomalie e ablation `train_normal_only`.
+- Uso post-hoc delle anomalie per la valutazione; esclusione di `train_normal_only` dal protocollo sperimentale della tesi.
 
 ### Related Work
 
@@ -156,7 +156,7 @@
 - Il codice denomina `dt` mediante una ripartizione dell'orizzonte astratto, ma non implementa una successione temporale Euler--Maruyama classica sullo stesso stato: le perturbazioni sono associate agli stadi della rete.
 - La dispersione delle traiettorie non è scomposta in parte aleatoria ed epistemica.
 - Non è ricavabile dal codice se il rumore pseudo-OOD rappresenti anomalie climatiche reali.
-- I valori di `sigma_max`, rumore OOD e numero di traiettorie richiedono giustificazione o ablation sperimentale.
+- I valori di `sigma_max`, rumore OOD e numero di traiettorie richiedono giustificazione o un'analisi di sensibilità.
 - I risultati quantitativi richiedono gli output delle esecuzioni.
 - La nota descrive esclusivamente il tip remoto `2d9a783c`.
 
