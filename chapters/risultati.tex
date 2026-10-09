@@ -1,15 +1,15 @@
-\chapter{Risultati}
+\chapter{Risultati e discussione}
 \label{chap:risultati}
 
-\section{Configurazione della valutazione}
-
-\subsection{Split temporali e training separati per t+1, t+6 e t+12}
-
-\subsection{Metriche puntuali e probabilistiche}
+% Questa scaletta non contiene ancora risultati numerici dei nuovi confronti.
+% Integrare soltanto misure riferite a esecuzioni identificate e confrontabili.
 
 \section{Accuratezza del forecasting}
 
-\subsection{Backbone BiLSTM--GAT}
+\subsection{Backbone BiLSTM--GAT e ablazione della GAT}
+
+% Confrontare configurazioni e campioni coerenti. L'ablazione rimuove il
+% message passing, ma conserva la diffusione globale condivisa fra località.
 
 \subsection{Enhanced Monte Carlo Dropout}
 
@@ -17,7 +17,13 @@
 
 \subsection{SDE-Net true-minimal}
 
-\subsection{SDE-Net paper-faithful}
+\subsection{SDE-Net paper-faithful e previsione diretta multiorizzonte}
+
+% Riportare le metriche per orizzonte senza confondere t+1 e t+6 dello stesso
+% modello diretto con risultati di modelli addestrati separatamente.
+
+% Consente l'impaginazione della scaletta finché le sottosezioni sono vuote.
+\pagebreak[0]
 
 \section{Quantificazione dell'incertezza}
 
@@ -27,19 +33,139 @@
 
 \subsection{Intervalli delle due varianti SDE-Net}
 
-\section{Rilevamento delle anomalie con MTGFlow}
+% Per paper-faithful distinguere quantili della miscela gaussiana e banda
+% gaussiana approssimata; riportare separatamente le componenti della varianza.
 
-\subsection{Score aggregato per località e score per variabile climatica}
+% Consente l'impaginazione della scaletta finché le sottosezioni sono vuote.
+\pagebreak[0]
 
-\subsection{Soglie IQR e classificazione per località-timestamp}
+\section{Rilevamento delle anomalie con MTGFlow, STGAN e ConvGRU}
+
+\subsection{Score e distribuzione spazio-temporale delle anomalie}
+
+% Inserire score locali e quote regionali indicando copertura e denominatori.
+% Distinguere score aggregati del detector e diagnostiche per variabile.
+
+\subsection{Soglie IQR, top-K e confronto fra grafo e griglia}
+
+% Specificare statistiche IQR per sito e popolazione del ranking globale.
+% Per STGAN su grafo e ConvGRU riportare accordo e Jaccard sulle coordinate
+% comuni, separando patch complete/incomplete. Non interpretarli come
+% accuratezza del detector.
+% Non mescolare flag salvati con top-K ricalcolato dopo le esclusioni.
+% Distinguere le soglie native MTGFlow dalla variante esplorativa a budget
+% globale sulla coordinata firmata (score - soglia salvata) / IQR del training.
+% Nelle mappe riportare frequenza e copertura con i rispettivi denominatori;
+% il filtro diurno successivo alle decisioni non ricalcola il ranking.
+
+\subsection{Ablazione dei kernel convoluzionali}
+
+% Inserire soltanto confronti fra run completate e identificate per k=1,3,5.
+% Tenere distinta l'ampiezza P della patch; il default P=3 non fornisce nuovi
+% siti osservati quando k passa a 5. Riportare i parametri di G e D per variante.
+% Il caso k=1 elimina il mixing convoluzionale, ma conserva aggregazioni e
+% loss sulla patch: non presentarlo come assenza completa di contesto spaziale.
+% Confrontare campioni, maschere, finestre, seed e budget di training coerenti.
+% Non dedurre la superiorità di un kernel dalla sola disponibilità del codice.
+
+% Consente l'impaginazione della scaletta finché le sottosezioni sono vuote.
+\pagebreak[0]
 
 \section{Analisi post-hoc forecasting--anomalie}
 
 \subsection{MAE e RMSE sui campioni normali e anomali}
 
-\subsection{Confronto agli orizzonti t+1, t+6 e t+12}
+% Riportare conteggi, metriche aggregate e distribuzioni degli errori assoluti
+% per fascia di produzione. I boxplot non descrivono RMSE per campione.
 
-\subsection{Errore in funzione della soglia MTGFlow}
+\subsection{Confronto a una e sei ore e quattro casi input--target}
+
+% Inserire i quattro casi con copertura ed esclusioni della finestra di input.
+% Il target normale/anomalo è l'osservazione etichettata dal detector:
+% questo confronto non è una matrice di confusione del previsore.
+
+\subsection{Errore in funzione della soglia e bande di dispersione}
+
+% Inserire sensibilità MTGFlow e STGAN con curve MAE, fascia Q1--Q3 e baffi.
+% Le bande descrivono errori individuali: nessuna conclusione di significatività
+% o equivalenza dei gruppi può essere ricavata dalla sola sovrapposizione.
+
+\subsection{Errori per tipo e direzione dell'estremo meteorologico}
+
+% Riportare normali STGAN ed estremi alti/bassi di temperatura, vento e
+% irradianza, ottenuti intersecando anomalie e flag climatologici al target.
+% Esplicitare filtro diurno, riferimento di produzione e orizzonti confrontati.
+% Contare sottogruppi sovrapposti e anomalie non tipizzate senza trasformare
+% queste ultime in normali. La somma dei gruppi non è il totale dei campioni.
+% Distinguere MAE/RMSE aggregati, quartili degli errori assoluti individuali
+% e mediana/quartili del RMSE fra località; nessuna banda è automaticamente
+% un intervallo di confidenza.
+
+% Consente l'impaginazione della scaletta finché le sottosezioni sono vuote.
+\pagebreak[0]
+
+\section{Anomalie ed eventi geografici su ERA5}
+
+\subsection{Copertura dei dati e configurazione del detector}
+
+% Riportare il periodo realmente acquisito, le quindici feature, la cadenza
+% trioraria, la griglia 0.5 gradi e il numero di celle complete effettivamente
+% usate. Lo split 1980-2003 / 2004 / 2005-latest è un default, non una run
+% attestata; indicare se il 2004 è stato escluso dal training.
+% Distinguere file scaricati, cubi preparati e training/scoring completati.
+% Documentare la maschera statica e le celle escluse; il trend di 56 passi
+% copre 168 ore. Non riutilizzare risultati PVGIS come risultati ERA5.
+% Per ogni run riportare: encoder del generatore (ConvGRU o GAT), unità del
+% campione (patch o campo intero), passi recenti, codifica temporale,
+% normalizzazione, precisione, batch, epoche completate, tassi di G e D,
+% rapporto di aggiornamento D:G e peso di ricostruzione.
+
+\subsection{Score Monte Carlo e dispersione}
+
+% Inserire soltanto mappe e statistiche di run completate, secondo la
+% Sezione~\ref{sec:era5-mcdropout}. Riportare numero di campioni e probabilità
+% di dropout, estremi del min-max delle due componenti e statistiche descrittive
+% delle componenti non normalizzate.
+% La dispersione è nelle unità dello score normalizzato: non presentarla come
+% probabilità di anomalia. Nel confronto fra celle anomale e normali ricordare
+% che le prime sono selezionate per score alto; una dispersione maggiore può
+% riflettere la scala dello score.
+% Se si usa lo z-score climatologico, dichiararlo e riportare i valori esclusi
+% per campioni insufficienti; non mescolare eventi estratti dai due score.
+
+\subsection{Monitoraggio per epoca e selezione delle configurazioni}
+
+% Riportare le curve per epoca della Sezione~\ref{sec:era5-monitoraggio}:
+% termini separati delle loss, uscite medie di D su reale e generato,
+% discrepanza delle feature di D, stabilità dello score, MMD in spazio PCA con
+% media, varianza sui sottoinsiemi e media mobile.
+% Indicare numero di componenti PCA, sottoinsiemi e banda del riferimento usato;
+% confrontare soltanto run che caricano gli stessi riferimenti.
+% Una MMD più bassa non è una misura di accuratezza del rilevamento.
+
+\subsection{Confronto fra generatore ConvGRU e GAT e fra unità di training}
+
+% Confrontare ConvGRU a patch, ConvGRU sul campo intero e GAT soltanto su run
+% identificate. Le tre configurazioni differiscono per operatore spaziale,
+% unità del campione e numero di aggiornamenti per epoca: riportare gli
+% aggiornamenti effettivi, non soltanto le epoche.
+% Non attribuire le differenze al solo operatore spaziale.
+% L'accordo fra le anomalie delle configurazioni non equivale ad accuratezza.
+
+\subsection{Cluster spaziali, traiettorie e sensibilità del postprocessing}
+
+% Integrare risultati verificati del metodo della Sezione~\ref{sec:era5-eventi}.
+% Riportare soglia e sua popolazione, confronto stretto, kernel morfologico,
+% apertura/chiusura, dimensione minima e criterio di collegamento.
+% Non confondere il kernel morfologico con quello della ConvGRU.
+% Distinguere celle inizialmente sopra soglia da celle dei cluster finali.
+% Descrivere aree, durata, separazioni e fusioni con le convenzioni adottate;
+% le fusioni retrospettive modificano l'identità e il conteggio degli eventi.
+% Ogni confronto di sensibilità richiede esecuzioni documentate; la sola
+% parametrizzazione dell'algoritmo non costituisce un risultato quantitativo.
+
+% Consente l'impaginazione della scaletta finché le sottosezioni sono vuote.
+\pagebreak[0]
 
 \section{Confronto progressivo degli esperimenti}
 
@@ -49,4 +175,19 @@
 
 \subsection{Costo computazionale e complessità dei modelli}
 
-\section{Discussione e limiti}
+% Inserire parametri e tempi misurati su hardware e carichi confrontabili.
+% Separare preprocessing, training e scoring. La ConvGRU conserva la LSTM lunga;
+% la rimozione della GAT dal previsore non rimuove la costruzione del grafo.
+% Distinguere effetti di kernel e numero di parametri da quelli di batch,
+% cache e memmap; non attribuire accelerazioni senza misure confrontabili.
+% La modalità block di shuffle conserva i campioni ma ne cambia l'ordine.
+% Per ERA5 distinguere numero di aggiornamenti per epoca e costo per cella:
+% nelle varianti sul campo intero e su grafo il discriminatore resta a patch,
+% quindi la riduzione degli aggiornamenti non implica una riduzione
+% proporzionale del tempo. Riportare tempi e memoria misurati sulle run reali,
+% con precisione numerica e hardware indicati.
+
+% Consente l'impaginazione della scaletta finché le sottosezioni sono vuote.
+\pagebreak[0]
+
+% Limiti e discussione complessiva: Capitolo delle conclusioni.

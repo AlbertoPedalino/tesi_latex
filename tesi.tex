@@ -7,6 +7,9 @@
 \usepackage{microtype}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{array}
+% Colonna di testo allineata a sinistra, larga una frazione della riga.
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1\textwidth}}
 \usepackage{amsmath,amssymb}
 \usepackage[hidelinks]{hyperref}
 \usepackage{csquotes}
@@ -15,25 +18,66 @@
 \graphicspath{{figures/}}
 \addbibresource{bibliography.bib}
 
-\title{Titolo della tesi}
-\author{Nome Cognome}
-\date{Anno Accademico 20XX--20XX}
-
 \begin{document}
 
+% --- Frontespizio -----------------------------------------------------------
+% Impostato sul frontespizio della tesi presa a modello.
+% DA COMPLETARE: titolo e sessione di laurea. Verificare il modello ufficiale
+% dell'ateneo prima della consegna.
 \hypersetup{pageanchor=false}
-\maketitle
+\begin{titlepage}
+    \centering
+    {\LARGE Politecnico di Torino\par}
+    \vspace{0.8cm}
+    {\large Laurea Magistrale in Computer Engineering -- Artificial Intelligence and Data Analytics\par}
+    \vspace{0.3cm}
+    {\large A.A. 2025/2026\par}
+    \vspace{0.3cm}
+    {\large Sessione di laurea [mese e anno]\par}
+    \vfill
+    {\Huge\bfseries [Titolo della tesi]\par}
+    \vfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \raggedright
+        {\large Relatore:\par}
+        \vspace{0.2cm}
+        {\large Simone Monaco\par}
+    \end{minipage}\hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \raggedleft
+        {\large Candidato:\par}
+        \vspace{0.2cm}
+        {\large Alberto Pedalino\par}
+    \end{minipage}
+    \vspace{1.5cm}
+\end{titlepage}
 \clearpage
 \hypersetup{pageanchor=true}
+
+% --- Parti iniziali ---------------------------------------------------------
 \pagenumbering{roman}
+% La tesi presa a modello non ha un sommario prima dell'indice. La scaletta è
+% in chapters/sommario.tex: togliere il commento se il corso lo richiede.
+% \include{chapters/sommario}
+
 \tableofcontents
 \clearpage
+
+\phantomsection
+\addcontentsline{toc}{chapter}{\listfigurename}
+\listoffigures
+\clearpage
+
+% --- Corpo ------------------------------------------------------------------
 \pagenumbering{arabic}
 
 \include{chapters/introduzione}
 \include{chapters/stato_arte}
+\include{chapters/dati}
 \include{chapters/metodologia}
+\include{chapters/esperimenti}
 \include{chapters/risultati}
+\include{chapters/conclusioni}
 
 \printbibliography[heading=bibintoc,title={Bibliografia}]
 

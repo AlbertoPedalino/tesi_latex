@@ -10,3 +10,6 @@
 *.synctex.gz
 *.toc
 _minted-*/
+*.lof
+*.lot
+*-SAVE-ERROR

@@ -1,0 +1,46 @@
+\chapter{Dati e preprocessing}
+\label{chap:dati}
+
+\section{Serie PVGIS, località geografiche e target}
+
+Nei modelli PVGIS-only, \texttt{pv\_power\_output} rappresenta la produzione fotovoltaica teorica associata a ciascuna località PVGIS, non una misura acquisita da un impianto reale. Il target osservato \texttt{ENERGIA} della baseline viene pertanto trattato separatamente.
+
+Il previsore utilizza serie orarie sincronizzate fra località e produce una stima della produzione futura. Il detector STGAN utilizza invece tre variabili meteorologiche: irradianza sul piano inclinato, temperatura a due metri e velocità del vento a dieci metri. La produzione futura non è il target della GAN: il generatore stima le variabili meteorologiche al passo successivo del contesto spaziale considerato.
+
+\section{Feature, trasformazioni fisiche e normalizzazione}
+% CITAZIONE DA INSERIRE: fonte dei dati PVGIS e libreria usata per le grandezze
+% solari; riferimenti sulle feature meteorologiche e solari per il forecasting PV.
+
+Nel percorso PVGIS del previsore, il set completo comprende temperatura, irradianza sul piano inclinato, vento, seno e coseno dell'elevazione solare, indice di cielo sereno sul piano inclinato, sua deviazione standard mobile su tre ore, differenza temporale dell'irradianza, componenti diretta e diffusa inclinate e produzione storica. L'irradianza effettiva sul piano inclinato è ricostruita dalla somma delle componenti diretta e diffusa inclinate.
+
+La normalizzazione del previsore usa statistiche dei dati di fit: z-score per temperatura, irradianza, vento e differenza temporale dell'irradianza, e una scala della produzione per località ricavata dal percentile 99 dei valori positivi diurni. La produzione storica è causale perché viene inclusa soltanto nella finestra che precede il target. Le feature mobili possono richiedere anche osservazioni precedenti l'inizio della finestra esplicita.
+
+Per STGAN, la trasformazione delle feature è un min--max stimato sul training, aggregando tempo e località e riportando i valori nel sistema di coordinate $[-1,1]$. Valori di test esterni all'intervallo del training possono superare questi estremi, poiché la trasformazione non applica un clipping generale. La normalizzazione delle feature è distinta da quella delle componenti dello score, descritta nella sezione dedicata al detector.
+
+\section{Finestre temporali, split cronologici e previsione diretta multiorizzonte}
+% CITAZIONE DA INSERIRE: strategie di previsione a singolo orizzonte, diretta
+% multi-output e ricorsiva, distinguendo le rispettive ipotesi.
+
+Indicando con $t$ l'ultimo timestamp della finestra di input, il target dell'orizzonte $h$ è associato a $t+h$. L'ingresso del previsore ha forma $[B,N,L,F]$, con dimensione del batch $B$, numero di località $N$, lunghezza della sequenza $L$ e numero di feature $F$. Il percorso a singolo orizzonte resta disponibile; nell'estensione diretta, un solo modello produce le uscite per l'insieme di orizzonti richiesto, ad esempio da una a sei ore.
+
+Per $H$ orizzonti, i target e le uscite assumono forma $[B,N,H]$. Le previsioni intermedie non vengono reinserite nell'input: tutte le uscite derivano dalla stessa finestra osservata. Ogni previsione conserva località, timestamp di emissione, timestamp target e orizzonte. I confronti a una e sei ore possono quindi essere estratti dallo stesso modello diretto, distinguendoli dalle precedenti esecuzioni con modelli separati per orizzonte.
+
+Nel percorso SDE, un anno viene riservato alla validazione prima di stimare la normalizzazione. Il test viene fornito separatamente. Quando è attivo il filtro di training su finestre normali, vengono escluse le finestre con eventi nel contesto delle feature, nell'input o in almeno uno dei target richiesti. L'estensione degli orizzonti può pertanto cambiare sia il numero di finestre disponibili sia quello delle finestre ammissibili.
+
+La preparazione STGAN prevede periodi storici e test separati; il primo target di test può utilizzare la coda contigua del training come contesto. I periodi e i parametri effettivamente utilizzati nelle esecuzioni devono essere riportati nella configurazione sperimentale.
+
+\section{Campi ERA5, allineamento e celle valide}
+\label{sec:dati-era5}
+% CITAZIONE DA INSERIRE: riferimento primario su ERA5, livelli singoli e livelli di
+% pressione. Distinguere tempi validi, frequenza di campionamento e intervallo di
+% accumulo; maschere di validità e variazione dell'area delle celle con la latitudine.
+
+Il percorso ERA5 utilizza due prodotti distinti: variabili a livello singolo e variabili su livelli di pressione, selezionando per queste ultime soltanto 850 hPa. Il contratto di ingresso comprende quindici feature, con un ordine condiviso fra acquisizione e preparazione. Le dieci variabili a livello singolo sono temperatura a due metri, componenti orizzontali del vento a dieci metri, pressione al livello medio del mare, precipitazione totale, copertura nuvolosa totale, radiazione solare discendente alla superficie, umidità volumetrica del primo strato del suolo, velocità d'attrito e altezza dello strato limite. Le altre cinque sono le componenti orizzontali del vento, la velocità verticale, la temperatura e l'umidità specifica a 850 hPa.
+
+L'acquisizione predefinita parte dal 1980 e termina all'ultimo anno completo disponibile per entrambi i prodotti. Sono selezionati gli istanti UTC 00, 03, 06, 09, 12, 15, 18 e 21, su una griglia di $0.5^\circ\times0.5^\circ$ nell'area $[60,-15,20,50]$, espressa nell'ordine nord, ovest, sud, est. Il campionamento ogni tre ore è una selezione di tempi validi, non un'aggregazione temporale: precipitazione e radiazione conservano gli accumuli di un'ora associati ai tempi selezionati, senza somme triorarie o conversioni locali delle unità.
+
+I file mensili vengono verificati rispetto a tempi, griglia, variabili e livello di pressione richiesti. La preparazione allinea i due prodotti sulle stesse coordinate e sugli stessi timestamp, ordina le latitudini da nord a sud e le longitudini da ovest a est. Nell'area predefinita il reticolo contiene $81\times131$ posizioni; ciascun blocco è rappresentato come $[T_{\mathrm{blocco}},81,131,15]$ prima della selezione delle celle.
+
+La politica predefinita conserva le celle per le quali tutte le feature sono finite nel primo frame di training e richiede che questa maschera rimanga identica nel resto del periodo. La selezione iniziale non utilizza il test; la verifica successiva interrompe la preparazione se la completezza cambia nel tempo. Non viene applicata imputazione. La maschera può escludere celle marine per l'assenza dell'umidità del suolo, ma il criterio implementato è la completezza delle feature, non una classificazione terra--mare.
+
+I cubi preparati hanno forma $[T,N_{\mathrm{valide}},15]$. La prima versione della preparazione assegnava il periodo 1980--2004 al training e gli anni dal 2005 all'ultimo anno completo consecutivo presente localmente al test. La versione successiva introduce una terza partizione: training 1980--2003, validation 2004 e test dal 2005. Quando la validation è tenuta fuori dal training, viene letta soltanto dal monitoraggio e dalle statistiche descritte nella Sezione~\ref{sec:era5-monitoraggio}; in caso contrario il 2004 rientra nel training, come nella configurazione precedente. La validation non contribuisce alla normalizzazione dello score del test, alle soglie o agli eventi. Questi estremi descrivono la configurazione implementata; copertura effettiva e numero di celle valide devono essere riportati per le esecuzioni valutate. La normalizzazione delle feature rimane stimata soltanto sul training.

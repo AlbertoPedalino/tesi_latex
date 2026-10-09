@@ -7,6 +7,20 @@
 
 \section{Obiettivi e contributi della tesi}
 
+La tesi studia la previsione della produzione fotovoltaica e la caratterizzazione della sua incertezza, affiancando al previsore un'analisi delle condizioni meteorologiche anomale. I due compiti sono distinti: il previsore stima la produzione futura, mentre il detector assegna uno score alle osservazioni meteorologiche. Le decisioni del detector permettono quindi di esaminare gli errori di previsione in condizioni differenti.
+
+Il percorso comprende l'estensione della previsione a più orizzonti, il confronto fra contesto spaziale basato su grafo e su griglia e l'analisi degli errori rispetto alla soglia di anomalia e allo stato della finestra di input e del target. Le varianti architetturali costituiscono confronti da valutare sperimentalmente; la loro implementazione non implica un miglioramento delle prestazioni.
+
 \section{Percorso sperimentale}
 
+Il percorso metodologico parte dal backbone BiLSTM--GAT e dalle varianti probabilistiche preliminari, per arrivare alle due implementazioni SDE-Net. La linea paper-faithful viene estesa alla previsione diretta multiorizzonte e a un'ablazione senza message passing GAT. In parallelo, il rilevamento delle anomalie climatiche comprende MTGFlow, STGAN con convoluzioni sul grafo e un adattamento STGAN a griglia, inizialmente basato su CNN e successivamente su ConvGRU, con il ramo LSTM del trend conservato. La versione finale permette di confrontare kernel convoluzionali di diversa ampiezza mantenendo distinta la dimensione della patch osservata.
+
+Le analisi successive collegano le previsioni alle decisioni dei detector mediante località e timestamp target. Il confronto considera gli orizzonti di previsione, le fasce di produzione, la distribuzione spazio-temporale delle anomalie e le quattro combinazioni fra input normale o anomalo e target normale o anomalo. Le analisi comprendono inoltre frequenze geografiche, sottogruppi meteorologici e sensibilità delle decisioni alle soglie.
+
+Un ulteriore sviluppo estende il detector ai campi meteorologici ERA5, con quindici variabili su una griglia regolare e campionamento ogni tre ore. Gli score possono essere trasformati in cluster spaziali e collegati nel tempo per descrivere eventi, comprese separazioni e fusioni. Questo percorso riguarda la caratterizzazione delle anomalie meteorologiche e rimane distinto dalla previsione della produzione fotovoltaica; la disponibilità dell'implementazione non costituisce una validazione empirica degli eventi.
+
+Sul detector ERA5 vengono poi introdotti il dropout nel generatore e uno score Monte Carlo, che associa a ogni coppia tempo--località una media e una misura di dispersione. Un anno di validation, escluso dal training, alimenta un monitoraggio privo di etichette, basato sulle rappresentazioni del discriminatore e su una Maximum Mean Discrepancy calcolata in uno spazio PCA fissato in anticipo. Sono inoltre considerate una codifica ciclica del tempo, una normalizzazione stagionale dell'ingresso e una normalizzazione climatologica degli score. Due varianti modificano il generatore: una sostituisce la ConvGRU con una Graph Attention Network sul grafo dell'intera griglia, l'altra applica la ConvGRU al campo completo di un timestamp. In entrambe il discriminatore resta locale; le due varianti cambiano anche l'unità del campione e il numero di aggiornamenti per epoca, e costituiscono configurazioni distinte da confrontare sperimentalmente.
+
 \section{Organizzazione del documento}
+
+Il Capitolo~\ref{chap:stato-arte} presenta i fondamenti teorici e i lavori su cui la tesi è costruita, indicando per ciascuno ciò che propone, ciò che non copre e ciò che la tesi ne riprende. Il Capitolo~\ref{chap:dati} descrive i dati e la loro preparazione. Il Capitolo~\ref{chap:metodologia} presenta i modelli e i loro adattamenti. Il Capitolo~\ref{chap:esperimenti} definisce le configurazioni confrontate e il protocollo di valutazione. Il Capitolo~\ref{chap:risultati} riporta e discute i risultati. Il Capitolo~\ref{chap:conclusioni} riassume il lavoro, ne indica i limiti e gli sviluppi futuri.
