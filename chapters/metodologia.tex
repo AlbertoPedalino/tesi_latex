@@ -3,7 +3,7 @@
 
 \section{Panoramica del percorso metodologico}
 
-La metodologia comprende il backbone deterministico BiLSTM--GAT, gli esperimenti preliminari con Enhanced MC Dropout e Deep Ensemble e le varianti SDE-Net true-minimal e paper-faithful. La linea paper-faithful include una previsione diretta multiorizzonte e un'ablazione della GAT. Il rilevamento delle anomalie costituisce una linea distinta, basata su MTGFlow, STGAN e un adattamento STGAN a griglia, evoluto da una CNN senza ricorrenza a un encoder ConvGRU. La versione finale conserva la LSTM del trend e permette un'ablazione della dimensione dei kernel. Un'estensione separata applica lo stesso detector a ERA5 e introduce la ricostruzione di eventi geografici a partire dagli score. Su ERA5 il detector viene poi dotato di dropout nel generatore e di uno score Monte Carlo con una misura di dispersione associata. Due varianti intervengono sul generatore: la prima sostituisce l'encoder convoluzionale con una Graph Attention Network definita sull'intera griglia, la seconda applica la ConvGRU al campo completo invece che a singole patch. In entrambe il discriminatore rimane locale.
+La metodologia comprende il backbone deterministico BiLSTM--GAT, gli esperimenti preliminari con Enhanced MC Dropout e Deep Ensemble e le varianti SDE-Net true-minimal e paper-faithful. La linea paper-faithful include una previsione diretta multiorizzonte e un'ablazione della GAT. Il rilevamento delle anomalie costituisce una linea distinta, basata su MTGFlow, STGAN e un adattamento STGAN a griglia, evoluto da una CNN senza ricorrenza a un encoder ConvGRU. La versione finale conserva la LSTM del trend e permette un'ablazione della dimensione dei kernel. Un'estensione separata applica lo stesso detector a ERA5 e introduce la ricostruzione di eventi geografici a partire dagli score. Su ERA5 il detector viene poi dotato di dropout nel generatore e di uno score Monte Carlo con una misura di dispersione associata. Due varianti intervengono sul generatore: la prima sostituisce, nei gate dell'unità ricorrente, la convoluzione con l'attenzione su grafo definita sull'intera griglia; la seconda applica la ConvGRU al campo completo invece che a singole patch. In entrambe il discriminatore rimane locale.
 
 Le analisi post-hoc utilizzano previsioni e score già prodotti. Il cambiamento della soglia o del raggruppamento delle osservazioni modifica il protocollo di valutazione, senza comportare un nuovo addestramento del previsore.
 
@@ -103,7 +103,7 @@ L'intervallo principale è ottenuto dai quantili a code uguali della miscela gau
 
 \subsection{Modelli indipendenti per località e assenza di message passing geografico}
 
-\section{Rilevamento delle anomalie con STGAN e variante ConvGRU}
+\section{STGAN su PVGIS: versione su grafo e variante a griglia}
 \label{sec:stgan}
 
 \subsection{Contesto spaziale e architettura GCGRU--LSTM}
@@ -214,7 +214,7 @@ d_{\mathrm{evento}}=t_{\mathrm{fine}}-t_{\mathrm{inizio}}+\Delta t,
 \end{equation}
 nel default ERA5; il solo tempo trascorso fra primo e ultimo frame viene conservato separatamente. La normalizzazione degli score sull'intero test, la soglia globale quando utilizzata e l'unificazione retrospettiva degli eventi definiscono un protocollo di analisi successiva al periodo osservato, non un sistema causale di allerta.
 
-\section{Score Monte Carlo e varianti del detector su ERA5}
+\section{STGAN su ERA5: score Monte Carlo e varianti ConvGRU e GAT-GRU}
 \label{sec:era5-mc}
 
 Gli sviluppi di questa sezione riguardano il solo percorso ERA5. Feature, griglia, maschera delle celle ed estrazione degli eventi restano quelle delle Sezioni~\ref{sec:dati-era5} e~\ref{sec:era5-eventi}. Il lavoro procede su due linee parallele, che condividono protocollo di training, score e monitoraggio e si distinguono per l'encoder spaziale del generatore: una ConvGRU, come nella Sezione~\ref{sec:stgan-convgru}, oppure una Graph Attention Network. Nessuna delle due linee è la continuazione dell'altra.
@@ -246,7 +246,7 @@ La quantità $u_{tn}$ misura la variabilità dello score rispetto alle maschere 
 
 \subsection{Split di validation e bilanciamento dell'addestramento avversario}
 
-Gli obiettivi $\mathcal{L}_{D}$ e $\mathcal{L}_{G}$ sono quelli della Sezione~\ref{sec:stgan}. Il peso di ricostruzione $\lambda_G$ diventa un parametro, con valore predefinito invariato. I tassi di apprendimento dei due ottimizzatori Adam possono essere distinti: quello del discriminatore è espresso come rapporto rispetto a quello del generatore oppure come valore indipendente, e le due forme non possono essere indicate insieme.
+Gli obiettivi $\mathcal{L}_{D}$ e $\mathcal{L}_{G}$ sono quelli della Sezione~\ref{sec:stgan}. Il peso di ricostruzione $\lambda_G$ diventa un parametro, con valore predefinito invariato. I tassi di apprendimento dei due ottimizzatori Adam possono essere distinti: quello del discriminatore è espresso come rapporto rispetto a quello del generatore oppure come valore indipendente, e le due forme non possono essere indicate insieme. Anche il coefficiente $\beta_1$ dei due ottimizzatori, che regola quanto gli aggiornamenti precedenti pesano nella media dei gradienti, è un parametro: il valore predefinito è 0.9, quello usato dal codice degli autori di STGAN.
 
 Un secondo controllo riguarda il numero di aggiornamenti per batch. Con rapporto $n_D{:}n_G$, sullo stesso batch vengono eseguiti prima $n_D$ aggiornamenti del discriminatore e poi $n_G$ del generatore, ciascuno con un proprio forward completo; il default è $1{:}1$. Il passo del discriminatore e quello del generatore utilizzano forward indipendenti del generatore, quindi maschere di dropout distinte. Questo rapporto è un conteggio di aggiornamenti e non va confuso con il rapporto fra i tassi di apprendimento.
 
@@ -312,22 +312,29 @@ Dopo l'ultima epoca viene inoltre calcolato, su tutti i punti validi della valid
 
 Numero di componenti principali, sottoinsiemi e banda fanno parte del protocollo e devono essere riportati. Poiché tutte le esecuzioni confrontate caricano gli stessi riferimenti, le differenze nella misura non dipendono da una nuova stima dello spazio o della banda. Una MMD più bassa indica ricostruzioni più vicine alle osservazioni nello spazio considerato; non misura direttamente la qualità del rilevamento delle anomalie.
 
-\subsection{Generatore con Graph Attention Network sulla griglia}
+\subsection{Generatore GAT-GRU sul grafo della griglia}
 \label{sec:era5-gat}
 % CITAZIONE DA INSERIRE: Graph Attention Network (attenzione additiva a più teste);
 % grafi regolari derivati da griglie e reti su grafo per campi meteorologici.
 
 Nella variante su grafo ogni località valida è un nodo. Ciascun nodo riceve un arco da ognuno degli otto vicini immediati presenti sulla griglia e da sé stesso. Gli archi sono diretti e memorizzati in forma sparsa; i bordi non sono collegati fra loro e una cella senza località non genera archi. A differenza del grafo del previsore, gli archi non hanno pesi geografici.
 
-Lo strato di attenzione è quello delle equazioni~\eqref{eq:gat-logit}--\eqref{eq:gat-uscita}, a più teste e con pendenza negativa 0.2 nella LeakyReLU; $\mathcal{N}(i)$ è l'insieme delle sorgenti degli archi entranti in $i$, compreso $i$ stesso. L'encoder è composto da due strati: nel primo le teste sono concatenate e seguite da ELU, nel secondo sono mediate. I default prevedono quattro teste, sedici feature per testa nel primo strato e 32 canali in uscita. Con due strati, ogni nodo riceve informazione fino a due celle di distanza.
+Lo strato di attenzione è quello delle equazioni~\eqref{eq:gat-logit}--\eqref{eq:gat-uscita}, a più teste e con pendenza negativa 0.2 nella LeakyReLU; $\mathcal{N}(i)$ è l'insieme delle sorgenti degli archi entranti in $i$, compreso $i$ stesso. Nella GAT-GRU lo strato sostituisce la convoluzione nei gate dell'unità ricorrente. Siano $\mathcal{A}_r$, $\mathcal{A}_u$ e $\mathcal{A}_c$ tre strati di attenzione distinti, con le teste mediate e senza non linearità propria, e $X'_s$ l'ingresso del passo $s$ concatenato alla maschera. L'aggiornamento di uno strato ricorrente è
+\begin{align}
+R_s &= \sigma\!\left(\mathcal{A}_r\!\left([X'_s,H_{s-1}]\right)\right),\\
+U_s &= \sigma\!\left(\mathcal{A}_u\!\left([X'_s,H_{s-1}]\right)\right),\\
+\widetilde{H}_s &= \tanh\!\left(\mathcal{A}_c\!\left([X'_s,R_s\odot H_{s-1}]\right)\right),\\
+H_s &= M\odot\left[U_s\odot H_{s-1}+(1-U_s)\odot\widetilde{H}_s\right].
+\end{align}
+È la forma delle equazioni~\eqref{eq:convgru-reset}--\eqref{eq:convgru-stato}, con l'attenzione su grafo al posto della convoluzione spaziale e con lo stesso trattamento della maschera della Sezione~\ref{sec:stgan-convgru}. I default prevedono due strati ricorrenti, quattro teste e 32 canali. Poiché il gate di reset e lo stato candidato applicano l'operatore in sequenza, a ogni passo lo stato si propaga di due archi: con $R\geq2$ passi recenti e due strati, l'ingresso del primo passo raggiunge i nodi fino a $2R+1$ archi di distanza. La ConvGRU con kernel $3\times3$ ha la stessa struttura e lo stesso raggio.
 
-Il generatore applica l'encoder a ciascun passo recente su tutti i nodi, passando da $[B\cdot R,N,F]$ a $[B,R,N,C]$. I passi sono poi aggregati da una GRU a gate puntuali, cioè dalla ConvGRU della Sezione~\ref{sec:stgan-convgru} con kernel $1\times1$: il mixing spaziale è affidato soltanto all'attenzione e il raggio osservato non cresce con $R$. La LSTM del trend elabora una sequenza per nodo e la codifica temporale è proiettata per nodo o condivisa. Seguono gli stessi tre dropout e la stessa proiezione di uscita, che restituisce $[B,N,F]$.
+Una prima versione del generatore, mantenuta come opzione, applica a ciascun passo recente un encoder di due strati di attenzione, con le teste concatenate e seguite da ELU nel primo e mediate nel secondo, e aggrega i passi con una GRU a gate puntuali, cioè con la ConvGRU della Sezione~\ref{sec:stgan-convgru} con kernel $1\times1$. In questa versione il mixing spaziale riguarda il solo ingresso di ciascun passo e il raggio osservato resta di due archi per qualunque $R$: non è una sostituzione uno a uno dell'unità ricorrente dell'articolo. Le due versioni sono configurazioni distinte e i rispettivi checkpoint non sono intercambiabili. In entrambe la LSTM del trend elabora una sequenza per nodo e la codifica temporale è proiettata per nodo o condivisa; seguono gli stessi tre dropout e la stessa proiezione di uscita, che restituisce $[B,N,F]$.
 
 Il discriminatore resta quello a patch. Per ogni nodo vengono estratte le patch $P\times P$ della storia recente, dell'osservazione e della ricostruzione globale del generatore, con le celle assenti azzerate e la relativa maschera. I centri sono elaborati a blocchi per limitare la memoria. La loss di ricostruzione è la media, sui centri, dell'errore quadratico medio sulla patch di ciascun centro: l'errore di un nodo entra quindi attraverso tutte le patch che lo contengono. Le loss dei blocchi sono pesate per la rispettiva frazione di centri, in modo che la loro somma coincida con la media su tutti i centri, e i gradienti vengono accumulati prima di un unico aggiornamento per rete.
 
 Un campione è un timestamp con tutti i nodi e il batch predefinito contiene un solo timestamp. Un'epoca comprende quindi $\lceil T/B\rceil$ aggiornamenti per rete, con $T$ timestamp utili, contro $\lceil TN/B\rceil$ del modello a patch. Score, campionamento Monte Carlo e fusione delle componenti seguono la Sezione~\ref{sec:era5-mcdropout}.
 
-Rispetto alla variante ConvGRU a patch cambiano insieme l'operatore spaziale del generatore, l'unità del campione e il numero di aggiornamenti per epoca. Un confronto fra le due linee non isola quindi il solo effetto dell'attenzione su grafo.
+Rispetto alla variante ConvGRU sul campo intero della Sezione~\ref{sec:era5-fullgrid}, il generatore GAT-GRU ha la stessa unità del campione, lo stesso numero di aggiornamenti per epoca, la stessa struttura ricorrente e lo stesso raggio: cambia il modo di pesare i vicini e, con esso, il numero di parametri. Rispetto alla variante ConvGRU a patch cambiano invece anche l'unità del campione e il numero di aggiornamenti per epoca.
 
 \subsection{Variante convoluzionale sul campo intero}
 \label{sec:era5-fullgrid}

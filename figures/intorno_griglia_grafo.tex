@@ -1,0 +1,59 @@
+% Intorno di una cella nelle due varianti: pesi per posizione (convoluzione)
+% e pesi per contenuto (attenzione su grafo). Figura originale della tesi.
+\begin{tikzpicture}[x=0.9cm,y=0.9cm,font=\footnotesize]
+    % ---- Convoluzione 3x3 ------------------------------------------------
+    \begin{scope}
+        \fill[blue!10] (1,1) rectangle (4,4);
+        \fill[blue!32] (2,2) rectangle (3,3);
+        \foreach \i in {0,...,5} {
+            \draw[gray!55] (\i,0) -- (\i,5);
+            \draw[gray!55] (0,\i) -- (5,\i);
+        }
+        \draw[thick] (1,1) rectangle (4,4);
+        \node at (1.5,3.5) {$w_{\mathrm{NO}}$};
+        \node at (2.5,3.5) {$w_{\mathrm{N}}$};
+        \node at (3.5,3.5) {$w_{\mathrm{NE}}$};
+        \node at (1.5,2.5) {$w_{\mathrm{O}}$};
+        \node at (2.5,2.5) {$w_{\mathrm{C}}$};
+        \node at (3.5,2.5) {$w_{\mathrm{E}}$};
+        \node at (1.5,1.5) {$w_{\mathrm{SO}}$};
+        \node at (2.5,1.5) {$w_{\mathrm{S}}$};
+        \node at (3.5,1.5) {$w_{\mathrm{SE}}$};
+        \node[above] at (2.5,5.05) {\small Convoluzione $3\times3$};
+        \node[below,align=center] at (2.5,-0.1)
+            {peso fissato dalla posizione del vicino,\\uguale in ogni cella e in ogni istante};
+    \end{scope}
+    % ---- Attenzione su grafo ---------------------------------------------
+    \begin{scope}[shift={(7.4,0)}]
+        \foreach \i in {0,...,5} {
+            \draw[gray!30] (\i,0) -- (\i,5);
+            \draw[gray!30] (0,\i) -- (5,\i);
+        }
+        \tikzset{nodo/.style={circle,draw=black!70,fill=blue!10,inner sep=0pt,minimum size=0.36cm},
+                 arco/.style={-{Stealth[length=4.5pt,width=4pt]},blue!55!black,shorten >=1.5pt,shorten <=1.5pt}}
+        \node[nodo,fill=blue!32] (c) at (2.5,2.5) {};
+        \node[nodo] (no) at (1.5,3.5) {};
+        \node[nodo] (n)  at (2.5,3.5) {};
+        \node[nodo] (ne) at (3.5,3.5) {};
+        \node[nodo] (o)  at (1.5,2.5) {};
+        \node[nodo] (e)  at (3.5,2.5) {};
+        \node[nodo] (so) at (1.5,1.5) {};
+        \node[nodo] (s)  at (2.5,1.5) {};
+        \node[nodo] (se) at (3.5,1.5) {};
+        \draw[arco,line width=0.4pt] (no) -- (c);
+        \draw[arco,line width=1.9pt] (n)  -- (c);
+        \draw[arco,line width=0.7pt] (ne) -- (c);
+        \draw[arco,line width=1.2pt] (o)  -- (c);
+        \draw[arco,line width=2.6pt] (e)  -- (c);
+        \draw[arco,line width=0.4pt] (so) -- (c);
+        \draw[arco,line width=0.9pt] (s)  -- (c);
+        \draw[arco,line width=1.5pt] (se) -- (c);
+        \node[right] at (3.72,2.5) {$j$};
+        \node at (2.5,2.07) {$i$};
+        \draw[gray!70,very thin] (4.25,3.05) -- (3.05,2.56);
+        \node[right] at (4.2,3.1) {$\alpha_{ij}$};
+        \node[above] at (2.5,5.05) {\small Attenzione su grafo};
+        \node[below,align=center] at (2.5,-0.1)
+            {peso calcolato dalle feature dei due nodi,\\diverso per ogni cella e ogni istante};
+    \end{scope}
+\end{tikzpicture}

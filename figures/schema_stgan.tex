@@ -1,0 +1,41 @@
+% Schema di STGAN: generatore a tre moduli, discriminatore e composizione dello
+% score. Ridisegnato a partire dalla Figura 6 di Deng et al. (2022).
+\begin{tikzpicture}[font=\scriptsize,
+    dato/.style={draw=black!60,rounded corners=2pt,align=center,inner sep=3pt,minimum height=0.8cm,text width=1.6cm},
+    modulo/.style={draw=black!80,fill=blue!10,align=center,inner sep=3pt,minimum height=0.8cm,text width=2.05cm},
+    rete/.style={draw=black!80,fill=orange!14,align=center,inner sep=4pt,text width=2.1cm},
+    esito/.style={draw=black!80,fill=green!10,rounded corners=2pt,align=center,inner sep=4pt},
+    freccia/.style={-{Stealth[length=4.5pt,width=4pt]},black!75},
+    cornice/.style={draw=black!55,dashed,rounded corners=4pt,inner sep=6pt}]
+    % ---- Generatore --------------------------------------------------------
+    \node[dato] (xr) at (0,2.5) {finestra recente del sottografo};
+    \node[dato] (xt) at (0,1.25) {storia del nodo};
+    \node[dato] (xe) at (0,0) {ora e giorno};
+    \node[modulo] (mr) at (2.5,2.5) {modulo recente\\GRU su grafo};
+    \node[modulo] (mt) at (2.5,1.25) {modulo trend\\LSTM};
+    \node[modulo] (me) at (2.5,0) {modulo esterno\\strato denso};
+    \node[modulo,text width=1.05cm] (fu) at (4.7,1.25) {fusione};
+    \draw[freccia] (xr) -- (mr);
+    \draw[freccia] (xt) -- (mt);
+    \draw[freccia] (xe) -- (me);
+    \draw[freccia] (mr.east) -- ++(0.3,0) |- ([yshift=5pt]fu.west);
+    \draw[freccia] (mt) -- (fu);
+    \draw[freccia] (me.east) -- ++(0.3,0) |- ([yshift=-5pt]fu.west);
+    \node[cornice,fit=(xr)(xe)(fu),label={[font=\footnotesize]above:Generatore $G_\theta$}] (gen) {};
+    % ---- Sequenze e discriminatore ----------------------------------------
+    \node[dato,text width=1.7cm] (sf) at (7.65,2.2) {sequenza generata $\hat{S}_{v,t}$};
+    \node[dato,text width=1.7cm] (sr) at (7.65,0.3) {sequenza reale $S_{v,t}$};
+    \node[rete] (d) at (10.5,1.25) {GRU su grafo sulla storia e convoluzione su grafo sul dato corrente};
+    \draw[freccia] (fu.east) -- ++(0.5,0) |- node[pos=0.78,above,inner sep=2pt] {$\hat{X}_{v,t}$} (sf.west);
+    \draw[freccia] (sf.east) -- ++(0.3,0) |- ([yshift=5pt]d.west);
+    \draw[freccia] (sr.east) -- ++(0.3,0) |- ([yshift=-5pt]d.west);
+    \node[cornice,fit=(d),label={[font=\footnotesize]above:Discriminatore $D_\phi$}] (dis) {};
+    % ---- Score -------------------------------------------------------------
+    \node[esito] (sg) at (4.7,-2.0) {$s_G=\lVert\hat{X}_{v,t}-X_{v,t}\rVert_2$};
+    \node[esito] (sd) at (10.5,-2.0) {$s_D=D_\phi(S_{v,t})-D_\phi(\hat{S}_{v,t})$};
+    \node[esito] (sc) at (7.6,-3.2) {$\mathrm{score}=s_G+\lambda\,s_D$};
+    \draw[freccia] (fu.south) -- (sg.north);
+    \draw[freccia] (d.south) -- node[left,align=right] {uscita in $[0,1]$:\\$0$ reale, $1$ generata} (sd.north);
+    \draw[freccia] (sg.south) |- (sc.west);
+    \draw[freccia] (sd.south) |- (sc.east);
+\end{tikzpicture}

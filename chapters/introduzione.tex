@@ -2,24 +2,49 @@
 \label{chap:introduzione}
 
 \section{Contesto e motivazioni}
+% CITAZIONE DA INSERIRE: ruolo delle previsioni fotovoltaiche nella gestione della
+% rete e previsione probabilistica. Nessuna fonte è citata qui finché non è scelta.
 
-\section{Previsione della produzione fotovoltaica}
+La produzione di un impianto fotovoltaico dipende dalle condizioni meteorologiche: irradianza, temperatura e vento ne determinano l'andamento, dalle variazioni entro la giornata a quelle stagionali. La gestione di una rete con una quota crescente di fotovoltaico richiede quindi previsioni della produzione, possibilmente accompagnate da una misura della loro incertezza.
+
+Un previsore addestrato su dati storici è affidabile nelle condizioni che quei dati rappresentano bene. Le condizioni meteorologiche poco frequenti, o mai osservate, sono quelle in cui l'errore di previsione può crescere e in cui una stima dell'incertezza è più utile. Riconoscerle è un problema a sé, distinto dalla previsione: richiede di stabilire, per ogni località e ogni istante, quanto le condizioni osservate si discostano da quelle abituali. È il compito del rilevamento di anomalie, a cui questa tesi è dedicata.
+
+Il lavoro considera due insiemi di dati. Il primo è costituito da serie orarie PVGIS, con la produzione fotovoltaica teorica e le variabili meteorologiche di un insieme di località. Il secondo è costituito dai campi della rianalisi ERA5, con quindici variabili su una griglia regolare e passo di tre ore. Sul primo il rilevamento è collegato a un previsore della produzione; sul secondo è studiato come problema autonomo, su un dominio più ampio.
+
+\section{Il problema: anomalie meteorologiche senza etichette}
+
+Tre caratteristiche dei dati rendono il problema difficile e guidano le scelte dei capitoli successivi.
+
+La prima è l'assenza di etichette. Non esiste un elenco di osservazioni meteorologiche anomale con cui addestrare un classificatore o misurare direttamente l'accuratezza di un detector. Il rilevamento deve essere non supervisionato e la sua valutazione deve ricorrere a strumenti indiretti.
+
+La seconda è che i dati di training non sono garantiti privi di anomalie. Molti detector apprendono il comportamento normale da un insieme che si assume pulito; con dati meteorologici non etichettati questa ipotesi non è verificabile. Ne segue una scelta di obiettivo: rilevare le condizioni nuove rispetto al periodo di training, trattando come già osservate quelle che il modello ha incontrato durante l'addestramento.
+
+La terza è la struttura spaziale. Le condizioni di una località dipendono da quelle delle località vicine, e un valore insolito in un punto può essere ordinario se considerato nel suo intorno. I dati non hanno però una topologia fisica, come una rete stradale: sono disposti su un insieme di siti o su un reticolo regolare, e il modo di rappresentare l'intorno va scelto.
+
+Il termine anomalia indica in questa tesi un'osservazione che si discosta da quanto il modello ha appreso dal periodo di training. Un evento meteorologico estremo è un caso particolare di anomalia, ma non ogni anomalia è un evento estremo.
 
 \section{Obiettivi e contributi della tesi}
 
-La tesi studia la previsione della produzione fotovoltaica e la caratterizzazione della sua incertezza, affiancando al previsore un'analisi delle condizioni meteorologiche anomale. I due compiti sono distinti: il previsore stima la produzione futura, mentre il detector assegna uno score alle osservazioni meteorologiche. Le decisioni del detector permettono quindi di esaminare gli errori di previsione in condizioni differenti.
-
-Il percorso comprende l'estensione della previsione a più orizzonti, il confronto fra contesto spaziale basato su grafo e su griglia e l'analisi degli errori rispetto alla soglia di anomalia e allo stato della finestra di input e del target. Le varianti architetturali costituiscono confronti da valutare sperimentalmente; la loro implementazione non implica un miglioramento delle prestazioni.
+L'obiettivo della tesi è rilevare condizioni meteorologiche anomale in dati privi di etichette e dotati di struttura spaziale, e usare le decisioni del detector per esaminare il comportamento di un previsore fotovoltaico probabilistico. I due compiti restano distinti: il detector assegna uno score alle osservazioni meteorologiche, il previsore stima la produzione futura. La tesi non propone un nuovo algoritmo di rilevamento: adatta e combina componenti esistenti. I contributi sono i seguenti.
+\begin{itemize}
+    \item L'adattamento di STGAN, un detector avversario spazio-temporale nato per il traffico, a variabili meteorologiche prive di topologia fisica, in due varianti che rappresentano l'intorno di una cella con una convoluzione su griglia oppure con l'attenzione su grafo.
+    \item La definizione dell'obiettivo come rilevamento di condizioni nuove rispetto al periodo di training, con uno score continuo e una quota di osservazioni segnalate che è un parametro del protocollo.
+    \item Tre estensioni del detector sui campi ERA5: uno score Monte Carlo con una misura di dispersione, un monitoraggio dell'addestramento privo di etichette e la ricostruzione di eventi geografici a partire dagli score.
+    \item L'analisi degli errori e degli intervalli di un previsore fotovoltaico probabilistico, costruito sullo schema di SDE-Net, rispetto alle decisioni dei detector.
+\end{itemize}
+Le varianti architetturali costituiscono confronti da valutare sperimentalmente; la loro implementazione non implica un miglioramento delle prestazioni.
 
 \section{Percorso sperimentale}
 
-Il percorso metodologico parte dal backbone BiLSTM--GAT e dalle varianti probabilistiche preliminari, per arrivare alle due implementazioni SDE-Net. La linea paper-faithful viene estesa alla previsione diretta multiorizzonte e a un'ablazione senza message passing GAT. In parallelo, il rilevamento delle anomalie climatiche comprende MTGFlow, STGAN con convoluzioni sul grafo e un adattamento STGAN a griglia, inizialmente basato su CNN e successivamente su ConvGRU, con il ramo LSTM del trend conservato. La versione finale permette di confrontare kernel convoluzionali di diversa ampiezza mantenendo distinta la dimensione della patch osservata.
+Il rilevamento delle anomalie parte da MTGFlow, scelto perché tollera la presenza di anomalie nei dati di training, e prosegue con STGAN, che aggiunge il contesto spaziale: prima nella forma con convoluzioni sul grafo, poi in un adattamento a griglia, inizialmente basato su CNN e successivamente su ConvGRU, con il ramo LSTM del trend conservato. La versione finale permette di confrontare kernel convoluzionali di diversa ampiezza mantenendo distinta la dimensione della patch osservata.
+
+Il detector viene poi esteso ai campi meteorologici ERA5, con quindici variabili su una griglia regolare e campionamento ogni tre ore. Gli score possono essere trasformati in cluster spaziali e collegati nel tempo per descrivere eventi, comprese separazioni e fusioni. Questo percorso riguarda la caratterizzazione delle anomalie meteorologiche e rimane distinto dalla previsione della produzione fotovoltaica; la disponibilità dell'implementazione non costituisce una validazione empirica degli eventi.
+
+Sul detector ERA5 vengono poi introdotti il dropout nel generatore e uno score Monte Carlo, che associa a ogni coppia tempo--località una media e una misura di dispersione. Un anno di validation, escluso dal training, alimenta un monitoraggio privo di etichette, basato sulle rappresentazioni del discriminatore e su una Maximum Mean Discrepancy calcolata in uno spazio PCA fissato in anticipo. Sono inoltre considerate una codifica ciclica del tempo, una normalizzazione stagionale dell'ingresso e una normalizzazione climatologica degli score. Due varianti modificano il generatore: una applica la ConvGRU al campo completo di un timestamp, l'altra ne mantiene la struttura ricorrente sul grafo dell'intera griglia e sostituisce nei gate la convoluzione con l'attenzione su grafo. In entrambe il discriminatore resta locale; le due varianti cambiano anche l'unità del campione e il numero di aggiornamenti per epoca, e costituiscono configurazioni distinte da confrontare sperimentalmente.
+
+Il previsore della produzione parte dal backbone BiLSTM--GAT e dalle varianti probabilistiche preliminari, per arrivare alle due implementazioni SDE-Net. La linea paper-faithful viene estesa alla previsione diretta multiorizzonte e a un'ablazione senza message passing GAT.
 
 Le analisi successive collegano le previsioni alle decisioni dei detector mediante località e timestamp target. Il confronto considera gli orizzonti di previsione, le fasce di produzione, la distribuzione spazio-temporale delle anomalie e le quattro combinazioni fra input normale o anomalo e target normale o anomalo. Le analisi comprendono inoltre frequenze geografiche, sottogruppi meteorologici e sensibilità delle decisioni alle soglie.
-
-Un ulteriore sviluppo estende il detector ai campi meteorologici ERA5, con quindici variabili su una griglia regolare e campionamento ogni tre ore. Gli score possono essere trasformati in cluster spaziali e collegati nel tempo per descrivere eventi, comprese separazioni e fusioni. Questo percorso riguarda la caratterizzazione delle anomalie meteorologiche e rimane distinto dalla previsione della produzione fotovoltaica; la disponibilità dell'implementazione non costituisce una validazione empirica degli eventi.
-
-Sul detector ERA5 vengono poi introdotti il dropout nel generatore e uno score Monte Carlo, che associa a ogni coppia tempo--località una media e una misura di dispersione. Un anno di validation, escluso dal training, alimenta un monitoraggio privo di etichette, basato sulle rappresentazioni del discriminatore e su una Maximum Mean Discrepancy calcolata in uno spazio PCA fissato in anticipo. Sono inoltre considerate una codifica ciclica del tempo, una normalizzazione stagionale dell'ingresso e una normalizzazione climatologica degli score. Due varianti modificano il generatore: una sostituisce la ConvGRU con una Graph Attention Network sul grafo dell'intera griglia, l'altra applica la ConvGRU al campo completo di un timestamp. In entrambe il discriminatore resta locale; le due varianti cambiano anche l'unità del campione e il numero di aggiornamenti per epoca, e costituiscono configurazioni distinte da confrontare sperimentalmente.
 
 \section{Organizzazione del documento}
 
