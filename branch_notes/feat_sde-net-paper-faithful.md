@@ -2,179 +2,105 @@
 
 ## 1. Scopo dello step
 
-- Funzione principale del branch: integrare nel previsore spazio-temporale su grafo una dinamica neurale stocastica esplicita, con drift appreso, diffusione scalare appresa, integrazione Euler–Maruyama e uscita probabilistica eteroschedastica.
-- Posizione nel percorso complessivo della tesi: costituisce lo step di forecasting probabilistico spazio-temporale usato per ottenere previsione puntuale, intervalli predittivi e separazione tra incertezza aleatoria ed epistemica sui nodi geografici PVGIS.
-- La nota documenta esclusivamente lo stato corrente del codice Python versionato nel branch al commit `6fd0898e`.
-- L'elemento metodologico distintivo dello step corrente è la combinazione tra grafo geografico, dinamica SDE nel latente, addestramento separato della diffusione e distribuzione gaussiana predittiva.
+- Consolidare il previsore fotovoltaico con encoder temporale, attenzione sul grafo e blocco SDE, separando dispersione delle traiettorie e rumore della testa di regressione.
+- Posizione nel percorso: previsione probabilistica di base, dalla quale si separano successivamente la previsione diretta multiorizzonte e le analisi delle anomalie.
+- Revisione analizzata: `7998a75b`, corrispondente ai riferimenti locale e `origin` disponibili il 10 settembre 2026.
+- Predecessore di confronto: stato `91753344`, antecedente al commit `4dc591d8` che introduce `sde_net.py`; è il punto di separazione dalla linea oggi denominata `feat/sde-net-true-minimal`. La punta attuale di quel branch non è il predecessore di questo. Git consente di verificare l'ascendenza dei commit, non il nome originario assegnato al ramo al momento della creazione.
+- La selezione dei branch riguarda il periodo 10 agosto–10 settembre 2026; questa nota documenta lo step complessivo al suo stato finale. Un confronto aggiuntivo `90075d68..7998a75b` distingue gli aggiornamenti recenti dal nucleo architetturale precedente.
+- Differenza principale: dal blocco con drift dipendente dal tempo, diffusione per nodo e uscita PV puntuale, a drift vettoriale, diffusione scalare per esempio e testa gaussiana eteroschedastica. Le modifiche recenti riguardano soprattutto la rivalutazione puntuale STGAN e la rimozione di alcuni helper di confronto tra run.
 
 ## 2. File di codice rilevanti
 
-### `physiq_pv/data/pvgis_dataset.py`
-
-- Responsabilità: caricamento degli anni PVGIS, controllo dell'allineamento temporale e geografico, costruzione delle feature, stima delle statistiche di normalizzazione e generazione delle finestre temporali.
-- Contenuto metodologico attuale: `PVGISWindowDataset`, `build_year_raw`, `fit_normalization`, `assemble_feats` e `build_datasets` realizzano split cronologici di fit, validation e test; le finestre non attraversano il confine tra anni. Il codice espone anche un filtraggio opzionale delle finestre rare, non utilizzato nel percorso sperimentale dichiarato per la tesi.
-
-### `physiq_pv/data/pvgis_irradiance.py`
-
-- Responsabilità: ricostruzione coerente della POA effettiva.
-- Contenuto metodologico attuale: `with_effective_poa` calcola la POA come somma di irradianza diretta e diffusa sul piano inclinato, correggendo soltanto piccoli valori negativi attribuiti alla tolleranza numerica.
-
-### `physiq_pv/data/pvgis_labels.py`
-
-- Responsabilità: caricamento e associazione alle predizioni di etichette di anomalia o di evento.
-- Contenuto metodologico attuale: le etichette sono metadati di valutazione e stratificazione e non vengono inserite nel tensore di input del modello.
-
-### `physiq_pv/model/graph_builder.py`
-
-- Responsabilità: costruzione del grafo geografico sparso.
-- Contenuto metodologico attuale: usa distanza Haversine, archi entro un raggio massimo, collegamento al vicino più prossimo per nodi isolati, archi nei due versi, self-loop e prior gaussiano dipendente dalla distanza.
-
-### `physiq_pv/model/sde_net.py`
-
-- Responsabilità: componenti fondamentali della SDE neurale.
-- Contenuto metodologico attuale: contiene `VectorDrift`, `ScalarDiffusion` e `PaperSDEBlock`; include inoltre `YearMSDSDENet` come composizione di riferimento e `diffusion_bce_loss` per la supervisione ID/pseudo-OOD della diffusione.
-
-### `physiq_pv/model/st_gnn.py`
-
-- Responsabilità: modello spazio-temporale complessivo.
-- Contenuto metodologico attuale: `STGNN` combina encoder BiLSTM per nodo, pooling temporale con attenzione, layer GAT sparsi, blocco SDE e teste probabilistiche; `GATLayer` incorpora il prior geografico sommando il logaritmo del peso di distanza ai logit di attenzione appresi.
-
-### `physiq_pv/training/losses.py`
-
-- Responsabilità: obiettivo della testa probabilistica.
-- Contenuto metodologico attuale: `gaussian_nll` implementa la negative log-likelihood gaussiana eteroschedastica; l'eventuale obiettivo ausiliario sull'irradianza è una MSE pesata.
-
-### `physiq_pv/training/train_loop.py`
-
-- Responsabilità: addestramento, validazione e selezione del checkpoint.
-- Contenuto metodologico attuale: `train_model` alterna l'ottimizzazione del sottosistema di forecasting/drift e quella della sola diffusione; applica warm-up dell'ampiezza del rumore, clipping del gradiente, decadimento del learning rate ed early stopping su una metrica di validation diurna.
-
-### `physiq_pv/training/uncertainty.py`
-
-- Responsabilità: inferenza stocastica e quantificazione dell'incertezza.
-- Contenuto metodologico attuale: `predict_sde` esegue più traiettorie Browniane; `_gaussian_mixture_quantile` calcola gli intervalli dalla miscela delle gaussiane prodotte dalle traiettorie; vengono separate varianza epistemica, aleatoria e totale.
-
-### `physiq_pv/experiments/pvgis_stgnn_runner.py`
-
-- Responsabilità: configurazione ed esecuzione riproducibile dell'intera pipeline.
-- Contenuto metodologico attuale: `run_from_args` coordina split, preprocessing, grafo, training, inferenza e salvataggio delle predizioni per coppia località-timestamp; espone gli iperparametri SDE e calcola metriche puntuali e di intervallo, anche per sottoinsiemi diurni e categorie di valutazione.
-
-### `physiq_pv/reporting/run_metrics.py`
-
-- Responsabilità: aggregazione delle metriche dalle predizioni salvate.
-- Contenuto metodologico attuale: calcola MAE, RMSE e metriche degli intervalli per l'intero insieme e per gli strati di valutazione disponibili, senza intervenire nel training.
+| Percorso | Responsabilità | Modifiche principali |
+|---|---|---|
+| `physiq_pv/model/sde_net.py` | Dinamica stocastica | Introduce `VectorDrift`, `ScalarDiffusion`, `PaperSDEBlock`, riferimento `YearMSDSDENet` e loss della diffusione. |
+| `physiq_pv/model/st_gnn.py` | Previsore PV | Integra il nuovo blocco SDE, testa PV media/deviazione standard e prior geografico additivo nei logit GAT. |
+| `physiq_pv/model/bilstm_encoder.py` | Encoder temporale ereditato | Chiarisce che il percorso attivo usa una BiLSTM con pooling temporale, anche se il flag storico si chiama `use_patchtst`. |
+| `physiq_pv/model/graph_builder.py` | Grafo geografico | Costruisce archi geografici con pesi gaussiani e self-loop. |
+| `physiq_pv/data/pvgis_irradiance.py` | Irradianza di ingresso | Ricostruisce POA effettiva da componenti diretta e diffusa inclinate. |
+| `physiq_pv/data/pvgis_dataset.py` | Feature, split e finestre | Allineamento dei siti, statistiche di normalizzazione, validazione separata, target e filtro opzionale delle finestre con eventi. |
+| `physiq_pv/data/pvgis_labels.py` | Etichette di analisi | Gestione delle categorie e dei gruppi associati alle osservazioni. |
+| `physiq_pv/training/losses.py` | Obiettivo di regressione | NLL gaussiana elementare; MSE della testa ausiliaria. |
+| `physiq_pv/training/train_loop.py` | Ottimizzazione | Passi distinti per previsione e diffusione, perturbazioni pseudo-OOD, scelta del modello sulla validazione. |
+| `physiq_pv/training/uncertainty.py` | Inferenza probabilistica | Traiettorie browniane, decomposizione della varianza e quantili della miscela gaussiana. |
+| `physiq_pv/experiments/pvgis_stgnn_runner.py` | Configurazione del protocollo | Collega costruzione dei dati, modello, training, inferenza e parametri di selezione. |
+| `physiq_pv/experiments/sde_pipeline.py` | Coordinamento e rivalutazione | Costruzione dei comandi e rietichettatura delle previsioni tramite detector. |
+| `physiq_pv/reporting/pointwise_detector_posthoc.py` | Analisi puntuale | Join previsione/etichetta e filtro opzionale degli azzeramenti solari regionali isolati. |
+| `physiq_pv/reporting/daytime_bin_anomaly_report.py`, `posthoc_outputs.py`, `run_metrics.py` | Metriche e stratificazioni | Errori e intervalli per categorie e fasce di produzione; statistiche dei boxplot sull'insieme delle righe ammissibili. |
+| `physiq_pv/reporting/anomaly_driver.py`, `anomaly_extremes.py` | Diagnostica delle anomalie | Attribuzione tramite contributi del detector, segno dello scostamento e aggregazione in episodi. |
+| `physiq_pv/reporting/event_onset.py`, `hourly_event_response.py` | Risposta durante gli eventi | Riferimenti locali per ora del giorno, profili dall'insorgenza e confronto con persistenza. |
+| `physiq_pv/reporting/mtgflow_spatiotemporal.py` | Analisi spaziale | Aggregazione degli score e raggruppamenti geografici. |
 
 ## 3. Dati e preprocessing
 
-- Input: file NetCDF/xarray annuali PVGIS con griglia oraria regolare, dimensioni temporali e di località coerenti tra anni, coordinate geografiche finite e variabili meteorologiche/solari.
-- Feature del set completo: `temperature_2m`, `solar_irradiance_poa`, `wind_speed_10m`, `sin_elev`, `cos_elev`, `kt_poa`, `kt_poa_std_3h`, `dpoa_dt`, `direct_irradiance_tilted`, `diffuse_irradiance_tilted` e `pv_lag_pvgis`.
-- Target: `pv_power_output`, ossia la produzione fotovoltaica teorica della località PVGIS e non una misura reale di impianto, all'orizzonte configurato; il default del runner è una previsione a un'ora dopo una finestra di 24 ore.
-- La POA viene ricostruita come diretta inclinata più diffusa inclinata. Sono inoltre calcolati geometria solare, POA clear-sky, indice di chiarezza limitato all'intervallo configurato, deviazione standard mobile a tre ore e differenza temporale della POA.
-- Temperatura, POA, vento e variazione della POA sono standardizzati mediante statistiche globali stimate esclusivamente sugli anni di fit. La potenza PV è scalata per località usando il percentile 99 dei valori positivi diurni del fit; non è applicato clipping superiore per default.
-- Lo split predefinito usa 2016–2018 come anni di training dichiarati e 2019 come test. L'anno più recente del gruppo di training è riservato alla validation; pertanto, con i default, le statistiche e i parametri sono stimati su 2016–2017 e la validation è il 2018.
-- `PVGISWindowDataset` restituisce `x` con forma `(N, T, F)`, `y` con forma `(N,)` e l'indice temporale globale. Dopo il batching: `X` ha forma `(B, N, T, F)` e `Y` forma `(B, N)`, dove `N` è il numero di località, `T` la lunghezza della finestra e `F` il numero di feature selezionate.
-- L'indice del target è `inizio_finestra + T + orizzonte - 1`; le finestre non attraversano anni diversi.
-- Le etichette di anomalia/evento sono associate soltanto alle righe di output per analisi stratificate. Il training standard non usa tali etichette; il filtraggio dei periodi rari è una modalità opzionale e disattivata per default.
+- Input: serie PVGIS orarie sincronizzate per località, coordinate geografiche e, quando richiesto, etichette esterne del detector.
+- Il set completo dichiarato nel codice contiene: temperatura a 2 m, POA, vento a 10 m, seno e coseno dell'elevazione solare, indice di cielo sereno sul piano inclinato, sua deviazione standard mobile su tre ore, differenza temporale POA, componenti diretta e diffusa inclinate, storia della produzione PV.
+- `pv_lag_pvgis` è il valore PV presente nella finestra storica: la causalità deriva dal taglio della finestra prima del target.
+- Target principale: `pv_power_output` al timestamp futuro; target ausiliario opzionale: `kt_poa`.
+- Normalizzazione: z-score globale per temperatura, POA, vento e differenza POA; scala PV per sito dal percentile 99 dei valori positivi diurni del fit, con fallback mediano. Altri canali conservano la trasformazione fisica esplicita.
+- `build_datasets` separa un anno di validazione, per default l'ultimo degli anni forniti, prima di stimare la normalizzazione. Lo split test è fornito separatamente.
+- Il filtro `train_normal_only` elimina finestre con eventi nel contesto delle feature, nella sequenza o nel target. Le feature derivate richiedono anche due ore precedenti la finestra esplicita.
+- Forme: dati `[T,N,F]`; batch di ingresso `[B,N,L,F]`; target e uscite PV `[B,N]`; stato latente `[B,N,D]`.
+- Nella rivalutazione puntuale, il percorso NetCDF identifica azzeramenti simultanei regionali di diretta, diffusa, altezza solare e produzione, racchiusi fra osservazioni a irradianza regionale positiva. Il percorso manifest controlla invece la sola POA. Entrambi escludono anche l'osservazione immediatamente successiva: i due controlli non leggono esattamente le stesse variabili.
 
 ## 4. Modello o algoritmo
 
-### Componenti e flusso dei dati
-
-1. Per ogni nodo geografico, la sequenza `(T, F)` è elaborata dallo stesso encoder BiLSTM bidirezionale a due strati.
-2. Un'attenzione temporale aggrega gli stati della BiLSTM; una proiezione con attivazione e normalizzazione produce il latente iniziale `x0` di forma `(B, N, D)`.
-3. I layer GAT propagano informazione soltanto sugli archi geografici sparsi. Il prior gaussiano di distanza modifica i logit dell'attenzione, mentre i coefficienti restano appresi dai dati.
-4. `PaperSDEBlock` evolve il latente secondo una SDE neurale. Il drift vettoriale è applicato a ogni nodo; la diffusione aggrega i nodi con una media e restituisce uno scalare per elemento del batch, condiviso tra nodi e dimensioni latenti.
-5. L'integrazione usa Euler–Maruyama. Con i default, l'intervallo temporale astratto è suddiviso in quattro passi; durante il training e l'inferenza stocastica viene aggiunto un incremento Browniano, mentre la validation deterministica usa il solo drift.
-6. La testa PV restituisce, per ogni nodo, media non negativa e deviazione standard positiva. Una testa ausiliaria opzionale stima anche una componente legata all'irradianza/indice clear-sky.
-
-### Grafo geografico
-
-- I nodi sono le località PVGIS, non le variabili meteorologiche.
-- `edge_index` ha forma `(2, E)` e il vettore dei prior forma `(E,)`.
-- Sono creati archi per distanze entro 20 km per default; i nodi senza vicini vengono connessi al nodo più vicino.
-- Il peso geografico è `exp(-0.5 * (d / scala)^2)` con self-loop di peso uno; la scala è configurabile e vale 10 km nella configurazione della pipeline.
-- Softmax e aggregazione del GAT operano sugli archi, evitando una matrice di attenzione geografica densa `N x N`.
-
-### Architettura, input e output
-
-- Input del modello: `X` di forma `(B, N, T, F)`, grafo sparso e prior degli archi.
-- Uscita latente dopo encoder, GAT e SDE: `(B, N, D)`.
-- Uscite principali: `pred_pv_mean` e `pred_pv_sigma`, entrambe `(B, N)`; la diffusione è uno scalare per elemento del batch. La testa ausiliaria, se attiva, produce una previsione per nodo.
-- L'output tabellare è indicizzato da `timestamp` e `location`; riporta target, previsione, incertezze e limiti dell'intervallo nelle unità fisiche ricostruite.
-
-### Funzione di perdita e training
-
-- Forecasting: negative log-likelihood gaussiana eteroschedastica, con eventuale MSE ausiliaria pesata sull'uscita solare.
-- Drift/backbone e diffusione usano due ottimizzatori SGD separati. Il primo aggiorna encoder temporale, GAT, drift e teste predittive.
-- Nel passo della diffusione, un batch pseudo-OOD è ottenuto aggiungendo rumore gaussiano all'input. Le rappresentazioni sono staccate dal grafo dei gradienti e una BCE addestra la diffusione a produrre valori bassi per ID e alti per pseudo-OOD.
-- L'ampiezza massima del termine stocastico passa dal valore iniziale a quello configurato dopo il warm-up. Il gradiente del sottosistema predittivo è limitato in norma.
-- La validation è deterministica ed è eseguita sull'ultimo anno di training. Per default, checkpoint ed early stopping dipendono dall'RMSE diurna in unità fisiche.
-
-### Inferenza e incertezza
-
-- L'inferenza predefinita genera dieci traiettorie SDE indipendenti.
-- La media predittiva è la media delle medie gaussiane delle traiettorie.
-- La varianza epistemica è la varianza tra le medie delle traiettorie; la varianza aleatoria è la media delle varianze gaussiane; la varianza totale è la loro somma.
-- L'intervallo predittivo principale è l'intervallo equal-tail della miscela gaussiana, ottenuto invertendo numericamente la CDF. L'intervallo gaussiano moment-matched è mantenuto come diagnostica secondaria.
-- La valutazione comprende MAE/RMSE e, per gli intervalli, copertura empirica, ampiezza media, ampiezza normalizzata e una metrica congiunta di copertura e sharpness. Non sono ricavabili dal codice risultati numerici del modello.
+- Flusso: BiLSTM condivisa tra siti → proiezione → GAT geografica → integrazione SDE → testa PV e testa ausiliaria opzionale.
+- L'encoder temporale è una BiLSTM a due strati nel costruttore del modello; la dimensione e il pooling sono configurabili.
+- Nei logit GAT il prior geografico entra come `edge_prior_strength * log(edge_weight)`; segue una softmax sugli archi entranti e l'aggregazione dei messaggi.
+- `VectorDrift` applica Linear e ReLU. `ScalarDiffusion` media lo stato iniziale sui nodi e produce uno scalare sigmoidale per esempio, di forma `[B,1]`.
+- Euler–Maruyama: `x_next = x + f(x)*dt + sigma*g(x0)*sqrt(dt)*epsilon`, con rumore indipendente nelle coordinate latenti. La scala è calcolata sullo stato iniziale e mantenuta lungo la traiettoria; default del blocco: quattro passi su un intervallo latente di durata quattro.
+- Questo tempo di integrazione è un parametro del modello, distinto dalle ore dell'orizzonte di previsione.
+- Testa PV: media `softplus` e deviazione standard `softplus + 1e-3`. L'obiettivo elementare è `log(sigma²) + (y-mu)²/sigma²`, equivalente alla NLL gaussiana a meno di fattore e costante.
+- Testa ausiliaria: indice POA limitato tramite sigmoide e `kt_poa_max`; MSE pesata quando abilitata.
+- Training: un ottimizzatore SGD aggiorna encoder, GAT, drift e teste; un secondo SGD aggiorna la diffusione mediante BCE, con ID=0 e pseudo-OOD=1. I pseudo-OOD sono `x + noise_std * randn_like(x)`; il secondo passo usa rappresentazioni staccate dall'encoder.
+- Sono previsti warm-up della scala SDE, decadimento del learning rate della previsione, clipping dei suoi gradienti ed early stopping su metrica di validazione.
+- Inferenza: ogni traiettoria restituisce una gaussiana. Media predittiva = media delle medie; varianza totale = varianza delle medie + media delle varianze delle componenti.
+- L'intervallo principale usa quantili a code uguali della miscela gaussiana, invertiti numericamente. La banda media ± z·deviazione totale è conservata come approssimazione diagnostica.
+- Il percorso deterministico integra il solo drift: non è in generale la media esatta delle traiettorie stocastiche.
+- Le analisi successive uniscono le previsioni alle etichette osservate senza riaddestrare il previsore. Il top-K STGAN può essere ricalcolato dopo le esclusioni ammissibili.
 
 ## 5. Elementi nuovi introdotti
 
-- `VectorDrift`: campo di drift neurale vettoriale nel latente.
-- `ScalarDiffusion`: diffusione scalare dipendente dal grafo, ottenuta dal pooling dei nodi.
-- `PaperSDEBlock`: simulazione discreta della dinamica tramite Euler–Maruyama.
-- `YearMSDSDENet`: composizione SDE di riferimento presente nel modulo dedicato.
-- `gaussian_nll`: obiettivo probabilistico per media e varianza dipendenti dall'input.
-- `diffusion_bce_loss`: obiettivo binario ID/pseudo-OOD per la sola rete di diffusione.
-- `predict_sde` e `_gaussian_mixture_quantile`: campionamento di traiettorie, decomposizione dell'incertezza e intervalli da miscela gaussiana.
-- `PVGISWindowDataset` e funzioni di costruzione: pipeline esplicita con split cronologico e statistiche stimate soltanto sul fit.
-- Prior geografico gaussiano integrato nei logit del GAT.
-- Testa eteroschedastica e traiettorie Browniane della SDE per la previsione probabilistica.
+- Componenti SDE separati, diffusione globale per esempio e testa gaussiana.
+- Inferenza mediante miscela di gaussiane e separazione delle due componenti della dispersione.
+- Filtro esplicito delle finestre di training e validazione, protocolli di eventi regionali e rivalutazione puntuale dei detector.
+- Analisi degli errori per produzione, driver, intervallo temporale e tempo dall'insorgenza.
+- Nel delta recente, `build_horizon_comparison_figures` viene rimosso da questo ramo. La previsione diretta multiorizzonte appartiene al ramo dedicato, non a questa implementazione del modello.
+- `YearMSDSDENet` è una classe di riferimento presente nel codice; la sua presenza non dimostra che sia stata usata negli esperimenti PV.
 
 ## 6. Informazioni utili per la tesi
 
 ### Metodi
 
-- Definizione del problema come forecasting probabilistico multivariato su un grafo di località geografiche.
-- Split cronologico fit/validation/test e prevenzione del leakage nelle statistiche di preprocessing.
-- Costruzione delle feature solari e meteorologiche e normalizzazione della potenza per località.
-- Costruzione sparsa del grafo tramite distanza Haversine, raggio geografico e prior gaussiano.
-- Encoder temporale BiLSTM con attenzione e propagazione spaziale GAT.
-- Formulazione del blocco SDE, ruoli distinti di drift e diffusione e discretizzazione Euler–Maruyama.
-- Alternanza tra obiettivo predittivo e classificazione ID/pseudo-OOD della diffusione.
-- Regressione gaussiana eteroschedastica e decomposizione aleatoria/epistemica dell'incertezza.
-- Costruzione degli intervalli predittivi dalla miscela delle distribuzioni ottenute dalle traiettorie SDE.
-- Protocollo di validation diurna, early stopping e metriche puntuali/di intervallo.
-- Uso delle etichette di anomalia soltanto per l'analisi post-hoc; il filtraggio opzionale del training sui periodi normali resta escluso dal protocollo sperimentale della tesi.
+- Split temporali, statistiche del fit e causalità delle finestre.
+- BiLSTM, GAT con prior geografico e diffusione condivisa per esempio.
+- Dinamica latente, loss separate e costruzione pseudo-OOD.
+- Testa gaussiana, miscela predittiva, decomposizione della varianza e selezione sulla validazione.
+- Distinzione fra etichette puntuali, eventi regionali e gruppi degli errori.
+- Differenza fra intervalli predittivi e distribuzione degli errori assoluti.
 
 ### Related Work
 
-- Neural stochastic differential equations.
-- Schema numerico Euler–Maruyama.
-- SDE-Net e apprendimento della diffusione mediante dati ID e pseudo-OOD.
-- Regressione eteroschedastica con negative log-likelihood gaussiana.
-- Separazione tra incertezza aleatoria ed epistemica mediante legge della varianza totale.
-- Intervalli predittivi da miscele gaussiane.
-- BiLSTM e attention pooling per serie temporali.
-- Graph Attention Networks e message passing sparso.
-- Grafi geografici basati su Haversine e kernel gaussiani di distanza.
-- Modellazione clear-sky, indice di chiarezza e decomposizione dell'irradianza sul piano inclinato.
+- Equazioni differenziali stocastiche neurali e discretizzazione Euler–Maruyama.
+- SDE-Net e discriminazione ID/pseudo-OOD.
+- BiLSTM, pooling temporale e Graph Attention Networks.
+- Regressione gaussiana eteroschedastica e legge della varianza totale.
+- Intervalli da miscele gaussiane, calibrazione e ampiezza degli intervalli.
+- Persistenza per serie fotovoltaiche e rilevamento di eventi spazio-temporali.
 
 ## 7. Aspetti da chiarire
 
-- Il codice non esplicita la motivazione scientifica dei valori scelti per raggio del grafo, scala gaussiana, numero di passi SDE, warm-up, rumore pseudo-OOD e peso della perdita ausiliaria.
-- Non sono ricavabili dal solo codice la procedura esatta con cui `pv_power_output` è stato generato nei file PVGIS, la configurazione nominale della simulazione, la sua unità e il criterio di selezione delle località.
-- Il numero effettivo di località e la configurazione finale di un esperimento dipendono dai file e dagli argomenti CLI usati a runtime.
-- La validità empirica, la significatività delle differenze e la capacità di generalizzare non possono essere dedotte senza risultati sperimentali.
-- La corrispondenza scientifica completa con il paper di riferimento richiede un confronto esterno con paper e repository originale; i nomi e i commenti nel codice non sono una prova sufficiente.
-- Il rumore gaussiano usato per creare pseudo-OOD è un meccanismo di training/diagnostica; dal codice non si può stabilire quanto rappresenti anomalie fisiche reali.
-- La scelta del detector e delle etichette associate a una specifica esecuzione non è determinabile dal modello, perché tali dati sono forniti separatamente alla fase di valutazione.
-- La nota descrive il codice versionato al commit `6fd0898e`; eventuali modifiche locali non committate non rientrano nello stato documentato.
+- I valori effettivamente usati in ciascuna esecuzione, il numero di siti, i periodi realmente disponibili e le prestazioni non sono ricavabili dai soli default.
+- L'allineamento a un articolo dichiarato nei commenti non è una verifica bibliografica indipendente.
+- `build_detector_event_protocol` riceve gli anni della mappa storica che include anche l'anno di validazione; la sua calibrazione regionale va descritta separatamente dal fit della normalizzazione, che esclude tale anno.
+- Il riferimento usato da `attach_anomaly_sign` è costruito sulle osservazioni presenti nel file di previsioni: è una diagnostica retrospettiva, non una feature causale del modello.
+- Il codice non dimostra che gli episodi selezionati corrispondano a eventi meteorologici certificati, né che le due componenti di incertezza siano calibrate.
+- La validità delle esclusioni solari, la confrontabilità dei due percorsi di rilevamento e i criteri finali di selezione degli eventi richiedono verifica sui dati, esclusa da questa analisi.
 
 ## 8. Sintesi
 
-- Il branch contiene una SDE neurale integrata nello ST-GNN geografico.
-- BiLSTM e GAT producono un latente spazio-temporale, poi evoluto mediante drift e diffusione appresi.
-- La testa gaussiana eteroschedastica e le traiettorie Browniane forniscono previsione e decomposizione dell'incertezza.
-- Preprocessing e split sono cronologici e le etichette di anomalia restano esterne al training standard.
-- Gli intervalli sono calcolati dalla miscela gaussiana delle traiettorie e valutati insieme agli errori puntuali.
+- Previsore PV BiLSTM–GAT con blocco SDE scalare per esempio.
+- Regressione eteroschedastica e training separato della diffusione.
+- Intervalli ottenuti dalla miscela delle gaussiane lungo le traiettorie.
+- Analisi puntuali e regionali degli errori, senza nuovi risultati sperimentali.
