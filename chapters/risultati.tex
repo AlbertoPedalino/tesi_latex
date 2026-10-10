@@ -6,10 +6,11 @@
 
 \section{Accuratezza del forecasting}
 
-\subsection{Backbone BiLSTM--GAT e ablazione della GAT}
-
-% Confrontare configurazioni e campioni coerenti. L'ablazione rimuove il
-% message passing, ma conserva la diffusione globale condivisa fra località.
+% Il backbone deterministico non ha una run propria su PVGIS con il protocollo
+% delle varianti SDE (60 epoche): esiste sui dati reali, esclusi dalla tesi, e su
+% PVGIS come membro del Deep Ensemble (5 epoche, MAE circa 20 W). Non presentarlo
+% come riferimento alla pari delle varianti SDE. Una run dedicata resta
+% un'opzione aperta.
 
 \subsection{Enhanced Monte Carlo Dropout}
 
@@ -17,10 +18,16 @@
 
 \subsection{SDE-Net true-minimal}
 
-\subsection{SDE-Net paper-faithful e previsione diretta multiorizzonte}
+\subsection{Variante SDE-Net e previsione diretta multiorizzonte}
 
 % Riportare le metriche per orizzonte senza confondere t+1 e t+6 dello stesso
 % modello diretto con risultati di modelli addestrati separatamente.
+
+\subsection{Ablazione della GAT}
+
+% Appartiene alla variante SDE-Net. Confrontare configurazioni e campioni
+% coerenti. L'ablazione rimuove il message passing, ma conserva la diffusione
+% globale condivisa fra località.
 
 % Consente l'impaginazione della scaletta finché le sottosezioni sono vuote.
 \pagebreak[0]
@@ -33,8 +40,15 @@
 
 \subsection{Intervalli delle due varianti SDE-Net}
 
-% Per paper-faithful distinguere quantili della miscela gaussiana e banda
+% Per la variante SDE-Net distinguere quantili della miscela gaussiana e banda
 % gaussiana approssimata; riportare separatamente le componenti della varianza.
+% ESITO DA SOSTENERE CON I NUMERI (spostato qui dallo Stato dell'arte): la testa
+% gaussiana avrebbe dato intervalli utilizzabili, la banda epistemica (dispersione
+% fra le traiettorie) sarebbe troppo stretta, in modo più evidente nella variante
+% true-minimal, che non ha componente aleatoria. Ordine di grandezza ricordato
+% dall'autore: la banda epistemica conteneva circa il 10--15% delle osservazioni.
+% Ritrovare nei file di valutazione copertura, ampiezza, livello nominale e
+% variante prima di scriverlo. Riprendere il limite anche nelle Conclusioni.
 
 % Consente l'impaginazione della scaletta finché le sottosezioni sono vuote.
 \pagebreak[0]
@@ -42,6 +56,14 @@
 \section{Rilevamento delle anomalie con MTGFlow, STGAN e ConvGRU}
 
 \subsection{Score e distribuzione spazio-temporale delle anomalie}
+
+Per le osservazioni segnalate dalla ConvGRU con kernel 3 è disponibile la ripartizione dell'errore di ricostruzione della località centrale fra le tre variabili. In media il 75.5\% dell'errore è dovuto all'irradianza, il 15.8\% alla temperatura e l'8.6\% al vento. L'irradianza è la variabile con il contributo maggiore in 81733 delle 100653 osservazioni segnalate (81.2\%), la temperatura in 13320 (13.2\%) e il vento in 5600 (5.6\%). Su PVGIS le osservazioni segnalate riguardano quindi in prevalenza scostamenti dell'irradianza, in accordo con la composizione di questi dati, che contengono le sole grandezze legate alla produzione (Capitolo~\ref{chap:dati}).
+
+Il dato descrive la sola componente di ricostruzione dello score e le sole osservazioni segnalate. La stessa ripartizione sulle osservazioni non segnalate non è stata calcolata: non è quindi possibile dire se la prevalenza dell'irradianza sia specifica delle anomalie o valga per l'errore di ricostruzione in generale.
+% Fonte: pvgis_stgan_cnn/convgru_reference/seed_20/entity_anomaly_scores.csv
+% (10 ottobre 2026), colonna contribution_fraction, 100653 righe per variabile.
+% Dal riepilogo per località (summary_by_seed.csv, visto in parte): la quota di
+% osservazioni segnalate per località varia circa da 0.4% a 3.0%.
 
 % Inserire score locali e quote regionali indicando copertura e denominatori.
 % Distinguere score aggregati del detector e diagnostiche per variabile.
@@ -58,7 +80,77 @@
 % Nelle mappe riportare frequenza e copertura con i rispettivi denominatori;
 % il filtro diurno successivo alle decisioni non ricalcola il ranking.
 
-\subsection{Ablazione dei kernel convoluzionali}
+\subsection{Stabilità delle decisioni al variare del modello}
+\label{sec:ris-stabilita}
+
+La versione su grafo di STGAN e la variante ConvGRU sono state addestrate sugli stessi dati PVGIS con lo stesso protocollo: sei epoche, un passo recente, 168 passi di trend e l'1\% delle osservazioni di test segnalato con un ranking globale. La ConvGRU è stata addestrata con kernel di lato 1, 3 e 5, a parità di ogni altra impostazione. Ogni detector segnala quindi 100653 delle 10065240 osservazioni del 2019. In assenza di etichette non è possibile stabilire quale configurazione individui meglio le anomalie; si può misurare quanto le osservazioni segnalate coincidono. La Tabella~\ref{tab:accordo-detector} confronta ciascuna configurazione ConvGRU con la versione su grafo.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Accordo fra le osservazioni segnalate dalla variante ConvGRU e dalla versione su grafo di STGAN sui dati PVGIS del 2019. Ogni detector segnala 100653 osservazioni. L'indice di Jaccard è il rapporto fra le osservazioni segnalate da entrambi e quelle segnalate da almeno uno; l'ultima riga riporta il valore atteso per due detector indipendenti con la stessa quota.}
+    \label{tab:accordo-detector}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.26}L{0.16}L{0.12}L{0.12}L{0.12}L{0.12}@{}}
+        \toprule
+        Configurazione & Segnalate da entrambi & Quota & Jaccard & Patch complete & Patch incomplete \\
+        \midrule
+        ConvGRU, kernel 1 & 9956 & 9.9\% & 0.052 & 0.054 & 0.046 \\
+        ConvGRU, kernel 3 & 6267 & 6.2\% & 0.032 & 0.032 & 0.032 \\
+        ConvGRU, kernel 5 & 7325 & 7.3\% & 0.038 & 0.039 & 0.034 \\
+        \addlinespace
+        Detector indipendenti & circa 1007 & 1.0\% & 0.005 & -- & -- \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+L'accordo è da sei a dieci volte quello atteso per due detector indipendenti, ma resta basso in valore assoluto: più del 90\% delle osservazioni segnalate da una configurazione ConvGRU non è segnalato dalla versione su grafo. Il risultato non cambia sulle 917 località con patch completa, nelle quali le due versioni osservano gli stessi nove siti. La quota di osservazioni segnalate differisce inoltre fra località con patch completa e incompleta: 0.93\% e 1.27\% per la ConvGRU con kernel 3, contro 0.97\% e 1.12\% per la versione su grafo.
+
+Altre due misure vanno nella stessa direzione. La loss del discriminatore resta fra 0.60 e 0.63 per tutte le sei epoche nelle tre configurazioni ConvGRU, mentre un discriminatore che assegna la stessa uscita a ogni ingresso ha loss $\ln 2\approx0.69$; per la versione su grafo la storia delle loss non è stata salvata. Lo score, somma di due componenti normalizzate in $[0,1]$, è concentrato in un intervallo stretto: con kernel 3, sulle patch complete, la mediana è 0.489 e il quantile 0.95 è 0.553.
+
+Una lettura coerente con le tre misure è che su questi dati lo score distingua poco le osservazioni fra loro: l'1\% più alto è scelto fra valori vicini, e piccole differenze fra i modelli bastano a cambiarne la composizione. È un'interpretazione e non una dimostrazione, perché le due componenti dello score non sono state salvate separatamente e il contributo di ciascuna non è verificabile su queste esecuzioni.
+
+Due limiti restringono le conclusioni. Ogni configurazione è stata addestrata con un solo seme: non è noto quanto concorderebbero due esecuzioni identiche con semi diversi, e la differenza osservata non può essere attribuita alla sola architettura. Il confronto è inoltre fra ciascuna ConvGRU e la versione su grafo; l'accordo diretto fra kernel diversi non è stato calcolato.
+
+La conseguenza riguarda le analisi della Sezione~\ref{sec:ris-posthoc}: gli errori del previsore sulle osservazioni segnalate da STGAN si riferiscono alle decisioni di una specifica configurazione, e non a un insieme di anomalie stabile rispetto al modello.
+
+% NUMERI VERIFICATI (server, 10 ottobre 2026): confronto di ciascuna run ConvGRU
+% con la versione su grafo (pvgis_stgan/paper_reference), file
+% seed_20/baseline_comparison/detector_comparison_by_boundary.csv, decisioni
+% salvate top 1% globale senza filtri né ricalcolo del ranking.
+% Osservazioni: 10065240 (1149 località x 8760 ore); segnalate da ciascun
+% detector: 100653. Con due detector indipendenti all'1% l'intersezione attesa
+% per caso è circa 1007 osservazioni (Jaccard circa 0.005).
+%   kernel 1: 9956 in comune, Jaccard 0.0520 (patch complete 0.0537, incomplete 0.0463)
+%   kernel 3: 6267 in comune, Jaccard 0.0321 (patch complete 0.0322, incomplete 0.0319)
+%   kernel 5: 7325 in comune, Jaccard 0.0378 (patch complete 0.0388, incomplete 0.0342)
+% Quota segnalata sulle patch incomplete (232 località) e complete (917):
+%   grafo 1.12% e 0.97%; kernel 1 1.11% e 0.97%; kernel 3 1.27% e 0.93%;
+%   kernel 5 1.07% e 0.98%.
+% Loss per epoca (seed_20/training_history.csv), sei epoche, 140803056 campioni
+% per epoca (1149 località x 122544 istanti: nessun sottocampionamento):
+%   kernel 3: G 2.99 3.18 3.23 3.32 3.46 3.47; D 0.629 0.622 0.618 0.612 0.603 0.601
+%   kernel 1: G 3.12 3.21 3.74 3.42 3.49 3.38; D 0.597 0.596 0.579 0.595 0.595 0.601
+%   kernel 5: G 2.96 2.95 3.17 3.58 3.33 3.14; D 0.633 0.632 0.623 0.614 0.613 0.626
+% Parametri con kernel 3 (model_results_summary.txt): generatore 140931,
+% discriminatore 114593. Da leggere per kernel 1 e 5.
+% ConvGRU kernel 3, statistiche dello score (somma di due componenti in [0,1]):
+%   patch complete: media 0.429, mediana 0.489, quantile 0.95 0.553, 74776 segnalate (0.93%)
+%   patch incomplete: media 0.430, mediana 0.492, quantile 0.95 0.563, 25877 segnalate (1.27%)
+% Training 51067 s, scoring 278 s, memoria GPU di picco 485 MB.
+% Le due componenti dello score non sono state salvate: il peso di ciascuna sullo
+% score non è verificabile senza rifare lo scoring. La mediana vicina a 0.49 è
+% compatibile con una differenza D(reale) - D(generato) vicina a zero per
+% l'osservazione tipica (deduzione, non misura).
+% entity_anomaly_scores.csv riporta, per le osservazioni segnalate, la quota
+% dell'errore di ricostruzione dovuta a ciascuna variabile.
+% Tempo per epoca: circa 8280 s (kernel 3), 7950 s (kernel 1), 3430 s (kernel 5
+% con caricamento dei dati ottimizzato). La versione su grafo non ha salvato la
+% storia delle loss. La loss di D resta vicina a 0.693, valore di un
+% discriminatore che non distingue reale e generato.
+% Limiti da dichiarare: un solo seme (20) per ogni configurazione, quindi la
+% variabilità fra semi non è misurata e la differenza non si può attribuire al
+% solo operatore; manca il confronto diretto fra kernel (solo kernel contro grafo).
 
 % Inserire soltanto confronti fra run completate e identificate per k=1,3,5.
 % Tenere distinta l'ampiezza P della patch; il default P=3 non fornisce nuovi
@@ -72,6 +164,7 @@
 \pagebreak[0]
 
 \section{Analisi post-hoc forecasting--anomalie}
+\label{sec:ris-posthoc}
 
 \subsection{MAE e RMSE sui campioni normali e anomali}
 
@@ -134,6 +227,26 @@
 % per campioni insufficienti; non mescolare eventi estratti dai due score.
 
 \subsection{Monitoraggio per epoca e selezione delle configurazioni}
+
+% LOSS LETTE DAI LOG SUL SERVER (10 ottobre 2026). D_mean e G_mean sono medie
+% sull'ultimo tratto, non cumulative.
+% ConvGRU a patch, 1 passo recente (train_cnn_mc_paper_run2.log), 3025793
+% aggiornamenti per epoca, 6 epoche, run conclusa:
+%   epoca 1: D 0.317 (151289 agg.), 0.197 (302578), 0.141 (453867), 0.071
+%   (1512890), 0.0035 (2874491); G 10.9, 13.3, 16.9, 30.9, 101.9
+%   epoche 2-6: D da 0.0034 a 0.0017; G da 102.8 a 107.
+% ConvGRU sul campo intero, 16 passi (train_fullgrid_recent16.log), 70072
+% aggiornamenti per epoca, bf16; il log copre le epoche 3-5:
+%   fine epoca 3: D 0.21, G 10.8; fine epoca 4: D 0.19, G 11.3-13.4;
+%   epoca 5: D 0.18, G 11.8, poi G 26.4 e 17.0 e il log si interrompe.
+% GAT-GRU, 16 passi (train_gatgru.log), 70072 aggiornamenti per epoca, bf16:
+%   fine epoca 3: D 0.196, G 12.8; epoca 4 all'80%: D 0.177, G 13.6.
+% ATTENZIONE: a parità di aggiornamenti la loss di D è simile nei due casi
+% (circa 0.20 a 300000 aggiornamenti sia con 1 passo sia con 16). La run a patch
+% fa 43 volte più aggiornamenti per epoca. Dai log non si può attribuire il
+% crollo di D al numero di passi: unità del campione e numero di aggiornamenti
+% cambiano insieme. Con D vicino a zero la loss di G attorno a 107 è compatibile
+% con il termine avversario saturato (deduzione).
 
 % Riportare le curve per epoca della Sezione~\ref{sec:era5-monitoraggio}:
 % termini separati delle loss, uscite medie di D su reale e generato,

@@ -3,22 +3,39 @@
 
 \section{Panoramica del percorso metodologico}
 
-La metodologia comprende il backbone deterministico BiLSTM--GAT, gli esperimenti preliminari con Enhanced MC Dropout e Deep Ensemble e le varianti SDE-Net true-minimal e paper-faithful. La linea paper-faithful include una previsione diretta multiorizzonte e un'ablazione della GAT. Il rilevamento delle anomalie costituisce una linea distinta, basata su MTGFlow, STGAN e un adattamento STGAN a griglia, evoluto da una CNN senza ricorrenza a un encoder ConvGRU. La versione finale conserva la LSTM del trend e permette un'ablazione della dimensione dei kernel. Un'estensione separata applica lo stesso detector a ERA5 e introduce la ricostruzione di eventi geografici a partire dagli score. Su ERA5 il detector viene poi dotato di dropout nel generatore e di uno score Monte Carlo con una misura di dispersione associata. Due varianti intervengono sul generatore: la prima sostituisce, nei gate dell'unità ricorrente, la convoluzione con l'attenzione su grafo definita sull'intera griglia; la seconda applica la ConvGRU al campo completo invece che a singole patch. In entrambe il discriminatore rimane locale.
+La metodologia parte dal previsore: il backbone deterministico BiLSTM--GAT, le soglie climatologiche della Sezione~\ref{sec:soglie-climatologiche}, che forniscono le prime etichette di condizioni insolite, gli esperimenti preliminari con Enhanced MC Dropout e Deep Ensemble, valutati su quelle etichette, e le due varianti basate su equazioni differenziali stocastiche, true-minimal e SDE-Net. La variante SDE-Net include una previsione diretta multiorizzonte e un'ablazione della GAT. Il rilevamento delle anomalie con modelli appresi costituisce una linea distinta, condotta dapprima sui dati PVGIS, come analisi iniziale, con MTGFlow, STGAN e un adattamento STGAN a griglia, evoluto da una CNN senza ricorrenza a un encoder ConvGRU. La versione finale conserva la LSTM del trend e permette un'ablazione della dimensione dei kernel. Un'estensione separata applica lo stesso detector a ERA5 e introduce la ricostruzione di eventi geografici a partire dagli score. Su ERA5 il detector viene poi dotato di dropout nel generatore e di uno score Monte Carlo con una misura di dispersione associata. Due varianti intervengono sul generatore: la prima sostituisce, nei gate dell'unità ricorrente, la convoluzione con l'attenzione su grafo definita sull'intera griglia; la seconda applica la ConvGRU al campo completo invece che a singole patch. In entrambe il discriminatore rimane locale.
 
 Le analisi post-hoc utilizzano previsioni e score già prodotti. Il cambiamento della soglia o del raggruppamento delle osservazioni modifica il protocollo di valutazione, senza comportare un nuovo addestramento del previsore.
 
 \section{Backbone BiLSTM--GAT}
+\label{sec:backbone}
+
+Il backbone è stato messo a punto inizialmente su una configurazione mista, con la produzione misurata di impianti reali come grandezza da prevedere e le variabili meteorologiche PVGIS della località più vicina come ingressi. Quella configurazione non fa parte della tesi; il backbone è descritto qui come architettura comune ai previsori addestrati sui soli dati PVGIS. Su questi dati non è stato addestrato come modello a sé con il protocollo delle varianti SDE: è il modello di base degli esperimenti preliminari della Sezione~\ref{sec:probabilistici-preliminari}.
 
 \subsection{Tensori di input, encoder temporale e attention pooling}
 % CITAZIONE DA INSERIRE: LSTM, BiLSTM e attention pooling (metodi standard).
 
-L'encoder temporale elabora la sequenza di ciascuna località con parametri condivisi. La rappresentazione BiLSTM, aggregata mediante pooling temporale, viene proiettata nello spazio latente utilizzato dai componenti successivi.
+Il previsore riceve un tensore $X\in\mathbb{R}^{B\times N\times L\times F}$: $B$ esempi, $N$ località, una finestra di $L=24$ ore e le $F$ feature descritte nel Capitolo~\ref{chap:dati}. L'uscita è la produzione normalizzata di ogni località all'ora successiva, di forma $[B,N]$.
+
+L'encoder temporale elabora la sequenza di ciascuna località con parametri condivisi fra le località. È una LSTM bidirezionale a due strati, con 128 unità per direzione, che restituisce per ogni passo $t$ uno stato $h_t\in\mathbb{R}^{256}$. Gli stati sono aggregati con un pooling ad attenzione: un punteggio scalare per passo, ottenuto da una trasformazione lineare, è normalizzato con una softmax sui passi e usato come peso,
+\begin{equation}
+    w_t=\frac{\exp\!\left(a^{\top}h_t+b\right)}{\sum_{s=1}^{L}\exp\!\left(a^{\top}h_s+b\right)},
+    \qquad
+    h=\operatorname{LayerNorm}\!\left(\sum_{t=1}^{L}w_t\,h_t\right).
+    \label{eq:attention-pooling}
+\end{equation}
+La rappresentazione $h$ è poi proiettata in uno spazio latente di 96 dimensioni da uno strato lineare seguito da GELU e da una normalizzazione di strato. Questo vettore, uno per località, è l'ingresso dello stadio spaziale.
 
 \subsection{Grafo geografico Haversine e ablazione della GAT}
-% CITAZIONE DA INSERIRE: Graph Neural Network e Graph Attention Network (metodo
-% standard); message passing e studi di ablazione del contesto spaziale.
 
-Nel previsore con GAT, gli archi esprimono relazioni di vicinanza geografica e i pesi gaussiani forniscono un prior ai coefficienti di attenzione. Nel percorso paper-faithful, il logaritmo del peso geografico viene aggiunto al logit appreso $e_{ij}$ dell'equazione~\eqref{eq:gat-logit}, prima della softmax sugli archi entranti.
+Ogni località è un nodo. Due località sono collegate, in entrambe le direzioni, quando la loro distanza sulla superficie terrestre, calcolata con la formula di Haversine, non supera 20~km; una località senza vicini entro questo raggio è collegata alla più vicina, e ogni nodo ha un arco verso sé stesso. A ogni arco è associato un peso che decresce con la distanza $d_{ij}$,
+\begin{equation}
+    p_{ij}=\exp\!\left[-\frac{1}{2}\left(\frac{d_{ij}}{s}\right)^{2}\right],
+    \label{eq:prior-geografico}
+\end{equation}
+con scala $s=10$~km e $p_{ii}=1$. Lo stadio spaziale è uno strato di attenzione su grafo~\cite{velickovic2018gat} a quattro teste, seguito da una connessione residua e da una normalizzazione di strato.
+
+Nel previsore con GAT, gli archi esprimono quindi relazioni di vicinanza geografica e i pesi gaussiani forniscono un prior ai coefficienti di attenzione. Nella variante SDE-Net, il logaritmo del peso geografico viene aggiunto al logit appreso $e_{ij}$ dell'equazione~\eqref{eq:gat-logit}, prima della softmax sugli archi entranti.
 
 L'ablazione senza GAT rimuove gli strati di attenzione sul grafo: la proiezione dell'encoder temporale diventa direttamente lo stato iniziale della SDE. Il grafo continua a essere costruito e passato nelle interfacce, ma i suoi archi non sono utilizzati dal forward. L'ablazione riduce anche il numero di parametri, senza introdurre un blocco sostitutivo di pari dimensione.
 
@@ -26,28 +43,124 @@ L'assenza di message passing non implica completa indipendenza fra le distribuzi
 
 \subsection{Teste di previsione, funzione di perdita e training}
 
-% Descrivere qui il percorso deterministico di riferimento e mantenerlo
-% distinto dalla testa gaussiana e dalla loss della variante paper-faithful.
+Lo stato prodotto dallo stadio spaziale alimenta due teste, ciascuna formata da due strati lineari con una GELU intermedia, che riducono le 96 dimensioni a 48 e poi a un valore per località. La testa della produzione applica una softplus e restituisce una previsione non negativa $\hat{y}_{bn}$ della produzione normalizzata. La testa ausiliaria applica una sigmoide moltiplicata per un valore massimo e stima l'indice di cielo sereno $\hat{k}_{bn}$, cioè il rapporto fra l'irradianza globale e quella a cielo sereno; moltiplicata per l'irradianza a cielo sereno fornisce una stima dell'irradianza.
+
+Nel percorso deterministico la funzione di perdita è un errore quadratico medio sulla produzione, a cui si somma, quando la testa ausiliaria è attiva, l'errore quadratico medio sull'indice di cielo sereno con peso $\lambda$:
+\begin{equation}
+    \mathcal{L}
+    =\operatorname{media}_{b,n}\left(y_{bn}-\hat{y}_{bn}\right)^{2}
+    +\lambda\,\operatorname{media}_{b,n}\left(k_{bn}-\hat{k}_{bn}\right)^{2}.
+    \label{eq:loss-deterministica}
+\end{equation}
+Negli esperimenti preliminari della Sezione~\ref{sec:probabilistici-preliminari} la perdita comprende anche un termine di errore assoluto pesato sui valori alti della produzione, che penalizza maggiormente le sottostime; le varianti SDE non lo usano. La testa gaussiana e la negative log-likelihood della variante SDE-Net sono descritte nella Sezione~\ref{sec:sde-net}. Epoche, dimensione del batch e tasso di apprendimento sono riportati nel Capitolo~\ref{chap:esperimenti}.
+% Verificato sul report della run true-minimal: peso lambda 0.1 e valore massimo
+% 1.6 dell'indice di cielo sereno. DA VERIFICARE: peso del termine sui picchi
+% (0.25 nel branch degli esperimenti preliminari).
+
+\section{Soglie climatologiche}
+\label{sec:soglie-climatologiche}
+
+Il primo criterio usato per individuare condizioni insolite non è un modello appreso, ma un confronto con la climatologia degli stessi dati PVGIS. Per ogni località e ogni ora del giorno si raccolgono i valori osservati negli anni della climatologia entro una finestra di $\pm15$ giorni di calendario attorno alla data considerata; da questo insieme si ricavano la mediana e i quantili $0.025$ e $0.975$. Un'osservazione è segnalata quando il suo valore cade fuori dalla banda fra i due quantili. Il confronto è svolto separatamente per l'irradianza globale, la produzione teorica, la temperatura e la velocità del vento. Per irradianza e produzione l'etichetta distingue i valori insolitamente alti da quelli insolitamente bassi; per temperatura e vento indica una condizione estrema. Dove la climatologia non contiene dati sufficienti l'osservazione non viene classificata.
+
+Per il 2019, anno di test, la climatologia comprende gli anni 2005--2018. Per gli anni di addestramento del previsore comprende soltanto gli anni precedenti a quello valutato: 2005--2015 per il 2016, 2005--2016 per il 2017 e 2005--2017 per il 2018.
+
+Le etichette hanno due impieghi. Il primo è l'analisi del previsore: errori e intervalli sono confrontati fra le osservazioni segnalate e le altre, e per l'irradianza separatamente sui valori insolitamente alti e su quelli insolitamente bassi. In particolare, le etichette indicano le osservazioni attorno alle quali verificare se gli intervalli degli esperimenti preliminari della Sezione~\ref{sec:probabilistici-preliminari} contengono il valore osservato. Il secondo è l'addestramento sulle sole finestre normali, secondo il protocollo ripreso da SDE U-Net~\cite{monaco2025sdeunet}. Per questo impiego le etichette locali sono aggregate sull'intera regione: per ogni istante e ogni variabile si calcola il quantile $0.99$, fra le località, degli score delle osservazioni segnalate, e l'istante è considerato un evento quando questo valore supera il quantile $0.975$ della sua distribuzione negli anni di addestramento. Dal training e dalla validation sono escluse le finestre che contengono un evento; il test le conserva, come nell'articolo, dove soltanto gli eventi non intensi sono usati per training e validation.
+
+Le soglie climatologiche segnalano i valori estremi di ciascuna variabile rispetto alla sua distribuzione storica. Per verificare se un modello appreso individua anomalie di altro tipo, e come il previsore si comporta su di esse, il lavoro passa ai detector descritti nelle Sezioni~\ref{sec:mtgflow} e~\ref{sec:stgan}. A differenza delle soglie climatologiche, i detector non usano la produzione: operano sulle sole variabili meteorologiche.
+% Fonti dei valori: finestra di 15 giorni, quantile 0.975 e climatologie per anno
+% dalle cartelle sul server; quantili 0.99 (spaziale) e 0.975 (temporale) degli
+% eventi dal README e dalla configurazione di riferimento del branch
+% feat/sde-net-true-minimal. Nello stesso README il training sulle sole finestre
+% normali è un'ablazione opzionale e la validation è il 2018, filtrata allo stesso
+% modo (come in Monaco et al., che hanno training, validation e test): la
+% distinzione fra run base e ablazione va riportata nel capitolo Esperimenti.
+% Verificato sui report delle run (10 ottobre 2026): validation 2018 sia in
+% pvgis_stgnn_normal_only_monaco_ep60_seed42 sia in
+% pvgis_stgnn_paper_faithful_gaussian_ep60_seed1 (selezione su rmse_daytime).
+% Nella prima il filtro conserva 11109 finestre di training su 17496 e 6054 di
+% validation su 8736: numeri da riportare negli Esperimenti.
 
 \section{Esperimenti probabilistici preliminari}
+\label{sec:probabilistici-preliminari}
+
+I primi due metodi usati per associare un intervallo alla previsione non modificano il backbone: ne campionano l'uscita. Entrambi sono valutati sulle osservazioni segnalate dalle soglie climatologiche della Sezione~\ref{sec:soglie-climatologiche}, per verificare se l'intervallo si allarga e contiene il valore osservato nelle condizioni insolite.
 
 \subsection{Enhanced Monte Carlo Dropout}
-% CITAZIONE DA INSERIRE: Monte Carlo Dropout (metodo standard).
+
+Il dropout Monte Carlo~\cite{gal2016dropout} mantiene il dropout attivo in previsione e ripete il passaggio in avanti. Nel backbone il dropout è presente in origine soltanto sui coefficienti di attenzione dello strato su grafo e fra gli strati della LSTM. La variante qui indicata come Enhanced aggiunge tre strati di dropout: dopo l'encoder temporale, dopo la proiezione nello spazio latente e prima dell'ultimo strato della testa della produzione. La probabilità è 0.2.
+
+In addestramento il dropout agisce da regolarizzatore. In previsione il modello è posto in modalità di valutazione e vengono riattivati i soli strati di dropout, in modo che le normalizzazioni restino quelle di valutazione. Per ogni coppia località--istante si eseguono $J=20$ passaggi in avanti con maschere diverse, che producono $J$ previsioni della produzione.
 
 \subsection{Deep Ensemble di modelli addestrati indipendentemente}
-% CITAZIONE DA INSERIRE: Deep Ensemble (metodo standard).
+
+Nel Deep Ensemble~\cite{lakshminarayanan2017ensembles} i campioni non provengono da maschere diverse dello stesso modello, ma da modelli diversi. Ogni membro è lo stesso modello, addestrato in modo indipendente con un seme diverso, sugli stessi dati e con lo stesso protocollo; i membri sono cinque. In previsione ogni membro è usato in modo deterministico, senza dropout attivo. Le previsioni dei membri sul test sono allineate per località e istante, verificando che i valori osservati coincidano, e combinate in una matrice con una riga per membro.
+
+Rispetto all'articolo c'è una differenza: i membri restituiscono una previsione puntuale e non una media e una varianza gaussiane. Della varianza di miscela dell'equazione~\eqref{eq:ensemble-miscela} resta quindi il solo termine di dispersione fra le medie.
 
 \subsection{Previsioni medie, dispersione e intervalli empirici}
 
+I due metodi producono per ogni osservazione un insieme di previsioni $\hat{y}^{(1)},\dots,\hat{y}^{(S)}$, con $S$ pari al numero di passaggi o di membri, e sono riassunti allo stesso modo. La previsione puntuale è la media dell'insieme, come nell'equazione~\eqref{eq:mcdropout-media}, e la dispersione è la sua deviazione standard. L'intervallo al 95\% è delimitato dai quantili empirici 0.025 e 0.975 dell'insieme; la banda gaussiana $\bar{y}\pm1.96\,s_y$ è conservata come diagnostica. Agli intervalli non è applicata alcuna correzione di scala successiva all'addestramento.
+
+Le due dispersioni hanno significato diverso: quella del dropout Monte Carlo misura la variabilità di un solo modello rispetto alle maschere, quella del Deep Ensemble il disaccordo fra modelli addestrati separatamente. Nessuna delle due comprende una stima del rumore dei dati, e con pochi membri i quantili del Deep Ensemble sono necessariamente grossolani. Le metriche con cui gli intervalli sono valutati sono definite nel Capitolo~\ref{chap:esperimenti}.
+% Verificato su W&B, progetto PhysiQ-PV, run del 10 giugno 2026:
+% enhanced-daytime-check-seed1 (dropout Monte Carlo, modello con dropout
+% aggiunto) e sweep vfry1hgx con aggregazione pvgis_deep_ensemble_vfry1hgx
+% (cinque membri). Training 2016--2018, test 2019, nessuna validation, 5 epoche,
+% batch 16, tasso 1e-3, dropout 0.2, 20 passaggi, livello 95%, 64 unità nella
+% LSTM, etichette da una climatologia 2005--2023. README e notebook del branch
+% ablation/enhanced-mc-dropout riportano una configurazione diversa (60 epoche,
+% 2005--2018, dropout 0.3, 30 passaggi) di cui non risultano run.
+% Per gli Esperimenti (parole dell'autore): run brevi, fatte prima di SDE-Net;
+% non proseguite con run più complete perché non sembravano dare risultati.
+% Per i Risultati: copertura dell'intervallo al 95% pari a 0.028 (dropout Monte
+% Carlo, un modello) e 0.173 (Deep Ensemble); MAE 20.1 e 19.2 W.
+
 \section{SDE-Net true-minimal}
+\label{sec:sde-true-minimal}
+
+Questa variante trasferisce al backbone BiLSTM--GAT lo schema di SDE U-Net~\cite{monaco2025sdeunet}, in cui i passi stocastici sono allineati agli stadi dell'encoder e a ciascuno stadio corrisponde un blocco di diffusione. Gli stadi sono qui due: quello temporale e quello spaziale.
 
 \subsection{Backbone paralleli di drift e diffusione}
 
+Il percorso di drift è il backbone della sezione precedente: encoder temporale, proiezione, strato di attenzione su grafo e teste. Il percorso di diffusione ne replica gli stadi con parametri propri: una seconda LSTM bidirezionale con pooling ad attenzione, una proiezione lineare seguita da ReLU e un secondo strato di attenzione su grafo, sullo stesso grafo geografico. A ogni stadio il percorso di diffusione restituisce, attraverso una sigmoide, un coefficiente compreso fra 0 e 1 per ogni località e ogni dimensione latente: $g_1$ per lo stadio temporale e $g_2$ per quello spaziale, entrambi di forma $[B,N,96]$. Lo stato che passa da uno stadio di diffusione al successivo è quello che precede la sigmoide.
+
 \subsection{Perturbazioni Browniane negli stadi BiLSTM e GAT}
+
+Sia $c$ la rappresentazione proiettata dell'encoder temporale del drift. Nello stadio temporale la perturbazione è sommata a $c$ insieme a un raffinamento $r(c)$, formato da uno strato lineare e da una GELU:
+\begin{equation}
+    h_1=\operatorname{LayerNorm}\!\left(r(c)+c+\kappa\,g_1\odot\varepsilon_1\right),
+    \qquad \varepsilon_1\sim\mathcal{N}(0,I).
+    \label{eq:tm-stadio-temporale}
+\end{equation}
+Nello stadio spaziale la perturbazione è sommata all'uscita dello strato di attenzione su grafo $\mathcal{A}$ e alla connessione residua, prima della normalizzazione:
+\begin{equation}
+    h_2=\operatorname{LayerNorm}\!\left(\mathcal{A}(h_1)+h_1+\kappa\,g_2\odot\varepsilon_2\right),
+    \qquad \varepsilon_2\sim\mathcal{N}(0,I).
+    \label{eq:tm-stadio-spaziale}
+\end{equation}
+La scala comune è $\kappa=s_{\max}\sqrt{\Delta\tau}$. L'orizzonte astratto è $T=4$ e il passo è $\Delta\tau=T/(S+1)$, con $S=2$ stadi stocastici; il valore massimo della diffusione è $s_{\max}=0.5$. Le teste ricevono lo stato $h_2$.
+% Nel codice T = 4, il passo e s_max = 0.5 sono annotati come ripresi
+% dall'implementazione pubblica di SDE U-Net: da verificare su quel codice prima
+% di scriverlo nel testo.
+
+A differenza della variante SDE-Net, lo schema non applica più volte lo stesso campo di drift a uno stesso stato: ogni perturbazione è legata a uno stadio diverso della rete, e il tempo $\tau$ serve soltanto a fissare la scala del rumore. Nel percorso deterministico le due perturbazioni sono assenti.
 
 \subsection{Training alternato, pseudo-OOD e inferenza a traiettorie}
 
-\section{SDE-Net paper-faithful}
+A ogni passo di addestramento si alternano due aggiornamenti, con due ottimizzatori Adam distinti. Il primo aggiorna il percorso di drift e le teste su un passaggio stocastico, minimizzando la perdita dell'equazione~\eqref{eq:loss-deterministica} con $\lambda=0.1$. Il secondo aggiorna il solo percorso di diffusione: i coefficienti $g_1$ e $g_2$ sono spinti verso 0 sugli ingressi di training e verso 1 su ingressi pseudo fuori distribuzione, con una entropia incrociata binaria sommata sui due stadi. Gli ingressi pseudo fuori distribuzione sono ottenuti aggiungendo rumore gaussiano di deviazione standard unitaria alle feature continue dell'ingresso; seno e coseno dell'elevazione solare non sono perturbati.
+
+Il modello valutato sul test è quello dell'epoca con il miglior errore sulla validation, calcolato con il percorso deterministico. Quando è attivo l'addestramento sulle sole finestre normali, training e validation sono filtrati come descritto nella Sezione~\ref{sec:soglie-climatologiche}.
+
+In previsione si campionano $M=20$ traiettorie per ogni ingresso. La previsione puntuale è la media delle $M$ uscite, la dispersione la loro deviazione standard e l'intervallo al 95\% è delimitato dai quantili empirici 0.025 e 0.975, come nella Sezione~\ref{sec:probabilistici-preliminari}. La testa della produzione restituisce un solo valore per traiettoria: non c'è una stima della varianza dei dati, e la dispersione fra le traiettorie non è separata in una componente aleatoria e una epistemica.
+% Verificato sul report di pvgis_stgnn_normal_only_monaco_ep60_seed42 (10 ottobre
+% 2026): s_max = 0.5, due stadi, rumore pseudo-OOD 1.0 (seno e coseno esclusi),
+% 20 traiettorie, peso ausiliario 0.1, limite 1.6 dell'indice di cielo sereno,
+% 11 feature, finestra 24, orizzonte 1, 1149 località, 60 epoche, batch 16,
+% tasso 1e-4, miglior checkpoint all'epoca 60. Esiste anche una run con
+% s_max = 1 (pvgis_stgnn_normal_only_sigma1_ep60_seed42).
+
+\section{Variante SDE-Net}
+\label{sec:sde-net}
 
 \subsection{Campo di drift, diffusione e integrazione Euler--Maruyama}
 
@@ -70,9 +183,18 @@ L'obiettivo di regressione utilizza la forma
 \left[\log \sigma_{bnh}^{2}
 +\frac{(y_{bnh}-\mu_{bnh})^{2}}{\sigma_{bnh}^{2}}\right],
 \end{equation}
-equivalente alla negative log-likelihood gaussiana a meno di una costante e di un fattore moltiplicativo. Quando abilitata, una testa ausiliaria stima l'indice di cielo sereno sul piano inclinato e aggiunge un termine MSE pesato.
+equivalente alla negative log-likelihood gaussiana a meno di una costante e di un fattore moltiplicativo. Quando abilitata, una testa ausiliaria stima l'indice di cielo sereno e aggiunge un termine MSE pesato.
 
 Il training alterna due aggiornamenti: il primo ottimizza encoder, eventuale GAT, drift e teste; il secondo aggiorna soltanto la rete di diffusione. Quest'ultimo usa una BCE con dati di ingresso etichettati zero e pseudo-OOD etichettati uno, ottenuti aggiungendo rumore gaussiano all'intero input. Le rappresentazioni del secondo passo sono staccate dall'encoder. La procedura prevede inoltre warm-up della scala SDE e selezione del modello tramite validazione.
+% Verificato su W&B, progetto physiq_pv, run
+% pvgis_stgnn_paper_faithful_gaussian_ep60_seed1 (24 luglio 2026): training
+% effettivo 2016--2017, validation 2018 (rmse_daytime, pazienza 10, miglior epoca
+% 59), test 2019, nessun limite sui campioni, 60 epoche, batch 16, tasso 1e-4 per
+% il drift e 1e-2 per la diffusione, riduzione di un fattore 10 all'epoca 20,
+% quattro passi di integrazione, s_max 0.5 con valore iniziale 0.01 e warm-up di
+% 30 epoche, rumore pseudo-OOD 2, 10 traiettorie, peso ausiliario 0.1, nessun
+% filtro sulle finestre normali, etichette dalla climatologia 2005--2018
+% (8978381 osservazioni normali su 10037664).
 
 \subsection{Campionamento e componenti dell'incertezza predittiva}
 % CITAZIONE DA INSERIRE: regressione gaussiana eteroschedastica, legge della
@@ -91,46 +213,112 @@ La varianza $v_{\mathrm{tot}}$ ha la forma della varianza di miscela dell'equazi
 L'intervallo principale è ottenuto dai quantili a code uguali della miscela gaussiana equiponderata rappresentata dalle traiettorie. La banda $\bar{\mu}\pm z\sqrt{v_{\mathrm{tot}}}$ è mantenuta come approssimazione gaussiana diagnostica. Il percorso senza rumore integra invece il solo drift e non coincide, in generale, con la media esatta delle traiettorie stocastiche.
 
 \section{Rilevamento delle anomalie climatiche con MTGFlow}
+\label{sec:mtgflow}
+
+Il primo detector appreso è MTGFlow~\cite{zhou2023labelfree}, nella versione base dell'articolo. Stima la densità delle finestre di training e assegna uno score alto alle finestre a bassa densità; non richiede etichette e non assume che il training sia privo di anomalie.
 
 \subsection{Serie storiche per località, variabili climatiche e finestre}
+
+MTGFlow è applicato separatamente a ogni località. Le entità del modello sono le tre variabili meteorologiche della località: irradianza globale, temperatura a due metri e velocità del vento a dieci metri. La produzione e le etichette delle soglie climatologiche non entrano nel detector.
+
+Ogni variabile è normalizzata sottraendo la media e dividendo per la deviazione standard, calcolate sul solo training della località. Le serie sono suddivise in finestre di $T=60$ ore; una finestra ha forma $[K,T]$, con $K=3$ entità. Le finestre che attraversano un'interruzione della cadenza oraria sono scartate. In addestramento le finestre sono estratte con passo 10. Nello scoring il passo è 1: ogni ora riceve lo score della finestra che termina in quell'ora. È uno scostamento dalla configurazione di riferimento, che usa il passo 10 anche nello scoring, ed è necessario per collegare gli score alle previsioni orarie del previsore.
+% Verificato su outputs/pvgis_mtgflow/downstream_dense/run_metadata.json (10 ottobre
+% 2026): finestra 60, passo 10 in training e 1 nello scoring, 40 epoche, batch
+% 256, due blocchi, un solo seme (15), fattore 1.5, scala 0.8; score esportati
+% anche per gli anni 2016--2018.
 
 \subsection{Grafo dinamico tra entità e normalizing flow condizionale}
 % CITAZIONE DA INSERIRE: stima di densità con normalizing flow (metodo standard).
 
+Per ogni finestra il modello calcola una matrice di adiacenza fra le entità. Indicando con $x^{k}\in\mathbb{R}^{T}$ la finestra dell'entità $k$ e con $W_Q$, $W_K$ due trasformazioni lineari,
+\begin{equation}
+    A_{kj}=\frac{\exp\!\left[(W_Q x^{k})^{\top}(W_K x^{j})/\sqrt{T}\right]}
+    {\sum_{l=1}^{K}\exp\!\left[(W_Q x^{k})^{\top}(W_K x^{l})/\sqrt{T}\right]}.
+    \label{eq:mtgflow-adiacenza}
+\end{equation}
+La matrice cambia da una finestra all'altra e descrive quanto l'entità $j$ contribuisce al contesto dell'entità $k$: collega le variabili di una stessa località, non località diverse.
+
+Una LSTM con parametri condivisi fra le entità elabora la sequenza di ciascuna e restituisce gli stati $H_t\in\mathbb{R}^{K\times d}$. Il condizionamento del passo $t$ combina gli stati delle entità collegate con lo stato del passo precedente,
+\begin{equation}
+    C_t=\operatorname{ReLU}\!\left(A\,H_t\,W_1+H_{t-1}\,W_2\right)W_3.
+    \label{eq:mtgflow-condizionamento}
+\end{equation}
+Il normalizing flow trasforma ogni valore $x^{k}_{t}$ in una variabile $z^{k}_{t}$ con una sequenza di blocchi autoregressivi mascherati, ciascuno dei quali applica una traslazione e una scala calcolate da $C_t$:
+\begin{equation}
+    z=\left(x-m(C_t)\right)\exp\!\left(-a(C_t)\right),
+    \qquad
+    \log\left|\frac{\partial z}{\partial x}\right|=-a(C_t).
+\end{equation}
+I parametri dei blocchi sono condivisi fra le entità; ciò che distingue un'entità dall'altra è la distribuzione di arrivo, una gaussiana di varianza unitaria con media $\mu_k$ propria dell'entità. La log-verosimiglianza della finestra dell'entità $k$ è la somma sui passi della log-densità gaussiana di $z^{k}_{t}$ e dei logaritmi dei determinanti dei blocchi.
+
+L'addestramento massimizza la log-verosimiglianza media delle finestre di training. Nella configurazione di riferimento il modello ha due blocchi di flow e stati di dimensione 32, ed è addestrato per 40 epoche con Adam; il modello usato per lo scoring è quello dell'ultima epoca, senza selezione su una validation.
+
 \subsection{Score aggregato della località, score per variabile e soglie IQR}
 % CITAZIONE DA INSERIRE: soglie robuste basate sull'intervallo interquartile.
-% Distinguere soglie per sito e budget globale.
+
+Lo score di una finestra è l'opposto della log-verosimiglianza, mediato sulle entità:
+\begin{equation}
+    S=-\frac{1}{K}\sum_{k=1}^{K}\log p\!\left(x^{k}\right)=\sum_{k=1}^{K}S_k,
+    \qquad
+    S_k=-\frac{1}{K}\log p\!\left(x^{k}\right).
+    \label{eq:mtgflow-score}
+\end{equation}
+$S$ è lo score aggregato della località e $S_k$ il contributo della variabile $k$. Lo score è attribuito all'ultimo istante della finestra.
+
+La soglia segue l'articolo ed è ricavata dagli score di training della stessa località: indicando con $Q_1$ e $Q_3$ il primo e il terzo quartile,
+\begin{equation}
+    \theta=Q_3+1.5\,(Q_3-Q_1),
+    \label{eq:mtgflow-soglia}
+\end{equation}
+e una finestra è segnalata quando $S\geq\theta$. Per ogni variabile è calcolata allo stesso modo una soglia sugli score $S_k$, moltiplicata per 0.8. Lo score per variabile indica quale grandezza contribuisce di più alla bassa verosimiglianza; non identifica la causa fisica dell'anomalia.
+
+Con soglie stimate per località, la quota di osservazioni segnalate varia da una località all'altra. Come variante esplorativa le decisioni sono ricalcolate con una quota fissata sull'insieme di tutte le località, ordinando le osservazioni secondo lo scarto dalla soglia della propria località, $(S-\theta)/(Q_3-Q_1)$. Il confronto fra i due criteri è definito nel Capitolo~\ref{chap:esperimenti}.
 
 \subsection{Modelli indipendenti per località e assenza di message passing geografico}
 
+Per ogni località è addestrato un modello distinto, che vede soltanto la serie di quella località, con un solo seme. Gli score delle diverse località sono riuniti soltanto dopo lo scoring. È quindi possibile rappresentarli su una mappa e confrontarli, ma il modello non apprende relazioni fra località: il grafo dinamico dell'equazione~\eqref{eq:mtgflow-adiacenza} riguarda le tre variabili di un sito.
+
+Questo è il limite che motiva il passo successivo. Una condizione meteorologica insolita interessa di norma più località vicine, e un valore insolito in un punto può essere ordinario rispetto al suo intorno. Per introdurre il contesto spaziale il lavoro passa a STGAN, descritto nella sezione seguente.
+% Verificati sui metadati della run: 40 epoche, batch 256, due blocchi, fattore
+% 1.5, scala 0.8, seme 15 (la configurazione di riferimento ne prevede cinque,
+% 15--19). Stato di dimensione 32, tasso 2e-3 e dropout 0.2 sull'adiacenza non
+% compaiono nei metadati, ma lo script di lancio non ha opzioni per cambiarli:
+% sono fissati da mtgflow/config.py. La media mu_k nel codice è estratta una
+% volta da una normale standard e non è addestrata.
+
 \section{STGAN su PVGIS: versione su grafo e variante a griglia}
 \label{sec:stgan}
+% Verificato sui metadati delle run (10 ottobre 2026).
+% pvgis_stgan/paper_reference: sottografo di 9 siti (kNN 8, pesi gaussiani), un
+% passo recente, trend 168, stato 64, due strati, 6 epoche, batch 256, tasso 1e-3,
+% peso di ricostruzione 500, score per ogni ora, top 1% globale sul test, seme 20.
+% pvgis_stgan_cnn/convgru_reference: reticolo EPSG:32632 con passo 5000 m, patch
+% 3, 1149 località (917 patch complete, 232 incomplete, le complete coincidono
+% con i vicini kNN), due strati ConvGRU da 32 canali, stessi valori di training.
+% Da leggere ancora: metadati di convgru_patch3_kernel1 e
+% convgru_patch3_kernel5_optimized (cosa indica "optimized").
 
 \subsection{Contesto spaziale e architettura GCGRU--LSTM}
 
-La versione STGAN basata su grafo costruisce un sottografo locale comprendente la località centrale e i vicini geografici, con nove siti nella configurazione di riferimento. Gli archi diretti derivano da un criterio kNN, con pesi gaussiani delle distanze, self-loop e normalizzazione dell'adiacenza.
+La versione STGAN basata su grafo costruisce un sottografo locale di nove siti: la località centrale e gli otto vicini geografici più prossimi. Gli archi diretti derivano da un criterio kNN, con pesi gaussiani delle distanze, self-loop e normalizzazione dell'adiacenza.
 
-Il generatore combina un ramo GCGRU sul contesto recente, una LSTM sulla storia della località centrale e una codifica one-hot dell'ora e del giorno della settimana. Nella configurazione di riferimento, il contesto recente contiene un passo e il trend 168 passi orari. L'uscita stima le tre variabili meteorologiche al timestamp successivo per tutti i nodi del sottografo.
+Il generatore combina un ramo GCGRU sul contesto recente, una LSTM sulla storia della località centrale e una codifica one-hot dell'ora e del giorno della settimana. Il contesto recente contiene un passo e il trend 168 passi orari. L'uscita stima le tre variabili meteorologiche al timestamp successivo per tutti i nodi del sottografo.
 
 Il discriminatore combina una rappresentazione GCGRU della storia con una convoluzione sul dato corrente, reale o generato, e restituisce un valore sigmoidale. I due componenti operano sullo stesso contesto locale; il generatore non stima direttamente la produzione fotovoltaica.
 
 \subsection{Variante ConvGRU--LSTM e gestione delle celle assenti}
 \label{sec:stgan-convgru}
-% CITAZIONE DA INSERIRE: unità ricorrenti convoluzionali (operatore preesistente);
-% CNN su reticoli regolari e gestione delle celle assenti. Distinguere maschera come
-% canale, azzeramento dello stato ricorrente e partial convolutions: la variante della
-% tesi combina le prime due, senza rinormalizzare i kernel sulle celle osservate.
 
-L'adattamento a griglia sostituisce gli operatori sul grafo con convoluzioni su una patch geografica $P\times P$. Le coordinate vengono proiettate e verificate rispetto a un reticolo prima di assegnare righe e colonne: l'ordine originario dei siti non viene semplicemente rimodellato come un'immagine. Nel percorso PVGIS, la configurazione predefinita usa EPSG:32632 e passo di 5 km; sono ammesse patch con $P=1,3,5$. Le celle assenti non vengono sostituite da località più lontane.
+L'adattamento a griglia sostituisce gli operatori sul grafo con convoluzioni su una patch geografica $P\times P$. Le coordinate vengono proiettate e verificate rispetto a un reticolo prima di assegnare righe e colonne: l'ordine originario dei siti non viene semplicemente rimodellato come un'immagine. Sui dati PVGIS il reticolo è quello della proiezione UTM del fuso 32, con passo di 5~km, e la patch è $3\times3$: 917 località hanno una patch completa e 232 una patch incompleta, perché sul bordo della regione mancano alcune celle. Le celle assenti non vengono sostituite da località più lontane.
 
-Il primo adattamento utilizzava un encoder CNN senza ricorrenza. La versione finale impiega invece una ConvGRU sia nel ramo recente del generatore sia in quello storico del discriminatore. Le denominazioni delle due versioni non identificano quindi architetture intercambiabili. Con $R$ passi recenti, $L$ passi di trend e $F$ feature, gli ingressi hanno forma $[B,R,F,P,P]$ per la patch recente e $[B,L,F]$ per la storia del sito centrale; maschera e calendario hanno rispettivamente forma $[B,1,P,P]$ e $[B,31]$.
+Il primo adattamento utilizzava un encoder CNN senza ricorrenza. La versione finale impiega invece una ConvGRU~\cite{shi2015convlstm,ballas2016convgru} sia nel ramo recente del generatore sia in quello storico del discriminatore. Le denominazioni delle due versioni non identificano quindi architetture intercambiabili. Con $R$ passi recenti, $L$ passi di trend e $F$ feature, gli ingressi hanno forma $[B,R,F,P,P]$ per la patch recente e $[B,L,F]$ per la storia del sito centrale; maschera e calendario hanno rispettivamente forma $[B,1,P,P]$ e $[B,31]$.
 
 Le feature delle celle assenti sono azzerate dopo normalizzazione e la maschera binaria $M$ viene fornita come canale aggiuntivo a ogni strato ConvGRU. Rispetto alle equazioni~\eqref{eq:convgru-reset}--\eqref{eq:convgru-stato} cambiano l'ingresso e l'ultimo passaggio. I gate e lo stato candidato sono calcolati su $X'_s$, la concatenazione dei valori mascherati e di $M$, al posto di $X_s$; lo stato precedente $H_{s-1}$ è già mascherato e lo stato aggiornato viene moltiplicato per la maschera, replicata sui canali:
 \begin{equation}
 H_s = M\odot\left[U_s\odot H_{s-1}+(1-U_s)\odot\widetilde{H}_s\right].
 \end{equation} Il mascheramento dello stato impedisce alle celle assenti di conservare attivazioni da propagare negli strati o nei passi successivi. Non viene applicata una rinormalizzazione del kernel in funzione delle celle osservate, come avverrebbe in una partial convolution.
 
-Lo stato ricorrente è inizializzato a zero per ogni finestra. I default prevedono due strati ConvGRU da 32 canali, $R=1$ e una LSTM del trend a due strati con stato nascosto di dimensione 64. Nel caso orario $L=168$. Con un solo passo recente la ConvGRU esegue un solo aggiornamento dallo stato nullo: la ricorrenza sul lungo periodo rimane affidata alla LSTM. Finestre recenti più lunghe sono configurabili, ma il loro impiego effettivo non viene dedotto dai default.
+Lo stato ricorrente è inizializzato a zero per ogni finestra. Il modello ha due strati ConvGRU da 32 canali, $R=1$ e una LSTM del trend a due strati con stato nascosto di dimensione 64, con $L=168$ ore. Con un solo passo recente la ConvGRU esegue un solo aggiornamento dallo stato nullo: la ricorrenza sul lungo periodo rimane affidata alla LSTM.
 
 Nel generatore, l'uscita ConvGRU viene concatenata alla rappresentazione del trend centrale e a quella del calendario, replicate sulle posizioni della patch. Una proiezione $1\times1$ seguita da tanh produce il target meteorologico $[B,F,P,P]$, azzerando le celle assenti. Nel discriminatore, la storia codificata viene appiattita su tutta la patch e proiettata linearmente; il dato corrente passa attraverso una proiezione $1\times1$ e un massimo sulle celle valide. Le due rappresentazioni alimentano la classificazione sigmoidale.
 
@@ -141,7 +329,7 @@ Il numero di celle osservate può variare fra patch. La loss generativa e lo sco
 % CITAZIONE DA INSERIRE: campo ricettivo, supporto osservato della patch e padding;
 % mixing spaziale e capacità parametrica per kernel 1x1, 3x3 e 5x5.
 
-La dimensione $k$ del kernel è indipendente dal lato $P$ della patch. L'ablazione consente $k=1,3,5$ nei gate reset, update e candidato delle ConvGRU del generatore e del discriminatore, con padding $\lfloor k/2\rfloor$. Le proiezioni finali $1\times1$ rimangono tali in tutte le configurazioni. Il caso predefinito è $k=3$, mentre la patch predefinita conserva $P=3$.
+La dimensione $k$ del kernel è indipendente dal lato $P$ della patch. L'ablazione consente $k=1,3,5$ nei gate reset, update e candidato delle ConvGRU del generatore e del discriminatore, con padding $\lfloor k/2\rfloor$. Le proiezioni finali $1\times1$ rimangono tali in tutte le configurazioni. Il caso di riferimento è $k=3$; la patch resta $P=3$ in tutte le configurazioni.
 
 Con $k=1$ i gate non mescolano celle geografiche diverse mediante convoluzione. Il detector continua tuttavia a utilizzare una patch: il discriminatore aggrega la storia appiattita e il massimo sulle celle valide, mentre loss e score generativo considerano l'intero supporto osservato. L'ablazione elimina quindi il mixing convoluzionale locale, senza rendere l'intero detector indipendente dalle altre celle.
 
@@ -163,11 +351,11 @@ Il discriminatore viene addestrato con reale uguale a zero e generato uguale a u
 \lambda_G\,\operatorname{MSE}(\hat{x},x)
 +\operatorname{BCE}(D_{\mathrm{generato}},0).
 \end{align}
-Il peso di ricostruzione predefinito è $\lambda_G=500$; nella variante ConvGRU la MSE applica la riduzione mascherata descritta sopra. Generatore e discriminatore vengono aggiornati con ottimizzatori Adam separati, prima D e poi G. Nel passo del generatore, i parametri del discriminatore sono congelati ma viene mantenuto il gradiente rispetto alla predizione generata. La storia usata per questa loss è ricalcolata con i pesi aggiornati di D; il riuso del forward del generatore non sostituisce questo aggiornamento. Il valore del discriminatore non viene interpretato come probabilità di anomalia calibrata mediante etichette reali.
+Il peso di ricostruzione è $\lambda_G=500$; nella variante ConvGRU la MSE applica la riduzione mascherata descritta sopra. Generatore e discriminatore vengono aggiornati con ottimizzatori Adam separati, prima D e poi G. Nel passo del generatore, i parametri del discriminatore sono congelati ma viene mantenuto il gradiente rispetto alla predizione generata. La storia usata per questa loss è ricalcolata con i pesi aggiornati di D; il riuso del forward del generatore non sostituisce questo aggiornamento. Il valore del discriminatore non viene interpretato come probabilità di anomalia calibrata mediante etichette reali.
 
 Lo score combina l'errore quadratico medio sul contesto spaziale e la differenza $D_{\mathrm{reale}}-D_{\mathrm{generato}}$. Le due componenti vengono normalizzate separatamente con min--max sull'intero insieme di test località--timestamp e sommate. I residui per feature della sola località centrale sono conservati come diagnostica distinta.
 
-La decisione utilizza un ranking globale stabile: con percentuale $p$, vengono selezionate $\lceil np/100\rceil$ osservazioni fra le $n$ disponibili. Il valore predefinito è $p=1$. Non viene applicato un budget dell'1\% separatamente a ogni sito. Poiché normalizzazione dello score e ranking dipendono dal test completo, il protocollo è retrospettivo; non definisce da solo una soglia causale per uso online.
+La decisione utilizza un ranking globale stabile: con percentuale $p$, vengono selezionate $\lceil np/100\rceil$ osservazioni fra le $n$ disponibili. Nelle esecuzioni $p=1$. Non viene applicato un budget dell'1\% separatamente a ogni sito. Poiché normalizzazione dello score e ranking dipendono dal test completo, il protocollo è retrospettivo; non definisce da solo una soglia causale per uso online.
 
 \subsection{Campionamento e riproducibilità del calcolo}
 
@@ -182,7 +370,7 @@ Estrazione vettoriale delle finestre, cache normalizzata e scoring su disco perm
 
 L'estensione utilizza i cubi e la maschera descritti nella Sezione~\ref{sec:dati-era5}, mantenendo l'architettura ConvGRU--LSTM e le loss della Sezione~\ref{sec:stgan}. Il target del generatore resta meteorologico e comprende ora quindici feature. La griglia è definita direttamente in coordinate geografiche, con EPSG:4326 e passo angolare di $0.5^\circ$.
 
-La cadenza diventa di tre ore e il trend viene impostato a 56 passi, conservando una durata di 168 ore. Il ramo recente mantiene un passo nel default; la codifica di ora e giorno della settimana rimane di dimensione 31. Lunghezza del ramo recente e codifica temporale diventano configurabili negli sviluppi della Sezione~\ref{sec:era5-mc}. Preparazione, training con scoring e analisi degli eventi costituiscono fasi distinte: gli eventi vengono ricavati dagli score già disponibili, senza un nuovo aggiornamento dei pesi del detector.
+La cadenza diventa di tre ore e il trend viene impostato a 56 passi, conservando una durata di 168 ore. In questa prima estensione il ramo recente mantiene un passo e la codifica di ora e giorno della settimana rimane di dimensione 31. Lunghezza del ramo recente e codifica temporale cambiano negli sviluppi della Sezione~\ref{sec:era5-mc}. Preparazione, training con scoring e analisi degli eventi costituiscono fasi distinte: gli eventi vengono ricavati dagli score già disponibili, senza un nuovo aggiornamento dei pesi del detector.
 
 \subsection{Soglia, morfologia e cluster spaziali}
 % CITAZIONE DA INSERIRE: morfologia binaria (apertura, chiusura), connettività a
@@ -221,10 +409,8 @@ Gli sviluppi di questa sezione riguardano il solo percorso ERA5. Feature, grigli
 
 \subsection{Dropout nel generatore e campionamento dello score}
 \label{sec:era5-mcdropout}
-% CITAZIONE DA INSERIRE: Monte Carlo Dropout come stima della variabilità di uno
-% score; distinguere dispersione rispetto alle maschere e incertezza calibrata.
 
-Il generatore riceve tre strati di dropout: sulla rappresentazione spaziale del ramo recente, sulla rappresentazione del trend e sulla loro concatenazione con la codifica temporale, prima della proiezione di uscita. La probabilità predefinita è 0.2. Il discriminatore non contiene dropout.
+Lo score è campionato con il dropout Monte Carlo~\cite{gal2016dropout}. Il generatore riceve tre strati di dropout: sulla rappresentazione spaziale del ramo recente, sulla rappresentazione del trend e sulla loro concatenazione con la codifica temporale, prima della proiezione di uscita. La probabilità predefinita è 0.2. Il discriminatore non contiene dropout.
 
 Durante lo scoring il modello è in modalità di valutazione, con l'eccezione dei dropout del generatore, che restano attivi. Per ogni osservazione vengono estratti $J$ campioni, 20 nel default. Gli encoder del generatore, la codifica della storia nel discriminatore e il valore $D_{\mathrm{reale}}$ non dipendono dal dropout e sono calcolati una sola volta; a ogni campione vengono ripetuti i dropout, la proiezione di uscita e la valutazione del dato generato.
 
@@ -260,7 +446,9 @@ Rapporti fra tassi, numero di aggiornamenti e peso di ricostruzione sono strumen
 % posizione nell'anno nei modelli meteorologici basati su apprendimento; anomalie
 % standardizzate rispetto a una climatologia per località, giorno dell'anno e ora.
 
-Il numero $R$ di passi recenti è configurabile anche nel percorso ERA5. Con $R>1$ la ConvGRU esegue più aggiornamenti sulla finestra recente, mentre il trend conserva 56 passi.
+La finestra recente contiene gli $R$ istanti che precedono quello da stimare. L'unità ricorrente spaziale la percorre in ordine: parte da uno stato nullo ed esegue un aggiornamento per ogni istante, sicché lo stato finale riassume gli $R$ campi osservati. Con $R=1$ il ramo recente vede soltanto l'ultimo istante e la ricorrenza si riduce a un solo aggiornamento: la storia più lunga è affidata alla LSTM del trend, che riguarda la sola cella centrale. Con $R>1$ il modello riceve anche l'evoluzione del campo negli istanti precedenti, e l'area che può influenzare una cella cresce con $R$, perché a ogni aggiornamento lo stato si propaga alle celle vicine.
+
+Nell'analisi iniziale sui dati PVGIS la finestra recente è di un passo, cioè un'ora. Su ERA5 è portata a $R=16$ passi, che alla cadenza di tre ore corrispondono a 48 ore; il trend conserva 56 passi, cioè 168 ore.
 
 La codifica temporale predefinita resta quella a 31 elementi, composta dal giorno della settimana e dall'ora UTC. In alternativa è disponibile una codifica ciclica a quattro elementi, diversa per località. Indicando con $h_t$ l'ora UTC, con $\ell_n$ la longitudine in gradi, con $g_t$ il giorno frazionario dell'anno e con $G_t$ il numero di giorni dell'anno corrispondente, la codifica è
 \begin{equation}
@@ -314,8 +502,6 @@ Numero di componenti principali, sottoinsiemi e banda fanno parte del protocollo
 
 \subsection{Generatore GAT-GRU sul grafo della griglia}
 \label{sec:era5-gat}
-% CITAZIONE DA INSERIRE: Graph Attention Network (attenzione additiva a più teste);
-% grafi regolari derivati da griglie e reti su grafo per campi meteorologici.
 
 Nella variante su grafo ogni località valida è un nodo. Ciascun nodo riceve un arco da ognuno degli otto vicini immediati presenti sulla griglia e da sé stesso. Gli archi sono diretti e memorizzati in forma sparsa; i bordi non sono collegati fra loro e una cella senza località non genera archi. A differenza del grafo del previsore, gli archi non hanno pesi geografici.
 
@@ -328,7 +514,7 @@ H_s &= M\odot\left[U_s\odot H_{s-1}+(1-U_s)\odot\widetilde{H}_s\right].
 \end{align}
 È la forma delle equazioni~\eqref{eq:convgru-reset}--\eqref{eq:convgru-stato}, con l'attenzione su grafo al posto della convoluzione spaziale e con lo stesso trattamento della maschera della Sezione~\ref{sec:stgan-convgru}. I default prevedono due strati ricorrenti, quattro teste e 32 canali. Poiché il gate di reset e lo stato candidato applicano l'operatore in sequenza, a ogni passo lo stato si propaga di due archi: con $R\geq2$ passi recenti e due strati, l'ingresso del primo passo raggiunge i nodi fino a $2R+1$ archi di distanza. La ConvGRU con kernel $3\times3$ ha la stessa struttura e lo stesso raggio.
 
-Una prima versione del generatore, mantenuta come opzione, applica a ciascun passo recente un encoder di due strati di attenzione, con le teste concatenate e seguite da ELU nel primo e mediate nel secondo, e aggrega i passi con una GRU a gate puntuali, cioè con la ConvGRU della Sezione~\ref{sec:stgan-convgru} con kernel $1\times1$. In questa versione il mixing spaziale riguarda il solo ingresso di ciascun passo e il raggio osservato resta di due archi per qualunque $R$: non è una sostituzione uno a uno dell'unità ricorrente dell'articolo. Le due versioni sono configurazioni distinte e i rispettivi checkpoint non sono intercambiabili. In entrambe la LSTM del trend elabora una sequenza per nodo e la codifica temporale è proiettata per nodo o condivisa; seguono gli stessi tre dropout e la stessa proiezione di uscita, che restituisce $[B,N,F]$.
+La LSTM del trend elabora una sequenza per nodo e la codifica temporale è proiettata per nodo o condivisa; seguono i tre dropout della Sezione~\ref{sec:era5-mcdropout} e la proiezione di uscita, che restituisce $[B,N,F]$.
 
 Il discriminatore resta quello a patch. Per ogni nodo vengono estratte le patch $P\times P$ della storia recente, dell'osservazione e della ricostruzione globale del generatore, con le celle assenti azzerate e la relativa maschera. I centri sono elaborati a blocchi per limitare la memoria. La loss di ricostruzione è la media, sui centri, dell'errore quadratico medio sulla patch di ciascun centro: l'errore di un nodo entra quindi attraverso tutte le patch che lo contengono. Le loss dei blocchi sono pesate per la rispettiva frazione di centri, in modo che la loro somma coincida con la media su tutti i centri, e i gradienti vengono accumulati prima di un unico aggiornamento per rete.
 
@@ -340,7 +526,7 @@ Rispetto alla variante ConvGRU sul campo intero della Sezione~\ref{sec:era5-full
 \label{sec:era5-fullgrid}
 % CITAZIONE DA INSERIRE: discriminatori locali a patch nelle GAN.
 
-La seconda variante nasce dal tempo di addestramento del modello a patch su ERA5, in cui il numero di aggiornamenti per epoca cresce con il prodotto fra timestamp e località. Mantiene la ConvGRU e modifica l'unità del campione: invece di una cella con la propria patch, un campione è l'intero campo di un timestamp, disposto sul reticolo $H\times W$. Moduli e parametri sono quelli del modello a patch; cambia ciò a cui vengono applicati.
+La seconda variante nasce dal tempo di addestramento del modello a patch su ERA5, in cui il numero di aggiornamenti per epoca cresce con il prodotto fra timestamp e località. Mantiene la ConvGRU e modifica l'unità del campione: invece di una cella con la propria patch, un campione è l'intero campo di un timestamp, disposto sul reticolo $H\times W$. Moduli e parametri sono quelli del modello a patch; cambia ciò a cui vengono applicati. Alla variante porta anche la lunghezza della finestra recente: su una patch $3\times3$ aumentare $R$ moltiplica il costo di ciascuno dei $TN$ campioni senza ampliare l'area osservata, che resta di nove celle. Il passaggio da uno a sedici passi recenti è stato quindi fatto sul campo intero.
 
 Il generatore opera sul campo completo, da $[B,R,F,H,W]$ a $[B,F,H,W]$. Le convoluzioni scorrono sull'intero reticolo, quindi il campo ricettivo non è più troncato al bordo di una patch e ogni cella viene ricostruita una sola volta. La LSTM del trend e la codifica temporale sono calcolate per cella e disposte sul reticolo, dove il modello a patch replicava quelle del sito centrale sulle posizioni della patch.
 

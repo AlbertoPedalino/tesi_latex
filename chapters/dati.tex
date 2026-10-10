@@ -2,45 +2,142 @@
 \label{chap:dati}
 
 \section{Serie PVGIS, località geografiche e target}
+% Verificato sul file del server (10 ottobre 2026):
+% /data/SentinelPV/pvgis_data/data/pvgis_summed_irradiance/piedmont_pvgis_2019.nc,
+% del 24 marzo 2026, 8 variabili float32, attributi source = PVGIS SARAH3,
+% summation_formula = Gb(i)+Gd(i)+Gr(i), tilt = 0, azimuth = 0. Irradianza
+% globale massima 1089 W/m2; differenza massima fra globale e diretta + diffusa
+% 1.5e-5 sulle prime 100 località. Rapporto dicembre/giugno della diretta massima
+% 0.43, compatibile con il piano orizzontale e non con 30 gradi a sud.
+% Controllo su tutti i 19 file 2005--2023 (stessa data): 1149 località, 8760 ore
+% (8784 nei bisestili), tilt 0, azimuth 0, irradianza globale massima fra 1060 e
+% 1108 W/m2, circa 51-52% di zeri (notte), nessun valore mancante, riflessa 0,
+% globale = diretta + diffusa esattamente, produzione massima fra 847 e 928 W,
+% temperatura fra -33.2 e 40.7 gradi.
+% Il file locale usato in un primo momento (564 MB, attributi tilt_angle = 30 e
+% azimuth_angle = 180, colonna dell'irradianza globale a zero) è un'altra copia:
+% /data/SentinelPV/pvgis_data/historical_data/piedmont_pvgis_2019.nc, del 19 marzo
+% 2026, cioè la versione precedente a quella con l'irradianza sommata. Nella
+% stessa cartella dei dati c'è grid_5km.xlsx, la definizione del reticolo.
+% PROBLEMA APERTO: il codice dei previsori SDE legge gli attributi tilt_angle e
+% azimuth_angle, assenti nei file del server, e usa i valori di ripiego 30 e 180
+% per l'irradianza a cielo sereno: l'indice di cielo sereno confronta quindi dati
+% orizzontali con un riferimento inclinato. Nel testo resta "piano inclinato"
+% dove si parla di quell'indice, finché non è deciso come trattarlo.
 
-Nei modelli PVGIS-only, \texttt{pv\_power\_output} rappresenta la produzione fotovoltaica teorica associata a ciascuna località PVGIS, non una misura acquisita da un impianto reale. Il target osservato \texttt{ENERGIA} della baseline viene pertanto trattato separatamente.
+I dati PVGIS sono serie orarie ottenute dal Photovoltaic Geographical Information System~\cite{huld2012pvgis} con la banca dati di radiazione SARAH3, e provengono dal progetto SentinelPV del Politecnico di Torino. Coprono 1149 località del Piemonte, comprese fra $44.08^\circ$ e $46.47^\circ$ di latitudine nord e fra $6.66^\circ$ e $9.20^\circ$ di longitudine est. Nella proiezione UTM del fuso 32 le località occupano 1149 delle $41\times54$ posizioni di un reticolo regolare con passo di 5~km: quelle che ricadono nel territorio regionale (Figura~\ref{fig:localita-pvgis}). Sono disponibili gli anni dal 2005 al 2023, senza valori mancanti; i valori sono riferiti al minuto 10 di ciascuna ora, in tempo universale.
 
-Il previsore utilizza serie orarie sincronizzate fra località e produce una stima della produzione futura. Il detector STGAN utilizza invece tre variabili meteorologiche: irradianza sul piano inclinato, temperatura a due metri e velocità del vento a dieci metri. La produzione futura non è il target della GAN: il generatore stima le variabili meteorologiche al passo successivo del contesto spaziale considerato.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics{localita_pvgis}
+    \caption{Le 1149 località dei dati PVGIS. Ogni punto è una posizione del reticolo con passo di 5~km per la quale sono disponibili le serie orarie.}
+    \label{fig:localita-pvgis}
+\end{figure}
+
+Per ogni località e ogni istante sono disponibili l'irradianza globale con le sue componenti diretta, diffusa e riflessa, l'altezza del sole, la temperatura dell'aria a due metri, la velocità del vento a dieci metri e la potenza prodotta. L'irradianza è riferita al piano orizzontale: l'inclinazione indicata nei dati è nulla, la componente riflessa risulta nulla e l'irradianza globale coincide con la somma delle componenti diretta e diffusa. La potenza è una produzione teorica calcolata da PVGIS, non la misura di un impianto reale. La Tabella~\ref{tab:variabili-pvgis} riassume le grandezze e il loro impiego.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Grandezze dei dati PVGIS e loro impiego nel previsore, nei detector MTGFlow e STGAN e nelle soglie climatologiche della Sezione~\ref{sec:soglie-climatologiche}. L'altezza del sole fornita da PVGIS non è usata: l'elevazione solare è ricalcolata.}
+    \label{tab:variabili-pvgis}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.34}L{0.10}L{0.20}L{0.10}L{0.14}@{}}
+        \toprule
+        Grandezza & Unità & Previsore & Detector & Soglie climatologiche \\
+        \midrule
+        Irradianza diretta & $\mathrm{W\,m^{-2}}$ & Ingresso & -- & -- \\
+        Irradianza diffusa & $\mathrm{W\,m^{-2}}$ & Ingresso & -- & -- \\
+        Irradianza riflessa (nulla) & $\mathrm{W\,m^{-2}}$ & -- & -- & -- \\
+        Irradianza globale (diretta più diffusa) & $\mathrm{W\,m^{-2}}$ & Ingresso & Sì & Sì \\
+        Altezza del sole & gradi & -- & -- & -- \\
+        Temperatura dell'aria a due metri & $^\circ$C & Ingresso & Sì & Sì \\
+        Velocità del vento a dieci metri & $\mathrm{m\,s^{-1}}$ & Ingresso & Sì & Sì \\
+        Potenza prodotta (teorica) & W & Target e ingresso storico & -- & Sì \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Per il previsore il test è il 2019. Gli esperimenti preliminari con dropout Monte Carlo e Deep Ensemble usano gli anni 2016--2018 per l'addestramento, senza un insieme di validation. La variante SDE-Net, come l'articolo~\cite{kong2020sdenet}, non usa un insieme di validation ed è addestrata sugli anni 2016--2018 per un numero fissato di epoche. La variante true-minimal segue il protocollo di SDE U-Net~\cite{monaco2025sdeunet}, che prevede una validation: usa gli anni 2016--2017 per l'addestramento e il 2018 per la validation.
+% DA FARE PRIMA DELLA CONSEGNA: la frase sulla variante SDE-Net descrive la
+% run da rifare senza validation. La run esistente
+% (pvgis_stgnn_paper_faithful_gaussian_ep60_seed1) ha usato il 2018 come validation
+% con selezione su rmse_daytime: i suoi numeri non vanno riportati sotto questa
+% descrizione. Se la run non viene rifatta, ripristinare la validation nel testo
+% e dichiararla come scostamento dall'articolo.
+I detector usano gli anni 2005--2018 per l'addestramento e il 2019 per il test. Il 2019 è usato come anno di test perché è l'anno con la migliore disponibilità di misure da impianti reali. Il confronto con queste misure non fa parte della tesi: il lavoro si è orientato all'individuazione delle anomalie meteorologiche a supporto della previsione fotovoltaica.Il previsore utilizza serie orarie sincronizzate fra località e stima la produzione futura di ciascuna. Il detector STGAN utilizza invece tre variabili meteorologiche: irradianza globale, temperatura a due metri e velocità del vento a dieci metri. La produzione futura non è il target della GAN: il generatore stima le variabili meteorologiche al passo successivo del contesto spaziale considerato.
+
+Queste sono le sole grandezze disponibili, e sono quelle che determinano la produzione fotovoltaica. Un'anomalia rilevata su questi dati non può essere ricondotta a una condizione meteorologica più generale. Per rilevare anomalie di tipo diverso e descriverne l'origine il lavoro passa ai campi ERA5, che comprendono quindici variabili in superficie e a 850~hPa e sono descritti nella Sezione~\ref{sec:dati-era5}.
 
 \section{Feature, trasformazioni fisiche e normalizzazione}
-% CITAZIONE DA INSERIRE: fonte dei dati PVGIS e libreria usata per le grandezze
-% solari; riferimenti sulle feature meteorologiche e solari per il forecasting PV.
 
-Nel percorso PVGIS del previsore, il set completo comprende temperatura, irradianza sul piano inclinato, vento, seno e coseno dell'elevazione solare, indice di cielo sereno sul piano inclinato, sua deviazione standard mobile su tre ore, differenza temporale dell'irradianza, componenti diretta e diffusa inclinate e produzione storica. L'irradianza effettiva sul piano inclinato è ricostruita dalla somma delle componenti diretta e diffusa inclinate.
+Nel percorso PVGIS del previsore, il set completo comprende temperatura, irradianza globale, vento, seno e coseno dell'elevazione solare, indice di cielo sereno, sua deviazione standard mobile su tre ore, differenza temporale dell'irradianza, componenti diretta e diffusa e produzione storica. L'indice di cielo sereno è il rapporto fra l'irradianza globale e l'irradianza che si avrebbe a cielo sereno sullo stesso piano, cioè sul piano orizzontale. La posizione del sole e l'irradianza a cielo sereno, da cui derivano l'elevazione solare e l'indice, sono calcolate con la libreria pvlib~\cite{holmgren2018pvlib}.
+% DA FARE PRIMA DELLA CONSEGNA: nelle run SDE esistenti (luglio 2026) il
+% riferimento a cielo sereno era calcolato per un piano a 30 gradi verso sud,
+% perché il codice non leggeva gli attributi tilt e azimuth dei file. Su 20
+% località del 2019 l'indice medio diurno passa da 0.611 a 0.718 con la
+% correzione (inverno da 0.460 a 0.727, estate da 0.773 a 0.777; differenza
+% assoluta media 0.181). La correzione è nei branch feat/sde-net-paper-faithful e
+% feat/sde-net-true-minimal (funzione _surface_orientation), non ancora in
+% commit. Questa frase descrive le run da rifare: i numeri delle run esistenti
+% non vanno riportati sotto questa descrizione senza dichiararlo.
 
 La normalizzazione del previsore usa statistiche dei dati di fit: z-score per temperatura, irradianza, vento e differenza temporale dell'irradianza, e una scala della produzione per località ricavata dal percentile 99 dei valori positivi diurni. La produzione storica è causale perché viene inclusa soltanto nella finestra che precede il target. Le feature mobili possono richiedere anche osservazioni precedenti l'inizio della finestra esplicita.
 
 Per STGAN, la trasformazione delle feature è un min--max stimato sul training, aggregando tempo e località e riportando i valori nel sistema di coordinate $[-1,1]$. Valori di test esterni all'intervallo del training possono superare questi estremi, poiché la trasformazione non applica un clipping generale. La normalizzazione delle feature è distinta da quella delle componenti dello score, descritta nella sezione dedicata al detector.
 
 \section{Finestre temporali, split cronologici e previsione diretta multiorizzonte}
-% CITAZIONE DA INSERIRE: strategie di previsione a singolo orizzonte, diretta
-% multi-output e ricorsiva, distinguendo le rispettive ipotesi.
 
 Indicando con $t$ l'ultimo timestamp della finestra di input, il target dell'orizzonte $h$ è associato a $t+h$. L'ingresso del previsore ha forma $[B,N,L,F]$, con dimensione del batch $B$, numero di località $N$, lunghezza della sequenza $L$ e numero di feature $F$. Il percorso a singolo orizzonte resta disponibile; nell'estensione diretta, un solo modello produce le uscite per l'insieme di orizzonti richiesto, ad esempio da una a sei ore.
 
 Per $H$ orizzonti, i target e le uscite assumono forma $[B,N,H]$. Le previsioni intermedie non vengono reinserite nell'input: tutte le uscite derivano dalla stessa finestra osservata. Ogni previsione conserva località, timestamp di emissione, timestamp target e orizzonte. I confronti a una e sei ore possono quindi essere estratti dallo stesso modello diretto, distinguendoli dalle precedenti esecuzioni con modelli separati per orizzonte.
 
-Nel percorso SDE, un anno viene riservato alla validazione prima di stimare la normalizzazione. Il test viene fornito separatamente. Quando è attivo il filtro di training su finestre normali, vengono escluse le finestre con eventi nel contesto delle feature, nell'input o in almeno uno dei target richiesti. L'estensione degli orizzonti può pertanto cambiare sia il numero di finestre disponibili sia quello delle finestre ammissibili.
+Nella variante true-minimal l'anno di validation viene separato prima di stimare la normalizzazione. Il test viene fornito separatamente. Quando è attivo il filtro di training su finestre normali, vengono escluse le finestre con eventi nel contesto delle feature, nell'input o in almeno uno dei target richiesti. L'estensione degli orizzonti può pertanto cambiare sia il numero di finestre disponibili sia quello delle finestre ammissibili.
 
-La preparazione STGAN prevede periodi storici e test separati; il primo target di test può utilizzare la coda contigua del training come contesto. I periodi e i parametri effettivamente utilizzati nelle esecuzioni devono essere riportati nella configurazione sperimentale.
-
+La preparazione STGAN prevede periodi storici e test separati; il primo target di test può utilizzare la coda contigua del training come contesto.
 \section{Campi ERA5, allineamento e celle valide}
 \label{sec:dati-era5}
-% CITAZIONE DA INSERIRE: riferimento primario su ERA5, livelli singoli e livelli di
-% pressione. Distinguere tempi validi, frequenza di campionamento e intervallo di
-% accumulo; maschere di validità e variazione dell'area delle celle con la latitudine.
 
-Il percorso ERA5 utilizza due prodotti distinti: variabili a livello singolo e variabili su livelli di pressione, selezionando per queste ultime soltanto 850 hPa. Il contratto di ingresso comprende quindici feature, con un ordine condiviso fra acquisizione e preparazione. Le dieci variabili a livello singolo sono temperatura a due metri, componenti orizzontali del vento a dieci metri, pressione al livello medio del mare, precipitazione totale, copertura nuvolosa totale, radiazione solare discendente alla superficie, umidità volumetrica del primo strato del suolo, velocità d'attrito e altezza dello strato limite. Le altre cinque sono le componenti orizzontali del vento, la velocità verticale, la temperatura e l'umidità specifica a 850 hPa.
+I dati della rianalisi ERA5~\cite{hersbach2020era5} provengono da due prodotti distinti: variabili a livello singolo e variabili su livelli di pressione, di cui è usato soltanto il livello di 850 hPa. Le variabili sono quindici. Le dieci variabili a livello singolo sono temperatura a due metri, componenti orizzontali del vento a dieci metri, pressione al livello medio del mare, precipitazione totale, copertura nuvolosa totale, radiazione solare discendente alla superficie, umidità volumetrica del primo strato del suolo, velocità d'attrito e altezza dello strato limite. Le altre cinque sono le componenti orizzontali del vento, la velocità verticale, la temperatura e l'umidità specifica a 850 hPa. La Tabella~\ref{tab:variabili-era5} le elenca con le unità di ERA5, che non vengono convertite.
 
-L'acquisizione predefinita parte dal 1980 e termina all'ultimo anno completo disponibile per entrambi i prodotti. Sono selezionati gli istanti UTC 00, 03, 06, 09, 12, 15, 18 e 21, su una griglia di $0.5^\circ\times0.5^\circ$ nell'area $[60,-15,20,50]$, espressa nell'ordine nord, ovest, sud, est. Il campionamento ogni tre ore è una selezione di tempi validi, non un'aggregazione temporale: precipitazione e radiazione conservano gli accumuli di un'ora associati ai tempi selezionati, senza somme triorarie o conversioni locali delle unità.
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Le quindici variabili ERA5, con la sigla e l'unità del dataset. Precipitazione e radiazione sono accumuli di un'ora; le altre variabili sono istantanee.}
+    \label{tab:variabili-era5}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.46}L{0.10}L{0.16}L{0.14}@{}}
+        \toprule
+        Variabile & Sigla & Livello & Unità \\
+        \midrule
+        Temperatura a due metri & t2m & Superficie & K \\
+        Componente zonale del vento a dieci metri & u10 & Superficie & $\mathrm{m\,s^{-1}}$ \\
+        Componente meridionale del vento a dieci metri & v10 & Superficie & $\mathrm{m\,s^{-1}}$ \\
+        Pressione al livello medio del mare & msl & Superficie & Pa \\
+        Precipitazione totale & tp & Superficie & m \\
+        Copertura nuvolosa totale & tcc & Superficie & 0--1 \\
+        Radiazione solare discendente alla superficie & ssrd & Superficie & $\mathrm{J\,m^{-2}}$ \\
+        Umidità volumetrica del primo strato del suolo & swvl1 & Superficie & $\mathrm{m^{3}\,m^{-3}}$ \\
+        Velocità d'attrito & zust & Superficie & $\mathrm{m\,s^{-1}}$ \\
+        Altezza dello strato limite & blh & Superficie & m \\
+        \addlinespace
+        Componente zonale del vento & u & 850 hPa & $\mathrm{m\,s^{-1}}$ \\
+        Componente meridionale del vento & v & 850 hPa & $\mathrm{m\,s^{-1}}$ \\
+        Velocità verticale & w & 850 hPa & $\mathrm{Pa\,s^{-1}}$ \\
+        Temperatura & t & 850 hPa & K \\
+        Umidità specifica & q & 850 hPa & $\mathrm{kg\,kg^{-1}}$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
-I file mensili vengono verificati rispetto a tempi, griglia, variabili e livello di pressione richiesti. La preparazione allinea i due prodotti sulle stesse coordinate e sugli stessi timestamp, ordina le latitudini da nord a sud e le longitudini da ovest a est. Nell'area predefinita il reticolo contiene $81\times131$ posizioni; ciascun blocco è rappresentato come $[T_{\mathrm{blocco}},81,131,15]$ prima della selezione delle celle.
+I dati coprono gli anni dal 1980 al 2025. Sono selezionati gli istanti UTC 00, 03, 06, 09, 12, 15, 18 e 21, su una griglia di $0.5^\circ\times0.5^\circ$ nell'area compresa fra $20^\circ$ e $60^\circ$ di latitudine nord e fra $15^\circ$ di longitudine ovest e $50^\circ$ di longitudine est. Il campionamento ogni tre ore è una selezione di tempi validi, non un'aggregazione temporale: precipitazione e radiazione conservano gli accumuli di un'ora associati ai tempi selezionati, senza somme triorarie o conversioni locali delle unità.
 
-La politica predefinita conserva le celle per le quali tutte le feature sono finite nel primo frame di training e richiede che questa maschera rimanga identica nel resto del periodo. La selezione iniziale non utilizza il test; la verifica successiva interrompe la preparazione se la completezza cambia nel tempo. Non viene applicata imputazione. La maschera può escludere celle marine per l'assenza dell'umidità del suolo, ma il criterio implementato è la completezza delle feature, non una classificazione terra--mare.
+I file mensili vengono verificati rispetto a tempi, griglia, variabili e livello di pressione richiesti. La preparazione allinea i due prodotti sulle stesse coordinate e sugli stessi timestamp, ordina le latitudini da nord a sud e le longitudini da ovest a est. Il reticolo contiene $81\times131=10611$ posizioni.
 
-I cubi preparati hanno forma $[T,N_{\mathrm{valide}},15]$. La prima versione della preparazione assegnava il periodo 1980--2004 al training e gli anni dal 2005 all'ultimo anno completo consecutivo presente localmente al test. La versione successiva introduce una terza partizione: training 1980--2003, validation 2004 e test dal 2005. Quando la validation è tenuta fuori dal training, viene letta soltanto dal monitoraggio e dalle statistiche descritte nella Sezione~\ref{sec:era5-monitoraggio}; in caso contrario il 2004 rientra nel training, come nella configurazione precedente. La validation non contribuisce alla normalizzazione dello score del test, alle soglie o agli eventi. Questi estremi descrivono la configurazione implementata; copertura effettiva e numero di celle valide devono essere riportati per le esecuzioni valutate. La normalizzazione delle feature rimane stimata soltanto sul training.
+Sono conservate le celle per le quali tutte le variabili sono definite nel primo istante di training, e si verifica che questo insieme rimanga identico nel resto del periodo; se cambia, la preparazione si interrompe. La selezione non utilizza il test e non viene applicata imputazione. Il criterio è la completezza delle variabili, non una classificazione terra--mare: nei dati usati nessuna cella è esclusa.
+
+I dati preparati hanno forma $[T,N,15]$, con $N=10611$ celle. Gli anni 1980--2004 sono usati per il training e gli anni 2005--2025 per il test: rispettivamente 73056 e 61360 istanti. La normalizzazione delle variabili è stimata soltanto sul training. Questa suddivisione segue l'articolo di STGAN~\cite{deng2022stgan}, che separa i dati in training e test senza un insieme di validation. Gli esperimenti con il monitoraggio descritto nella Sezione~\ref{sec:era5-monitoraggio} tengono invece il 2004 fuori dal training come anno di validation, letto soltanto dal monitoraggio; in questi esperimenti il training comprende gli anni 1980--2003.
+% Fonti: anni e assenza di validation confermati dall'autore (10 ottobre 2026);
+% 61360 istanti di test e 10611 celle dalle dimensioni degli score di una run
+% completa, e coincidono con il calendario 2005--2025 a otto istanti al giorno e
+% con l'intero reticolo 81x131; 73056 è calcolato dal calendario 1980--2004.
