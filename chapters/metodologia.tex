@@ -13,7 +13,6 @@ Le analisi post-hoc utilizzano previsioni e score già prodotti. Il cambiamento 
 Il backbone è stato messo a punto inizialmente su una configurazione mista, con la produzione misurata di impianti reali come grandezza da prevedere e le variabili meteorologiche PVGIS della località più vicina come ingressi. Quella configurazione non fa parte della tesi; il backbone è descritto qui come architettura comune ai previsori addestrati sui soli dati PVGIS. Su questi dati non è stato addestrato come modello a sé con il protocollo delle varianti SDE: è il modello di base degli esperimenti preliminari della Sezione~\ref{sec:probabilistici-preliminari}.
 
 \subsection{Tensori di input, encoder temporale e attention pooling}
-% CITAZIONE DA INSERIRE: LSTM, BiLSTM e attention pooling (metodi standard).
 
 Il previsore riceve un tensore $X\in\mathbb{R}^{B\times N\times L\times F}$: $B$ esempi, $N$ località, una finestra di $L=24$ ore e le $F$ feature descritte nel Capitolo~\ref{chap:dati}. L'uscita è la produzione normalizzata di ogni località all'ora successiva, di forma $[B,N]$.
 
@@ -147,7 +146,7 @@ A differenza della variante SDE-Net, lo schema non applica più volte lo stesso 
 
 \subsection{Training alternato, pseudo-OOD e inferenza a traiettorie}
 
-A ogni passo di addestramento si alternano due aggiornamenti, con due ottimizzatori Adam distinti. Il primo aggiorna il percorso di drift e le teste su un passaggio stocastico, minimizzando la perdita dell'equazione~\eqref{eq:loss-deterministica} con $\lambda=0.1$. Il secondo aggiorna il solo percorso di diffusione: i coefficienti $g_1$ e $g_2$ sono spinti verso 0 sugli ingressi di training e verso 1 su ingressi pseudo fuori distribuzione, con una entropia incrociata binaria sommata sui due stadi. Gli ingressi pseudo fuori distribuzione sono ottenuti aggiungendo rumore gaussiano di deviazione standard unitaria alle feature continue dell'ingresso; seno e coseno dell'elevazione solare non sono perturbati.
+A ogni passo di addestramento si alternano due aggiornamenti, con due ottimizzatori Adam~\cite{kingma2015adam} distinti. Il primo aggiorna il percorso di drift e le teste su un passaggio stocastico, minimizzando la perdita dell'equazione~\eqref{eq:loss-deterministica} con $\lambda=0.1$. Il secondo aggiorna il solo percorso di diffusione: i coefficienti $g_1$ e $g_2$ sono spinti verso 0 sugli ingressi di training e verso 1 su ingressi pseudo fuori distribuzione, con una entropia incrociata binaria sommata sui due stadi. Gli ingressi pseudo fuori distribuzione sono ottenuti aggiungendo rumore gaussiano di deviazione standard unitaria alle feature continue dell'ingresso; seno e coseno dell'elevazione solare non sono perturbati.
 
 Il modello valutato sul test è quello dell'epoca con il miglior errore sulla validation, calcolato con il percorso deterministico. Quando è attivo l'addestramento sulle sole finestre normali, training e validation sono filtrati come descritto nella Sezione~\ref{sec:soglie-climatologiche}.
 
@@ -197,9 +196,6 @@ Il training alterna due aggiornamenti: il primo ottimizza encoder, eventuale GAT
 % (8978381 osservazioni normali su 10037664).
 
 \subsection{Campionamento e componenti dell'incertezza predittiva}
-% CITAZIONE DA INSERIRE: regressione gaussiana eteroschedastica, legge della
-% varianza totale e quantili di miscele gaussiane. Separare intervalli predittivi,
-% intervalli di confidenza di una metrica e dispersione degli errori osservati.
 
 Ogni traiettoria browniana $m$ produce una componente gaussiana con parametri $(\mu^{(m)},\sigma^{(m)})$ per ciascuna uscita. La media e la varianza predittiva sono calcolate come
 \begin{align}
@@ -228,7 +224,6 @@ Ogni variabile è normalizzata sottraendo la media e dividendo per la deviazione
 % anche per gli anni 2016--2018.
 
 \subsection{Grafo dinamico tra entità e normalizing flow condizionale}
-% CITAZIONE DA INSERIRE: stima di densità con normalizing flow (metodo standard).
 
 Per ogni finestra il modello calcola una matrice di adiacenza fra le entità. Indicando con $x^{k}\in\mathbb{R}^{T}$ la finestra dell'entità $k$ e con $W_Q$, $W_K$ due trasformazioni lineari,
 \begin{equation}
@@ -254,7 +249,6 @@ I parametri dei blocchi sono condivisi fra le entità; ciò che distingue un'ent
 L'addestramento massimizza la log-verosimiglianza media delle finestre di training. Nella configurazione di riferimento il modello ha due blocchi di flow e stati di dimensione 32, ed è addestrato per 40 epoche con Adam; il modello usato per lo scoring è quello dell'ultima epoca, senza selezione su una validation.
 
 \subsection{Score aggregato della località, score per variabile e soglie IQR}
-% CITAZIONE DA INSERIRE: soglie robuste basate sull'intervallo interquartile.
 
 Lo score di una finestra è l'opposto della log-verosimiglianza, mediato sulle entità:
 \begin{equation}
@@ -326,8 +320,6 @@ Il numero di celle osservate può variare fra patch. La loss generativa e lo sco
 
 \subsection{Ablazione del kernel e supporto spaziale osservato}
 \label{sec:ablation-kernel}
-% CITAZIONE DA INSERIRE: campo ricettivo, supporto osservato della patch e padding;
-% mixing spaziale e capacità parametrica per kernel 1x1, 3x3 e 5x5.
 
 La dimensione $k$ del kernel è indipendente dal lato $P$ della patch. L'ablazione consente $k=1,3,5$ nei gate reset, update e candidato delle ConvGRU del generatore e del discriminatore, con padding $\lfloor k/2\rfloor$. Le proiezioni finali $1\times1$ rimangono tali in tutte le configurazioni. Il caso di riferimento è $k=3$; la patch resta $P=3$ in tutte le configurazioni.
 
@@ -338,8 +330,6 @@ Con $k=5$ aumenta l'ampiezza del kernel, ma non il numero di siti forniti in ing
 A parità di canali e strati, la dimensione del kernel modifica anche il numero di parametri. Il confronto deve pertanto riportare capacità parametrica, patch, lunghezza delle finestre e configurazione di training: non isola automaticamente il solo effetto dell'estensione spaziale a capacità costante.
 
 \subsection{Training avversario, anomaly score e soglia globale}
-% CITAZIONE DA INSERIRE: bilanciamento fra generatore e discriminatore (tassi di
-% apprendimento distinti, numero di aggiornamenti per batch); ranking globale top-K.
 
 Il discriminatore viene addestrato con reale uguale a zero e generato uguale a uno. Gli obiettivi sono
 \begin{align}
@@ -373,8 +363,6 @@ L'estensione utilizza i cubi e la maschera descritti nella Sezione~\ref{sec:dati
 La cadenza diventa di tre ore e il trend viene impostato a 56 passi, conservando una durata di 168 ore. In questa prima estensione il ramo recente mantiene un passo e la codifica di ora e giorno della settimana rimane di dimensione 31. Lunghezza del ramo recente e codifica temporale cambiano negli sviluppi della Sezione~\ref{sec:era5-mc}. Preparazione, training con scoring e analisi degli eventi costituiscono fasi distinte: gli eventi vengono ricavati dagli score già disponibili, senza un nuovo aggiornamento dei pesi del detector.
 
 \subsection{Soglia, morfologia e cluster spaziali}
-% CITAZIONE DA INSERIRE: morfologia binaria (apertura, chiusura), connettività a
-% otto vicini e filtraggio delle componenti connesse (metodi standard).
 
 Gli score $[T,N_{\mathrm{valide}}]$ vengono ricollocati sulla griglia $[T,H,W]$, mantenendo non valide le celle escluse. La selezione iniziale può utilizzare una soglia assoluta oppure un percentile degli score finiti, globale per default o distinto per frame. Una cella è selezionata soltanto se lo score è strettamente maggiore della soglia. In presenza di pareggi, questa regola non garantisce lo stesso numero di selezionati del top-K esatto degli export PVGIS.
 
@@ -383,9 +371,6 @@ Per ogni frame, la maschera binaria viene sottoposta ad apertura e chiusura, ris
 Il kernel della morfologia e quello della ConvGRU sono parametri di fasi diverse. Un confronto fra kernel neurali $1\times1$ e $5\times5$ non implica una modifica dell'elemento strutturante usato sugli eventi. Le aree dei cluster sono ottenute sommando le aree sferiche delle celle e i centroidi sono pesati con tali aree. Questa correzione geometrica nel postprocessing non rende uniforme in chilometri la patch neurale, la cui estensione fisica varia con la latitudine.
 
 \subsection{Collegamento temporale, separazioni e fusioni}
-% CITAZIONE DA INSERIRE: collegamento temporale di oggetti, sovrapposizione, distanze
-% dei centroidi e gestione di separazioni e fusioni; definizioni di evento, durata,
-% area e persistenza. Distinguere ricostruzione retrospettiva e rilevamento causale.
 
 I cluster di frame consecutivi vengono collegati secondo sovrapposizione, sovrapposizione dopo dilatazione, distanza dei centroidi oppure unione dei criteri. Indicando con $A$ e $B$ i supporti di due cluster, il rapporto di sovrapposizione è
 \begin{equation}
@@ -442,9 +427,6 @@ Rapporti fra tassi, numero di aggiornamenti e peso di ricostruzione sono strumen
 
 \subsection{Finestra recente, codifica temporale ciclica e normalizzazione stagionale}
 \label{sec:era5-input}
-% CITAZIONE DA INSERIRE: codifiche seno/coseno dell'ora solare locale e della
-% posizione nell'anno nei modelli meteorologici basati su apprendimento; anomalie
-% standardizzate rispetto a una climatologia per località, giorno dell'anno e ora.
 
 La finestra recente contiene gli $R$ istanti che precedono quello da stimare. L'unità ricorrente spaziale la percorre in ordine: parte da uno stato nullo ed esegue un aggiornamento per ogni istante, sicché lo stato finale riassume gli $R$ campi osservati. Con $R=1$ il ramo recente vede soltanto l'ultimo istante e la ricorrenza si riduce a un solo aggiornamento: la storia più lunga è affidata alla LSTM del trend, che riguarda la sola cella centrale. Con $R>1$ il modello riceve anche l'evoluzione del campo negli istanti precedenti, e l'area che può influenzare una cella cresce con $R$, perché a ogni aggiornamento lo stato si propaga alle celle vicine.
 
@@ -472,13 +454,10 @@ Finestra recente, codifica temporale e normalizzazione modificano l'ingresso del
 
 \subsection{Monitoraggio senza etichette e spazio PCA di riferimento}
 \label{sec:era5-monitoraggio}
-% CITAZIONE DA INSERIRE: Maximum Mean Discrepancy (stima non distorta, kernel RBF,
-% euristica della mediana, kernel a più scale); metriche di valutazione delle GAN su
-% feature apprese e su spazi fissati in anticipo; PCA di campi geofisici.
 
 Le quantità di questa sezione servono a osservare l'addestramento e a confrontare configurazioni. Non entrano in una loss, in un aggiornamento dei pesi, nello score o nella valutazione sul test, e non utilizzano etichette di anomalia. Il loro calcolo avviene senza gradiente e ripristina gli stati dei generatori casuali, così da non alterare la traiettoria del training.
 
-Al termine di ogni epoca, un sottoinsieme fisso della validation viene elaborato con un forward deterministico, a dropout spento. Il sottoinsieme comprende 32 timestamp equispaziati nel default, ciascuno con tutte le località. Vengono registrate tre diagnostiche: la differenza assoluta media fra le attivazioni del penultimo strato del discriminatore sull'osservazione e sulla ricostruzione; la variazione dello score fra epoche consecutive sulle stesse celle, riassunta da media, mediana e correlazione di Spearman; la Maximum Mean Discrepancy fra le stesse attivazioni, con kernel RBF e banda scelta con l'euristica della mediana.
+Al termine di ogni epoca, un sottoinsieme fisso della validation viene elaborato con un forward deterministico, a dropout spento. Il sottoinsieme comprende 32 timestamp equispaziati nel default, ciascuno con tutte le località. Vengono registrate tre diagnostiche: la differenza assoluta media fra le attivazioni del penultimo strato del discriminatore sull'osservazione e sulla ricostruzione; la variazione dello score fra epoche consecutive sulle stesse celle, riassunta da media, mediana e correlazione di Spearman; la Maximum Mean Discrepancy~\cite{gretton2012mmd} fra le stesse attivazioni, con kernel RBF e banda scelta con l'euristica della mediana.
 
 Una seconda misura confronta osservazioni e ricostruzioni in uno spazio indipendente dal modello. Lo spazio è ottenuto da un'analisi delle componenti principali dei campi di training: ogni campione è il campo completo di un timestamp, normalizzato e appiattito su località e feature. La PCA è calcolata in forma esatta su un insieme di timestamp equispaziati sull'intero training, 4096 nel default, e viene salvata con le componenti principali e la varianza spiegata. È costruita una sola volta, prima delle esecuzioni, e successivamente soltanto caricata.
 
@@ -524,7 +503,6 @@ Rispetto alla variante ConvGRU sul campo intero della Sezione~\ref{sec:era5-full
 
 \subsection{Variante convoluzionale sul campo intero}
 \label{sec:era5-fullgrid}
-% CITAZIONE DA INSERIRE: discriminatori locali a patch nelle GAN.
 
 La seconda variante nasce dal tempo di addestramento del modello a patch su ERA5, in cui il numero di aggiornamenti per epoca cresce con il prodotto fra timestamp e località. Mantiene la ConvGRU e modifica l'unità del campione: invece di una cella con la propria patch, un campione è l'intero campo di un timestamp, disposto sul reticolo $H\times W$. Moduli e parametri sono quelli del modello a patch; cambia ciò a cui vengono applicati. Alla variante porta anche la lunghezza della finestra recente: su una patch $3\times3$ aumentare $R$ moltiplica il costo di ciascuno dei $TN$ campioni senza ampliare l'area osservata, che resta di nove celle. Il passaggio da uno a sedici passi recenti è stato quindi fatto sul campo intero.
 
@@ -538,8 +516,6 @@ Come nella variante su grafo, un'epoca comprende $\lceil T/B\rceil$ aggiornament
 
 \subsection{Incertezza negli eventi e normalizzazione climatologica degli score}
 \label{sec:era5-climatologia}
-% CITAZIONE DA INSERIRE: climatologie e stima leave-one-year-out. Distinguere
-% standardizzazione dell'ingresso e normalizzazione degli score dopo il training.
 
 L'estrazione degli eventi della Sezione~\ref{sec:era5-eventi} può operare sullo score combinato oppure su una sola componente. La dispersione $u_{tn}$ viene ricollocata sulla griglia e riportata per cluster, come media e massimo sulle celle, e per evento, come media pesata sulle celle e massimo. Non partecipa alla soglia, alla morfologia o ai collegamenti temporali: è un'annotazione degli eventi già individuati.
 
