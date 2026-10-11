@@ -12,16 +12,100 @@
 % come riferimento alla pari delle varianti SDE. Una run dedicata resta
 % un'opzione aperta.
 
-\subsection{Enhanced Monte Carlo Dropout}
+\subsection{Dropout Monte Carlo e Deep Ensemble}
 
-\subsection{Deep Ensemble}
+I due esperimenti preliminari usano il backbone con l'addestramento breve della Tabella~\ref{tab:configurazioni}. Sulle 10037664 previsioni a un'ora del 2019 l'errore assoluto medio è 20.1~W con il dropout Monte Carlo e 19.2~W con il Deep Ensemble; per quest'ultimo la radice dell'errore quadratico medio è 45.1~W. I valori sono calcolati su tutte le ore.
+
+Questi errori sono dello stesso ordine di quelli delle varianti SDE riportati nelle sottosezioni seguenti, ma il confronto non è a parità di condizioni: gli esperimenti preliminari sono addestrati per 5 epoche su un sottoinsieme dei campioni e con un encoder temporale più piccolo, le varianti SDE per 60 epoche.
+% NUMERI LETTI SU W&B il 10 ottobre 2026 (progetto PhysiQ-PV, run del 10 giugno
+% 2026): enhanced-daytime-check-seed1 (id x4eic20l), MAE 20.1 W; aggregazione
+% pvgis_deep_ensemble_vfry1hgx (id 29yahjvt), cinque membri, 10037664 campioni,
+% MAE 19.19 W, RMSE 45.06 W. DA FARE: RMSE del dropout Monte Carlo e metriche
+% sulle sole ore diurne, da rileggere su W&B.
 
 \subsection{Variante SDE U-Net}
 
+La variante SDE U-Net è addestrata sulle sole finestre normali, come previsto dal protocollo della Sezione~\ref{sec:soglie-climatologiche}. Sulle 10037664 previsioni a un'ora del 2019 l'errore assoluto medio è \provv{18.7}~W e la radice dell'errore quadratico medio \provv{46.1}~W (Tabella~\ref{tab:accuratezza-sde}). Sulle sole ore diurne, 4747545 previsioni, i due valori sono \provv{38.1} e \provv{65.0}~W: le ore notturne, in cui produzione e previsione sono quasi nulle, abbassano la media complessiva.
+
+Non è disponibile un'esecuzione della stessa variante addestrata su tutte le finestre: l'effetto del filtro sulle finestre normali non è quindi isolato, e l'errore riportato non può essere attribuito a questa scelta.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Errore di previsione a un'ora delle due varianti SDE sul 2019, su tutte le ore (10037664 previsioni) e sulle ore diurne (4747545).}
+    \label{tab:accuratezza-sde}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.30}L{0.12}L{0.12}L{0.12}L{0.12}@{}}
+        \toprule
+        & \multicolumn{2}{@{}l}{Tutte le ore} & \multicolumn{2}{@{}l}{Ore diurne} \\
+        Modello & MAE (W) & RMSE (W) & MAE (W) & RMSE (W) \\
+        \midrule
+        Variante SDE U-Net & \provv{18.7} & \provv{46.1} & \provv{38.1} & \provv{65.0} \\
+        Variante SDE-Net & \provv{20.6} & \provv{49.2} & \provv{42.8} & \provv{69.6} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+% NUMERI LETTI SUL SERVER l'11 ottobre 2026, file metrics_global.csv:
+%   pvgis_stgnn_normal_only_monaco_ep60_seed42: MAE 18.672, RMSE 46.090
+%   pvgis_stgnn_normal_only_sigma1_ep60_seed42: MAE 18.619, RMSE 46.125,
+%     copertura 0.126, deviazione standard media 2.876 W. Seconda esecuzione
+%     SDE U-Net: DA VERIFICARE che cosa cambia ("sigma1") prima di citarla.
+%   pvgis_stgnn_paper_faithful_gaussian_ep60_seed1: MAE 20.638, RMSE 49.162
+%   ..._detector_mtgflow_ep60_seed1: MAE 20.652, RMSE 49.112
+%   ..._detector_mtgflow_ep60_h1-2-3-4-5-6_direct_seed1: MAE 32.272, RMSE 69.045
+%     su 60191514 previsioni (10031919 per orizzonte).
+% Tutti in \provv: le run hanno training 2016--2017, validation 2018 e il
+% riferimento a cielo sereno con inclinazione di 30 gradi.
+% Ore diurne e notturne (metrics_daytime.csv, righe daytime e nighttime):
+%   SDE U-Net: diurne MAE 38.064, RMSE 64.981; notturne MAE 1.269, RMSE 15.531
+%   SDE-Net:   diurne MAE 42.795, RMSE 69.611; notturne MAE 0.753, RMSE 15.403
+% Il RMSE notturno di circa 15 W contro un MAE di circa 1 W indica poche ore
+% "notturne" con errori grandi (irradianza sotto 10 W/m2 ma produzione non
+% nulla): DA GUARDARE prima di commentarlo; esiste pvgis_data_quality_issues.csv.
+% Righe high_daytime (1186852), peak_daytime (474719) ed extreme_peak_daytime
+% (237361): soglie non note, DA LEGGERE nel codice prima di usarle. In entrambe
+% le varianti la produzione alta è sottostimata (residuo medio fra -29 e -44 W,
+% quota di sottostime fra 0.74 e 0.94).
+
 \subsection{Variante SDE-Net e previsione diretta multiorizzonte}
 
-% Riportare le metriche per orizzonte senza confondere t+1 e t+6 dello stesso
-% modello diretto con risultati di modelli addestrati separatamente.
+A un'ora la variante SDE-Net ha un errore assoluto medio di \provv{20.6}~W e una radice dell'errore quadratico medio di \provv{49.2}~W su tutte le ore, \provv{42.8} e \provv{69.6}~W sulle ore diurne. Una seconda esecuzione a un'ora, valutata con le etichette di MTGFlow, dà valori quasi identici (\provv{20.7} e \provv{49.1}~W).
+
+La differenza rispetto alla variante SDE U-Net, circa 2~W di errore assoluto medio su tutte le ore e circa 5~W sulle ore diurne, non misura l'effetto di un singolo elemento: le due varianti differiscono per lo schema stocastico, per la funzione di perdita, per le finestre usate nell'addestramento e per il seme.
+
+Con l'uscita diretta su sei orizzonti l'errore aggregato sugli orizzonti da una a sei ore, su tutte le ore, è \provv{32.3}~W di errore assoluto medio e \provv{69.0}~W di radice dell'errore quadratico medio, su 60191514 previsioni. Il valore aggregato non va confrontato con quello a un'ora, perché comprende orizzonti più lontani.
+
+La Tabella~\ref{tab:orizzonti} riporta l'errore per orizzonte sulle osservazioni diurne. L'errore assoluto medio cresce da \provv{45.6}~W a un'ora a \provv{82.3}~W a sei ore, e l'incremento si riduce a ogni passo: \provv{11.9}~W fra la prima e la seconda ora, \provv{3.8}~W fra la quinta e la sesta. A un'ora il modello a sei orizzonti ha un errore di circa 3~W superiore a quello del modello addestrato per la sola previsione a un'ora (\provv{42.8}~W); i due insiemi di osservazioni diurne non coincidono esattamente, e la differenza va letta come indicativa.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Errore della variante SDE-Net a sei orizzonti sulle osservazioni diurne del 2019, per orizzonte e secondo le decisioni di MTGFlow sull'osservazione prevista. Ogni orizzonte comprende 4761227 previsioni, di cui 314124 su osservazioni segnalate. Valori in watt.}
+    \label{tab:orizzonti}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.14}L{0.10}L{0.10}L{0.10}L{0.10}L{0.10}L{0.10}@{}}
+        \toprule
+        & \multicolumn{2}{@{}l}{Tutte} & \multicolumn{2}{@{}l}{Normali} & \multicolumn{2}{@{}l}{Segnalate} \\
+        Orizzonte & MAE & RMSE & MAE & RMSE & MAE & RMSE \\
+        \midrule
+        1 ora & \provv{45.6} & \provv{71.5} & \provv{45.2} & \provv{70.6} & \provv{52.0} & \provv{82.3} \\
+        2 ore & \provv{57.5} & \provv{86.8} & \provv{57.1} & \provv{85.9} & \provv{63.9} & \provv{98.7} \\
+        3 ore & \provv{66.7} & \provv{97.5} & \provv{66.3} & \provv{96.6} & \provv{73.2} & \provv{108.9} \\
+        4 ore & \provv{72.9} & \provv{105.4} & \provv{72.4} & \provv{104.5} & \provv{79.4} & \provv{116.6} \\
+        5 ore & \provv{78.5} & \provv{111.4} & \provv{78.0} & \provv{110.7} & \provv{85.6} & \provv{122.0} \\
+        6 ore & \provv{82.3} & \provv{115.5} & \provv{81.8} & \provv{114.8} & \provv{88.9} & \provv{124.9} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+% Fonte: multihorizon_anomaly_group_metrics.csv della run a sei orizzonti (letto
+% l'11 ottobre 2026). Filtro diurno: multihorizon_posthoc_metadata.json non lo
+% riporta. Indizi concordi: 4761227 righe per orizzonte sono il 47.5% delle
+% 10031919 previsioni (47.3% di ore diurne nel modello a un'ora), e l'analisi di
+% sensibilità, che dichiara la soglia diurna di 10 W/m2, dà a un'ora e k = 1.5
+% valori quasi uguali (normali 44.96, segnalate 51.01 W, su 4724704 righe).
+% DA CONFERMARE nel notebook che ha prodotto il file.
+% Non confondere t+1 e t+6 dello stesso modello diretto con risultati di modelli
+% addestrati separatamente.
 
 % Sottosezione tolta l'11 ottobre 2026: nessuna run senza GAT sul server (vedi
 % il commento nella Metodologia, sezione sul grafo geografico).
@@ -36,11 +120,120 @@
 
 \section{Quantificazione dell'incertezza}
 
-\subsection{Intervalli dell'Enhanced Monte Carlo Dropout}
+\subsection{Intervalli del dropout Monte Carlo e del Deep Ensemble}
 
-\subsection{Intervalli e disaccordo tra membri del Deep Ensemble}
+L'intervallo al 95\% del dropout Monte Carlo contiene il 2.8\% delle osservazioni; quello del Deep Ensemble il 17.3\%. Entrambi sono lontani dal livello nominale. Per il Deep Ensemble la deviazione standard media fra i cinque membri è 5.8~W, contro un errore assoluto medio di 19.2~W: come per la variante SDE U-Net della sottosezione seguente, la dispersione fra le previsioni è molto inferiore all'errore.
+
+Il risultato va letto con due cautele. L'addestramento è breve, e non è noto come cambierebbero gli intervalli con più epoche. L'intervallo del Deep Ensemble è inoltre costruito sui quantili di cinque valori, e coincide in pratica con l'intervallo fra il membro più basso e quello più alto. Poiché gli intervalli ottenuti contengono una quota così ridotta delle osservazioni, i due esperimenti non sono stati proseguiti con addestramenti più lunghi, e il lavoro è passato alle varianti basate su equazioni differenziali stocastiche.
+% NUMERI LETTI SU W&B il 10 ottobre 2026: copertura 0.028 (dropout Monte Carlo,
+% un modello, 20 passaggi) e 0.173 (Deep Ensemble, cinque membri); deviazione
+% standard media del Deep Ensemble 5.78 W.
+% DA FARE: ampiezza media, NMPIL e CLC ricalcolato con eta = 9 (su W&B il CLC è
+% calcolato con eta = 10); deviazione standard del dropout Monte Carlo. Le
+% metriche sulle sole osservazioni segnalate NON vanno prese da queste run: le
+% loro etichette usano una climatologia diversa (vedi Capitolo 5).
 
 \subsection{Intervalli delle due varianti SDE}
+
+Le due varianti costruiscono l'intervallo al 95\% in modo diverso. Nella variante SDE U-Net l'intervallo è dato dai quantili empirici delle previsioni delle traiettorie: rappresenta la sola dispersione fra le traiettorie. Nella variante SDE-Net ogni traiettoria produce una media e una varianza, e l'intervallo è dato dai quantili della miscela delle gaussiane: comprende sia la dispersione fra le traiettorie sia la varianza stimata dalla testa gaussiana. La Tabella~\ref{tab:intervalli-sde} riporta copertura e ampiezza dei due intervalli.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Intervallo al 95\% delle due varianti SDE a un'ora sul 2019, su tutte le ore e sulle ore diurne: copertura, ampiezza media, ampiezza normalizzata e CLC.}
+    \label{tab:intervalli-sde}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.24}L{0.10}L{0.11}L{0.15}L{0.10}L{0.10}@{}}
+        \toprule
+        Modello & Ore & PICP & Ampiezza (W) & NMPIL & CLC \\
+        \midrule
+        Variante SDE U-Net & tutte & \provv{0.108} & \provv{8.2} & \provv{0.009} & \provv{17.9} \\
+        Variante SDE U-Net & diurne & \provv{0.227} & \provv{16.8} & \provv{0.019} & \provv{12.6} \\
+        \addlinespace
+        Variante SDE-Net & tutte & \provv{0.977} & \provv{108.2} & \provv{0.121} & \provv{0.22} \\
+        Variante SDE-Net & diurne & \provv{0.953} & \provv{224.6} & \provv{0.251} & \provv{0.50} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+L'intervallo della variante SDE U-Net contiene il \provv{10.8}\% delle osservazioni, contro un livello nominale del 95\%; sulle ore diurne il \provv{22.7}\%. Di giorno l'ampiezza media è \provv{16.8}~W, mentre l'errore assoluto medio della stessa variante è \provv{38.1}~W: l'intervallo è più stretto dell'errore che dovrebbe contenere. La sola dispersione fra le traiettorie non fornisce quindi, in questa configurazione, un intervallo utilizzabile. Il CLC, che penalizza la copertura insufficiente, è \provv{17.9}, contro \provv{0.22} della variante SDE-Net.
+
+L'intervallo della variante SDE-Net contiene il \provv{97.7}\% delle osservazioni su tutte le ore e il \provv{95.3}\% sulle ore diurne, in linea con il livello nominale; il valore complessivo è più alto perché di notte la copertura è quasi totale. La copertura è però ottenuta con un intervallo ampio: di giorno l'ampiezza media è \provv{224.6}~W, un quarto dell'intervallo dei valori osservati e oltre cinque volte l'errore assoluto medio diurno (\provv{42.8}~W). L'intervallo è quindi affidabile, ma la sua ampiezza ne limita l'utilità sulle singole ore. Rispetto alla variante SDE U-Net, l'intervallo comprende la varianza stimata dalla testa gaussiana.
+
+Sui sei orizzonti la copertura su tutte le ore resta \provv{0.977}, mentre la deviazione standard predittiva media sale da \provv{27.6}~W a un'ora a \provv{42.0}~W: l'intervallo si allarga con l'orizzonte.
+
+Le due componenti dell'incertezza della variante SDE-Net sono state separate sull'esecuzione a sei orizzonti, per le ore diurne. A un'ora la deviazione standard dovuta alla dispersione fra le traiettorie è in media \provv{0.04}~W, quella stimata dalla testa gaussiana \provv{62.7}~W; a sei ore \provv{0.03} e \provv{102.8}~W. La dispersione fra le traiettorie contribuisce alla varianza totale per meno di una parte su centomila. L'intervallo della variante SDE-Net è quindi determinato, in pratica, dalla sola testa gaussiana: il termine di diffusione non produce una dispersione apprezzabile fra le traiettorie. Sulle osservazioni segnalate da MTGFlow questa dispersione è più alta che sulle normali, \provv{0.064} contro \provv{0.043}~W a un'ora, ma resta trascurabile rispetto all'errore.
+
+In entrambe le varianti, quindi, la parte di incertezza che lo schema stocastico dovrebbe fornire, cioè la dispersione fra le traiettorie, è molto inferiore all'errore di previsione: di giorno \provv{4.9}~W in media nella variante SDE U-Net e \provv{0.04}~W nella variante SDE-Net, contro errori assoluti medi di circa 40~W.
+
+La copertura della variante SDE-Net non è uniforme fra le fasce di produzione (Tabella~\ref{tab:fasce}). Cresce con la produzione: a un'ora da \provv{0.934} nella fascia più bassa a \provv{0.988} nella più alta, a sei ore da \provv{0.907} a \provv{0.995}. L'intervallo è quindi leggermente stretto quando la produzione è bassa e più ampio del necessario quando è alta. A sei ore l'ampiezza media nella fascia più alta è \provv{653}~W, quasi tre quarti dell'intervallo dei valori osservati.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{4pt}
+    \caption{Errore assoluto medio, copertura e ampiezza media dell'intervallo al 95\% della variante SDE-Net a sei orizzonti, per fascia di produzione osservata, a una e a sei ore. Ore diurne del 2019; le fasce sono riferite al picco di produzione di riferimento. Errori e ampiezze in watt.}
+    \label{tab:fasce}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.12}L{0.11}L{0.08}L{0.09}L{0.11}L{0.08}L{0.09}L{0.11}@{}}
+        \toprule
+        & & \multicolumn{3}{@{}l}{Un'ora} & \multicolumn{3}{@{}l}{Sei ore} \\
+        Fascia & Numero & MAE & PICP & Ampiezza & MAE & PICP & Ampiezza \\
+        \midrule
+        0--20\% & 1934608 & \provv{39.9} & \provv{0.934} & \provv{176.1} & \provv{71.8} & \provv{0.907} & \provv{246.1} \\
+        20--40\% & 856630 & \provv{52.2} & \provv{0.949} & \provv{279.1} & \provv{75.7} & \provv{0.968} & \provv{392.2} \\
+        40--60\% & 736468 & \provv{51.5} & \provv{0.959} & \provv{307.3} & \provv{84.1} & \provv{0.988} & \provv{490.2} \\
+        60--80\% & 669745 & \provv{48.9} & \provv{0.969} & \provv{304.1} & \provv{92.1} & \provv{0.995} & \provv{568.1} \\
+        80--100\% & 550094 & \provv{44.6} & \provv{0.988} & \provv{286.0} & \provv{117.1} & \provv{0.995} & \provv{653.4} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+% Fonte: posthoc_by_horizon/t_plus_1 e t_plus_6 della run a sei orizzonti
+% (letti l'11 ottobre 2026).
+% uncertainty_components.csv, ore diurne (4747545): deviazione standard media
+% epistemica, aleatoria, totale; quota epistemica della varianza.
+%   t+1 tutte      0.04429,  62.7095,  62.7096, 6.68e-06
+%   t+1 normali    0.04288,  62.3454,  62.3455, 6.28e-06  (4434310)
+%   t+1 segnalate  0.06430,  67.8637,  67.8640, 1.24e-05  (313235)
+%   t+6 tutte      0.03106, 102.7968, 102.7968, 1.01e-06
+%   t+6 normali    0.02948, 102.2012, 102.2012, 8.90e-07
+%   t+6 segnalate  0.05343, 111.2284, 111.2284, 2.77e-06
+% daytime_bin_summary.csv: numero, MAE, RMSE, PICP, deviazione standard media,
+% ampiezza media, NMPIL.
+%   t+1  0-20   1934608, 39.914,  66.973, 0.9343,  44.917, 176.070, 0.1974
+%   t+1 20-40    856630, 52.211,  71.526, 0.9485,  71.202, 279.105, 0.3129
+%   t+1 40-60    736468, 51.497,  73.936, 0.9586,  78.407, 307.349, 0.3446
+%   t+1 60-80    669745, 48.930,  78.807, 0.9691,  77.575, 304.087, 0.3410
+%   t+1 80-100   550094, 44.578,  74.743, 0.9884,  72.948, 285.951, 0.3206
+%   t+6  0-20   71.826, 119.323, 0.9073,  62.786, 246.116, 0.2760
+%   t+6 20-40   75.655, 102.070, 0.9676, 100.050, 392.187, 0.4397
+%   t+6 40-60   84.072, 100.565, 0.9885, 125.060, 490.227, 0.5497
+%   t+6 60-80   92.056, 111.779, 0.9952, 144.923, 568.087, 0.6370
+%   t+6 80-100 117.075, 142.628, 0.9949, 166.693, 653.423, 0.7327
+% Picco di riferimento per le fasce: 712.95 W (analysis_metadata.json).
+% La separazione delle componenti è disponibile solo per la run a sei orizzonti;
+% per quella a un'ora andrebbe letta da predictions.csv.
+% NUMERI LETTI SUL SERVER l'11 ottobre 2026, metrics_daytime.csv, colonne
+% picp_pi, mpiw_pi, nmpil_pi, clc_pi (intervallo principale), righe all e daytime:
+%   SDE U-Net: all 0.10805, 8.184, 0.009161, 17.908; daytime 0.22724, 16.817,
+%     0.018827, 12.602; nighttime 0.00109, 0.435
+%   SDE-Net:   all 0.97654, 108.200, 0.121129, 0.21652; daytime 0.95311,
+%     224.562, 0.251393, 0.49585; nighttime 0.99758, 3.774
+% Il CLC dei file è calcolato con eta = 9 (verificato: 0.009161 * (1 +
+% exp(9 * 0.84195)) = 17.91). R = 893.27 W.
+% ATTENZIONE: per SDE U-Net la colonna coverage_95 di metrics_global.csv e di
+% metrics_by_anomaly_label.csv (0.122 su tutte le ore) è quella della banda
+% gaussiana media +/- 1.96 deviazioni standard (picp_gaussian), non quella dei
+% quantili empirici (picp_pi, 0.108). Per SDE-Net le due coincidono (0.9765).
+% Deviazione standard (metrics_global.csv: media, mediana, percentile 90):
+%   SDE U-Net 2.386, 0.333, 6.226; SDE-Net un'ora 27.603, 0.786, 87.759;
+%   SDE-Net sei orizzonti 41.975, 0.841, 131.392 (copertura 0.9770).
+% Costruzione degli intervalli letta nel codice (training/uncertainty.py dei due
+% branch): quantili empirici delle traiettorie per SDE U-Net; quantili della
+% miscela gaussiana per SDE-Net, con deviazione standard totale
+% sqrt(varianza epistemica + varianza aleatoria).
+% Componenti epistemica e aleatoria: vedi il commento dopo la Tabella delle
+% fasce di produzione, più sotto.
 
 % Per la variante SDE-Net distinguere quantili della miscela gaussiana e banda
 % gaussiana approssimata; riportare separatamente le componenti della varianza.
@@ -79,6 +272,36 @@ Il dato descrive la sola componente di ricostruzione dello score e le sole osser
 % Distinguere score aggregati del detector e diagnostiche per variabile.
 
 \subsection{Soglie IQR, top-K e confronto fra grafo e griglia}
+
+MTGFlow e STGAN decidono in modo diverso quali osservazioni segnalare, e la differenza si riflette nella loro distribuzione fra le località. Con la soglia per località, MTGFlow segnala nel 2019 il 6.1\% delle osservazioni con score, ma la quota varia da una località all'altra: la mediana è il 6.0\%, i quartili il 4.7\% e il 7.4\%, il minimo l'1.3\% e il massimo il 13.7\%. STGAN segnala invece una quota fissata, l'1\%, sull'insieme di tutte le località.
+
+I due detector segnalano osservazioni quasi del tutto diverse. Sulle 4724704 osservazioni diurne per le quali sono disponibili entrambi gli score, MTGFlow ne segnala 312044 e la versione su grafo di STGAN 94532; quelle segnalate da entrambi sono 6829, con un indice di Jaccard di 0.017. Due detector indipendenti con le stesse quote ne avrebbero in comune circa 6243, con un indice di 0.016: l'accordo osservato supera di poco quello atteso per caso. Delle osservazioni segnalate da STGAN, il 7.2\% è segnalato anche da MTGFlow; di quelle segnalate da MTGFlow, il 2.2\% lo è anche da STGAN. Anche aggregando per giorno la relazione resta debole, con una correlazione di 0.14 secondo Pearson e di 0.18 secondo Spearman.
+
+Il confronto fra i due detector riguarda quindi insiemi di osservazioni in larga parte distinti, e non due ordinamenti delle stesse osservazioni. Lo stesso vale, come mostra la Sezione~\ref{sec:ris-stabilita}, per due configurazioni di STGAN.
+% Fonte: reference_detector_overlap.csv (letto l'11 ottobre 2026), soglie di
+% riferimento k = 1.5 e 1%: n_common_daytime 4724704, n_mtgflow_rare 312044,
+% n_stgan_rare 94532, n_both_rare 6829, jaccard 0.017083,
+% stgan_captured_by_mtgflow 0.07224, mtgflow_captured_by_stgan 0.02188,
+% daily_pearson 0.13678, daily_spearman 0.18259.
+% Atteso per caso: 312044 * 94532 / 4724704 = 6243; Jaccard 6243 / (312044 +
+% 94532 - 6243) = 0.0156.
+% STGAN = versione su grafo: confermato dal protocollo dell'analisi dei quattro
+% casi, che usa pvgis_stgan/paper_reference/seed_20 (stessa serie di analisi).
+% DA VERIFICARE nel notebook: quale grandezza giornaliera è correlata (file
+% reference_detector_daily_overlap.csv) e che STGAN sia la versione su grafo.
+% reference_decision_metrics.csv, errore assoluto a un'ora (media; primo
+% quartile, mediana, terzo quartile): MTGFlow normali 44.96; 10.76, 27.35, 58.18;
+% segnalate 51.01; 12.22, 30.12, 66.10. STGAN normali 45.04; 10.76, 27.32, 58.29;
+% segnalate 61.19; 17.73, 37.99, 76.74. A sei ore: MTGFlow 82.12 (22.97, 59.58,
+% 113.54) e 89.00 (24.82, 63.32, 123.05); STGAN 82.35 (22.99, 59.68, 113.85) e
+% 93.80 (28.48, 66.91, 129.16).
+% Fonte: pvgis_mtgflow/downstream_dense/summary_aggregate.csv, colonna
+% anomaly_rate_mean, 1149 località (letto l'11 ottobre 2026): minimo 0.01333,
+% primo quartile 0.04747, mediana 0.06045, terzo quartile 0.07390, massimo
+% 0.13677; 8701 osservazioni con score per località (8760 meno le prime 59 ore,
+% finestra di 60). Quota complessiva: 613164 segnalate su 9997449 con score.
+% Per STGAN ConvGRU, dal riepilogo per località visto in parte, la quota per
+% località varia circa da 0.4% a 3.0%: DA RILEGGERE prima di scriverlo.
 % TESTO SPOSTATO DAL CAPITOLO 5 (11 ottobre 2026). Descrive come è calcolata
 % l'analisi: da riusare, accorciato, in apertura della sottosezione e soltanto
 % insieme al risultato corrispondente.
@@ -111,7 +334,7 @@ La versione su grafo di STGAN e la variante ConvGRU sono state addestrate sugli 
     \caption{Accordo fra le osservazioni segnalate dalla variante ConvGRU e dalla versione su grafo di STGAN sui dati PVGIS del 2019. Ogni detector segnala 100653 osservazioni. L'indice di Jaccard è il rapporto fra le osservazioni segnalate da entrambi e quelle segnalate da almeno uno; l'ultima riga riporta il valore atteso per due detector indipendenti con la stessa quota.}
     \label{tab:accordo-detector}
     \vspace{0.6em}
-    \begin{tabular}{@{}L{0.26}L{0.16}L{0.12}L{0.12}L{0.12}L{0.12}@{}}
+    \begin{tabular}{@{}L{0.24}L{0.15}L{0.10}L{0.10}L{0.11}L{0.11}@{}}
         \toprule
         Configurazione & Segnalate da entrambi & Quota & Jaccard & Patch complete & Patch incomplete \\
         \midrule
@@ -188,10 +411,153 @@ La conseguenza riguarda le analisi della Sezione~\ref{sec:ris-posthoc}: gli erro
 
 \subsection{MAE e RMSE sui campioni normali e anomali}
 
+Le previsioni a un'ora sono divise secondo l'etichetta dell'osservazione prevista. La Tabella~\ref{tab:errori-etichette} usa le soglie climatologiche: un'osservazione è segnalata quando almeno una delle quattro grandezze esce dalla propria banda. Le righe per tipo non sono disgiunte, perché la stessa osservazione può essere segnalata per più grandezze.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{4pt}
+    \caption{Errore e copertura dell'intervallo al 95\% delle due varianti SDE a un'ora, per etichetta climatologica dell'osservazione prevista. Tutte le ore del 2019. Bassa e alta indicano valori insolitamente bassi o alti rispetto alla climatologia. Le righe per tipo possono sovrapporsi. Per la variante SDE U-Net la copertura è quella della banda $\bar{y}\pm1.96\,s_y$, la sola salvata per tipo; con i quantili empirici è \provv{0.106} sulle normali e \provv{0.127} sulle segnalate.}
+    \label{tab:errori-etichette}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.26}L{0.11}L{0.07}L{0.07}L{0.08}L{0.07}L{0.07}L{0.08}@{}}
+        \toprule
+        & & \multicolumn{3}{@{}l}{Variante SDE U-Net} & \multicolumn{3}{@{}l}{Variante SDE-Net} \\
+        Osservazioni & Numero & MAE & RMSE & Cop. & MAE & RMSE & Cop. \\
+        \midrule
+        Normali & 8978381 & \provv{17.6} & \provv{43.1} & \provv{0.120} & \provv{19.3} & \provv{46.0} & \provv{0.979} \\
+        Segnalate & 1059283 & \provv{27.6} & \provv{66.2} & \provv{0.143} & \provv{31.7} & \provv{70.6} & \provv{0.956} \\
+        \addlinespace
+        Irradianza o produzione bassa & 115395 & \provv{98.5} & \provv{151.0} & \provv{0.014} & \provv{112.7} & \provv{158.5} & \provv{0.809} \\
+        Irradianza o produzione alta & 39289 & \provv{48.7} & \provv{74.0} & \provv{0.105} & \provv{48.7} & \provv{76.2} & \provv{0.970} \\
+        Temperatura estrema & 512047 & \provv{15.3} & \provv{41.9} & \provv{0.206} & \provv{19.9} & \provv{48.3} & \provv{0.975} \\
+        Vento estremo & 465833 & \provv{23.0} & \provv{53.1} & \provv{0.108} & \provv{25.7} & \provv{57.0} & \provv{0.968} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+In entrambe le varianti l'errore sulle osservazioni segnalate è maggiore di quello sulle normali: l'errore assoluto medio passa da \provv{17.6} a \provv{27.6}~W nella variante SDE U-Net e da \provv{19.3} a \provv{31.7}~W nella variante SDE-Net, circa 1.6 volte in entrambi i casi. La differenza non è uniforme fra i tipi. L'errore più alto riguarda le osservazioni con irradianza o produzione insolitamente bassa, \provv{98.5} e \provv{112.7}~W, più di cinque volte quello delle normali. Sulle osservazioni con temperatura estrema l'errore è invece vicino a quello delle normali, e nella variante SDE U-Net inferiore.
+
+La copertura della variante SDE-Net resta vicina al livello nominale su tutti i gruppi tranne uno: sulle osservazioni con irradianza o produzione insolitamente bassa scende a \provv{0.809}. È il gruppo in cui l'errore è maggiore e in cui l'intervallo, pur più ampio, non basta a contenere le osservazioni. Nella variante SDE U-Net la copertura è bassa su tutti i gruppi e sullo stesso gruppo scende a \provv{0.014}.
+
+Il confronto su tutte le ore ha un limite. I gruppi non hanno la stessa composizione: le osservazioni normali comprendono più ore notturne, in cui l'errore è quasi nullo, mentre un'irradianza insolitamente bassa o alta si verifica soltanto di giorno. È diurno il 55.8\% delle osservazioni segnalate, contro il 46.3\% delle normali. Restringendo il confronto alle ore diurne (Tabella~\ref{tab:errori-diurne}) la differenza si riduce: l'errore assoluto medio sulle segnalate è \provv{1.16} volte quello sulle normali nella variante SDE U-Net e \provv{1.22} volte nella variante SDE-Net, contro circa 1.6 su tutte le ore. Una parte consistente della differenza osservata su tutte le ore dipende quindi dalla diversa quota di ore diurne, e non dall'etichetta. Sulle ore diurne la copertura della variante SDE-Net passa da \provv{0.955} sulle normali a \provv{0.937} sulle segnalate; quella della variante SDE U-Net è la stessa nei due gruppi.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{4pt}
+    \caption{Errore e copertura dell'intervallo al 95\% delle due varianti SDE a un'ora sulle sole ore diurne del 2019, per etichetta climatologica dell'osservazione prevista. Errori in watt.}
+    \label{tab:errori-diurne}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.18}L{0.11}L{0.07}L{0.07}L{0.08}L{0.07}L{0.07}L{0.08}@{}}
+        \toprule
+        & & \multicolumn{3}{@{}l}{Variante SDE U-Net} & \multicolumn{3}{@{}l}{Variante SDE-Net} \\
+        Osservazioni & Numero & MAE & RMSE & PICP & MAE & RMSE & PICP \\
+        \midrule
+        Normali & 4156850 & \provv{37.3} & \provv{63.3} & \provv{0.227} & \provv{41.6} & \provv{67.6} & \provv{0.955} \\
+        Segnalate & 590695 & \provv{43.2} & \provv{75.6} & \provv{0.227} & \provv{50.9} & \provv{82.7} & \provv{0.937} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+% Fonte: metrics_daytime.csv, righe normal_daytime e rare_extreme_daytime
+% (l'11 ottobre 2026). Rapporti: 43.169/37.339 = 1.156; 50.910/41.642 = 1.223.
+% Quote diurne: 590695/1059283 = 55.8%; 4156850/8978381 = 46.3%.
+% DA FARE: stesso confronto per fascia di produzione
+% (residual_bias_and_bin_metrics.csv) e per tipo di etichetta.
+
+Le stesse previsioni della variante SDE-Net sono state divise anche secondo le decisioni di MTGFlow (Tabella~\ref{tab:errori-mtgflow}). MTGFlow segnala il 6.1\% delle osservazioni, contro il 10.6\% delle soglie climatologiche. L'errore assoluto medio sulle osservazioni segnalate è circa 1.3 volte quello sulle normali a un'ora e 1.2 volte sui sei orizzonti; la copertura scende di meno di un punto percentuale. Le osservazioni segnalate da MTGFlow sono quindi, per il previsore, meno diverse dalle normali di quanto lo siano quelle segnalate dalle soglie climatologiche. I due insiemi di osservazioni segnalate non sono stati confrontati direttamente: non è noto in che misura coincidano.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Errore e copertura dell'intervallo al 95\% della variante SDE-Net secondo le decisioni di MTGFlow sull'osservazione prevista. Tutte le ore del 2019.}
+    \label{tab:errori-mtgflow}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.18}L{0.15}L{0.14}L{0.11}L{0.11}L{0.12}@{}}
+        \toprule
+        Previsione & Osservazioni & Numero & MAE (W) & RMSE (W) & Copertura \\
+        \midrule
+        Un'ora & Normali & 9424500 & \provv{20.3} & \provv{48.3} & \provv{0.977} \\
+        Un'ora & Segnalate & 613164 & \provv{26.0} & \provv{60.0} & \provv{0.970} \\
+        \addlinespace
+        Sei orizzonti & Normali & 56512582 & \provv{31.9} & \provv{68.3} & \provv{0.977} \\
+        Sei orizzonti & Segnalate & 3678932 & \provv{38.6} & \provv{80.2} & \provv{0.970} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+% NUMERI LETTI SUL SERVER l'11 ottobre 2026, file metrics_by_anomaly_label.csv
+% delle run normal_only_monaco_ep60_seed42 (SDE U-Net),
+% paper_faithful_gaussian_ep60_seed1 (SDE-Net, etichette climatologiche),
+% ..._detector_mtgflow_ep60_seed1 e ..._h1-2-3-4-5-6_direct_seed1 (etichette
+% MTGFlow). Righe "group:" = etichetta locale dell'osservazione; "label:" = tipo.
+% Nel codice l'etichetta solar_potential copre irradianza e produzione
+% (pvgis_anomaly_scores.py, SOLAR_VARIABLES).
+% Non usate qui le righe "event:" (eventi regionali, criterio del filtro sulle
+% finestre normali). Per SDE U-Net: ore in un evento regionale 785916 (7.8%),
+% MAE 41.09 e RMSE 85.73 contro 16.77 e 40.99 nelle altre; copertura 0.120 e
+% 0.122. Con le etichette MTGFlow, un'ora: evento 346998, MAE 28.02, RMSE 58.60.
+% Rapporti: 27.61/17.62 = 1.57; 31.65/19.34 = 1.64; 26.01/20.30 = 1.28;
+% 38.58/31.86 = 1.21; 98.51/17.62 = 5.6; 112.67/19.34 = 5.8.
+
 % Riportare conteggi, metriche aggregate e distribuzioni degli errori assoluti
 % per fascia di produzione. I boxplot non descrivono RMSE per campione.
 
 \subsection{Confronto a una e sei ore e quattro casi input--target}
+
+La Tabella~\ref{tab:orizzonti} divide le previsioni della variante SDE-Net a sei orizzonti secondo le decisioni di MTGFlow, sulle osservazioni diurne. A ogni orizzonte l'errore sulle osservazioni segnalate è maggiore di quello sulle normali, e la differenza in valore assoluto resta quasi costante: \provv{6.8}~W di errore assoluto medio a un'ora e \provv{7.1}~W a sei ore. Poiché l'errore cresce con l'orizzonte, il rapporto fra i due scende da \provv{1.15} a \provv{1.09}. Su queste previsioni la distanza fra osservazioni segnalate e normali non aumenta quindi con l'orizzonte.
+% Differenze: 51.976 - 45.186 = 6.79; 88.910 - 81.836 = 7.07.
+
+L'etichetta dell'osservazione prevista non è l'unica informazione disponibile: anche la finestra di ingresso può contenere osservazioni segnalate. Le previsioni sono quindi divise in quattro casi, secondo che la finestra di ingresso e l'osservazione prevista siano normali o anomale. La finestra comprende le 24 ore della stessa località che precedono l'emissione della previsione, ed è considerata anomala quando contiene almeno un'osservazione segnalata. Le decisioni sono quelle della versione su grafo di STGAN, con l'1\% del ranking; le previsioni sono quelle della variante SDE-Net a sei orizzonti sulle ore diurne. Sono escluse le previsioni con finestra incompleta o con osservazione prevista priva di score, il 2.9\% a un'ora e il 3.0\% a sei ore.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{4pt}
+    \caption{Errore della variante SDE-Net nei quattro casi definiti dalle decisioni di STGAN sulla finestra di ingresso e sull'osservazione prevista, a una e a sei ore. Ore diurne del 2019; la quota è riferita alle previsioni incluse, 4611053 a un'ora e 4606662 a sei ore. Errori in watt.}
+    \label{tab:quattro-casi}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.12}L{0.12}L{0.10}L{0.09}L{0.09}L{0.10}L{0.09}L{0.09}@{}}
+        \toprule
+        & & \multicolumn{3}{@{}l}{Un'ora} & \multicolumn{3}{@{}l}{Sei ore} \\
+        Ingresso & Target & Quota & MAE & RMSE & Quota & MAE & RMSE \\
+        \midrule
+        Normale & Normale & 77.4\% & \provv{42.9} & \provv{67.2} & 77.4\% & \provv{79.7} & \provv{112.0} \\
+        Anomalo & Normale & 20.6\% & \provv{50.3} & \provv{76.5} & 20.6\% & \provv{90.2} & \provv{125.0} \\
+        Normale & Anomalo & 1.4\% & \provv{59.4} & \provv{93.3} & 1.5\% & \provv{92.7} & \provv{129.4} \\
+        Anomalo & Anomalo & 0.6\% & \provv{62.2} & \provv{97.5} & 0.5\% & \provv{95.2} & \provv{132.2} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Una finestra su cinque contiene almeno un'osservazione segnalata, benché le osservazioni segnalate siano l'1\%: in 24 ore la probabilità di incontrarne una è molto più alta che in una singola ora (Tabella~\ref{tab:quattro-casi}). In questi casi l'errore è maggiore anche quando l'osservazione prevista è normale: \provv{50.3} contro \provv{42.9}~W a un'ora, il \provv{17}\% in più, e \provv{90.2} contro \provv{79.7}~W a sei ore, il \provv{13}\% in più. Un'anomalia nelle ore precedenti è quindi associata a una previsione peggiore anche quando l'ora prevista non è segnalata.
+
+L'effetto dell'osservazione prevista è più forte a un'ora e si attenua a sei. A un'ora, con ingresso normale, l'errore passa da \provv{42.9} a \provv{59.4}~W quando il target è anomalo, il \provv{39}\% in più; a sei ore da \provv{79.7} a \provv{92.7}~W, il \provv{16}\% in più, un aumento vicino a quello dovuto al solo ingresso anomalo. Quando ingresso e target sono entrambi anomali l'errore è il più alto, ma di poco superiore a quello con il solo target anomalo.
+
+I quattro casi non sono una classificazione delle previsioni del modello: l'etichetta riguarda le osservazioni, non la previsione. I conteggi sono previsioni per località e istante, non giorni indipendenti, e finestre vicine nel tempo condividono gran parte delle ore.
+% Fonte: stgan_input_target_cases_t1_t6 (letto l'11 ottobre 2026).
+% Protocollo: sola rielaborazione; previsioni della run a sei orizzonti; score
+% pvgis_stgan/paper_reference/seed_20 (versione su grafo); top 1% ricalcolato
+% dopo il filtro di qualità, soglia dello score 0.65091; finestra di 24 ore
+% della stessa località che termina all'istante di emissione; almeno un passo
+% anomalo rende anomala la finestra; soglia diurna 10 W/m2.
+% Righe diurne caricate 9495090 (due orizzonti), classificate 9217715, escluse
+% 277375. A un'ora: incluse 4611053 (97.125%), finestra incompleta 126230,
+% finestra incompleta e target senza score 10262. A sei ore: incluse 4606662
+% (97.0325%), finestra incompleta 130621, entrambe 2298, target senza score 7964.
+% Casi (numero, quota, MAE, RMSE):
+%   t+1 normale-normale 3570325, 77.430%, 42.902,  67.197
+%   t+1 normale-anomalo   66845,  1.450%, 59.421,  93.254
+%   t+1 anomalo-normale  948460, 20.569%, 50.326,  76.465
+%   t+1 anomalo-anomalo   25423,  0.551%, 62.205,  97.524
+%   t+6 normale-normale 3567175, 77.435%, 79.675, 111.993
+%   t+6 normale-anomalo   68398,  1.485%, 92.733, 129.407
+%   t+6 anomalo-normale  947430, 20.567%, 90.199, 125.021
+%   t+6 anomalo-anomalo   23659,  0.514%, 95.190, 132.222
+% Rapporti rispetto a normale-normale: t+1 1.173, 1.385, 1.450; t+6 1.132,
+% 1.164, 1.195.
+% DA FARE: stessi casi per fascia di produzione (input_target_bin_metrics.csv),
+% per controllare che l'effetto dell'ingresso anomalo non dipenda dalla diversa
+% ripartizione fra le fasce.
 % TESTO SPOSTATO DAL CAPITOLO 5 (11 ottobre 2026). Descrive come è calcolata
 % l'analisi: da riusare, accorciato, in apertura della sottosezione e soltanto
 % insieme al risultato corrispondente.
@@ -205,7 +571,179 @@ La conseguenza riguarda le analisi della Sezione~\ref{sec:ris-posthoc}: gli erro
 % Il target normale/anomalo è l'osservazione etichettata dal detector:
 % questo confronto non è una matrice di confusione del previsore.
 
+\subsection{Due episodi del 2019}
+
+Dallo score di MTGFlow sulle osservazioni diurne sono stati individuati due episodi, usati come casi di studio: il 23--26 aprile e il 28--29 giugno 2019. Un episodio riunisce ore vicine in cui lo score è nella coda della propria distribuzione. A ciascun episodio sono assegnate tutte le ore diurne dei giorni che tocca, perché lo score, calcolato su finestre di 60 ore, segnala l'episodio con ritardo. Le previsioni sono quelle della variante SDE-Net a sei orizzonti; il riferimento sono le osservazioni diurne non segnalate dell'intero anno, pesate secondo la ripartizione dell'episodio fra le fasce di produzione (Tabella~\ref{tab:episodi}).
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Errore assoluto medio e copertura dell'intervallo al 95\% della variante SDE-Net nei due episodi, a una e a sei ore, a confronto con le osservazioni normali. Ore diurne; l'episodio di aprile comprende 58514 previsioni per orizzonte, quello di giugno 33789.}
+    \label{tab:episodi}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.18}L{0.11}L{0.11}L{0.11}L{0.11}L{0.11}@{}}
+        \toprule
+        & & \multicolumn{2}{@{}l}{MAE (W)} & \multicolumn{2}{@{}l}{PICP} \\
+        Episodio & Orizzonte & Episodio & Normali & Episodio & Normali \\
+        \midrule
+        23--26 aprile & 1 ora & \provv{70.5} & \provv{42.6} & \provv{0.946} & \provv{0.943} \\
+        23--26 aprile & 6 ore & \provv{145.7} & \provv{75.4} & \provv{0.945} & \provv{0.931} \\
+        \addlinespace
+        28--29 giugno & 1 ora & \provv{35.5} & \provv{45.6} & \provv{0.945} & \provv{0.963} \\
+        28--29 giugno & 6 ore & \provv{58.6} & \provv{91.0} & \provv{0.920} & \provv{0.971} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Nell'episodio di aprile l'errore assoluto medio è \provv{70.5}~W a un'ora e \provv{145.7}~W a sei ore, il \provv{65}\% e il \provv{93}\% in più rispetto alle osservazioni normali. La copertura complessiva resta vicina a quella delle normali, perché l'intervallo si allarga, ma non è uniforme: nelle fasce di produzione più alte scende, a un'ora, a \provv{0.757} fra il 60 e l'80\% del riferimento e a \provv{0.869} fra l'80 e il 100\%, e in queste fasce la produzione è sottostimata in modo sistematico.
+
+Nell'episodio di giugno l'errore è invece inferiore a quello delle osservazioni normali: \provv{35.5} contro \provv{45.6}~W a un'ora e \provv{58.6} contro \provv{91.0}~W a sei ore. La copertura scende a \provv{0.945} e a \provv{0.920}. Il calo è concentrato nella fascia di produzione più bassa, dove l'intervallo è più stretto di quello delle normali (\provv{98.8} contro \provv{173.3}~W a un'ora) e la copertura è \provv{0.797}.
+
+Dei due episodi, quello di giugno ha lo score di picco più alto (5095 contro 4169), ma è quello in cui il previsore sbaglia meno. Uno score elevato del detector non corrisponde quindi, di per sé, a una previsione più difficile. Due episodi non bastano per una conclusione generale: indicano che lo score del detector e la difficoltà per il previsore vanno misurati separatamente.
+% Fonte: analysis_summary_extreme_events_t1_t6.txt ed extreme_event_metrics_
+% t_plus_1/6.csv della run a sei orizzonti (letti l'11 ottobre 2026); metodo nel
+% notebook pvgis_sde_extreme_events.ipynb. Episodi: 23 aprile 05:10 -- 26 aprile
+% 18:10 (86 ore, picco 4169.1 il 24 aprile 08:10, 559 finestre estreme);
+% 28 giugno 04:10 -- 29 giugno 18:10 (39 ore, picco 5094.6 il 28 giugno 17:10,
+% 500 finestre estreme). Riferimento normale: 4390625 righe per orizzonte.
+% Classifica: aprile t+1 MAE 70.47 contro 42.62 (+65.3%), PICP 0.9464 e 0.9433,
+% CLC 0.927; t+6 145.71 contro 75.42 (+93.2%), 0.9453 e 0.9314, CLC 1.510;
+% giugno t+1 35.55 contro 45.62 (-22.1%), 0.9454 e 0.9632, CLC 0.517; t+6 58.62
+% contro 91.01 (-35.6%), 0.9198 e 0.9706, CLC 0.889.
+% Segno del bias: previsto meno osservato (nella fascia 0--20% delle normali
+% bias +25.8 con quota di sovrastime 0.587). Aprile, t+1: fascia 60--80% bias
+% -141.2, PICP 0.757; fascia 80--100% bias -138.5, PICP 0.869.
+% DA VERIFICARE nel notebook sul server: quantile che definisce la coda e
+% distanza massima fra ore dello stesso episodio.
+% Nei file i due episodi si chiamano april_dust e june_extreme. Nel testo NON è
+% indicata la causa meteorologica (polvere sahariana, ondata di calore): serve
+% una fonte verificata prima di scriverla.
+% Non usato: riepilogo_arrivo_evento (bias di picco 49.0 W a t+1 e 188.6 W a
+% t+6, ritardi 0 e 4 ore, assestamento dopo 4 e 7 ore): non è indicato a quale
+% episodio si riferisce.
+
 \subsection{Errore in funzione della soglia e bande di dispersione}
+
+La decisione di un detector dipende da una soglia. Per MTGFlow la soglia di ogni località è $Q_3+k\,\mathrm{IQR}$, con $k=1.5$ nel protocollo di base; per STGAN è la quota del ranking globale degli score, pari all'1\%. Per verificare quanto il confronto fra osservazioni normali e segnalate dipenda da queste scelte, le due soglie sono state fatte variare; a ogni valore i due gruppi e i loro errori sono ricalcolati, senza riaddestrare né i detector né il previsore. Per STGAN l'analisi è svolta sulla versione su grafo e sulla variante ConvGRU con kernel 3. Le previsioni sono quelle della variante SDE-Net a sei orizzonti, sulle osservazioni diurne per le quali sono disponibili gli score di entrambi i detector, il 99.5\% delle diurne. Per STGAN il ranking è ricalcolato dopo aver escluso 18 istanti riconducibili a un difetto dei dati: un azzeramento isolato dell'irradianza sull'intera regione e l'ora immediatamente successiva.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{4pt}
+    \caption{Errore assoluto medio della variante SDE-Net, a una e a sei ore, sulle osservazioni diurne normali e segnalate, al variare della soglia dei detector. Per MTGFlow la soglia è il moltiplicatore $k$; per STGAN è la quota del ranking globale, calcolata su tutte le ore. La colonna delle segnalate riporta la quota fra le osservazioni diurne. Il rapporto è fra l'errore sulle segnalate e quello sulle normali. Errori in watt.}
+    \label{tab:sensibilita}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.15}L{0.09}L{0.11}L{0.08}L{0.08}L{0.07}L{0.08}L{0.08}L{0.07}@{}}
+        \toprule
+        & & & \multicolumn{3}{@{}l}{Un'ora} & \multicolumn{3}{@{}l}{Sei ore} \\
+        Detector & Soglia & Segnalate & Norm. & Segn. & Rapp. & Norm. & Segn. & Rapp. \\
+        \midrule
+        MTGFlow & 0.5 & 15.9\% & \provv{44.4} & \provv{50.2} & \provv{1.13} & \provv{81.7} & \provv{87.3} & \provv{1.07} \\
+        MTGFlow & 1.0 & 9.8\% & \provv{44.8} & \provv{50.9} & \provv{1.14} & \provv{81.9} & \provv{88.4} & \provv{1.08} \\
+        MTGFlow & 1.5 & 6.6\% & \provv{45.0} & \provv{51.0} & \provv{1.13} & \provv{82.1} & \provv{89.0} & \provv{1.08} \\
+        MTGFlow & 2.0 & 4.7\% & \provv{45.1} & \provv{50.9} & \provv{1.13} & \provv{82.3} & \provv{89.0} & \provv{1.08} \\
+        MTGFlow & 2.5 & 3.5\% & \provv{45.2} & \provv{50.9} & \provv{1.13} & \provv{82.3} & \provv{89.1} & \provv{1.08} \\
+        MTGFlow & 3.0 & 2.8\% & \provv{45.2} & \provv{51.4} & \provv{1.14} & \provv{82.4} & \provv{90.0} & \provv{1.09} \\
+        \addlinespace
+        STGAN su grafo & 5\% & 7.7\% & \provv{45.1} & \provv{48.4} & \provv{1.07} & \provv{82.0} & \provv{90.0} & \provv{1.10} \\
+        STGAN su grafo & 3\% & 5.5\% & \provv{45.0} & \provv{51.4} & \provv{1.14} & \provv{82.1} & \provv{90.5} & \provv{1.10} \\
+        STGAN su grafo & 2\% & 3.9\% & \provv{45.0} & \provv{54.8} & \provv{1.22} & \provv{82.2} & \provv{91.4} & \provv{1.11} \\
+        STGAN su grafo & 1\% & 2.0\% & \provv{45.0} & \provv{61.2} & \provv{1.36} & \provv{82.3} & \provv{93.8} & \provv{1.14} \\
+        STGAN su grafo & 0.5\% & 1.0\% & \provv{45.1} & \provv{68.5} & \provv{1.52} & \provv{82.4} & \provv{97.4} & \provv{1.18} \\
+        STGAN su grafo & 0.25\% & 0.5\% & \provv{45.2} & \provv{76.5} & \provv{1.69} & \provv{82.5} & \provv{102.0} & \provv{1.24} \\
+        \addlinespace
+        STGAN ConvGRU & 5\% & 9.4\% & \provv{45.9} & \provv{40.2} & \provv{0.88} & \provv{83.7} & \provv{72.1} & \provv{0.86} \\
+        STGAN ConvGRU & 3\% & 5.7\% & \provv{45.6} & \provv{42.2} & \provv{0.93} & \provv{83.2} & \provv{71.8} & \provv{0.86} \\
+        STGAN ConvGRU & 2\% & 3.9\% & \provv{45.4} & \provv{43.6} & \provv{0.96} & \provv{83.0} & \provv{72.4} & \provv{0.87} \\
+        STGAN ConvGRU & 1\% & 2.0\% & \provv{45.3} & \provv{46.4} & \provv{1.02} & \provv{82.7} & \provv{74.6} & \provv{0.90} \\
+        STGAN ConvGRU & 0.5\% & 1.0\% & \provv{45.3} & \provv{49.8} & \provv{1.10} & \provv{82.6} & \provv{77.8} & \provv{0.94} \\
+        STGAN ConvGRU & 0.25\% & 0.5\% & \provv{45.3} & \provv{53.2} & \provv{1.17} & \provv{82.6} & \provv{81.0} & \provv{0.98} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Per MTGFlow, passando da $k=0.5$ a $k=3$ la quota di osservazioni segnalate scende dal 15.9\% al 2.8\% (Tabella~\ref{tab:sensibilita}), ma l'errore assoluto medio a un'ora sulle segnalate resta fra \provv{50.2} e \provv{51.4}~W e il rapporto con quello sulle normali fra \provv{1.13} e \provv{1.14}; a sei ore il rapporto resta fra \provv{1.07} e \provv{1.09}. In questo intervallo una soglia più severa non seleziona quindi osservazioni più difficili per il previsore, e la differenza fra i due gruppi non dipende dal valore di $k$ scelto.
+
+Per STGAN il rapporto cresce invece al restringersi della quota, in entrambe le configurazioni, ma a partire da livelli molto diversi. Nella versione su grafo, passando dal 5\% allo 0.25\% del ranking, l'errore assoluto medio a un'ora sulle segnalate sale da \provv{48.4} a \provv{76.5}~W e il rapporto da \provv{1.07} a \provv{1.69}; a sei ore il rapporto sale da \provv{1.10} a \provv{1.24}. Nella variante ConvGRU il rapporto a un'ora va da \provv{0.88} a \provv{1.17} e supera 1 soltanto sotto l'1.25\% del ranking; a sei ore resta sotto 1 a tutte le soglie, fra \provv{0.86} e \provv{0.98}: le osservazioni segnalate hanno un errore inferiore a quello delle normali.
+
+Alle soglie di riferimento il rapporto a un'ora è \provv{1.13} per MTGFlow, \provv{1.36} per la versione su grafo di STGAN e \provv{1.02} per la variante ConvGRU. I detector segnalano però quote diverse delle osservazioni diurne: il 6.6\% MTGFlow, il 2.0\% le due configurazioni di STGAN. A quote vicine, il 2.8\% per MTGFlow con $k=3$ e il 3.0\% per STGAN con l'1.5\% del ranking, i rapporti sono \provv{1.14}, \provv{1.27} e \provv{0.98}.
+
+L'associazione fra lo score di STGAN e la difficoltà della previsione non è quindi una proprietà del metodo: è marcata nella versione su grafo e quasi assente nella variante ConvGRU. Il risultato è coerente con il basso accordo fra le osservazioni segnalate dalle due configurazioni (Sezione~\ref{sec:ris-stabilita}): le due segnalano in larga parte osservazioni diverse, e il previsore si comporta in modo diverso sulle une e sulle altre. Con una sola esecuzione per configurazione non è possibile stabilire quale delle due sia rappresentativa, né attribuire la differenza al modo di rappresentare l'intorno.
+% Fonte: detector_threshold_sensitivity_metrics.csv (letto l'11 ottobre 2026).
+% MTGFlow, colonne: k, normali, segnalate, quota, MAE normali, MAE segnalate,
+% RMSE normali, RMSE segnalate, rapporto MAE.
+%   t+1  0.5: 3972525, 752179, 15.92%, 44.448, 50.205, 68.864, 78.593, 1.1295
+%   t+1  1.0: 4260191, 464513,  9.83%, 44.760, 50.910, 69.429, 79.686, 1.1374
+%   t+1  1.5: 4412660, 312044,  6.60%, 44.965, 51.013, 69.806, 79.706, 1.1345
+%   t+1  2.0: 4503292, 221412,  4.69%, 45.090, 50.941, 70.042, 79.296, 1.1298
+%   t+1  2.5: 4558534, 166170,  3.52%, 45.161, 50.939, 70.175, 78.972, 1.1279
+%   t+1  3.0: 4594272, 130432,  2.76%, 45.192, 51.425, 70.235, 79.385, 1.1379
+%   t+6  0.5: 81.690, 87.269, 114.106, 123.987, 1.0683
+%   t+6  1.0: 81.941, 88.426, 114.655, 125.210, 1.0792
+%   t+6  1.5: 82.124, 89.004, 115.054, 124.970, 1.0838
+%   t+6  2.0: 82.261, 89.034, 115.323, 123.835, 1.0823
+%   t+6  2.5: 82.340, 89.118, 115.467, 122.876, 1.0823
+%   t+6  3.0: 82.369, 89.959, 115.513, 123.309, 1.0922
+% STGAN, colonne: quota del ranking, normali, segnalate, quota fra le diurne,
+% MAE normali, MAE segnalate, RMSE normali, RMSE segnalate, rapporto MAE.
+%   t+1 0.25: 4700621,  24083, 0.51%, 45.205, 76.532, 70.162, 119.689, 1.6930
+%   t+1 0.50: 4676922,  47782, 1.01%, 45.128, 68.507, 70.024, 107.497, 1.5181
+%   t+1 0.75: 4653385,  71319, 1.51%, 45.076, 64.154, 69.933, 100.956, 1.4232
+%   t+1 1.00: 4630172,  94532, 2.00%, 45.041, 61.193, 69.873,  96.447, 1.3586
+%   t+1 1.25: 4607233, 117471, 2.49%, 45.016, 59.031, 69.827,  93.220, 1.3113
+%   t+1 1.50: 4584753, 139951, 2.96%, 45.000, 57.311, 69.797,  90.639, 1.2736
+%   t+1 2.00: 4541473, 183231, 3.88%, 44.984, 54.783, 69.764,  86.844, 1.2178
+%   t+1 3.00: 4465207, 259497, 5.49%, 45.014, 51.399, 69.790,  81.811, 1.1418
+%   t+1 4.00: 4406476, 318228, 6.74%, 45.062, 49.544, 69.844,  79.072, 1.0994
+%   t+1 5.00: 4362749, 361955, 7.66%, 45.115, 48.368, 69.902,  77.378, 1.0721
+%   t+6 0.25: 82.479, 102.020, 115.591, 141.172, 1.2369
+%   t+6 0.50: 82.427,  97.387, 115.518, 135.372, 1.1815
+%   t+6 0.75: 82.382,  95.391, 115.453, 132.865, 1.1579
+%   t+6 1.00: 82.349,  93.805, 115.409, 130.718, 1.1391
+%   t+6 1.25: 82.318,  92.793, 115.369, 129.284, 1.1273
+%   t+6 1.50: 82.289,  92.047, 115.337, 128.107, 1.1186
+%   t+6 2.00: 82.221,  91.429, 115.264, 126.861, 1.1120
+%   t+6 3.00: 82.116,  90.529, 115.178, 124.943, 1.1025
+%   t+6 4.00: 82.029,  90.193, 115.111, 124.060, 1.0995
+%   t+6 5.00: 81.959,  90.039, 115.064, 123.538, 1.0986
+% analysis_metadata.json: sola rielaborazione, nessun nuovo addestramento;
+% soglia diurna 10 W/m2; regola MTGFlow score >= Q3 + k IQR, riferimento k 1.5;
+% regola STGAN top-K globale, riferimento 1%, ranking ricalcolato dopo
+% l'esclusione di 18 istanti (isolated_regional_solar_dropout_plus_immediate_
+% recovery); dominio comune MTGFlow/STGAN, copertura 0.9952; picco di
+% riferimento per le fasce di produzione 712.95 W; tipi meteorologici dalle
+% etichette climatologiche 2005--2018.
+% Le righe STGAN sopra sono quelle della cartella anomaly_threshold_sensitivity_
+% t1_t6, i cui dati di qualità vengono da pvgis_stgan/prepared: versione su
+% grafo (DA CONFERMARE nel notebook).
+% Variante ConvGRU, kernel 3 (anomaly_threshold_sensitivity_cnn/
+% convgru_reference_seed_20_t1_t6_20260916T133237162286Z_45c3ff1b, letto
+% l'11 ottobre 2026). Colonne: quota del ranking, segnalate, quota fra le
+% diurne, MAE normali, MAE segnalate, rapporto.
+%   t+1 0.25:  24147, 0.51%, 45.324, 53.248, 1.1748
+%   t+1 0.50:  47814, 1.01%, 45.319, 49.836, 1.0997
+%   t+1 0.75:  70798, 1.50%, 45.328, 47.776, 1.0540
+%   t+1 1.00:  93388, 1.98%, 45.342, 46.445, 1.0243
+%   t+1 1.25: 115766, 2.45%, 45.363, 45.419, 1.0012
+%   t+1 1.50: 138081, 2.92%, 45.386, 44.655, 0.9839
+%   t+1 2.00: 182487, 3.86%, 45.435, 43.614, 0.9599
+%   t+1 3.00: 270849, 5.73%, 45.560, 42.152, 0.9252
+%   t+1 4.00: 358113, 7.58%, 45.713, 41.108, 0.8993
+%   t+1 5.00: 443468, 9.39%, 45.895, 40.240, 0.8768
+%   t+6 0.25: 82.586, 81.029, 0.9811
+%   t+6 0.50: 82.627, 77.827, 0.9419
+%   t+6 0.75: 82.680, 75.905, 0.9181
+%   t+6 1.00: 82.740, 74.577, 0.9013
+%   t+6 1.25: 82.801, 73.706, 0.8902
+%   t+6 1.50: 82.861, 73.178, 0.8831
+%   t+6 2.00: 82.988, 72.381, 0.8722
+%   t+6 3.00: 83.232, 71.825, 0.8629
+%   t+6 4.00: 83.460, 71.830, 0.8607
+%   t+6 5.00: 83.661, 72.125, 0.8621
+% Non lette: righe MTGFlow e metadati di questa seconda analisi (dominio e
+% previsioni usate): DA LEGGERE per confermare che il previsore è lo stesso.
+% DA FARE: fasce di produzione e bande (quartili e baffi) degli errori assoluti,
+% che richiedono una figura.
 % TESTO SPOSTATO DAL CAPITOLO 5 (11 ottobre 2026). Descrive come è calcolata
 % l'analisi: da riusare, accorciato, in apertura della sottosezione e soltanto
 % insieme al risultato corrispondente.
@@ -222,6 +760,63 @@ La conseguenza riguarda le analisi della Sezione~\ref{sec:ris-posthoc}: gli erro
 % o equivalenza dei gruppi può essere ricavata dalla sola sovrapposizione.
 
 \subsection{Errori per tipo e direzione dell'estremo meteorologico}
+
+Le osservazioni segnalate da un detector sono divise incrociando la decisione con le etichette climatologiche della stessa località e dello stesso istante. Per irradianza, temperatura e vento si distingue se il valore è sopra il quantile alto o sotto quello basso della banda climatologica. Un'osservazione segnalata che non ricade in alcun tipo resta fra le segnalate ed è contata a parte; i tipi possono sovrapporsi. Le soglie dei detector sono quelle di riferimento, le osservazioni sono le diurne comuni ai due detector e le previsioni quelle della variante SDE-Net a sei orizzonti (Tabella~\ref{tab:errori-tipo}).
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{4pt}
+    \caption{Errore assoluto medio della variante SDE-Net, a una e a sei ore, sulle osservazioni diurne segnalate da MTGFlow e dalla versione su grafo di STGAN, per tipo di estremo climatologico. La quota è riferita alle osservazioni segnalate dal detector; i tipi possono sovrapporsi. Errori in watt.}
+    \label{tab:errori-tipo}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.21}L{0.09}L{0.07}L{0.065}L{0.065}L{0.09}L{0.07}L{0.065}L{0.065}@{}}
+        \toprule
+        & \multicolumn{4}{@{}l}{MTGFlow} & \multicolumn{4}{@{}l}{STGAN su grafo} \\
+        Osservazioni & Numero & Quota & 1 ora & 6 ore & Numero & Quota & 1 ora & 6 ore \\
+        \midrule
+        Normali & 4412660 & & \provv{45.0} & \provv{82.1} & 4630172 & & \provv{45.0} & \provv{82.3} \\
+        Segnalate & 312044 & & \provv{51.0} & \provv{89.0} & 94532 & & \provv{61.2} & \provv{93.8} \\
+        \addlinespace
+        Irradianza bassa & 6842 & 2.2\% & \provv{117.8} & \provv{231.5} & 5571 & 5.9\% & \provv{110.1} & \provv{184.6} \\
+        Irradianza alta & 2762 & 0.9\% & \provv{39.7} & \provv{124.8} & 167 & 0.2\% & \provv{62.2} & \provv{147.4} \\
+        Temperatura bassa & 1829 & 0.6\% & \provv{70.0} & \provv{147.8} & 2356 & 2.5\% & \provv{64.5} & \provv{157.9} \\
+        Temperatura alta & 48695 & 15.6\% & \provv{33.5} & \provv{56.9} & 2977 & 3.1\% & \provv{40.3} & \provv{63.1} \\
+        Vento basso & 5948 & 1.9\% & \provv{55.9} & \provv{93.3} & 1594 & 1.7\% & \provv{72.7} & \provv{94.0} \\
+        Vento alto & 20251 & 6.5\% & \provv{68.3} & \provv{115.3} & 3700 & 3.9\% & \provv{69.6} & \provv{123.3} \\
+        Nessun tipo & 231716 & 74.3\% & \provv{51.1} & \provv{88.7} & 79668 & 84.3\% & \provv{58.1} & \provv{86.7} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+La maggior parte delle osservazioni segnalate non corrisponde ad alcun estremo climatologico: il 74.3\% per MTGFlow e l'84.3\% per STGAN. I detector appresi individuano quindi, in prevalenza, osservazioni che le soglie climatologiche non segnalano. Su queste osservazioni l'errore del previsore è superiore a quello delle normali, ma in misura contenuta: a un'ora \provv{51.1}~W per MTGFlow e \provv{58.1}~W per STGAN contro \provv{45.0}~W, a sei ore \provv{88.7} e \provv{86.7}~W contro circa \provv{82}~W.
+
+Gli errori più alti si trovano dove la segnalazione del detector coincide con un'irradianza insolitamente bassa: \provv{117.8} e \provv{110.1}~W a un'ora, più del doppio dell'errore sulle normali, e \provv{231.5} e \provv{184.6}~W a sei ore. Seguono la temperatura bassa e il vento alto. Con temperatura alta l'errore è invece inferiore a quello delle normali, a entrambi gli orizzonti e per entrambi i detector. Il risultato concorda con quello ottenuto con le sole etichette climatologiche nella Tabella~\ref{tab:errori-etichette}: la condizione su cui il previsore sbaglia di più è l'irradianza insolitamente bassa.
+
+La composizione delle osservazioni segnalate è diversa nei due detector. L'irradianza bassa, su cui l'errore è più alto, è il 5.9\% delle segnalate da STGAN e il 2.2\% di quelle segnalate da MTGFlow; la temperatura alta, su cui l'errore è più basso, il 3.1\% e il 15.6\%. Le due differenze vanno nel verso della differenza complessiva fra i due detector riportata nella Tabella~\ref{tab:sensibilita}, ma non la spiegano per intero: anche sulle osservazioni senza tipo l'errore è più alto per STGAN.
+% Fonte: detector_threshold_sensitivity_by_meteo_type.csv, righe mtgflow k 1.5
+% e stgan 1.0, orizzonti 1 e 6 (lette l'11 ottobre 2026). Colonne: numero,
+% quota delle segnalate, MAE e RMSE a t+1, MAE e RMSE a t+6.
+% MTGFlow (312044 segnalate su 4724704):
+%   irradiance_high    2762, 0.89%,  39.66,  59.40; 124.82, 148.76
+%   irradiance_low     6842, 2.19%, 117.84, 154.30; 231.53, 276.46
+%   temperature_high  48695, 15.61%, 33.47,  59.17;  56.94,  82.16
+%   temperature_low    1829, 0.59%,  69.95, 100.53; 147.78, 202.68
+%   wind_high         20251, 6.49%,  68.29, 102.23; 115.30, 152.00
+%   wind_low           5948, 1.91%,  55.94,  91.57;  93.27, 143.76
+%   untyped          231716, 74.26%, 51.09,  77.83;  88.71, 122.25
+% STGAN (94532 segnalate):
+%   irradiance_high     167, 0.18%,  62.17, 110.69; 147.40, 170.05
+%   irradiance_low     5571, 5.89%, 110.12, 169.28; 184.57, 231.84
+%   temperature_high   2977, 3.15%,  40.31,  68.13;  63.07,  88.62
+%   temperature_low    2356, 2.49%,  64.53,  90.41; 157.95, 196.59
+%   wind_high          3700, 3.91%,  69.58,  99.41; 123.31, 161.33
+%   wind_low           1594, 1.69%,  72.75, 120.75;  94.01, 132.82
+%   untyped           79668, 84.28%, 58.13,  89.90;  86.72, 119.71
+% Tipi dalle etichette climatologiche 2005--2018 (analysis_metadata.json):
+% alto = valore sopra climatology_q_high, basso = sotto climatology_q_low.
+% Le righe con poche osservazioni (irradianza alta per STGAN: 167) vanno lette
+% con cautela.
 % TESTO SPOSTATO DAL CAPITOLO 5 (11 ottobre 2026). Descrive come è calcolata
 % l'analisi: da riusare, accorciato, in apertura della sottosezione e soltanto
 % insieme al risultato corrispondente.

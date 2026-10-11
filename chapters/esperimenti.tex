@@ -67,7 +67,7 @@ La Tabella~\ref{tab:configurazioni} riporta anni, numero di epoche, dimensione d
     \end{tabular}
 \end{table}
 
-I previsori ricevono una finestra di 24 ore e undici feature. Il dropout Monte Carlo usa 20 passaggi in avanti e il Deep Ensemble cinque membri; la variante SDE U-Net campiona 20 traiettorie e la variante SDE-Net 10. Gli esperimenti preliminari sono addestrati per 5 epoche e le due varianti SDE per 60: i due gruppi non sono a parità di addestramento, e i loro risultati non vanno letti come un confronto alla pari.
+I previsori ricevono una finestra di 24 ore e undici feature. Il dropout Monte Carlo usa 20 passaggi in avanti e il Deep Ensemble cinque membri; la variante SDE U-Net campiona 20 traiettorie e la variante SDE-Net 10. Negli esperimenti preliminari l'addestramento usa al più 50000 campioni e l'encoder temporale ha dimensione nascosta 64 invece di 128. Gli esperimenti preliminari sono addestrati per 5 epoche e le due varianti SDE per 60: i due gruppi non sono a parità di addestramento, e i loro risultati non vanno letti come un confronto alla pari.
 
 La variante SDE U-Net sceglie sul 2018 l'epoca del modello valutato; quando è addestrata sulle sole finestre normali, il filtro conserva 11109 delle 17496 finestre di training e 6054 delle 8736 di validation. La variante SDE-Net, come l'articolo, è addestrata per un numero fissato di epoche e valutata all'ultima; la sua diffusione massima parte da 0.01 e passa a 0.5 dopo 30 epoche, e il tasso di apprendimento del drift è ridotto di un fattore 10 dopo l'epoca 20.
 
@@ -81,6 +81,11 @@ Tutti i modelli sono addestrati su una scheda NVIDIA RTX PRO 6000 Blackwell.
 % Fonti dei valori (verificati il 10 ottobre 2026): W&B per dropout Monte Carlo e
 % Deep Ensemble (run del 10 giugno 2026); report e W&B per le varianti SDE;
 % run_metadata.json per MTGFlow e STGAN; log di training per ERA5.
+% MTGFlow, anni: pvgis_mtgflow/prepared/loc_0000_0/metadata.json riporta
+% train_years [2005, 2018], validation_year null, test_year 2019, tre feature,
+% nessuna normalizzazione stagionale (riletto l'11 ottobre 2026). Il campo
+% export_train_years [2016, 2017, 2018] di run_metadata.json indica gli anni di
+% training di cui sono esportati gli score, non gli anni di addestramento.
 % DA FARE PRIMA DELLA CONSEGNA: la riga della variante SDE-Net descrive la run da
 % rifare con --no-validation; la run esistente ha training 2016--2017 e
 % validation 2018. Scelta dell'autore dell'11 ottobre 2026: intanto i Risultati
@@ -96,7 +101,7 @@ Tutti i modelli sono addestrati su una scheda NVIDIA RTX PRO 6000 Blackwell.
 \section{Protocollo di valutazione}
 \label{sec:exp-protocollo}
 
-Tutti i modelli sui dati PVGIS sono valutati sul 2019, che non entra in alcun addestramento. Per i previsori ogni previsione richiede le 24 ore precedenti: le previsioni sono 8736 per località, in tutto 10037664. I detector assegnano uno score a ogni ora dell'anno, usando come contesto la coda del periodo di training: le osservazioni valutate sono 10065240.
+Tutti i modelli sui dati PVGIS sono valutati sul 2019, che non entra in alcun addestramento. Per i previsori ogni previsione richiede le 24 ore precedenti: le previsioni sono 8736 per località, in tutto 10037664. STGAN assegna uno score a ogni ora dell'anno, usando come contesto la coda del periodo di training: le osservazioni valutate sono 10065240. MTGFlow assegna lo score all'ultima ora di ogni finestra di 60 ore interna all'anno, cioè a 8701 ore per località, 9997449 in tutto.
 
 Le metriche del previsore sono calcolate sull'insieme completo e separatamente sulle ore diurne, definite da un'irradianza al target maggiore di $10\,\mathrm{W\,m^{-2}}$: sono 4747545, il 47.3\% del totale. Le fasce di produzione dividono le osservazioni diurne in intervalli di 20 punti percentuali rispetto a un riferimento unico per tutte le località, il percentile 99 della produzione positiva diurna. La fascia è assegnata dalla produzione osservata e non da quella prevista.
 
