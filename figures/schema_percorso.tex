@@ -1,0 +1,46 @@
+% Quadro d'insieme del metodo: previsore, soglie climatologiche, detector e
+% analisi che li collega. Figura originale della tesi.
+\begin{tikzpicture}[font=\scriptsize,
+    dato/.style={draw=black!60,rounded corners=2pt,align=center,inner sep=3pt,minimum height=0.95cm,text width=1.7cm},
+    modulo/.style={draw=black!80,fill=blue!10,align=center,inner sep=3pt,minimum height=0.95cm,text width=3.5cm},
+    rete/.style={draw=black!80,fill=orange!14,align=center,inner sep=3pt,minimum height=0.95cm,text width=3.5cm},
+    esito/.style={draw=black!80,fill=green!10,rounded corners=2pt,align=center,inner sep=3pt,minimum height=0.95cm,text width=2.0cm},
+    freccia/.style={-{Stealth[length=4.5pt,width=4pt]},black!75},
+    cornice/.style={draw=black!55,dashed,rounded corners=4pt,inner sep=5pt}]
+    % ---- Previsore ---------------------------------------------------------
+    \node[dato] (dp) at (0,6.6) {PVGIS\\undici feature};
+    \node[modulo] (prev) at (3.5,6.6) {backbone BiLSTM--GAT\\dropout Monte Carlo\\Deep Ensemble\\variante SDE U-Net\\variante SDE-Net};
+    \node[esito] (out) at (7.2,6.6) {previsione e intervallo al 95\%};
+    \draw[freccia] (dp) -- (prev);
+    \draw[freccia] (prev) -- (out);
+    % ---- Soglie climatologiche --------------------------------------------
+    \node[dato] (dc) at (0,3.9) {PVGIS\\quattro grandezze};
+    \node[modulo] (clim) at (3.5,3.9) {soglie climatologiche\\per località e ora};
+    \node[esito] (lab) at (7.2,3.9) {osservazioni insolite};
+    \draw[freccia] (dc) -- (clim);
+    \draw[freccia] (clim) -- (lab);
+    % ---- Detector su PVGIS --------------------------------------------------
+    \node[dato] (dd) at (0,2.1) {PVGIS\\tre variabili};
+    \node[rete] (det) at (3.5,2.1) {MTGFlow\\STGAN su grafo\\STGAN con ConvGRU};
+    \node[esito] (seg) at (7.2,2.1) {score e osservazioni segnalate};
+    \draw[freccia] (dd) -- (det);
+    \draw[freccia] (det) -- (seg);
+    % ---- Detector su ERA5 ---------------------------------------------------
+    \node[dato] (de) at (0,0.3) {ERA5\\quindici variabili};
+    \node[rete] (gan) at (3.5,0.3) {STGAN con ConvGRU\\STGAN con GAT-GRU};
+    \node[esito] (mc) at (7.2,0.3) {score\\Monte Carlo};
+    \node[esito] (ev) at (10.5,0.3) {eventi\\geografici};
+    \draw[freccia] (de) -- (gan);
+    \draw[freccia] (gan) -- (mc);
+    \draw[freccia] (mc) -- (ev);
+    % ---- Analisi che collega le due linee ------------------------------------
+    \node[esito,fill=yellow!18,text width=2.1cm,minimum height=1.6cm] (post) at (10.5,3.9) {errori e intervalli su osservazioni normali e segnalate};
+    \draw[freccia] (out.east) -- ++(0.3,0) |- ([yshift=12pt]post.west);
+    \draw[freccia] (lab.east) -- (post.west);
+    \draw[freccia] (seg.east) -- ++(0.3,0) |- ([yshift=-12pt]post.west);
+    % ---- Cornici -------------------------------------------------------------
+    \node[cornice,fit=(dp)(prev)(out),label={[font=\footnotesize,anchor=south west]north west:Previsione della produzione}] (cp) {};
+    \node[cornice,fit=(dc)(clim)(lab)(seg)(de)(gan)(mc),label={[font=\footnotesize,anchor=north west]south west:Rilevamento delle anomalie}] (cr) {};
+    % ---- Filtro sulle finestre normali -----------------------------------------
+    \draw[freccia,dashed] (clim.north) -- node[right,align=left,inner sep=4pt,fill=white] {sole finestre\\normali} (prev.south);
+\end{tikzpicture}

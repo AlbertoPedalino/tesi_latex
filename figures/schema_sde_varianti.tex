@@ -1,0 +1,42 @@
+% Le due varianti SDE del previsore a confronto: dove entra il rumore.
+% Figura originale della tesi.
+\begin{tikzpicture}[font=\scriptsize,
+    dato/.style={draw=black!60,rounded corners=2pt,align=center,inner sep=3pt,minimum height=0.9cm,text width=1.35cm},
+    modulo/.style={draw=black!80,fill=blue!10,align=center,inner sep=3pt,minimum height=0.9cm,text width=1.75cm},
+    rete/.style={draw=black!80,fill=orange!14,align=center,inner sep=3pt,minimum height=0.9cm,text width=1.75cm},
+    esito/.style={draw=black!80,fill=green!10,rounded corners=2pt,align=center,inner sep=3pt,minimum height=0.9cm,text width=1.5cm},
+    somma/.style={draw=black!80,circle,inner sep=1.2pt,minimum size=0.42cm},
+    freccia/.style={-{Stealth[length=4.5pt,width=4pt]},black!75},
+    cornice/.style={draw=black!55,dashed,rounded corners=4pt,inner sep=6pt}]
+    % ---- Variante SDE U-Net ------------------------------------------------
+    \node[dato] (x1) at (0,0) {finestra di ingresso};
+    \node[modulo] (enc) at (2.45,0) {encoder temporale};
+    \node[somma] (p1) at (4.35,0) {$+$};
+    \node[modulo] (gat) at (6.2,0) {attenzione su grafo};
+    \node[somma] (p2) at (8.1,0) {$+$};
+    \node[esito] (h1) at (10.0,0) {teste\\$\hat{y}$, $\hat{k}$};
+    \node[rete] (encd) at (2.45,-1.75) {encoder temporale di diffusione};
+    \node[rete] (gatd) at (6.2,-1.75) {attenzione su grafo di diffusione};
+    \draw[freccia] (x1) -- (enc);
+    \draw[freccia] (enc) -- (p1);
+    \draw[freccia] (p1) -- (gat);
+    \draw[freccia] (gat) -- (p2);
+    \draw[freccia] (p2) -- (h1);
+    \draw[freccia] (x1.south) |- (encd.west);
+    \draw[freccia] (encd) -- (gatd);
+    \draw[freccia] (encd.east) -- ++(0.35,0) -| node[pos=0.75,right,inner sep=2pt] {$\kappa\,g_1\odot\varepsilon_1$} (p1.south);
+    \draw[freccia] (gatd.east) -- ++(0.35,0) -| node[pos=0.75,right,inner sep=2pt] {$\kappa\,g_2\odot\varepsilon_2$} (p2.south);
+    \node[cornice,fit=(x1)(h1)(encd)(gatd),label={[font=\footnotesize,anchor=south west]north west:Variante SDE U-Net: una perturbazione per ogni stadio}] {};
+    % ---- Variante SDE-Net ---------------------------------------------------
+    \node[dato] (x2) at (0,-4.6) {finestra di ingresso};
+    \node[modulo] (bb) at (2.45,-4.6) {backbone\\BiLSTM--GAT};
+    \node[modulo,text width=4.6cm] (em) at (6.55,-4.6) {integrazione di Euler--Maruyama\\[2pt]$z_{k+1}=z_k+f(z_k)\Delta\tau+s_{\max}\,g(z_0)\sqrt{\Delta\tau}\,\varepsilon_k$};
+    \node[esito] (h2) at (10.5,-4.6) {testa gaussiana\\$\mu$, $\sigma$};
+    \node[rete,text width=2.9cm] (dif) at (6.55,-6.25) {rete di diffusione\\media sulle località};
+    \draw[freccia] (x2) -- (bb);
+    \draw[freccia] (bb) -- node[above,inner sep=2pt] {$z_0$} (em);
+    \draw[freccia] (em) -- (h2);
+    \draw[freccia] (bb.south) |- (dif.west);
+    \draw[freccia] (dif) -- node[right,inner sep=3pt] {$g(z_0)$} (em);
+    \node[cornice,fit=(x2)(h2)(dif),label={[font=\footnotesize,anchor=south west]north west:Variante SDE-Net: lo stesso campo applicato per più passi allo stato latente}] {};
+\end{tikzpicture}

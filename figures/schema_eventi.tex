@@ -1,0 +1,61 @@
+% Dagli score agli eventi geografici: selezione, pulizia della maschera,
+% gruppi di celle e collegamento nel tempo. Esempio illustrativo su una griglia
+% di 11 x 7 celle, non un risultato. Figura originale della tesi.
+\begin{tikzpicture}[x=0.27cm,y=0.27cm,font=\scriptsize]
+    % Celle dei due gruppi che superano la pulizia (blocchi 3 x 3).
+    \def\gruppoA{1/3,2/3,3/3,1/4,2/4,3/4,1/5,2/5,3/5}
+    \def\gruppoB{7/1,8/1,9/1,7/2,8/2,9/2,7/3,8/3,9/3}
+    % Celle sopra soglia eliminate dalla pulizia: una sporgenza e una cella isolata.
+    \def\scartate{4/5,5/0}
+    \newcommand{\griglia}{%
+        \foreach \i in {0,...,11} {\draw[gray!50] (\i,0) -- (\i,7);}
+        \foreach \j in {0,...,7} {\draw[gray!50] (0,\j) -- (11,\j);}
+        \draw[black!70] (0,0) rectangle (11,7);}
+    % ---- (a) score ------------------------------------------------------------
+    \begin{scope}
+        \foreach \c/\r in {0/6,5/6,10/5,6/5,0/1,3/0,10/6,5/3} {\fill[red!12] (\c,\r) rectangle ++(1,1);}
+        \foreach \c/\r in {4/3,4/4,0/4,6/2,10/2,8/4,8/0,2/2,2/6} {\fill[red!28] (\c,\r) rectangle ++(1,1);}
+        \foreach \c/\r in \gruppoA {\fill[red!70] (\c,\r) rectangle ++(1,1);}
+        \foreach \c/\r in \gruppoB {\fill[red!70] (\c,\r) rectangle ++(1,1);}
+        \foreach \c/\r in \scartate {\fill[red!70] (\c,\r) rectangle ++(1,1);}
+        \griglia
+        \node[anchor=north,align=center] at (5.5,-0.4) {\strut score\\su ogni cella};
+    \end{scope}
+    % ---- (b) celle sopra soglia ------------------------------------------------
+    \begin{scope}[xshift=3.55cm]
+        \foreach \c/\r in \gruppoA {\fill[black!70] (\c,\r) rectangle ++(1,1);}
+        \foreach \c/\r in \gruppoB {\fill[black!70] (\c,\r) rectangle ++(1,1);}
+        \foreach \c/\r in \scartate {\fill[black!70] (\c,\r) rectangle ++(1,1);}
+        \griglia
+        \node[anchor=north,align=center] at (5.5,-0.4) {\strut celle\\sopra soglia};
+    \end{scope}
+    % ---- (c) gruppi di celle dopo la pulizia --------------------------------------
+    \begin{scope}[xshift=7.1cm]
+        \foreach \c/\r in \gruppoA {\fill[blue!55] (\c,\r) rectangle ++(1,1);}
+        \foreach \c/\r in \gruppoB {\fill[orange!75] (\c,\r) rectangle ++(1,1);}
+        \griglia
+        \node[anchor=north,align=center] at (5.5,-0.4) {\strut gruppi di celle\\dopo la pulizia};
+    \end{scope}
+    % ---- Frecce fra i pannelli ---------------------------------------------------
+    \draw[-{Stealth[length=4.5pt,width=4pt]},black!75] (11.5,3.5) -- (12.6,3.5);
+    \draw[-{Stealth[length=4.5pt,width=4pt]},black!75] (24.65,3.5) -- (25.75,3.5);
+    \draw[-{Stealth[length=4.5pt,width=4pt]},black!75] (37.8,3.5) -- (38.9,3.5);
+    % ---- (d) collegamento nel tempo --------------------------------------------------
+    \begin{scope}[xshift=10.75cm,x=1cm,y=1cm]
+        \tikzset{gruppo/.style={circle,inner sep=0pt,minimum size=0.3cm,draw=black!70},
+                 legame/.style={black!70}}
+        \node[gruppo,fill=blue!55] (a1) at (0,1.45) {};
+        \node[gruppo,fill=blue!55] (a2) at (0.75,1.45) {};
+        \node[gruppo,fill=blue!55] (a3) at (1.5,1.75) {};
+        \node[gruppo,fill=blue!55] (a4) at (1.5,1.15) {};
+        \node[gruppo,fill=blue!55] (a5) at (2.25,1.45) {};
+        \draw[legame] (a1) -- (a2) -- (a3) -- (a5);
+        \draw[legame] (a2) -- (a4) -- (a5);
+        \node[gruppo,fill=orange!75] (b1) at (0.75,0.45) {};
+        \node[gruppo,fill=orange!75] (b2) at (1.5,0.45) {};
+        \draw[legame] (b1) -- (b2);
+        \draw[-{Stealth[length=4pt,width=3.5pt]},black!60] (-0.2,0) -- (2.55,0);
+        \foreach \x in {0,0.75,1.5,2.25} {\draw[black!60] (\x,0.06) -- (\x,-0.06);}
+        \node[anchor=north,align=center] at (1.15,-0.12) {\strut eventi collegati\\nel tempo};
+    \end{scope}
+\end{tikzpicture}

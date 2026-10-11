@@ -130,9 +130,21 @@ I dati della rianalisi ERA5~\cite{hersbach2020era5} provengono da due prodotti d
     \end{tabular}
 \end{table}
 
-I dati coprono gli anni dal 1980 al 2025. Sono selezionati gli istanti UTC 00, 03, 06, 09, 12, 15, 18 e 21, su una griglia di $0.5^\circ\times0.5^\circ$ nell'area compresa fra $20^\circ$ e $60^\circ$ di latitudine nord e fra $15^\circ$ di longitudine ovest e $50^\circ$ di longitudine est. Il campionamento ogni tre ore è una selezione di tempi validi, non un'aggregazione temporale: precipitazione e radiazione conservano gli accumuli di un'ora associati ai tempi selezionati, senza somme triorarie o conversioni locali delle unità.
+I dati coprono gli anni dal 1980 al 2025. Sono selezionati gli istanti UTC 00, 03, 06, 09, 12, 15, 18 e 21, su una griglia di $0.5^\circ\times0.5^\circ$ nell'area compresa fra $20^\circ$ e $60^\circ$ di latitudine nord e fra $15^\circ$ di longitudine ovest e $50^\circ$ di longitudine est (Figura~\ref{fig:dominio-era5}). Il dominio comprende l'Europa, il Mediterraneo e parte dell'Africa settentrionale e del Medio Oriente; l'area delle località PVGIS ne occupa una porzione ridotta. Il campionamento ogni tre ore è una selezione di tempi validi, non un'aggregazione temporale: precipitazione e radiazione conservano gli accumuli di un'ora associati ai tempi selezionati, senza somme triorarie o conversioni locali delle unità.
 
 I file mensili vengono verificati rispetto a tempi, griglia, variabili e livello di pressione richiesti. La preparazione allinea i due prodotti sulle stesse coordinate e sugli stessi timestamp, ordina le latitudini da nord a sud e le longitudini da ovest a est. Il reticolo contiene $81\times131=10611$ posizioni.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics{dominio_era5}
+    \caption{Dominio dei campi ERA5: $81\times131$ celle di $0.5^\circ$, fra $20^\circ$ e $60^\circ$ di latitudine nord e fra $15^\circ$ di longitudine ovest e $50^\circ$ di longitudine est. Il rettangolo indica l'area delle località PVGIS della Figura~\ref{fig:localita-pvgis}. Linee di costa da Natural Earth.}
+    \label{fig:dominio-era5}
+\end{figure}
+% Confini del dominio riletti l'11 ottobre 2026 in
+% outputs/era5_gat_mc_paper_recent16_run1/metadata.json: 81 latitudini da 60 a
+% 20, 131 longitudini da -15 a 50. Figura generata da
+% figures/genera_mappa_era5.py; la linea di costa (Natural Earth, pubblico
+% dominio, scala 1:50m) non è nel repository.
 
 Sono conservate le celle per le quali tutte le variabili sono definite nel primo istante di training, e si verifica che questo insieme rimanga identico nel resto del periodo; se cambia, la preparazione si interrompe. La selezione non utilizza il test e non viene applicata imputazione. Il criterio è la completezza delle variabili, non una classificazione terra--mare: nei dati usati nessuna cella è esclusa.
 

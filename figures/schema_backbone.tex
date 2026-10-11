@@ -1,0 +1,26 @@
+% Backbone BiLSTM--GAT del previsore: encoder temporale condiviso fra le
+% località, stadio spaziale sul grafo geografico e due teste. Figura originale
+% della tesi.
+\begin{tikzpicture}[font=\scriptsize,
+    dato/.style={draw=black!60,rounded corners=2pt,align=center,inner sep=3pt,minimum height=1.0cm,text width=1.75cm},
+    modulo/.style={draw=black!80,fill=blue!10,align=center,inner sep=3pt,minimum height=1.0cm,text width=1.9cm},
+    rete/.style={draw=black!80,fill=orange!14,align=center,inner sep=3pt,minimum height=1.0cm,text width=1.9cm},
+    esito/.style={draw=black!80,fill=green!10,rounded corners=2pt,align=center,inner sep=3pt,minimum height=0.9cm,text width=2.2cm},
+    freccia/.style={-{Stealth[length=4.5pt,width=4pt]},black!75},
+    cornice/.style={draw=black!55,dashed,rounded corners=4pt,inner sep=6pt}]
+    \node[dato] (x) at (0,0) {finestra di 24 ore, undici feature};
+    \node[modulo] (lstm) at (2.55,0) {LSTM bidirezionale\\due strati, 128 unità per direzione};
+    \node[modulo] (pool) at (5.15,0) {pooling ad attenzione\\e proiezione a 96 dimensioni};
+    \node[rete] (gat) at (7.95,0) {attenzione su grafo\\quattro teste};
+    \node[esito] (hy) at (11.0,0.75) {produzione $\hat{y}$\\softplus};
+    \node[esito] (hk) at (11.0,-0.75) {indice di cielo sereno $\hat{k}$\\sigmoide};
+    \node[dato,text width=2.6cm] (graph) at (7.95,-2.1) {grafo geografico\\raggio di 20~km, pesi decrescenti con la distanza};
+    \draw[freccia] (x) -- (lstm);
+    \draw[freccia] (lstm) -- (pool);
+    \draw[freccia] (pool) -- (gat);
+    \draw[freccia] (gat.east) -- ++(0.3,0) |- (hy.west);
+    \draw[freccia] (gat.east) -- ++(0.3,0) |- (hk.west);
+    \draw[freccia] (graph) -- (gat);
+    \node[cornice,fit=(lstm)(pool),label={[font=\footnotesize]above:encoder temporale, per ogni località}] {};
+    \node[cornice,fit=(gat),label={[font=\footnotesize]above:stadio spaziale}] {};
+\end{tikzpicture}

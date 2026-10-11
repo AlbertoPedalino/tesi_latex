@@ -5,12 +5,30 @@
 
 La metodologia parte dal previsore: il backbone deterministico BiLSTM--GAT, le soglie climatologiche della Sezione~\ref{sec:soglie-climatologiche}, che forniscono le prime etichette di condizioni insolite, gli esperimenti preliminari con Enhanced MC Dropout e Deep Ensemble, valutati su quelle etichette, e le due varianti basate su equazioni differenziali stocastiche, SDE U-Net e SDE-Net. La variante SDE-Net include una previsione diretta multiorizzonte. Il rilevamento delle anomalie con modelli appresi costituisce una linea distinta, condotta dapprima sui dati PVGIS, come analisi iniziale, con MTGFlow, STGAN e un adattamento STGAN a griglia, evoluto da una CNN senza ricorrenza a un encoder ConvGRU. La versione finale conserva la LSTM del trend e permette un'ablazione della dimensione dei kernel. Un'estensione separata applica lo stesso detector a ERA5 e introduce la ricostruzione di eventi geografici a partire dagli score. Su ERA5 il detector viene poi dotato di dropout nel generatore e di uno score Monte Carlo con una misura di dispersione associata. Due varianti intervengono sul generatore: la prima sostituisce, nei gate dell'unità ricorrente, la convoluzione con l'attenzione su grafo definita sull'intera griglia; la seconda applica la ConvGRU al campo completo invece che a singole patch. In entrambe il discriminatore rimane locale.
 
+La Figura~\ref{fig:schema-percorso} riassume le due linee e il punto in cui si incontrano.
+
+\begin{figure}[htbp]
+    \centering
+    \input{figures/schema_percorso}
+    \caption{Quadro d'insieme del metodo. In alto il previsore della produzione, addestrato sui dati PVGIS; in basso il rilevamento delle anomalie, con le soglie climatologiche e con i detector appresi, prima sui dati PVGIS e poi sui campi ERA5. Le soglie climatologiche forniscono anche il filtro per l'addestramento sulle sole finestre normali. Le due linee si incontrano nel confronto degli errori e degli intervalli del previsore fra osservazioni normali e segnalate.}
+    \label{fig:schema-percorso}
+\end{figure}
+
 Le analisi post-hoc utilizzano previsioni e score già prodotti. Il cambiamento della soglia o del raggruppamento delle osservazioni modifica il protocollo di valutazione, senza comportare un nuovo addestramento del previsore.
 
 \section{Backbone BiLSTM--GAT}
 \label{sec:backbone}
 
 Il backbone è stato messo a punto inizialmente su una configurazione mista, con la produzione misurata di impianti reali come grandezza da prevedere e le variabili meteorologiche PVGIS della località più vicina come ingressi. Quella configurazione non fa parte della tesi; il backbone è descritto qui come architettura comune ai previsori addestrati sui soli dati PVGIS. Su questi dati non è stato addestrato come modello a sé con il protocollo delle varianti SDE: è il modello di base degli esperimenti preliminari della Sezione~\ref{sec:probabilistici-preliminari}.
+
+La Figura~\ref{fig:schema-backbone} ne mostra i tre stadi, descritti nelle sottosezioni che seguono.
+
+\begin{figure}[htbp]
+    \centering
+    \input{figures/schema_backbone}
+    \caption{Backbone del previsore. L'encoder temporale elabora la finestra di ogni località con parametri condivisi; lo stadio spaziale scambia informazione fra località vicine sul grafo geografico; due teste restituiscono la produzione e l'indice di cielo sereno.}
+    \label{fig:schema-backbone}
+\end{figure}
 
 \subsection{Tensori di input, encoder temporale e attention pooling}
 
@@ -127,7 +145,14 @@ Le due dispersioni hanno significato diverso: quella del dropout Monte Carlo mis
 \section{Variante SDE U-Net}
 \label{sec:sde-unet}
 
-Questa variante trasferisce al backbone BiLSTM--GAT lo schema di SDE U-Net~\cite{monaco2025sdeunet}, in cui i passi stocastici sono allineati agli stadi dell'encoder e a ciascuno stadio corrisponde un blocco di diffusione. Gli stadi sono qui due: quello temporale e quello spaziale.
+Questa variante trasferisce al backbone BiLSTM--GAT lo schema di SDE U-Net~\cite{monaco2025sdeunet}, in cui i passi stocastici sono allineati agli stadi dell'encoder e a ciascuno stadio corrisponde un blocco di diffusione. Gli stadi sono qui due: quello temporale e quello spaziale. La Figura~\ref{fig:schema-sde-varianti} mette a confronto questa variante con la variante SDE-Net della Sezione~\ref{sec:sde-net}.
+
+\begin{figure}[htbp]
+    \centering
+    \input{figures/schema_sde_varianti}
+    \caption{Le due varianti SDE del previsore. Nella variante SDE U-Net un percorso di diffusione parallelo al backbone fornisce, a ciascuno dei due stadi, un coefficiente che scala una perturbazione gaussiana. Nella variante SDE-Net il backbone produce lo stato latente iniziale $z_0$, che viene integrato per più passi con lo stesso campo di drift e con una diffusione calcolata una sola volta su $z_0$; la testa restituisce media e deviazione standard.}
+    \label{fig:schema-sde-varianti}
+\end{figure}
 
 \subsection{Backbone paralleli di drift e diffusione}
 
@@ -194,7 +219,7 @@ L'obiettivo di regressione utilizza la forma
 \end{equation}
 equivalente alla negative log-likelihood gaussiana a meno di una costante e di un fattore moltiplicativo. Quando abilitata, una testa ausiliaria stima l'indice di cielo sereno e aggiunge un termine MSE pesato.
 
-Il training alterna due aggiornamenti: il primo ottimizza encoder, eventuale GAT, drift e teste; il secondo aggiorna soltanto la rete di diffusione. Quest'ultimo usa una BCE con dati di ingresso etichettati zero e pseudo-OOD etichettati uno, ottenuti aggiungendo rumore gaussiano all'intero input. Le rappresentazioni del secondo passo sono staccate dall'encoder. La procedura prevede inoltre warm-up della scala SDE e selezione del modello tramite validazione.
+Il training alterna due aggiornamenti: il primo ottimizza encoder, eventuale GAT, drift e teste; il secondo aggiorna soltanto la rete di diffusione. Quest'ultimo usa una BCE con dati di ingresso etichettati zero e pseudo-OOD etichettati uno, ottenuti aggiungendo rumore gaussiano all'intero input. Le rappresentazioni del secondo passo sono staccate dall'encoder. La procedura prevede inoltre un warm-up della scala SDE; l'addestramento dura un numero fissato di epoche e il modello valutato è quello dell'ultima.
 % Verificato su W&B, progetto physiq_pv, run
 % pvgis_stgnn_paper_faithful_gaussian_ep60_seed1 (24 luglio 2026): training
 % effettivo 2016--2017, validation 2018 (rmse_daytime, pazienza 10, miglior epoca
@@ -371,6 +396,15 @@ Estrazione vettoriale delle finestre, cache normalizzata e scoring su disco perm
 L'estensione utilizza i cubi e la maschera descritti nella Sezione~\ref{sec:dati-era5}, mantenendo l'architettura ConvGRU--LSTM e le loss della Sezione~\ref{sec:stgan}. Il target del generatore resta meteorologico e comprende ora quindici feature. La griglia è definita direttamente in coordinate geografiche, con EPSG:4326 e passo angolare di $0.5^\circ$.
 
 La cadenza diventa di tre ore e il trend viene impostato a 56 passi, conservando una durata di 168 ore. In questa prima estensione il ramo recente mantiene un passo e la codifica di ora e giorno della settimana rimane di dimensione 31. Lunghezza del ramo recente e codifica temporale cambiano negli sviluppi della Sezione~\ref{sec:era5-mc}. Preparazione, training con scoring e analisi degli eventi costituiscono fasi distinte: gli eventi vengono ricavati dagli score già disponibili, senza un nuovo aggiornamento dei pesi del detector.
+
+La Figura~\ref{fig:schema-eventi} riassume i passaggi descritti nelle due sottosezioni che seguono.
+
+\begin{figure}[htbp]
+    \centering
+    \input{figures/schema_eventi}
+    \caption{Dagli score agli eventi geografici, su un esempio illustrativo. Gli score di un istante sono riportati sulla griglia; le celle sopra soglia formano una maschera, da cui apertura e chiusura rimuovono le celle isolate e le sporgenze; le celle rimaste sono riunite in gruppi di celle adiacenti. I gruppi di istanti consecutivi sono poi collegati: un evento è un insieme di gruppi collegati, e resta unico anche quando un gruppo si separa in due o due gruppi si fondono.}
+    \label{fig:schema-eventi}
+\end{figure}
 
 \subsection{Soglia, morfologia e cluster spaziali}
 
