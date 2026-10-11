@@ -58,7 +58,7 @@ Per ogni località e ogni istante sono disponibili l'irradianza globale con le s
     \end{tabular}
 \end{table}
 
-Per il previsore il test è il 2019. Gli esperimenti preliminari con dropout Monte Carlo e Deep Ensemble usano gli anni 2016--2018 per l'addestramento, senza un insieme di validation. La variante SDE-Net, come l'articolo~\cite{kong2020sdenet}, non usa un insieme di validation ed è addestrata sugli anni 2016--2018 per un numero fissato di epoche. La variante true-minimal segue il protocollo di SDE U-Net~\cite{monaco2025sdeunet}, che prevede una validation: usa gli anni 2016--2017 per l'addestramento e il 2018 per la validation.
+Per il previsore il test è il 2019. Gli esperimenti preliminari con dropout Monte Carlo e Deep Ensemble usano gli anni 2016--2018 per l'addestramento, senza un insieme di validation. La variante SDE-Net, come l'articolo~\cite{kong2020sdenet}, non usa un insieme di validation ed è addestrata sugli anni 2016--2018 per un numero fissato di epoche. La variante SDE U-Net segue il protocollo dell'articolo~\cite{monaco2025sdeunet}, che prevede una validation: usa gli anni 2016--2017 per l'addestramento e il 2018 per la validation.
 % DA FARE PRIMA DELLA CONSEGNA: la frase sulla variante SDE-Net descrive la
 % run da rifare senza validation. La run esistente
 % (pvgis_stgnn_paper_faithful_gaussian_ep60_seed1) ha usato il 2018 come validation
@@ -92,7 +92,7 @@ Indicando con $t$ l'ultimo timestamp della finestra di input, il target dell'ori
 
 Per $H$ orizzonti, i target e le uscite assumono forma $[B,N,H]$. Le previsioni intermedie non vengono reinserite nell'input: tutte le uscite derivano dalla stessa finestra osservata. Ogni previsione conserva località, timestamp di emissione, timestamp target e orizzonte. I confronti a una e sei ore possono quindi essere estratti dallo stesso modello diretto, distinguendoli dalle precedenti esecuzioni con modelli separati per orizzonte.
 
-Nella variante true-minimal l'anno di validation viene separato prima di stimare la normalizzazione. Il test viene fornito separatamente. Quando è attivo il filtro di training su finestre normali, vengono escluse le finestre con eventi nel contesto delle feature, nell'input o in almeno uno dei target richiesti. L'estensione degli orizzonti può pertanto cambiare sia il numero di finestre disponibili sia quello delle finestre ammissibili.
+Nella variante SDE U-Net l'anno di validation viene separato prima di stimare la normalizzazione. Il test viene fornito separatamente. Quando è attivo il filtro di training su finestre normali, vengono escluse le finestre con eventi nel contesto delle feature, nell'input o in almeno uno dei target richiesti. L'estensione degli orizzonti può pertanto cambiare sia il numero di finestre disponibili sia quello delle finestre ammissibili.
 
 La preparazione STGAN prevede periodi storici e test separati; il primo target di test può utilizzare la coda contigua del training come contesto.
 \section{Campi ERA5, allineamento e celle valide}

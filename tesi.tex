@@ -17,6 +17,14 @@
 \usepackage{csquotes}
 \usepackage[backend=biber,style=numeric,sorting=none]{biblatex}
 
+% Numeri provvisori: valori presi da una run che non corrisponde ancora alla
+% descrizione data nel testo. Con \bozzatrue sono stampati in rosso. Prima della
+% consegna ogni \provv va risolto: o si sostituisce il numero con quello della
+% run rifatta, o si corregge la descrizione della run.
+\newif\ifbozza
+\bozzatrue
+\newcommand{\provv}[1]{\ifbozza\textcolor{red}{#1}\else#1\fi}
+
 \graphicspath{{figures/}}
 \addbibresource{bibliography.bib}
 

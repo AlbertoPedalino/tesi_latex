@@ -1,7 +1,7 @@
 \chapter{Esperimenti}
 \label{chap:esperimenti}
 
-Il capitolo descrive gli esperimenti nell'ordine in cui sono stati condotti, le configurazioni di addestramento, il protocollo con cui i modelli sono valutati e le metriche. I metodi sono quelli del Capitolo~\ref{chap:metodologia}; i risultati sono nel Capitolo~\ref{chap:risultati}.
+Il capitolo descrive gli esperimenti nell'ordine in cui sono stati condotti, le configurazioni di addestramento, il protocollo con cui i modelli sono valutati e le metriche. I metodi sono quelli del Capitolo~\ref{chap:metodologia}; i risultati, con la descrizione delle singole analisi, sono nel Capitolo~\ref{chap:risultati}.
 
 \section{Percorso degli esperimenti}
 \label{sec:exp-percorso}
@@ -10,11 +10,11 @@ Gli esperimenti seguono due linee che si incontrano nell'analisi finale: il prev
 
 Il primo passo riguarda il previsore. Le soglie climatologiche della Sezione~\ref{sec:soglie-climatologiche} indicano le osservazioni insolite dell'anno di test, e su di esse si verifica se un intervallo costruito attorno alla previsione contiene il valore osservato. I primi due metodi provati sono il dropout Monte Carlo e il Deep Ensemble, applicati al backbone senza modificarlo. Sono esperimenti preliminari, con un addestramento breve: poiché gli intervalli ottenuti contengono una quota ridotta delle osservazioni, come riportato nel Capitolo~\ref{chap:risultati}, non sono stati proseguiti con addestramenti più lunghi.
 
-Il secondo passo introduce le due varianti basate su equazioni differenziali stocastiche. La variante true-minimal segue SDE U-Net, compreso l'addestramento sulle sole finestre normali. La variante SDE-Net segue l'articolo originale ed è eseguita in tre configurazioni: a un'ora, con uscita diretta su sei orizzonti da una a sei ore, e con le etichette di MTGFlow al posto di quelle climatologiche.
+Il secondo passo introduce le due varianti basate su equazioni differenziali stocastiche. La variante SDE U-Net segue l'articolo di Monaco et al.~\cite{monaco2025sdeunet}, compreso l'addestramento sulle sole finestre normali. La variante SDE-Net segue l'articolo di Kong et al.~\cite{kong2020sdenet} ed è eseguita in tre configurazioni: a un'ora, con uscita diretta su sei orizzonti da una a sei ore, e con le etichette di MTGFlow al posto di quelle climatologiche.
 
 La seconda linea cerca le anomalie con modelli appresi, per verificare se individuano condizioni diverse dai valori estremi segnalati dalle soglie climatologiche. Sui dati PVGIS, come analisi iniziale, sono addestrati MTGFlow, che non usa il contesto geografico, la versione su grafo di STGAN e la variante ConvGRU, quest'ultima con kernel di lato 1, 3 e 5. Poiché i dati PVGIS contengono soltanto irradianza, temperatura e vento, il detector è poi portato sui campi ERA5, prima con un passo recente su patch e poi con sedici passi sul campo intero, nelle due varianti ConvGRU e GAT-GRU.
 
-Le due linee si incontrano nell'analisi della Sezione~\ref{sec:exp-posthoc}: gli errori e gli intervalli del previsore sono confrontati fra le osservazioni che un detector segnala e le altre.
+Le due linee si incontrano nell'analisi della Sezione~\ref{sec:ris-posthoc}: gli errori e gli intervalli del previsore sono confrontati fra le osservazioni che un detector segnala e le altre.
 
 \begin{table}[htbp]
     \centering
@@ -28,8 +28,8 @@ Le due linee si incontrano nell'analisi della Sezione~\ref{sec:exp-posthoc}: gli
         \midrule
         Soglie climatologiche & PVGIS & Prime etichette di condizioni insolite, per località e ora \\
         Dropout Monte Carlo, Deep Ensemble & PVGIS & Verificare se un intervallo ottenuto campionando il backbone contiene le osservazioni \\
-        Variante true-minimal & PVGIS & Schema di SDE U-Net sul backbone, con addestramento sulle sole finestre normali \\
-        Variante SDE-Net & PVGIS & Schema di SDE-Net con testa gaussiana; un'ora, sei orizzonti, etichette MTGFlow \\
+        Variante SDE U-Net & PVGIS & Schema di Monaco et al. sul backbone, con addestramento sulle sole finestre normali \\
+        Variante SDE-Net & PVGIS & Schema di Kong et al. con testa gaussiana; un'ora, sei orizzonti, etichette MTGFlow \\
         \addlinespace
         MTGFlow & PVGIS & Detector appreso senza contesto geografico, un modello per località \\
         STGAN su grafo & PVGIS & Detector con contesto spaziale, come nell'articolo \\
@@ -57,7 +57,7 @@ La Tabella~\ref{tab:configurazioni} riporta anni, numero di epoche, dimensione d
         \midrule
         Dropout Monte Carlo & 2016--2018 & -- & 5 & 16 & $10^{-3}$ & 1 \\
         Deep Ensemble & 2016--2018 & -- & 5 & 16 & $10^{-3}$ & 5 \\
-        Variante true-minimal & 2016--2017 & 2018 & 60 & 16 & $10^{-4}$ & 1 \\
+        Variante SDE U-Net & 2016--2017 & 2018 & 60 & 16 & $10^{-4}$ & 1 \\
         Variante SDE-Net & 2016--2018 & -- & 60 & 16 & $10^{-4}$, $10^{-2}$ & 1 \\
         \addlinespace
         MTGFlow & 2005--2018 & -- & 40 & 256 & $2\cdot10^{-3}$ & 1 \\
@@ -67,21 +67,29 @@ La Tabella~\ref{tab:configurazioni} riporta anni, numero di epoche, dimensione d
     \end{tabular}
 \end{table}
 
-I previsori ricevono una finestra di 24 ore e undici feature. Il dropout Monte Carlo usa 20 passaggi in avanti e il Deep Ensemble cinque membri; la variante true-minimal campiona 20 traiettorie e la variante SDE-Net 10. Gli esperimenti preliminari sono addestrati per 5 epoche e le due varianti SDE per 60: i due gruppi non sono a parità di addestramento, e i loro risultati non vanno letti come un confronto alla pari.
+I previsori ricevono una finestra di 24 ore e undici feature. Il dropout Monte Carlo usa 20 passaggi in avanti e il Deep Ensemble cinque membri; la variante SDE U-Net campiona 20 traiettorie e la variante SDE-Net 10. Gli esperimenti preliminari sono addestrati per 5 epoche e le due varianti SDE per 60: i due gruppi non sono a parità di addestramento, e i loro risultati non vanno letti come un confronto alla pari.
 
-La variante true-minimal sceglie sul 2018 l'epoca del modello valutato; quando è addestrata sulle sole finestre normali, il filtro conserva 11109 delle 17496 finestre di training e 6054 delle 8736 di validation. La variante SDE-Net, come l'articolo, è addestrata per un numero fissato di epoche e valutata all'ultima; la sua diffusione massima parte da 0.01 e passa a 0.5 dopo 30 epoche, e il tasso di apprendimento del drift è ridotto di un fattore 10 dopo l'epoca 20.
+La variante SDE U-Net sceglie sul 2018 l'epoca del modello valutato; quando è addestrata sulle sole finestre normali, il filtro conserva 11109 delle 17496 finestre di training e 6054 delle 8736 di validation. La variante SDE-Net, come l'articolo, è addestrata per un numero fissato di epoche e valutata all'ultima; la sua diffusione massima parte da 0.01 e passa a 0.5 dopo 30 epoche, e il tasso di apprendimento del drift è ridotto di un fattore 10 dopo l'epoca 20.
 
 I detector su PVGIS usano tre variabili. MTGFlow è addestrato con finestre di 60 ore, un modello per località. Le versioni di STGAN usano un passo recente, 168 passi di trend e nove siti per contesto; ogni epoca visita tutte le coppie fra località e istanti, 140803056 campioni, e la variante ConvGRU ha 140931 parametri nel generatore e 114593 nel discriminatore con kernel 3.
 
 Su ERA5 il training comprende gli anni 1980--2004 e il test gli anni 2005--2025, con sei epoche. Nella configurazione a patch un'epoca comprende 3025793 aggiornamenti dei pesi; sul campo intero ne comprende 70072, perché un campione è un intero istante. A parità di epoche le due configurazioni non sono quindi confrontabili.
 
 Tutti i modelli sono addestrati su una scheda NVIDIA RTX PRO 6000 Blackwell.
+% Scheda grafica: stesso server usato nella tesi di Stiven Gjinaj, che riporta
+% lo stesso modello (confermato dall'autore l'11 ottobre 2026).
 % Fonti dei valori (verificati il 10 ottobre 2026): W&B per dropout Monte Carlo e
 % Deep Ensemble (run del 10 giugno 2026); report e W&B per le varianti SDE;
 % run_metadata.json per MTGFlow e STGAN; log di training per ERA5.
 % DA FARE PRIMA DELLA CONSEGNA: la riga della variante SDE-Net descrive la run da
 % rifare con --no-validation; la run esistente ha training 2016--2017 e
-% validation 2018. Verificare anche il seme della nuova run true-minimal (quella
+% validation 2018. Scelta dell'autore dell'11 ottobre 2026: intanto i Risultati
+% si scrivono con i numeri delle run esistenti, marcati con \provv (rosso nella
+% bozza). Prima della consegna: o si rifanno le run e si sostituiscono i numeri,
+% o in questa tabella e nel Capitolo dei dati si scrive training 2016--2017 e
+% validation 2018. Lo stesso vale per il riferimento a cielo sereno, calcolato
+% nelle run esistenti con inclinazione di 30 gradi.
+% Verificare anche il seme della nuova run SDE U-Net (quella
 % esistente, solo finestre normali, ha seme 42) e completare la parte ERA5 con le
 % configurazioni delle run concluse (precisione, tassi, codifica temporale).
 
@@ -92,9 +100,20 @@ Tutti i modelli sui dati PVGIS sono valutati sul 2019, che non entra in alcun ad
 
 Le metriche del previsore sono calcolate sull'insieme completo e separatamente sulle ore diurne, definite da un'irradianza al target maggiore di $10\,\mathrm{W\,m^{-2}}$: sono 4747545, il 47.3\% del totale. Le fasce di produzione dividono le osservazioni diurne in intervalli di 20 punti percentuali rispetto a un riferimento unico per tutte le località, il percentile 99 della produzione positiva diurna. La fascia è assegnata dalla produzione osservata e non da quella prevista.
 
-Le osservazioni sono divise in normali e segnalate secondo le etichette disponibili. Con le soglie climatologiche calcolate sugli anni 2005--2018 le segnalate sono 1059283, il 10.6\%. Gli esperimenti preliminari usano invece una climatologia estesa agli anni 2005--2023, che comprende anche l'anno di test: con questa le segnalate sono 983379, il 9.8\%. I due insiemi di etichette non coincidono, e i risultati dei due gruppi di esperimenti sulle osservazioni segnalate non sono direttamente confrontabili.
+Le osservazioni sono divise in normali e segnalate secondo le etichette disponibili. Le soglie climatologiche sono calcolate sugli anni 2005--2018, che precedono l'anno di test: con queste le segnalate sono 1059283, il 10.6\%.
+% DA FARE PRIMA DELLA CONSEGNA: il testo descrive un'unica climatologia
+% (2005--2018) per tutti i previsori, per scelta dell'autore. Le run di giugno di
+% dropout Monte Carlo e Deep Ensemble hanno però usato le etichette della
+% cartella pvgis_anomaly_2019_2005_2023_w15_q0975: anni 2005--2018 e 2020--2023,
+% anno di test escluso (codice del 3 giugno 2026, commit 9a174145), con 983379
+% segnalate invece di 1059283. Le loro metriche complessive (copertura, MAE,
+% RMSE) non dipendono dalle etichette e si possono riportare. Le loro metriche
+% sulle sole osservazioni segnalate NON vanno riportate dalle run di giugno:
+% servono una nuova valutazione o una nuova run con le etichette 2005--2018.
 
 Per i detector la decisione dipende dal metodo: MTGFlow usa la soglia per località dell'equazione~\eqref{eq:mtgflow-soglia}, STGAN segnala l'1\% delle osservazioni con lo score più alto sull'intero test, cioè 100653 osservazioni.
+
+Nel confronto fra previsore e detector ogni previsione è associata alla decisione del detector sulla stessa località e sullo stesso istante previsto. Con sei orizzonti la stessa osservazione è associata a più previsioni, emesse in ore diverse. La restrizione alle ore diurne è applicata dopo la decisione: l'1\% di STGAN resta calcolato su tutte le ore e non soltanto su quelle diurne. Il modo in cui è calcolata ciascuna analisi è descritto insieme al risultato, nel Capitolo~\ref{chap:risultati}.
 
 \section{Metriche}
 \label{sec:exp-metriche}
@@ -130,50 +149,8 @@ che vale 1 quando gli insiemi coincidono e 0 quando sono disgiunti. Non è una m
 % massimo della produzione osservata sul test (893.27 W nel 2019). Negli
 % esperimenti preliminari di giugno eta valeva 10; nelle run SDE vale 9, come
 % nell'articolo.
-
-\section{Analisi post-hoc}
-\label{sec:exp-posthoc}
-
-\subsection{Allineamento e distribuzione spazio-temporale}
-
-Le previsioni sono associate alle decisioni dei detector tramite località e timestamp target. Nel caso multiorizzonte, la chiave completa della previsione include anche l'orizzonte, mentre l'etichetta del detector rimane unica per località e timestamp. La stessa osservazione target può quindi essere associata a previsioni emesse in ore diverse.
-
-Il protocollo STGAN prevede un'esclusione opzionale degli azzeramenti solari regionali isolati e del passo immediatamente successivo, seguito dal ricalcolo del top-K sulle osservazioni ammissibili. Il percorso NetCDF controlla più variabili solari e la produzione; quello basato sui dati preparati controlla la sola irradianza. La sorgente utilizzata deve essere indicata, poiché i due criteri non sono identici.
-
-La serie locale mostra tempo e anomaly score, con le decisioni evidenziate e interruzioni nei periodi senza score. La rappresentazione regionale mostra invece, per ogni ora, la percentuale di siti anomali rispetto ai siti con score valido; una matrice sito--giorno mostra la percentuale di ore anomale rispetto alle ore valide di quel sito e giorno. Queste quote aggregano le decisioni puntuali senza stimare una nuova soglia regionale. I periodi senza osservazioni non vengono convertiti in normalità.
-
-\subsection{Frequenze geografiche e confronto dei budget di anomalia}
-
-Le mappe di frequenza associano a ciascun sito la quota di ore anomale sulle ore con score valido. La copertura è distinta da questa quota e rapporta le ore effettivamente valutate a quelle ammissibili. Un sito privo di score non viene rappresentato come privo di anomalie. Nel confronto diurno, il filtro dell'irradianza maggiore di $10\,\mathrm{W\,m^{-2}}$ viene applicato dopo le decisioni del detector: il ranking STGAN non viene ricalcolato sulle sole ore diurne.
-
-Per MTGFlow, il protocollo di base conserva le soglie per sito stimate dalle statistiche di training. Una variante esplorativa assegna invece un budget globale di anomalie ordinando la coordinata firmata
-\begin{equation}
-c_{nt}=\frac{s_{nt}-\theta_n}{\mathrm{IQR}_{n,\mathrm{train}}},
-\end{equation}
-dove $s_{nt}$ è lo score e $\theta_n$ la soglia salvata del sito. Non viene applicato un troncamento a zero: anche i valori sotto soglia mantengono il proprio ordinamento. La selezione usa un numero esatto di osservazioni determinato dalla percentuale richiesta, prima dell'eventuale filtro diurno. Questa variante deve essere distinta sia dalle decisioni native MTGFlow sia dalla coordinata centrata in $Q_3$ usata nell'analisi di sensibilità.
-
-\subsection{Sottogruppi meteorologici e direzione degli estremi}
-
-Le anomalie STGAN possono essere ulteriormente suddivise intersecando la decisione del detector con flag climatologici delle variabili meteorologiche, alla stessa località e al timestamp target. Per temperatura e vento vengono distinti i lati alto e basso confrontando il valore con le bande climatologiche della relativa osservazione; per l'irradianza viene verificata anche la variabile associata al flag. Il criterio non confonde quindi un estremo della produzione con un estremo dell'irradianza.
-
-I sottogruppi possono sovrapporsi. Una stessa osservazione può soddisfare più condizioni meteorologiche, mentre un'anomalia non associata ad alcuna condizione rimane anomala e viene conteggiata separatamente. I normali conservano la decisione STGAN e non vengono ridefiniti come complemento di ciascuna categoria. Le statistiche per categoria non costituiscono pertanto una partizione disgiunta di tutte le osservazioni.
-
-L'analisi degli errori tipizzati considera i target diurni con irradianza maggiore di $10\,\mathrm{W\,m^{-2}}$. Per le fasce di produzione utilizza un riferimento condiviso fra orizzonti: il percentile 99 della produzione positiva diurna, contando una sola volta ciascuna coppia località--timestamp target, e intervalli di ampiezza 20 punti percentuali. Oltre agli errori aggregati, calcola il RMSE per località e ne riassume mediana e quartili. La banda fra siti descrive l'eterogeneità geografica del RMSE; è distinta dai quartili degli errori assoluti individuali e dagli intervalli di confidenza di una metrica.
-
-\subsection{Campioni normali e anomali: quattro casi input--target}
-
-Oltre al raggruppamento secondo l'etichetta del target, l'analisi considera quattro casi: input normale e target normale, input normale e target anomalo, input anomalo e target normale, input anomalo e target anomalo. La normalità del target riguarda l'osservazione futura classificata dal detector, non una classificazione della previsione numerica del modello.
-
-Con una sequenza di 24 ore e ultimo input al tempo $t$, la finestra considerata è $[t-23\,\mathrm{h},t]$, estremi inclusi. Nel criterio predefinito, almeno un timestamp anomalo rende anomala la finestra. Sono considerate tutte le ore disponibili, anche notturne, della stessa località del target.
-
-La classificazione descrive la sequenza esplicita del sito centrale: non comprende automaticamente le altre località del grafo né le ore aggiuntive necessarie alle feature derivate. Le finestre incomplete e i target privi di score sono esclusi con conteggi separati. Il numero di righe indica previsioni località--timestamp per orizzonte, non giorni statisticamente indipendenti.
-
-\subsection{Sensibilità alla soglia e bande di dispersione}
-
-Nell'analisi di sensibilità MTGFlow, gli anomali soddisfano la soglia per sito $Q_3+k\,\mathrm{IQR}$, usando le statistiche di riferimento del training. Per STGAN si varia la percentuale del ranking globale. A ogni soglia vengono ricalcolati i gruppi e i rispettivi MAE e RMSE: l'asse orizzontale descrive la soglia, non il tempo.
-
-Le curve MAE sono accompagnate da due fasce degli errori assoluti: una fascia più scura fra primo e terzo quartile e una più chiara fra i baffi di Tukey. I baffi corrispondono agli estremi osservati entro $Q_1-1.5\,\mathrm{IQR}$ e $Q_3+1.5\,\mathrm{IQR}$; non comprendono necessariamente tutto l'intervallo dei valori. Gli outlier continuano a contribuire al MAE.
-
-Queste fasce descrivono la dispersione degli errori individuali. Non sono intervalli di confidenza del MAE e non sono intervalli predittivi della rete. La stessa distinzione vale per i boxplot degli errori assoluti nei quattro casi; il RMSE è rappresentato come metrica aggregata. La sovrapposizione delle fasce non costituisce un test di significatività.
-
-La valutazione probabilistica considera separatamente copertura e ampiezza degli intervalli predittivi del previsore. Il confronto fra STGAN su grafo e variante ConvGRU sulle coordinate comuni riporta inoltre concordanze, discordanze e Jaccard delle anomalie, distinguendo patch complete e incomplete. L'accordo fra detector non equivale ad accuratezza rispetto a una verità di riferimento indipendente.
+% DECISO l'11 ottobre 2026: un solo valore, eta = 9 di Monaco et al., in tutta
+% la tesi. DA FARE NEI RISULTATI: il CLC di dropout Monte Carlo e Deep Ensemble
+% salvato su W&B (eta = 10) non va copiato; va ricalcolato con la formula sopra
+% da PICP e ampiezza media salvati (PICP 0.028 e 0.173; ampiezza da leggere su
+% W&B, run x4eic20l e 29yahjvt).

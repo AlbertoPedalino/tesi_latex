@@ -16,15 +16,17 @@
 
 \subsection{Deep Ensemble}
 
-\subsection{SDE-Net true-minimal}
+\subsection{Variante SDE U-Net}
 
 \subsection{Variante SDE-Net e previsione diretta multiorizzonte}
 
 % Riportare le metriche per orizzonte senza confondere t+1 e t+6 dello stesso
 % modello diretto con risultati di modelli addestrati separatamente.
 
-\subsection{Ablazione della GAT}
-
+% Sottosezione tolta l'11 ottobre 2026: nessuna run senza GAT sul server (vedi
+% il commento nella Metodologia, sezione sul grafo geografico).
+% \subsection{Ablazione della GAT}
+%
 % Appartiene alla variante SDE-Net. Confrontare configurazioni e campioni
 % coerenti. L'ablazione rimuove il message passing, ma conserva la diffusione
 % globale condivisa fra località.
@@ -38,14 +40,14 @@
 
 \subsection{Intervalli e disaccordo tra membri del Deep Ensemble}
 
-\subsection{Intervalli delle due varianti SDE-Net}
+\subsection{Intervalli delle due varianti SDE}
 
 % Per la variante SDE-Net distinguere quantili della miscela gaussiana e banda
 % gaussiana approssimata; riportare separatamente le componenti della varianza.
 % ESITO DA SOSTENERE CON I NUMERI (spostato qui dallo Stato dell'arte): la testa
 % gaussiana avrebbe dato intervalli utilizzabili, la banda epistemica (dispersione
 % fra le traiettorie) sarebbe troppo stretta, in modo più evidente nella variante
-% true-minimal, che non ha componente aleatoria. Ordine di grandezza ricordato
+% SDE U-Net, che non ha componente aleatoria. Ordine di grandezza ricordato
 % dall'autore: la banda epistemica conteneva circa il 10--15% delle osservazioni.
 % Ritrovare nei file di valutazione copertura, ampiezza, livello nominale e
 % variante prima di scriverlo. Riprendere il limite anche nelle Conclusioni.
@@ -56,6 +58,14 @@
 \section{Rilevamento delle anomalie con MTGFlow, STGAN e ConvGRU}
 
 \subsection{Score e distribuzione spazio-temporale delle anomalie}
+% TESTO SPOSTATO DAL CAPITOLO 5 (11 ottobre 2026). Descrive come è calcolata
+% l'analisi: da riusare, accorciato, in apertura della sottosezione e soltanto
+% insieme al risultato corrispondente.
+% Le previsioni sono associate alle decisioni dei detector tramite località e timestamp target. Nel caso multiorizzonte, la chiave completa della previsione include anche l'orizzonte, mentre l'etichetta del detector rimane unica per località e timestamp. La stessa osservazione target può quindi essere associata a previsioni emesse in ore diverse.
+%
+% Il protocollo STGAN prevede un'esclusione opzionale degli azzeramenti solari regionali isolati e del passo immediatamente successivo, seguito dal ricalcolo del top-K sulle osservazioni ammissibili. Il percorso NetCDF controlla più variabili solari e la produzione; quello basato sui dati preparati controlla la sola irradianza. La sorgente utilizzata deve essere indicata, poiché i due criteri non sono identici.
+%
+% La serie locale mostra tempo e anomaly score, con le decisioni evidenziate e interruzioni nei periodi senza score. La rappresentazione regionale mostra invece, per ogni ora, la percentuale di siti anomali rispetto ai siti con score valido; una matrice sito--giorno mostra la percentuale di ore anomale rispetto alle ore valide di quel sito e giorno. Queste quote aggregano le decisioni puntuali senza stimare una nuova soglia regionale. I periodi senza osservazioni non vengono convertiti in normalità.
 
 Per le osservazioni segnalate dalla ConvGRU con kernel 3 è disponibile la ripartizione dell'errore di ricostruzione della località centrale fra le tre variabili. In media il 75.5\% dell'errore è dovuto all'irradianza, il 15.8\% alla temperatura e l'8.6\% al vento. L'irradianza è la variabile con il contributo maggiore in 81733 delle 100653 osservazioni segnalate (81.2\%), la temperatura in 13320 (13.2\%) e il vento in 5600 (5.6\%). Su PVGIS le osservazioni segnalate riguardano quindi in prevalenza scostamenti dell'irradianza, in accordo con la composizione di questi dati, che contengono le sole grandezze legate alla produzione (Capitolo~\ref{chap:dati}).
 
@@ -69,6 +79,16 @@ Il dato descrive la sola componente di ricostruzione dello score e le sole osser
 % Distinguere score aggregati del detector e diagnostiche per variabile.
 
 \subsection{Soglie IQR, top-K e confronto fra grafo e griglia}
+% TESTO SPOSTATO DAL CAPITOLO 5 (11 ottobre 2026). Descrive come è calcolata
+% l'analisi: da riusare, accorciato, in apertura della sottosezione e soltanto
+% insieme al risultato corrispondente.
+% Le mappe di frequenza associano a ciascun sito la quota di ore anomale sulle ore con score valido. La copertura è distinta da questa quota e rapporta le ore effettivamente valutate a quelle ammissibili. Un sito privo di score non viene rappresentato come privo di anomalie. Nel confronto diurno, il filtro dell'irradianza maggiore di $10\,\mathrm{W\,m^{-2}}$ viene applicato dopo le decisioni del detector: il ranking STGAN non viene ricalcolato sulle sole ore diurne.
+%
+% Per MTGFlow, il protocollo di base conserva le soglie per sito stimate dalle statistiche di training. Una variante esplorativa assegna invece un budget globale di anomalie ordinando la coordinata firmata
+% \begin{equation}
+% c_{nt}=\frac{s_{nt}-\theta_n}{\mathrm{IQR}_{n,\mathrm{train}}},
+% \end{equation}
+% dove $s_{nt}$ è lo score e $\theta_n$ la soglia salvata del sito. Non viene applicato un troncamento a zero: anche i valori sotto soglia mantengono il proprio ordinamento. La selezione usa un numero esatto di osservazioni determinato dalla percentuale richiesta, prima dell'eventuale filtro diurno. Questa variante deve essere distinta sia dalle decisioni native MTGFlow sia dalla coordinata centrata in $Q_3$ usata nell'analisi di sensibilità.
 
 % Specificare statistiche IQR per sito e popolazione del ranking globale.
 % Per STGAN su grafo e ConvGRU riportare accordo e Jaccard sulle coordinate
@@ -172,18 +192,44 @@ La conseguenza riguarda le analisi della Sezione~\ref{sec:ris-posthoc}: gli erro
 % per fascia di produzione. I boxplot non descrivono RMSE per campione.
 
 \subsection{Confronto a una e sei ore e quattro casi input--target}
+% TESTO SPOSTATO DAL CAPITOLO 5 (11 ottobre 2026). Descrive come è calcolata
+% l'analisi: da riusare, accorciato, in apertura della sottosezione e soltanto
+% insieme al risultato corrispondente.
+% Oltre al raggruppamento secondo l'etichetta del target, l'analisi considera quattro casi: input normale e target normale, input normale e target anomalo, input anomalo e target normale, input anomalo e target anomalo. La normalità del target riguarda l'osservazione futura classificata dal detector, non una classificazione della previsione numerica del modello.
+%
+% Con una sequenza di 24 ore e ultimo input al tempo $t$, la finestra considerata è $[t-23\,\mathrm{h},t]$, estremi inclusi. Nel criterio predefinito, almeno un timestamp anomalo rende anomala la finestra. Sono considerate tutte le ore disponibili, anche notturne, della stessa località del target.
+%
+% La classificazione descrive la sequenza esplicita del sito centrale: non comprende automaticamente le altre località del grafo né le ore aggiuntive necessarie alle feature derivate. Le finestre incomplete e i target privi di score sono esclusi con conteggi separati. Il numero di righe indica previsioni località--timestamp per orizzonte, non giorni statisticamente indipendenti.
 
 % Inserire i quattro casi con copertura ed esclusioni della finestra di input.
 % Il target normale/anomalo è l'osservazione etichettata dal detector:
 % questo confronto non è una matrice di confusione del previsore.
 
 \subsection{Errore in funzione della soglia e bande di dispersione}
+% TESTO SPOSTATO DAL CAPITOLO 5 (11 ottobre 2026). Descrive come è calcolata
+% l'analisi: da riusare, accorciato, in apertura della sottosezione e soltanto
+% insieme al risultato corrispondente.
+% Nell'analisi di sensibilità MTGFlow, gli anomali soddisfano la soglia per sito $Q_3+k\,\mathrm{IQR}$, usando le statistiche di riferimento del training. Per STGAN si varia la percentuale del ranking globale. A ogni soglia vengono ricalcolati i gruppi e i rispettivi MAE e RMSE: l'asse orizzontale descrive la soglia, non il tempo.
+%
+% Le curve MAE sono accompagnate da due fasce degli errori assoluti: una fascia più scura fra primo e terzo quartile e una più chiara fra i baffi di Tukey. I baffi corrispondono agli estremi osservati entro $Q_1-1.5\,\mathrm{IQR}$ e $Q_3+1.5\,\mathrm{IQR}$; non comprendono necessariamente tutto l'intervallo dei valori. Gli outlier continuano a contribuire al MAE.
+%
+% Queste fasce descrivono la dispersione degli errori individuali. Non sono intervalli di confidenza del MAE e non sono intervalli predittivi della rete. La stessa distinzione vale per i boxplot degli errori assoluti nei quattro casi; il RMSE è rappresentato come metrica aggregata. La sovrapposizione delle fasce non costituisce un test di significatività.
+%
+% La valutazione probabilistica considera separatamente copertura e ampiezza degli intervalli predittivi del previsore. Il confronto fra STGAN su grafo e variante ConvGRU sulle coordinate comuni riporta inoltre concordanze, discordanze e Jaccard delle anomalie, distinguendo patch complete e incomplete. L'accordo fra detector non equivale ad accuratezza rispetto a una verità di riferimento indipendente.
 
 % Inserire sensibilità MTGFlow e STGAN con curve MAE, fascia Q1--Q3 e baffi.
 % Le bande descrivono errori individuali: nessuna conclusione di significatività
 % o equivalenza dei gruppi può essere ricavata dalla sola sovrapposizione.
 
 \subsection{Errori per tipo e direzione dell'estremo meteorologico}
+% TESTO SPOSTATO DAL CAPITOLO 5 (11 ottobre 2026). Descrive come è calcolata
+% l'analisi: da riusare, accorciato, in apertura della sottosezione e soltanto
+% insieme al risultato corrispondente.
+% Le anomalie STGAN possono essere ulteriormente suddivise intersecando la decisione del detector con flag climatologici delle variabili meteorologiche, alla stessa località e al timestamp target. Per temperatura e vento vengono distinti i lati alto e basso confrontando il valore con le bande climatologiche della relativa osservazione; per l'irradianza viene verificata anche la variabile associata al flag. Il criterio non confonde quindi un estremo della produzione con un estremo dell'irradianza.
+%
+% I sottogruppi possono sovrapporsi. Una stessa osservazione può soddisfare più condizioni meteorologiche, mentre un'anomalia non associata ad alcuna condizione rimane anomala e viene conteggiata separatamente. I normali conservano la decisione STGAN e non vengono ridefiniti come complemento di ciascuna categoria. Le statistiche per categoria non costituiscono pertanto una partizione disgiunta di tutte le osservazioni.
+%
+% L'analisi degli errori tipizzati considera i target diurni con irradianza maggiore di $10\,\mathrm{W\,m^{-2}}$. Per le fasce di produzione utilizza un riferimento condiviso fra orizzonti: il percentile 99 della produzione positiva diurna, contando una sola volta ciascuna coppia località--timestamp target, e intervalli di ampiezza 20 punti percentuali. Oltre agli errori aggregati, calcola il RMSE per località e ne riassume mediana e quartili. La banda fra siti descrive l'eterogeneità geografica del RMSE; è distinta dai quartili degli errori assoluti individuali e dagli intervalli di confidenza di una metrica.
 
 % Riportare normali STGAN ed estremi alti/bassi di temperatura, vento e
 % irradianza, ottenuti intersecando anomalie e flag climatologici al target.

@@ -3,7 +3,7 @@
 
 \section{Panoramica del percorso metodologico}
 
-La metodologia parte dal previsore: il backbone deterministico BiLSTM--GAT, le soglie climatologiche della Sezione~\ref{sec:soglie-climatologiche}, che forniscono le prime etichette di condizioni insolite, gli esperimenti preliminari con Enhanced MC Dropout e Deep Ensemble, valutati su quelle etichette, e le due varianti basate su equazioni differenziali stocastiche, true-minimal e SDE-Net. La variante SDE-Net include una previsione diretta multiorizzonte e un'ablazione della GAT. Il rilevamento delle anomalie con modelli appresi costituisce una linea distinta, condotta dapprima sui dati PVGIS, come analisi iniziale, con MTGFlow, STGAN e un adattamento STGAN a griglia, evoluto da una CNN senza ricorrenza a un encoder ConvGRU. La versione finale conserva la LSTM del trend e permette un'ablazione della dimensione dei kernel. Un'estensione separata applica lo stesso detector a ERA5 e introduce la ricostruzione di eventi geografici a partire dagli score. Su ERA5 il detector viene poi dotato di dropout nel generatore e di uno score Monte Carlo con una misura di dispersione associata. Due varianti intervengono sul generatore: la prima sostituisce, nei gate dell'unità ricorrente, la convoluzione con l'attenzione su grafo definita sull'intera griglia; la seconda applica la ConvGRU al campo completo invece che a singole patch. In entrambe il discriminatore rimane locale.
+La metodologia parte dal previsore: il backbone deterministico BiLSTM--GAT, le soglie climatologiche della Sezione~\ref{sec:soglie-climatologiche}, che forniscono le prime etichette di condizioni insolite, gli esperimenti preliminari con Enhanced MC Dropout e Deep Ensemble, valutati su quelle etichette, e le due varianti basate su equazioni differenziali stocastiche, SDE U-Net e SDE-Net. La variante SDE-Net include una previsione diretta multiorizzonte. Il rilevamento delle anomalie con modelli appresi costituisce una linea distinta, condotta dapprima sui dati PVGIS, come analisi iniziale, con MTGFlow, STGAN e un adattamento STGAN a griglia, evoluto da una CNN senza ricorrenza a un encoder ConvGRU. La versione finale conserva la LSTM del trend e permette un'ablazione della dimensione dei kernel. Un'estensione separata applica lo stesso detector a ERA5 e introduce la ricostruzione di eventi geografici a partire dagli score. Su ERA5 il detector viene poi dotato di dropout nel generatore e di uno score Monte Carlo con una misura di dispersione associata. Due varianti intervengono sul generatore: la prima sostituisce, nei gate dell'unità ricorrente, la convoluzione con l'attenzione su grafo definita sull'intera griglia; la seconda applica la ConvGRU al campo completo invece che a singole patch. In entrambe il discriminatore rimane locale.
 
 Le analisi post-hoc utilizzano previsioni e score già prodotti. Il cambiamento della soglia o del raggruppamento delle osservazioni modifica il protocollo di valutazione, senza comportare un nuovo addestramento del previsore.
 
@@ -25,7 +25,7 @@ L'encoder temporale elabora la sequenza di ciascuna località con parametri cond
 \end{equation}
 La rappresentazione $h$ è poi proiettata in uno spazio latente di 96 dimensioni da uno strato lineare seguito da GELU e da una normalizzazione di strato. Questo vettore, uno per località, è l'ingresso dello stadio spaziale.
 
-\subsection{Grafo geografico Haversine e ablazione della GAT}
+\subsection{Grafo geografico Haversine}
 
 Ogni località è un nodo. Due località sono collegate, in entrambe le direzioni, quando la loro distanza sulla superficie terrestre, calcolata con la formula di Haversine, non supera 20~km; una località senza vicini entro questo raggio è collegata alla più vicina, e ogni nodo ha un arco verso sé stesso. A ogni arco è associato un peso che decresce con la distanza $d_{ij}$,
 \begin{equation}
@@ -34,11 +34,20 @@ Ogni località è un nodo. Due località sono collegate, in entrambe le direzion
 \end{equation}
 con scala $s=10$~km e $p_{ii}=1$. Lo stadio spaziale è uno strato di attenzione su grafo~\cite{velickovic2018gat} a quattro teste, seguito da una connessione residua e da una normalizzazione di strato.
 
-Nel previsore con GAT, gli archi esprimono quindi relazioni di vicinanza geografica e i pesi gaussiani forniscono un prior ai coefficienti di attenzione. Nella variante SDE-Net, il logaritmo del peso geografico viene aggiunto al logit appreso $e_{ij}$ dell'equazione~\eqref{eq:gat-logit}, prima della softmax sugli archi entranti.
+Gli archi esprimono quindi relazioni di vicinanza geografica e i pesi gaussiani forniscono un prior ai coefficienti di attenzione. Nella variante SDE-Net, il logaritmo del peso geografico viene aggiunto al logit appreso $e_{ij}$ dell'equazione~\eqref{eq:gat-logit}, prima della softmax sugli archi entranti.
 
-L'ablazione senza GAT rimuove gli strati di attenzione sul grafo: la proiezione dell'encoder temporale diventa direttamente lo stato iniziale della SDE. Il grafo continua a essere costruito e passato nelle interfacce, ma i suoi archi non sono utilizzati dal forward. L'ablazione riduce anche il numero di parametri, senza introdurre un blocco sostitutivo di pari dimensione.
-
-L'assenza di message passing non implica completa indipendenza fra le distribuzioni predittive delle località. La diffusione SDE conserva un pooling degli stati iniziali sui siti e produce una scala comune per esempio. In inferenza stocastica, il contenuto degli altri siti può quindi influire sull'ampiezza delle perturbazioni di una località. Il confronto isola la rimozione della GAT, mantenendo questa componente condivisa.
+% ABLAZIONE DELLA GAT, TOLTA DAL TESTO l'11 ottobre 2026: il codice esiste
+% (branch ablation/no-gat, 9 settembre 2026) ma sul server non risulta alcuna
+% run: nessun modello del previsore è stato addestrato dopo il 27 agosto. Se la
+% run viene fatta, ripristinare i due paragrafi seguenti, il titolo
+% "Grafo geografico Haversine e ablazione della GAT", la frase nella panoramica
+% e la sottosezione nei Risultati; aggiungere una riga alle tabelle del
+% Capitolo 5. Il branch va prima aggiornato con la correzione dell'inclinazione
+% e con l'opzione senza validation.
+%
+% L'ablazione senza GAT rimuove gli strati di attenzione sul grafo: la proiezione dell'encoder temporale diventa direttamente lo stato iniziale della SDE. Il grafo continua a essere costruito e passato nelle interfacce, ma i suoi archi non sono utilizzati dal forward. L'ablazione riduce anche il numero di parametri, senza introdurre un blocco sostitutivo di pari dimensione.
+%
+% L'assenza di message passing non implica completa indipendenza fra le distribuzioni predittive delle località. La diffusione SDE conserva un pooling degli stati iniziali sui siti e produce una scala comune per esempio. In inferenza stocastica, il contenuto degli altri siti può quindi influire sull'ampiezza delle perturbazioni di una località. Il confronto isola la rimozione della GAT, mantenendo questa componente condivisa.
 
 \subsection{Teste di previsione, funzione di perdita e training}
 
@@ -52,7 +61,7 @@ Nel percorso deterministico la funzione di perdita è un errore quadratico medio
     \label{eq:loss-deterministica}
 \end{equation}
 Negli esperimenti preliminari della Sezione~\ref{sec:probabilistici-preliminari} la perdita comprende anche un termine di errore assoluto pesato sui valori alti della produzione, che penalizza maggiormente le sottostime; le varianti SDE non lo usano. La testa gaussiana e la negative log-likelihood della variante SDE-Net sono descritte nella Sezione~\ref{sec:sde-net}. Epoche, dimensione del batch e tasso di apprendimento sono riportati nel Capitolo~\ref{chap:esperimenti}.
-% Verificato sul report della run true-minimal: peso lambda 0.1 e valore massimo
+% Verificato sul report della run SDE U-Net: peso lambda 0.1 e valore massimo
 % 1.6 dell'indice di cielo sereno. DA VERIFICARE: peso del termine sui picchi
 % (0.25 nel branch degli esperimenti preliminari).
 
@@ -106,7 +115,8 @@ Le due dispersioni hanno significato diverso: quella del dropout Monte Carlo mis
 % aggiunto) e sweep vfry1hgx con aggregazione pvgis_deep_ensemble_vfry1hgx
 % (cinque membri). Training 2016--2018, test 2019, nessuna validation, 5 epoche,
 % batch 16, tasso 1e-3, dropout 0.2, 20 passaggi, livello 95%, 64 unità nella
-% LSTM, etichette da una climatologia 2005--2023. README e notebook del branch
+% LSTM, etichette da una climatologia 2005--2023 senza il 2019 (il codice di
+% giugno esclude per default l'anno valutato). README e notebook del branch
 % ablation/enhanced-mc-dropout riportano una configurazione diversa (60 epoche,
 % 2005--2018, dropout 0.3, 30 passaggi) di cui non risultano run.
 % Per gli Esperimenti (parole dell'autore): run brevi, fatte prima di SDE-Net;
@@ -114,8 +124,8 @@ Le due dispersioni hanno significato diverso: quella del dropout Monte Carlo mis
 % Per i Risultati: copertura dell'intervallo al 95% pari a 0.028 (dropout Monte
 % Carlo, un modello) e 0.173 (Deep Ensemble); MAE 20.1 e 19.2 W.
 
-\section{SDE-Net true-minimal}
-\label{sec:sde-true-minimal}
+\section{Variante SDE U-Net}
+\label{sec:sde-unet}
 
 Questa variante trasferisce al backbone BiLSTM--GAT lo schema di SDE U-Net~\cite{monaco2025sdeunet}, in cui i passi stocastici sono allineati agli stadi dell'encoder e a ciascuno stadio corrisponde un blocco di diffusione. Gli stadi sono qui due: quello temporale e quello spaziale.
 
@@ -266,7 +276,7 @@ La soglia segue l'articolo ed è ricavata dagli score di training della stessa l
 \end{equation}
 e una finestra è segnalata quando $S\geq\theta$. Per ogni variabile è calcolata allo stesso modo una soglia sugli score $S_k$, moltiplicata per 0.8. Lo score per variabile indica quale grandezza contribuisce di più alla bassa verosimiglianza; non identifica la causa fisica dell'anomalia.
 
-Con soglie stimate per località, la quota di osservazioni segnalate varia da una località all'altra. Come variante esplorativa le decisioni sono ricalcolate con una quota fissata sull'insieme di tutte le località, ordinando le osservazioni secondo lo scarto dalla soglia della propria località, $(S-\theta)/(Q_3-Q_1)$. Il confronto fra i due criteri è definito nel Capitolo~\ref{chap:esperimenti}.
+Con soglie stimate per località, la quota di osservazioni segnalate varia da una località all'altra. Come variante esplorativa le decisioni sono ricalcolate con una quota fissata sull'insieme di tutte le località, ordinando le osservazioni secondo lo scarto dalla soglia della propria località, $(S-\theta)/(Q_3-Q_1)$. Il confronto fra i due criteri è riportato nel Capitolo~\ref{chap:risultati}.
 
 \subsection{Modelli indipendenti per località e assenza di message passing geografico}
 
