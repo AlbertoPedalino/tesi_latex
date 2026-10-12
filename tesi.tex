@@ -24,6 +24,9 @@
 \newif\ifbozza
 \bozzatrue
 \newcommand{\provv}[1]{\ifbozza\textcolor{red}{#1}\else#1\fi}
+% Nota visibile soltanto nella bozza, usata nelle didascalie delle figure
+% costruite con valori provvisori.
+\newcommand{\notabozza}[1]{\ifbozza\textcolor{red}{#1}\fi}
 
 \graphicspath{{figures/}}
 \addbibresource{bibliography.bib}

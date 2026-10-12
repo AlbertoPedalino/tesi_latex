@@ -537,3 +537,13 @@
 % \paragraph{Episodio di giugno.} L'errore è inferiore a quello delle osservazioni normali: \provv{35.5} contro \provv{45.6}~W a un'ora e \provv{58.6} contro \provv{91.0}~W a sei ore. La copertura scende a \provv{0.945} e a \provv{0.920}. Il calo è concentrato nella fascia di produzione più bassa, dove l'intervallo è più stretto di quello delle normali (\provv{98.8} contro \provv{173.3}~W a un'ora) e la copertura è \provv{0.797}.
 %
 % \paragraph{Lettura dei due casi.} Dei due episodi, quello di giugno ha lo score di picco più alto (5095 contro 4169), ma è quello in cui il previsore sbaglia meno. Uno score elevato del detector non corrisponde quindi, di per sé, a una previsione più difficile. Due episodi non bastano per una conclusione generale: indicano che lo score del detector e la difficoltà per il previsore vanno misurati separatamente.
+
+% ======================================================================
+% Figura delle previsioni su una settimana (aggiunta il 12 ottobre 2026)
+% ======================================================================
+% Dati in figures/dati/previsioni_settimana_maggio.csv: 336 righe estratte con
+% awk da predictions.csv della run a sei orizzonti (località 0, istanti target
+% dal 9 al 15 maggio 2019, orizzonti 1 e 6; colonne timestamp, horizon_hours,
+% y_true, y_pred, lower_pi, upper_pi, anomaly_group). Estremo inferiore negativo
+% in alcune ore: a sei ore fino a -131.8 W (9 maggio ore 10), a un ora fino a
+% -49.4 W (10 maggio ore 16); di notte -1.4 W.
