@@ -225,6 +225,47 @@ L'associazione fra lo score di STGAN e la difficoltà della previsione non è qu
 Una finestra su cinque contiene almeno un'osservazione segnalata, benché le osservazioni segnalate siano l'1\% (Figura~\ref{fig:quattro-casi}). In questi casi l'errore è maggiore anche quando l'osservazione prevista è normale: \provv{50.3} contro \provv{42.9}~W a un'ora, il \provv{17}\% in più, e \provv{90.2} contro \provv{79.7}~W a sei ore, il \provv{13}\% in più. Un'anomalia nelle ore precedenti è quindi associata a una previsione peggiore anche quando l'ora prevista non è segnalata. L'effetto dell'osservazione prevista è più forte a un'ora e si attenua a sei: con ingresso normale e target anomalo l'errore aumenta del \provv{39}\% a un'ora e del \provv{16}\% a sei ore, un valore vicino a quello dovuto al solo ingresso anomalo. I conteggi sono previsioni per località e istante, non giorni indipendenti, e finestre vicine nel tempo condividono gran parte delle ore.
 
 \section{Anomalie ed eventi geografici su ERA5}
+% ---------------------------------------------------------------------------
+% SCALETTA DA RIEMPIRE A RUN CONCLUSE (preparata il 12 ottobre 2026)
+% Stessa forma delle sezioni PVGIS: titoletti nel testo, poche tabelle, figure
+% generate da figures/genera_figure_risultati.py. Si riporta solo ciò che è
+% stato fatto nella forma corretta: una run per variante, a sedici passi sul
+% campo intero. Ciò che nella Metodologia non trova qui un risultato va tolto
+% dalla Metodologia.
+%
+% 1. Configurazioni e addestramento (un paragrafo + una tabella)
+%    Tabella: variante (ConvGRU, GAT-GRU), passi recenti, epoche, aggiornamenti
+%    per epoca, tassi di apprendimento, precisione, parametri di G e D, tempo.
+%    Comandi, per ogni cartella di run <RUN> in ~/physiq_pv/outputs:
+%      python3 -c "import json;m=json.load(open('<RUN>/metadata.json'));print(json.dumps({k:v for k,v in m.items() if not isinstance(v,(list,dict))},indent=1))"
+%      cat <RUN>/training_history.csv
+%
+% 2. Andamento dell'addestramento e monitoraggio (un paragrafo + una figura)
+%    Figura: loss di G e di D per epoca nelle due varianti; MMD nello spazio PCA
+%    per epoca, se il monitoraggio era attivo. Dati: training_history.csv.
+%    Da dire: se la loss di D resta vicina a ln 2 (0.69) o scende; nessuna
+%    conclusione sulla qualità del rilevamento dalla sola loss.
+%
+% 3. Score e dispersione Monte Carlo (un paragrafo + una figura)
+%    Figura: mappa del dominio con la quota di istanti segnalati per cella (o lo
+%    score medio), una per variante. Valori: quantili dello score e della
+%    dispersione u. Comando di partenza:
+%      ls -la <RUN>/scores | head -20
+%
+% 4. Accordo fra le due varianti (un paragrafo, numeri nel testo)
+%    Stesso calcolo fatto su PVGIS: osservazioni segnalate da entrambe, indice
+%    di Jaccard, valore atteso per caso. Su PVGIS era 0.03-0.05: dire se su ERA5
+%    le due varianti concordano di più.
+%
+% 5. Eventi geografici (un paragrafo + una tabella o una figura)
+%    Numero di eventi, durata e area (mediana, quartili), quota con separazioni
+%    o fusioni; un esempio di evento su mappa. Senza attribuire cause
+%    meteorologiche agli eventi se non c'è una fonte.
+%
+% Limiti da scrivere comunque: un solo seme per variante; nessuna verità di
+% riferimento, quindi nessuna misura di accuratezza; soglia e normalizzazione
+% calcolate sull'intero test (protocollo retrospettivo).
+% ---------------------------------------------------------------------------
 
 % \subsection{Copertura dei dati e configurazione del detector}
 

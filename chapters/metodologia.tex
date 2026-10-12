@@ -243,12 +243,12 @@ La varianza $v_{\mathrm{tot}}$ ha la forma della varianza di miscela dell'equazi
 
 L'intervallo principale è ottenuto dai quantili a code uguali della miscela gaussiana equiponderata rappresentata dalle traiettorie. La banda $\bar{\mu}\pm z\sqrt{v_{\mathrm{tot}}}$ è mantenuta come approssimazione gaussiana diagnostica. Il percorso senza rumore integra invece il solo drift e non coincide, in generale, con la media esatta delle traiettorie stocastiche.
 
-\section{Rilevamento delle anomalie climatiche con MTGFlow}
+\section{Rilevamento delle anomalie con MTGFlow}
 \label{sec:mtgflow}
 
 Il primo detector appreso è MTGFlow~\cite{zhou2023labelfree}, nella versione base dell'articolo. Stima la densità delle finestre di training e assegna uno score alto alle finestre a bassa densità; non richiede etichette e non assume che il training sia privo di anomalie.
 
-\subsection{Serie storiche per località, variabili climatiche e finestre}
+\subsection{Serie storiche per località, variabili meteorologiche e finestre}
 
 MTGFlow è applicato separatamente a ogni località. Le entità del modello sono le tre variabili meteorologiche della località: irradianza globale, temperatura a due metri e velocità del vento a dieci metri. La produzione e le etichette delle soglie climatologiche non entrano nel detector.
 
@@ -440,7 +440,7 @@ nel default ERA5; il solo tempo trascorso fra primo e ultimo frame viene conserv
 \section{STGAN su ERA5: score Monte Carlo e varianti ConvGRU e GAT-GRU}
 \label{sec:era5-mc}
 
-Gli sviluppi di questa sezione riguardano il solo percorso ERA5. Feature, griglia, maschera delle celle ed estrazione degli eventi restano quelle delle Sezioni~\ref{sec:dati-era5} e~\ref{sec:era5-eventi}. Il lavoro procede su due linee parallele, che condividono protocollo di training, score e monitoraggio e si distinguono per l'encoder spaziale del generatore: una ConvGRU, come nella Sezione~\ref{sec:stgan-convgru}, oppure una Graph Attention Network. Nessuna delle due linee è la continuazione dell'altra.
+Gli sviluppi di questa sezione riguardano il solo percorso ERA5. Feature, griglia, maschera delle celle ed estrazione degli eventi restano quelle delle Sezioni~\ref{sec:dati-era5} e~\ref{sec:era5-eventi}. Il lavoro procede su due linee parallele, che condividono protocollo di training, score e monitoraggio e si distinguono per l'encoder spaziale del generatore: una ConvGRU, come nella Sezione~\ref{sec:stgan-convgru}, oppure una GAT-GRU, cioè un'unità ricorrente con l'attenzione su grafo nei gate. Nessuna delle due linee è la continuazione dell'altra.
 
 \subsection{Dropout nel generatore e campionamento dello score}
 \label{sec:era5-mcdropout}
@@ -465,7 +465,7 @@ Con $J=1$ lo score coincide con quello deterministico e $u_{tn}$ è nulla. Vengo
 
 La quantità $u_{tn}$ misura la variabilità dello score rispetto alle maschere di dropout del generatore. È espressa nelle unità dello score normalizzato e non è una probabilità di anomalia; la sua calibrazione come misura di incertezza non è verificata dal metodo. Come nel caso deterministico, la normalizzazione dipende da tutti gli score del test, senza uso di etichette: estendere il periodo di test può modificare estremi e ordinamento.
 
-\subsection{Split di validation e bilanciamento dell'addestramento avversario}
+\subsection{Bilanciamento dell'addestramento avversario}
 
 Gli obiettivi $\mathcal{L}_{D}$ e $\mathcal{L}_{G}$ sono quelli della Sezione~\ref{sec:stgan}. Il peso di ricostruzione $\lambda_G$ diventa un parametro, con valore predefinito invariato. I tassi di apprendimento dei due ottimizzatori Adam possono essere distinti: quello del discriminatore è espresso come rapporto rispetto a quello del generatore oppure come valore indipendente, e le due forme non possono essere indicate insieme. Anche il coefficiente $\beta_1$ dei due ottimizzatori, che regola quanto gli aggiornamenti precedenti pesano nella media dei gradienti, è un parametro: il valore predefinito è 0.9, quello usato dal codice degli autori di STGAN.
 
@@ -554,7 +554,7 @@ Rispetto alla variante ConvGRU sul campo intero della Sezione~\ref{sec:era5-full
 \subsection{Variante convoluzionale sul campo intero}
 \label{sec:era5-fullgrid}
 
-La seconda variante nasce dal tempo di addestramento del modello a patch su ERA5, in cui il numero di aggiornamenti per epoca cresce con il prodotto fra timestamp e località. Mantiene la ConvGRU e modifica l'unità del campione: invece di una cella con la propria patch, un campione è l'intero campo di un timestamp, disposto sul reticolo $H\times W$. Moduli e parametri sono quelli del modello a patch; cambia ciò a cui vengono applicati. Alla variante porta anche la lunghezza della finestra recente: su una patch $3\times3$ aumentare $R$ moltiplica il costo di ciascuno dei $TN$ campioni senza ampliare l'area osservata, che resta di nove celle. La finestra recente di sedici passi è quindi usata sul campo intero.
+La variante convoluzionale usata su ERA5 mantiene la ConvGRU e modifica l'unità del campione, perché nel modello a patch il numero di aggiornamenti per epoca cresce con il prodotto fra timestamp e località: invece di una cella con la propria patch, un campione è l'intero campo di un timestamp, disposto sul reticolo $H\times W$. Moduli e parametri sono quelli del modello a patch; cambia ciò a cui vengono applicati. Alla variante porta anche la lunghezza della finestra recente: su una patch $3\times3$ aumentare $R$ moltiplica il costo di ciascuno dei $TN$ campioni senza ampliare l'area osservata, che resta di nove celle. La finestra recente di sedici passi è quindi usata sul campo intero.
 
 Il generatore opera sul campo completo, da $[B,R,F,H,W]$ a $[B,F,H,W]$. Le convoluzioni scorrono sull'intero reticolo, quindi il campo ricettivo non è più troncato al bordo di una patch e ogni cella viene ricostruita una sola volta. La LSTM del trend e la codifica temporale sono calcolate per cella e disposte sul reticolo, dove il modello a patch replicava quelle del sito centrale sulle posizioni della patch.
 
