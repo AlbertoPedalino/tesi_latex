@@ -75,7 +75,7 @@ I detector su PVGIS usano tre variabili. MTGFlow è addestrato con finestre di 6
 
 Su ERA5 il training comprende gli anni 1980--2004 e il test gli anni 2005--2025, con sei epoche. Un campione è l'intero campo di un istante, e un'epoca comprende 70072 aggiornamenti dei pesi.
 
-Tutti i modelli sono addestrati su una scheda NVIDIA RTX PRO 6000 Blackwell.
+I modelli sono implementati in PyTorch~\cite{paszke2019pytorch}. I dati PVGIS ed ERA5 sono letti con xarray~\cite{hoyer2017xarray}; le tabelle di previsioni e di score sono elaborate con pandas~\cite{mckinney2010pandas}. Tutti i modelli sono addestrati su una scheda NVIDIA RTX PRO 6000 Blackwell.
 % Scheda grafica: stesso server usato nella tesi di Stiven Gjinaj, che riporta
 % lo stesso modello (confermato dall'autore l'11 ottobre 2026).
 % Fonti dei valori (verificati il 10 ottobre 2026): W&B per dropout Monte Carlo e

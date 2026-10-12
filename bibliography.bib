@@ -1,5 +1,8 @@
 % Riferimenti bibliografici in formato BibLaTeX.
 % Ogni voce è stata verificata sul PDF dell'articolo o sulla pagina arXiv.
+% Il 12 ottobre 2026 sede, volume e pagine degli atti sono stati ricontrollati
+% sulle pagine ufficiali (proceedings.mlr.press, aclanthology.org,
+% proceedings.neurips.cc, jmlr.org). Gli atti ICLR non hanno pagine.
 
 @inproceedings{kong2020sdenet,
   author     = {Kong, Lingkai and Sun, Jimeng and Zhang, Chao},
@@ -7,6 +10,8 @@
   booktitle  = {Proceedings of the 37th International Conference on Machine Learning},
   series     = {Proceedings of Machine Learning Research},
   volume     = {119},
+  pages      = {5405--5415},
+  publisher  = {PMLR},
   year       = {2020},
   eprint     = {2008.10546},
   eprinttype = {arxiv}
@@ -49,8 +54,10 @@
 @inproceedings{wu2025catch,
   author    = {Wu, Xingjian and Qiu, Xiangfei and Li, Zhengyu and Wang, Yihang and Hu, Jilin and Guo, Chenjuan and Xiong, Hui and Yang, Bin},
   title     = {{CATCH}: Channel-Aware Multivariate Time Series Anomaly Detection via Frequency Patching},
-  booktitle = {International Conference on Learning Representations},
-  year      = {2025}
+  booktitle  = {International Conference on Learning Representations (ICLR)},
+  year       = {2025},
+  eprint     = {2410.12261},
+  eprinttype = {arxiv}
 }
 
 @inproceedings{alnegheimish2025m2ad,
@@ -59,6 +66,8 @@
   booktitle = {Proceedings of the 28th International Conference on Artificial Intelligence and Statistics},
   series    = {Proceedings of Machine Learning Research},
   volume    = {258},
+  pages     = {4384--4392},
+  publisher = {PMLR},
   year      = {2025}
 }
 
@@ -78,10 +87,13 @@
 }
 
 @inproceedings{cho2014gru,
-  author     = {Cho, Kyunghyun and van Merrienboer, Bart and Gulcehre, Caglar and Bahdanau, Dzmitry and Bougares, Fethi and Schwenk, Holger and Bengio, Yoshua},
+  author     = {Cho, Kyunghyun and van Merri{\"e}nboer, Bart and Gulcehre, Caglar and Bahdanau, Dzmitry and Bougares, Fethi and Schwenk, Holger and Bengio, Yoshua},
   title      = {Learning Phrase Representations using {RNN} Encoder-Decoder for Statistical Machine Translation},
-  booktitle  = {Conference on Empirical Methods in Natural Language Processing (EMNLP)},
+  booktitle  = {Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing (EMNLP)},
+  pages      = {1724--1734},
+  publisher  = {Association for Computational Linguistics},
   year       = {2014},
+  doi        = {10.3115/v1/D14-1179},
   eprint     = {1406.1078},
   eprinttype = {arxiv}
 }
@@ -118,7 +130,11 @@
 @inproceedings{gal2016dropout,
   author     = {Gal, Yarin and Ghahramani, Zoubin},
   title      = {Dropout as a {B}ayesian Approximation: Representing Model Uncertainty in Deep Learning},
-  booktitle  = {International Conference on Machine Learning (ICML)},
+  booktitle  = {Proceedings of the 33rd International Conference on Machine Learning},
+  series     = {Proceedings of Machine Learning Research},
+  volume     = {48},
+  pages      = {1050--1059},
+  publisher  = {PMLR},
   year       = {2016},
   eprint     = {1506.02142},
   eprinttype = {arxiv}
@@ -127,14 +143,16 @@
 @inproceedings{lakshminarayanan2017ensembles,
   author     = {Lakshminarayanan, Balaji and Pritzel, Alexander and Blundell, Charles},
   title      = {Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles},
-  booktitle  = {Advances in Neural Information Processing Systems (NIPS)},
+  booktitle  = {Advances in Neural Information Processing Systems},
+  volume     = {30},
+  publisher  = {Curran Associates, Inc.},
   year       = {2017},
   eprint     = {1612.01474},
   eprinttype = {arxiv}
 }
 
 @inproceedings{chen2018neuralode,
-  author     = {Chen, Ricky T. Q. and Rubanova, Yulia and Bettencourt, Jesse and Duvenaud, David},
+  author     = {Chen, Ricky T. Q. and Rubanova, Yulia and Bettencourt, Jesse and Duvenaud, David K.},
   title      = {Neural Ordinary Differential Equations},
   booktitle  = {Advances in Neural Information Processing Systems},
   volume     = {31},
@@ -204,4 +222,36 @@
   number  = {25},
   pages   = {723--773},
   year    = {2012}
+}
+
+% Software. PyTorch verificato su proceedings.neurips.cc, xarray sulla pagina
+% della rivista, pandas sul record Crossref del DOI (12 ottobre 2026).
+
+@inproceedings{paszke2019pytorch,
+  author    = {Paszke, Adam and Gross, Sam and Massa, Francisco and Lerer, Adam and Bradbury, James and Chanan, Gregory and Killeen, Trevor and Lin, Zeming and Gimelshein, Natalia and Antiga, Luca and Desmaison, Alban and Kopf, Andreas and Yang, Edward and DeVito, Zachary and Raison, Martin and Tejani, Alykhan and Chilamkurthy, Sasank and Steiner, Benoit and Fang, Lu and Bai, Junjie and Chintala, Soumith},
+  title     = {{PyTorch}: An Imperative Style, High-Performance Deep Learning Library},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {32},
+  publisher = {Curran Associates, Inc.},
+  year      = {2019}
+}
+
+@article{hoyer2017xarray,
+  author  = {Hoyer, Stephan and Hamman, Joe},
+  title   = {xarray: {N-D} labeled Arrays and Datasets in {Python}},
+  journal = {Journal of Open Research Software},
+  volume  = {5},
+  number  = {1},
+  pages   = {10},
+  year    = {2017},
+  doi     = {10.5334/jors.148}
+}
+
+@inproceedings{mckinney2010pandas,
+  author    = {McKinney, Wes},
+  title     = {Data Structures for Statistical Computing in {Python}},
+  booktitle = {Proceedings of the 9th Python in Science Conference},
+  pages     = {56--61},
+  year      = {2010},
+  doi       = {10.25080/Majora-92bf1922-00a}
 }
