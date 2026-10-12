@@ -9,7 +9,7 @@
 % Struttura sul modello della tesi di Stiven Gjinaj: paragrafo di apertura,
 % poche sezioni, titoletti nel testo al posto delle sottosezioni.
 
-Il capitolo riporta i risultati sui dati PVGIS in cinque parti: l'accuratezza dei previsori, i loro intervalli di previsione, le decisioni dei detector, il comportamento del previsore sulle osservazioni segnalate e due episodi del 2019 usati come casi di studio. L'ultima sezione riguarda il detector sui campi ERA5. I risultati su PVGIS si riferiscono al 2019 e alle 1149 località, con il protocollo della Sezione~\ref{sec:exp-protocollo}; gli errori sono espressi in watt.
+Il capitolo riporta i risultati sui dati PVGIS in quattro parti: l'accuratezza dei previsori, i loro intervalli di previsione, le decisioni dei detector e il comportamento del previsore sulle osservazioni segnalate. L'ultima sezione riguarda il detector sui campi ERA5. I risultati su PVGIS si riferiscono al 2019 e alle 1149 località, con il protocollo della Sezione~\ref{sec:exp-protocollo}; gli errori sono espressi in watt.
 
 \section{Accuratezza dei previsori}
 \label{sec:ris-accuratezza}
@@ -261,37 +261,6 @@ L'associazione fra lo score di STGAN e la difficoltà della previsione non è qu
 \end{table}
 
 Una finestra su cinque contiene almeno un'osservazione segnalata, benché le osservazioni segnalate siano l'1\% (Tabella~\ref{tab:quattro-casi}). In questi casi l'errore è maggiore anche quando l'osservazione prevista è normale: \provv{50.3} contro \provv{42.9}~W a un'ora, il \provv{17}\% in più, e \provv{90.2} contro \provv{79.7}~W a sei ore, il \provv{13}\% in più. Un'anomalia nelle ore precedenti è quindi associata a una previsione peggiore anche quando l'ora prevista non è segnalata. L'effetto dell'osservazione prevista è più forte a un'ora e si attenua a sei: con ingresso normale e target anomalo l'errore aumenta del \provv{39}\% a un'ora e del \provv{16}\% a sei ore, un valore vicino a quello dovuto al solo ingresso anomalo. I conteggi sono previsioni per località e istante, non giorni indipendenti, e finestre vicine nel tempo condividono gran parte delle ore.
-
-\section{Casi di studio: due episodi del 2019}
-\label{sec:ris-episodi}
-
-Le medie sull'anno non mostrano come il previsore si comporta in un singolo episodio. Dallo score di MTGFlow sulle osservazioni diurne sono stati individuati due episodi: il 23--26 aprile e il 28--29 giugno 2019. Un episodio riunisce ore vicine in cui lo score è nella coda della propria distribuzione; gli sono assegnate tutte le ore diurne dei giorni che tocca, perché lo score, calcolato su finestre di 60 ore, segnala l'episodio con ritardo. Le previsioni sono quelle della variante SDE-Net a sei orizzonti; il riferimento sono le osservazioni diurne non segnalate dell'intero anno, pesate secondo la ripartizione dell'episodio fra le fasce di produzione (Tabella~\ref{tab:episodi}).
-
-\begin{table}[htbp]
-    \centering
-    \footnotesize
-    \caption{Errore assoluto medio e copertura dell'intervallo al 95\% della variante SDE-Net nei due episodi, a una e a sei ore, a confronto con le osservazioni normali. Ore diurne; l'episodio di aprile comprende 58514 previsioni per orizzonte, quello di giugno 33789.}
-    \label{tab:episodi}
-    \vspace{0.6em}
-    \begin{tabular}{@{}L{0.18}L{0.11}L{0.11}L{0.11}L{0.11}L{0.11}@{}}
-        \toprule
-        & & \multicolumn{2}{@{}l}{MAE (W)} & \multicolumn{2}{@{}l}{PICP} \\
-        Episodio & Orizzonte & Episodio & Normali & Episodio & Normali \\
-        \midrule
-        23--26 aprile & 1 ora & \provv{70.5} & \provv{42.6} & \provv{0.946} & \provv{0.943} \\
-        23--26 aprile & 6 ore & \provv{145.7} & \provv{75.4} & \provv{0.945} & \provv{0.931} \\
-        \addlinespace
-        28--29 giugno & 1 ora & \provv{35.5} & \provv{45.6} & \provv{0.945} & \provv{0.963} \\
-        28--29 giugno & 6 ore & \provv{58.6} & \provv{91.0} & \provv{0.920} & \provv{0.971} \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\paragraph{Episodio di aprile.} L'errore assoluto medio è \provv{70.5}~W a un'ora e \provv{145.7}~W a sei ore, il \provv{65}\% e il \provv{93}\% in più rispetto alle osservazioni normali. La copertura complessiva resta vicina a quella delle normali, perché l'intervallo si allarga, ma non è uniforme: nelle fasce di produzione più alte scende, a un'ora, a \provv{0.757} fra il 60 e l'80\% del riferimento e a \provv{0.869} fra l'80 e il 100\%, e in queste fasce la produzione è sottostimata in modo sistematico.
-
-\paragraph{Episodio di giugno.} L'errore è inferiore a quello delle osservazioni normali: \provv{35.5} contro \provv{45.6}~W a un'ora e \provv{58.6} contro \provv{91.0}~W a sei ore. La copertura scende a \provv{0.945} e a \provv{0.920}. Il calo è concentrato nella fascia di produzione più bassa, dove l'intervallo è più stretto di quello delle normali (\provv{98.8} contro \provv{173.3}~W a un'ora) e la copertura è \provv{0.797}.
-
-\paragraph{Lettura dei due casi.} Dei due episodi, quello di giugno ha lo score di picco più alto (5095 contro 4169), ma è quello in cui il previsore sbaglia meno. Uno score elevato del detector non corrisponde quindi, di per sé, a una previsione più difficile. Due episodi non bastano per una conclusione generale: indicano che lo score del detector e la difficoltà per il previsore vanno misurati separatamente.
 
 \section{Anomalie ed eventi geografici su ERA5}
 

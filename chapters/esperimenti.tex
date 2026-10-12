@@ -8,11 +8,11 @@ Il capitolo descrive gli esperimenti nell'ordine in cui sono stati condotti, le 
 
 Gli esperimenti seguono due linee che si incontrano nell'analisi finale: il previsore della produzione e il rilevamento delle anomalie. La Tabella~\ref{tab:esperimenti} le riassume.
 
-Il primo passo riguarda il previsore. Le soglie climatologiche della Sezione~\ref{sec:soglie-climatologiche} indicano le osservazioni insolite dell'anno di test, e su di esse si verifica se un intervallo costruito attorno alla previsione contiene il valore osservato. I primi due metodi provati sono il dropout Monte Carlo e il Deep Ensemble, applicati al backbone senza modificarlo. Sono esperimenti preliminari, con un addestramento breve: poiché gli intervalli ottenuti contengono una quota ridotta delle osservazioni, come riportato nel Capitolo~\ref{chap:risultati}, non sono stati proseguiti con addestramenti più lunghi.
+Il primo passo riguarda il previsore. Le soglie climatologiche della Sezione~\ref{sec:soglie-climatologiche} indicano le osservazioni insolite dell'anno di test, e su di esse si verifica se un intervallo costruito attorno alla previsione contiene il valore osservato. I primi due metodi provati sono il dropout Monte Carlo e il Deep Ensemble, applicati al backbone; il primo richiede soltanto l'aggiunta di tre strati di dropout. Sono esperimenti preliminari, con un addestramento breve: poiché gli intervalli ottenuti contengono una quota ridotta delle osservazioni, come riportato nel Capitolo~\ref{chap:risultati}, non sono stati proseguiti con addestramenti più lunghi.
 
 Il secondo passo introduce le due varianti basate su equazioni differenziali stocastiche. La variante SDE U-Net segue l'articolo di Monaco et al.~\cite{monaco2025sdeunet}, compreso l'addestramento sulle sole finestre normali. La variante SDE-Net segue l'articolo di Kong et al.~\cite{kong2020sdenet} ed è eseguita in tre configurazioni: a un'ora, con uscita diretta su sei orizzonti da una a sei ore, e con le etichette di MTGFlow al posto di quelle climatologiche.
 
-La seconda linea cerca le anomalie con modelli appresi, per verificare se individuano condizioni diverse dai valori estremi segnalati dalle soglie climatologiche. Sui dati PVGIS, come analisi iniziale, sono addestrati MTGFlow, che non usa il contesto geografico, la versione su grafo di STGAN e la variante ConvGRU, quest'ultima con kernel di lato 1, 3 e 5. Poiché i dati PVGIS contengono soltanto irradianza, temperatura e vento, il detector è poi portato sui campi ERA5, prima con un passo recente su patch e poi con sedici passi sul campo intero, nelle due varianti ConvGRU e GAT-GRU.
+La seconda linea cerca le anomalie con modelli appresi, per verificare se individuano condizioni diverse dai valori estremi segnalati dalle soglie climatologiche. Sui dati PVGIS, come analisi iniziale, sono addestrati MTGFlow, che non usa il contesto geografico, la versione su grafo di STGAN e la variante ConvGRU, quest'ultima con kernel di lato 1, 3 e 5. Poiché i dati PVGIS contengono soltanto irradianza, temperatura e vento, il detector è poi portato sui campi ERA5, sul campo intero e con sedici passi recenti, nelle due varianti ConvGRU e GAT-GRU.
 
 Le due linee si incontrano nell'analisi della Sezione~\ref{sec:ris-posthoc}: gli errori e gli intervalli del previsore sono confrontati fra le osservazioni che un detector segnala e le altre.
 
@@ -73,7 +73,7 @@ La variante SDE U-Net sceglie sul 2018 l'epoca del modello valutato; quando è a
 
 I detector su PVGIS usano tre variabili. MTGFlow è addestrato con finestre di 60 ore, un modello per località. Le versioni di STGAN usano un passo recente, 168 passi di trend e nove siti per contesto; ogni epoca visita tutte le coppie fra località e istanti, 140803056 campioni, e la variante ConvGRU ha 140931 parametri nel generatore e 114593 nel discriminatore con kernel 3.
 
-Su ERA5 il training comprende gli anni 1980--2004 e il test gli anni 2005--2025, con sei epoche. Nella configurazione a patch un'epoca comprende 3025793 aggiornamenti dei pesi; sul campo intero ne comprende 70072, perché un campione è un intero istante. A parità di epoche le due configurazioni non sono quindi confrontabili.
+Su ERA5 il training comprende gli anni 1980--2004 e il test gli anni 2005--2025, con sei epoche. Un campione è l'intero campo di un istante, e un'epoca comprende 70072 aggiornamenti dei pesi.
 
 Tutti i modelli sono addestrati su una scheda NVIDIA RTX PRO 6000 Blackwell.
 % Scheda grafica: stesso server usato nella tesi di Stiven Gjinaj, che riporta

@@ -28,7 +28,7 @@ L'obiettivo della tesi è rilevare condizioni meteorologiche anomale in dati pri
     \item L'adattamento di STGAN~\cite{deng2022stgan}, un detector avversario spazio-temporale nato per il traffico, a variabili meteorologiche prive di topologia fisica, in due varianti che rappresentano l'intorno di una cella con una convoluzione su griglia oppure con l'attenzione su grafo.
     \item La definizione dell'obiettivo come rilevamento di condizioni nuove rispetto al periodo di training, con uno score continuo e una quota di osservazioni segnalate che è un parametro del protocollo.
     \item Tre estensioni del detector sui campi ERA5: uno score Monte Carlo con una misura di dispersione, un monitoraggio dell'addestramento privo di etichette e la ricostruzione di eventi geografici a partire dagli score.
-    \item L'analisi degli errori e degli intervalli di un previsore fotovoltaico probabilistico, costruito sullo schema di SDE-Net~\cite{kong2020sdenet}, rispetto alle decisioni dei detector.
+    \item L'analisi degli errori e degli intervalli di un previsore fotovoltaico probabilistico, costruito sugli schemi di SDE-Net~\cite{kong2020sdenet} e di SDE U-Net~\cite{monaco2025sdeunet}, rispetto alle soglie climatologiche e alle decisioni dei detector.
 \end{itemize}
 Le varianti architetturali costituiscono confronti da valutare sperimentalmente; la loro implementazione non implica un miglioramento delle prestazioni.
 

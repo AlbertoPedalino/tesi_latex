@@ -3,7 +3,7 @@
 
 \section{Panoramica del percorso metodologico}
 
-La metodologia parte dal previsore: il backbone deterministico BiLSTM--GAT, le soglie climatologiche della Sezione~\ref{sec:soglie-climatologiche}, che forniscono le prime etichette di condizioni insolite, gli esperimenti preliminari con Enhanced MC Dropout e Deep Ensemble, valutati su quelle etichette, e le due varianti basate su equazioni differenziali stocastiche, SDE U-Net e SDE-Net. La variante SDE-Net include una previsione diretta multiorizzonte. Il rilevamento delle anomalie con modelli appresi costituisce una linea distinta, condotta dapprima sui dati PVGIS, come analisi iniziale, con MTGFlow, STGAN e un adattamento STGAN a griglia, evoluto da una CNN senza ricorrenza a un encoder ConvGRU. La versione finale conserva la LSTM del trend e permette un'ablazione della dimensione dei kernel. Un'estensione separata applica lo stesso detector a ERA5 e introduce la ricostruzione di eventi geografici a partire dagli score. Su ERA5 il detector viene poi dotato di dropout nel generatore e di uno score Monte Carlo con una misura di dispersione associata. Due varianti intervengono sul generatore: la prima sostituisce, nei gate dell'unità ricorrente, la convoluzione con l'attenzione su grafo definita sull'intera griglia; la seconda applica la ConvGRU al campo completo invece che a singole patch. In entrambe il discriminatore rimane locale.
+La metodologia parte dal previsore: il backbone deterministico BiLSTM--GAT, le soglie climatologiche della Sezione~\ref{sec:soglie-climatologiche}, che forniscono le prime etichette di condizioni insolite, gli esperimenti preliminari con dropout Monte Carlo e Deep Ensemble, valutati su quelle etichette, e le due varianti basate su equazioni differenziali stocastiche, SDE U-Net e SDE-Net. La variante SDE-Net include una previsione diretta multiorizzonte. Il rilevamento delle anomalie con modelli appresi costituisce una linea distinta, condotta dapprima sui dati PVGIS, come analisi iniziale, con MTGFlow, STGAN e un adattamento di STGAN a griglia basato su una ConvGRU, che conserva la LSTM del trend e permette un'ablazione della dimensione dei kernel. Un'estensione separata applica lo stesso detector a ERA5 e introduce la ricostruzione di eventi geografici a partire dagli score. Su ERA5 il detector viene poi dotato di dropout nel generatore e di uno score Monte Carlo con una misura di dispersione associata. Due varianti intervengono sul generatore: la prima sostituisce, nei gate dell'unità ricorrente, la convoluzione con l'attenzione su grafo definita sull'intera griglia; la seconda applica la ConvGRU al campo completo invece che a singole patch. In entrambe il discriminatore rimane locale.
 
 La Figura~\ref{fig:schema-percorso} riassume le due linee e il punto in cui si incontrano.
 
@@ -19,7 +19,7 @@ Le analisi post-hoc utilizzano previsioni e score già prodotti. Il cambiamento 
 \section{Backbone BiLSTM--GAT}
 \label{sec:backbone}
 
-Il backbone è stato messo a punto inizialmente su una configurazione mista, con la produzione misurata di impianti reali come grandezza da prevedere e le variabili meteorologiche PVGIS della località più vicina come ingressi. Quella configurazione non fa parte della tesi; il backbone è descritto qui come architettura comune ai previsori addestrati sui soli dati PVGIS. Su questi dati non è stato addestrato come modello a sé con il protocollo delle varianti SDE: è il modello di base degli esperimenti preliminari della Sezione~\ref{sec:probabilistici-preliminari}.
+Il backbone è l'architettura comune ai previsori della tesi, addestrati sui dati PVGIS. Non è stato addestrato come modello a sé con il protocollo delle varianti SDE: è il modello di base degli esperimenti preliminari della Sezione~\ref{sec:probabilistici-preliminari}.
 
 La Figura~\ref{fig:schema-backbone} ne mostra i tre stadi, descritti nelle sottosezioni che seguono.
 
@@ -111,9 +111,9 @@ Le soglie climatologiche segnalano i valori estremi di ciascuna variabile rispet
 
 I primi due metodi usati per associare un intervallo alla previsione non modificano il backbone: ne campionano l'uscita. Entrambi sono valutati sulle osservazioni segnalate dalle soglie climatologiche della Sezione~\ref{sec:soglie-climatologiche}, per verificare se l'intervallo si allarga e contiene il valore osservato nelle condizioni insolite.
 
-\subsection{Enhanced Monte Carlo Dropout}
+\subsection{Dropout Monte Carlo}
 
-Il dropout Monte Carlo~\cite{gal2016dropout} mantiene il dropout attivo in previsione e ripete il passaggio in avanti. Nel backbone il dropout è presente in origine soltanto sui coefficienti di attenzione dello strato su grafo e fra gli strati della LSTM. La variante qui indicata come Enhanced aggiunge tre strati di dropout: dopo l'encoder temporale, dopo la proiezione nello spazio latente e prima dell'ultimo strato della testa della produzione. La probabilità è 0.2.
+Il dropout Monte Carlo~\cite{gal2016dropout} mantiene il dropout attivo in previsione e ripete il passaggio in avanti. Nel backbone il dropout è presente in origine soltanto sui coefficienti di attenzione dello strato su grafo e fra gli strati della LSTM. La versione usata negli esperimenti aggiunge tre strati di dropout: dopo l'encoder temporale, dopo la proiezione nello spazio latente e prima dell'ultimo strato della testa della produzione. La probabilità è 0.2.
 
 In addestramento il dropout agisce da regolarizzatore. In previsione il modello è posto in modalità di valutazione e vengono riattivati i soli strati di dropout, in modo che le normalizzazioni restino quelle di valutazione. Per ogni coppia località--istante si eseguono $J=20$ passaggi in avanti con maschere diverse, che producono $J$ previsioni della produzione.
 
@@ -301,7 +301,13 @@ La soglia segue l'articolo ed è ricavata dagli score di training della stessa l
 \end{equation}
 e una finestra è segnalata quando $S\geq\theta$. Per ogni variabile è calcolata allo stesso modo una soglia sugli score $S_k$, moltiplicata per 0.8. Lo score per variabile indica quale grandezza contribuisce di più alla bassa verosimiglianza; non identifica la causa fisica dell'anomalia.
 
-Con soglie stimate per località, la quota di osservazioni segnalate varia da una località all'altra. Come variante esplorativa le decisioni sono ricalcolate con una quota fissata sull'insieme di tutte le località, ordinando le osservazioni secondo lo scarto dalla soglia della propria località, $(S-\theta)/(Q_3-Q_1)$. Il confronto fra i due criteri è riportato nel Capitolo~\ref{chap:risultati}.
+Con soglie stimate per località, la quota di osservazioni segnalate varia da una località all'altra; i valori osservati sono riportati nel Capitolo~\ref{chap:risultati}.
+% TOLTO il 12 ottobre 2026 perché nei Risultati il confronto non c'è: "Come
+% variante esplorativa le decisioni sono ricalcolate con una quota fissata
+% sull'insieme di tutte le località, ordinando le osservazioni secondo lo scarto
+% dalla soglia della propria località, (S - theta)/(Q3 - Q1). Il confronto fra i
+% due criteri è riportato nel Capitolo dei risultati." Ripristinare se il
+% confronto viene aggiunto.
 
 \subsection{Modelli indipendenti per località e assenza di message passing geografico}
 
@@ -340,7 +346,7 @@ Il discriminatore combina una rappresentazione GCGRU della storia con una convol
 
 L'adattamento a griglia sostituisce gli operatori sul grafo con convoluzioni su una patch geografica $P\times P$. Le coordinate vengono proiettate e verificate rispetto a un reticolo prima di assegnare righe e colonne: l'ordine originario dei siti non viene semplicemente rimodellato come un'immagine. Sui dati PVGIS il reticolo è quello della proiezione UTM del fuso 32, con passo di 5~km, e la patch è $3\times3$: 917 località hanno una patch completa e 232 una patch incompleta, perché sul bordo della regione mancano alcune celle. Le celle assenti non vengono sostituite da località più lontane.
 
-Il primo adattamento utilizzava un encoder CNN senza ricorrenza. La versione finale impiega invece una ConvGRU~\cite{shi2015convlstm,ballas2016convgru} sia nel ramo recente del generatore sia in quello storico del discriminatore. Le denominazioni delle due versioni non identificano quindi architetture intercambiabili. Con $R$ passi recenti, $L$ passi di trend e $F$ feature, gli ingressi hanno forma $[B,R,F,P,P]$ per la patch recente e $[B,L,F]$ per la storia del sito centrale; maschera e calendario hanno rispettivamente forma $[B,1,P,P]$ e $[B,31]$.
+L'adattamento impiega una ConvGRU~\cite{shi2015convlstm,ballas2016convgru} sia nel ramo recente del generatore sia in quello storico del discriminatore. Con $R$ passi recenti, $L$ passi di trend e $F$ feature, gli ingressi hanno forma $[B,R,F,P,P]$ per la patch recente e $[B,L,F]$ per la storia del sito centrale; maschera e calendario hanno rispettivamente forma $[B,1,P,P]$ e $[B,31]$.
 
 Le feature delle celle assenti sono azzerate dopo normalizzazione e la maschera binaria $M$ viene fornita come canale aggiuntivo a ogni strato ConvGRU. Rispetto alle equazioni~\eqref{eq:convgru-reset}--\eqref{eq:convgru-stato} cambiano l'ingresso e l'ultimo passaggio. I gate e lo stato candidato sono calcolati su $X'_s$, la concatenazione dei valori mascherati e di $M$, al posto di $X_s$; lo stato precedente $H_{s-1}$ è già mascherato e lo stato aggiornato viene moltiplicato per la maschera, replicata sui canali:
 \begin{equation}
@@ -395,7 +401,7 @@ Estrazione vettoriale delle finestre, cache normalizzata e scoring su disco perm
 
 L'estensione utilizza i cubi e la maschera descritti nella Sezione~\ref{sec:dati-era5}, mantenendo l'architettura ConvGRU--LSTM e le loss della Sezione~\ref{sec:stgan}. Il target del generatore resta meteorologico e comprende ora quindici feature. La griglia è definita direttamente in coordinate geografiche, con EPSG:4326 e passo angolare di $0.5^\circ$.
 
-La cadenza diventa di tre ore e il trend viene impostato a 56 passi, conservando una durata di 168 ore. In questa prima estensione il ramo recente mantiene un passo e la codifica di ora e giorno della settimana rimane di dimensione 31. Lunghezza del ramo recente e codifica temporale cambiano negli sviluppi della Sezione~\ref{sec:era5-mc}. Preparazione, training con scoring e analisi degli eventi costituiscono fasi distinte: gli eventi vengono ricavati dagli score già disponibili, senza un nuovo aggiornamento dei pesi del detector.
+La cadenza diventa di tre ore e il trend viene impostato a 56 passi, conservando una durata di 168 ore. La lunghezza del ramo recente e la codifica temporale usate su ERA5 sono descritte nella Sezione~\ref{sec:era5-mc}. Preparazione, training con scoring e analisi degli eventi costituiscono fasi distinte: gli eventi vengono ricavati dagli score già disponibili, senza un nuovo aggiornamento dei pesi del detector.
 
 La Figura~\ref{fig:schema-eventi} riassume i passaggi descritti nelle due sottosezioni che seguono.
 
@@ -548,7 +554,7 @@ Rispetto alla variante ConvGRU sul campo intero della Sezione~\ref{sec:era5-full
 \subsection{Variante convoluzionale sul campo intero}
 \label{sec:era5-fullgrid}
 
-La seconda variante nasce dal tempo di addestramento del modello a patch su ERA5, in cui il numero di aggiornamenti per epoca cresce con il prodotto fra timestamp e località. Mantiene la ConvGRU e modifica l'unità del campione: invece di una cella con la propria patch, un campione è l'intero campo di un timestamp, disposto sul reticolo $H\times W$. Moduli e parametri sono quelli del modello a patch; cambia ciò a cui vengono applicati. Alla variante porta anche la lunghezza della finestra recente: su una patch $3\times3$ aumentare $R$ moltiplica il costo di ciascuno dei $TN$ campioni senza ampliare l'area osservata, che resta di nove celle. Il passaggio da uno a sedici passi recenti è stato quindi fatto sul campo intero.
+La seconda variante nasce dal tempo di addestramento del modello a patch su ERA5, in cui il numero di aggiornamenti per epoca cresce con il prodotto fra timestamp e località. Mantiene la ConvGRU e modifica l'unità del campione: invece di una cella con la propria patch, un campione è l'intero campo di un timestamp, disposto sul reticolo $H\times W$. Moduli e parametri sono quelli del modello a patch; cambia ciò a cui vengono applicati. Alla variante porta anche la lunghezza della finestra recente: su una patch $3\times3$ aumentare $R$ moltiplica il costo di ciascuno dei $TN$ campioni senza ampliare l'area osservata, che resta di nove celle. La finestra recente di sedici passi è quindi usata sul campo intero.
 
 Il generatore opera sul campo completo, da $[B,R,F,H,W]$ a $[B,F,H,W]$. Le convoluzioni scorrono sull'intero reticolo, quindi il campo ricettivo non è più troncato al bordo di una patch e ogni cella viene ricostruita una sola volta. La LSTM del trend e la codifica temporale sono calcolate per cella e disposte sul reticolo, dove il modello a patch replicava quelle del sito centrale sulle posizioni della patch.
 
