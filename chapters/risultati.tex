@@ -225,6 +225,9 @@ L'associazione fra lo score di STGAN e la difficoltà della previsione non è qu
 Una finestra su cinque contiene almeno un'osservazione segnalata, benché le osservazioni segnalate siano l'1\% (Figura~\ref{fig:quattro-casi}). In questi casi l'errore è maggiore anche quando l'osservazione prevista è normale: \provv{50.3} contro \provv{42.9}~W a un'ora, il \provv{17}\% in più, e \provv{90.2} contro \provv{79.7}~W a sei ore, il \provv{13}\% in più. Un'anomalia nelle ore precedenti è quindi associata a una previsione peggiore anche quando l'ora prevista non è segnalata. L'effetto dell'osservazione prevista è più forte a un'ora e si attenua a sei: con ingresso normale e target anomalo l'errore aumenta del \provv{39}\% a un'ora e del \provv{16}\% a sei ore, un valore vicino a quello dovuto al solo ingresso anomalo. I conteggi sono previsioni per località e istante, non giorni indipendenti, e finestre vicine nel tempo condividono gran parte delle ore.
 
 \section{Anomalie ed eventi geografici su ERA5}
+
+\notabozza{Sezione da scrivere a run conclusa: risultati della configurazione adattata, con le misure della Sezione~\ref{sec:exp-era5-base}.}
+
 % ---------------------------------------------------------------------------
 % SCALETTA DA RIEMPIRE A RUN CONCLUSE (preparata il 12 ottobre 2026)
 % Stessa forma delle sezioni PVGIS: titoletti nel testo, poche tabelle, figure
@@ -305,6 +308,15 @@ Una finestra su cinque contiene almeno un'osservazione segnalata, benché le oss
 % riferimento, quindi nessuna misura di accuratezza; soglia e normalizzazione
 % calcolate sull'intero test (protocollo retrospettivo).
 % ---------------------------------------------------------------------------
+
+% 13 ottobre 2026: la configurazione di base, con i due limiti osservati, è
+% raccontata nel Capitolo degli esperimenti (Sezione sec:exp-era5-base), sul
+% modello della tesi di riferimento. Questa sezione è riservata alla
+% configurazione finale e si scrive a run conclusa, con le stesse misure:
+% composizione dell'errore per variabile, stabilità fra le epoche, eventi per
+% durata, quota di celle segnalate per mese. I valori della configurazione di
+% base per il confronto, compresi quelli con l'errore ribilanciato (eventi
+% 44863 / 25265 / 2666 / 453), sono in risultati_fonti.tex.
 
 % \subsection{Copertura dei dati e configurazione del detector}
 

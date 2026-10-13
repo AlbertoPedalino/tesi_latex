@@ -39,6 +39,64 @@ Le due linee si incontrano nell'analisi della Sezione~\ref{sec:ris-posthoc}: gli
     \end{tabular}
 \end{table}
 
+\section{Dalla configurazione di base a quella adattata su ERA5}
+\label{sec:exp-era5-base}
+
+% Sezione scritta il 13 ottobre 2026 sul modello della tesi di riferimento
+% (una configurazione di partenza, i limiti osservati, le modifiche che ne
+% seguono). Numeri dai log letti lo stesso giorno, in risultati_fonti.tex; sono
+% in \provv perché la run esistente è addestrata su 1980-2003.
+
+Su ERA5 il detector non è stato portato subito nella forma finale. Il punto di partenza è una configurazione di base: la variante ConvGRU sul campo intero, con la normalizzazione min--max, lo stesso peso per tutte le variabili nell'errore di ricostruzione e lo score dell'articolo, somma dell'errore di ricostruzione e del termine del discriminatore. È addestrata sugli anni 1980--2004 per sei epoche e valutata sugli anni 2005--2025. Su questa configurazione sono emersi due limiti, e ciascuno ha motivato una modifica.
+
+\paragraph{Una sola variabile domina l'errore.} La Tabella~\ref{tab:era5-variabili} riporta quanta parte dell'errore quadratico di ricostruzione è dovuta a ciascuna variabile, su 400 istanti del periodo di test e tutte le 10611 celle. La copertura nuvolosa produce il \provv{77.8}\% dell'errore, e il \provv{97.5}\% nell'1\% di osservazioni con l'errore più alto; con quote uguali ogni variabile avrebbe il 6.7\%. In pratica, le osservazioni con l'errore più alto sono errori sulla copertura nuvolosa.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Configurazione di base su ERA5: quota dell'errore quadratico di ricostruzione dovuta a ciascuna variabile, su tutte le osservazioni e nell'1\% con l'errore più alto. 400 istanti del periodo di test. Con quote uguali ogni variabile avrebbe il 6.7\%.}
+    \label{tab:era5-variabili}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.46}L{0.20}L{0.20}@{}}
+        \toprule
+        Variabile & Quota dell'errore & Quota nell'1\% più alto \\
+        \midrule
+        Copertura nuvolosa totale & \provv{77.8\%} & \provv{97.5\%} \\
+        Radiazione solare discendente alla superficie & \provv{3.6\%} & \provv{0.6\%} \\
+        Umidità specifica a 850 hPa & \provv{3.5\%} & \provv{0.4\%} \\
+        Altezza dello strato limite & \provv{2.9\%} & \provv{0.3\%} \\
+        Velocità d'attrito & \provv{2.0\%} & \provv{0.2\%} \\
+        \addlinespace
+        Altre dieci variabili, ciascuna & al più \provv{1.6\%} & al più \provv{0.2\%} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Lo squilibrio è già nei dati. La copertura nuvolosa produce l'\provv{84.5}\% della variazione quadratica media su 24 ore dei dati normalizzati, e sulle quindici variabili la correlazione di rango fra questa quota e la quota di errore è \provv{0.87}: dopo il min--max, una variabile pesa nell'errore quanto cambia da un giorno all'altro. Da qui i pesi della Sezione~\ref{sec:era5-pesi}, che riportano le variabili sulla stessa scala di variazione.
+
+\paragraph{Lo score combinato è instabile.} Il secondo limite riguarda lo score. La Tabella~\ref{tab:era5-score} confronta lo score dell'articolo con il solo errore di ricostruzione su due misure che non richiedono etichette: quanto lo score segnala le stesse osservazioni dopo un'epoca di addestramento in più, e quanto durano gli eventi costruiti con la procedura della Sezione~\ref{sec:era5-eventi}.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Configurazione di base su ERA5: score dell'articolo e solo errore di ricostruzione. La stabilità è la quota delle osservazioni nell'1\% più alto di un'epoca che resta nell'1\% più alto all'epoca successiva, su 400 istanti: è riportato l'intervallo sulle cinque coppie di epoche consecutive, e due ordinamenti indipendenti darebbero l'1\%. Gli eventi sono costruiti sul periodo 2005--2025 segnalando il 5\% delle osservazioni con lo score più alto.}
+    \label{tab:era5-score}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.40}L{0.24}L{0.24}@{}}
+        \toprule
+        Misura & Score dell'articolo & Errore di ricostruzione \\
+        \midrule
+        Stabilità fra epoche consecutive & \provv{30.3\%}--\provv{48.3\%} & \provv{72.5\%}--\provv{82.1\%} \\
+        Eventi di durata superiore a 24 ore & \provv{0} & \provv{1501} \\
+        Eventi di un solo istante & \provv{93.8\%} & \provv{74.3\%} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Lo score dell'articolo segue quasi soltanto il termine del discriminatore: alla sesta epoca la sua correlazione con questo termine è \provv{0.92}, quella con l'errore di ricostruzione \provv{$-0.03$}. Cambia molto da un'epoca all'altra e non produce eventi che superano le 24 ore. L'errore di ricostruzione segnala in gran parte le stesse osservazioni e produce eventi che durano nel tempo. Su questi dati è quindi più informativo dello score combinato, e nella configurazione adattata lo score è il solo errore di ricostruzione.
+
+\paragraph{Configurazione adattata.} La configurazione finale mantiene il modello e cambia tre elementi: la normalizzazione stagionale della Sezione~\ref{sec:era5-input}, i pesi delle variabili della Sezione~\ref{sec:era5-pesi} e lo score, ridotto al solo errore di ricostruzione. I suoi risultati sono nel Capitolo~\ref{chap:risultati}. Le osservazioni di questa sezione vengono da una sola esecuzione, con un solo seme; composizione dell'errore e stabilità sono misurate su 400 istanti e non sull'intero periodo di test.
+
 \section{Configurazioni di addestramento}
 \label{sec:exp-configurazioni}
 
@@ -73,7 +131,9 @@ La variante SDE U-Net sceglie sul 2018 l'epoca del modello valutato; quando è a
 
 I detector su PVGIS usano tre variabili. MTGFlow è addestrato con finestre di 60 ore, un modello per località. Le versioni di STGAN usano un passo recente, 168 passi di trend e nove siti per contesto; ogni epoca visita tutte le coppie fra località e istanti, 140803056 campioni, e la variante ConvGRU ha 140931 parametri nel generatore e 114593 nel discriminatore con kernel 3.
 
-Su ERA5 il training comprende gli anni 1980--2004 e il test gli anni 2005--2025, con sei epoche. Un campione è l'intero campo di un istante, e un'epoca comprende 70072 aggiornamenti dei pesi.
+Su ERA5 il test comprende gli anni 2005--2025. La configurazione di base della Sezione~\ref{sec:exp-era5-base}, con la normalizzazione min--max e senza pesi fra le variabili, è addestrata sugli anni 1980--2004 per sei epoche. Un campione è l'intero campo di un istante, e un'epoca comprende \provv{70072} aggiornamenti dei pesi.
+% Configurazione finale (normalizzazione stagionale, pesi, training 1980-2004,
+% tre epoche): da aggiungere con i valori letti in metadata.json a run conclusa.
 
 I modelli sono implementati in PyTorch~\cite{paszke2019pytorch}. I dati PVGIS ed ERA5 sono letti con xarray~\cite{hoyer2017xarray}; le tabelle di previsioni e di score sono elaborate con pandas~\cite{mckinney2010pandas}. Tutti i modelli sono addestrati su una scheda NVIDIA RTX PRO 6000 Blackwell.
 % Scheda grafica: stesso server usato nella tesi di Stiven Gjinaj, che riporta
