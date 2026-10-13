@@ -447,6 +447,11 @@ Gli sviluppi di questa sezione riguardano il solo percorso ERA5. Feature, grigli
 
 Lo score è campionato con il dropout Monte Carlo~\cite{gal2016dropout}. Il generatore riceve tre strati di dropout: sulla rappresentazione spaziale del ramo recente, sulla rappresentazione del trend e sulla loro concatenazione con la codifica temporale, prima della proiezione di uscita. La probabilità predefinita è 0.2. Il discriminatore non contiene dropout.
 
+% Da allineare quando si riscrive lo score (ruolo del discriminatore e del
+% ribilanciamento, dopo la run finale): il discriminatore riceve la
+% ricostruzione calcolata senza dropout, in addestramento e nello scoring, e
+% il dropout agisce soltanto sull'errore di ricostruzione. Va descritto come
+% forma del metodo, senza raccontarlo come correzione.
 Durante lo scoring il modello è in modalità di valutazione, con l'eccezione dei dropout del generatore, che restano attivi. Per ogni osservazione vengono estratti $J$ campioni, 20 nel default. Gli encoder del generatore, la codifica della storia nel discriminatore e il valore $D_{\mathrm{reale}}$ non dipendono dal dropout e sono calcolati una sola volta; a ogni campione vengono ripetuti i dropout, la proiezione di uscita e la valutazione del dato generato.
 
 Per la coppia tempo--località $(t,n)$ e il campione $j$, le due componenti sono l'errore quadratico medio $s^{(j)}_{G,tn}$ sulle celle valide del contesto spaziale e la differenza $s^{(j)}_{D,tn}=D_{\mathrm{reale}}-D^{(j)}_{\mathrm{generato}}$. Indicando con $\bar{s}_{G}$ e $\bar{s}_{D}$ le rispettive medie sui $J$ campioni, lo score è
@@ -482,7 +487,9 @@ La finestra recente contiene gli $R$ istanti che precedono quello da stimare. L'
 
 Nell'analisi iniziale sui dati PVGIS la finestra recente è di un passo, cioè un'ora. Su ERA5 è portata a $R=16$ passi, che alla cadenza di tre ore corrispondono a 48 ore; il trend conserva 56 passi, cioè 168 ore.
 
-La codifica temporale predefinita resta quella a 31 elementi, composta dal giorno della settimana e dall'ora UTC. In alternativa è disponibile una codifica ciclica a quattro elementi, diversa per località. Indicando con $h_t$ l'ora UTC, con $\ell_n$ la longitudine in gradi, con $g_t$ il giorno frazionario dell'anno e con $G_t$ il numero di giorni dell'anno corrispondente, la codifica è
+% Scelte di questa sottosezione e della successiva: motivate nel testo, senza
+% fonti (decisione del 13 ottobre 2026, sul modello della tesi di riferimento).
+Sui dati PVGIS la codifica temporale è quella dell'articolo, a 31 elementi, composta dal giorno della settimana e dall'ora UTC. È pensata per il traffico e su ERA5 è poco adatta, per due motivi. Il primo è che il vettore è lo stesso per tutte le celle, mentre il dominio si estende per 65 gradi di longitudine: alla stessa ora UTC, l'ora solare delle celle più a ovest e quella delle celle più a est differiscono di oltre quattro ore. Il secondo è che non contiene la posizione nell'anno, e non distingue quindi le stagioni. Su ERA5 è perciò sostituita da una codifica ciclica a quattro elementi, diversa per cella. Indicando con $h_t$ l'ora UTC, con $\ell_n$ la longitudine in gradi, con $g_t$ il giorno frazionario dell'anno e con $G_t$ il numero di giorni dell'anno corrispondente, la codifica è
 \begin{equation}
 c_{tn}=\left[
 \sin\phi_{tn},\;\cos\phi_{tn},\;
@@ -492,15 +499,38 @@ c_{tn}=\left[
 \quad
 \psi_t=\frac{2\pi g_t}{G_t}.
 \end{equation}
-Il primo angolo rappresenta l'ora solare locale, ottenuta dalla sola longitudine senza fusi orari; il secondo la posizione nell'anno. La codifica ciclica non contiene il giorno della settimana.
+Il primo angolo rappresenta l'ora solare locale, ottenuta dalla sola longitudine senza fusi orari; il secondo la posizione nell'anno. Seno e coseno rendono vicini gli istanti vicini nel ciclo, come le ore 23 e le ore 1 oppure la fine di dicembre e l'inizio di gennaio. La codifica ciclica non contiene il giorno della settimana.
 
-La normalizzazione predefinita rimane il min--max per feature stimato sul training. La variante stagionale applica prima una standardizzazione per località $n$, feature $f$, ora del giorno $o$ e giorno dell'anno $g$,
+Su ERA5 sono usate due normalizzazioni. La prima è il min--max per variabile stimato sul training, lo stesso dei dati PVGIS. Usa un solo intervallo per variabile, valido per tutte le celle e per tutto l'anno. Su un dominio che va dal Sahara all'Europa settentrionale questo ha un limite: la scala non distingue un valore alto in assoluto, ma abituale per quella cella e quella stagione, da un valore lontano dagli estremi, ma insolito per quella cella e quella stagione. La seconda normalizzazione, stagionale, riferisce invece ogni valore a ciò che è abituale nella stessa cella, nello stesso periodo dell'anno e alla stessa ora. Per ogni cella $n$, variabile $f$, ora del giorno $o$ e giorno dell'anno $g$ il valore è standardizzato,
 \begin{equation}
 z_{tnf}=\frac{x_{tnf}-\mu_{nfog}}{\sigma_{nfog}},
 \end{equation}
-e poi lo stesso min--max. Media e deviazione standard sono stimate sul solo training, raggruppando una finestra circolare di giorni attorno a $g$, di quindici giorni per lato nel default. La dispersione è calcolata attorno alla media lisciata di ciascun giorno, in modo che la variazione del ciclo stagionale all'interno della finestra non venga contata come variabilità. Un valore minimo, pari a una frazione della deviazione standard complessiva della feature, limita la divisione dove una variabile è quasi costante, come la radiazione solare notturna.
+con otto ore del giorno e 366 giorni dell'anno. Media e deviazione standard sono stimate sui soli anni di training, raccogliendo i quindici giorni che precedono $g$ e i quindici che lo seguono. La deviazione standard è calcolata attorno alla media lisciata di ciascun giorno, in modo che la variazione del ciclo stagionale all'interno della finestra non venga contata come variabilità.
 
-Finestra recente, codifica temporale e normalizzazione modificano l'ingresso del modello: ciascuna scelta richiede un nuovo addestramento e identifica una configurazione distinta.
+La precipitazione richiede un passaggio in più. È nulla nella maggior parte degli istanti e assume di rado valori molto alti: media e deviazione standard dei valori originali sono determinate in larga parte da questi pochi valori. Prima della standardizzazione la precipitazione è quindi sostituita dalla sua radice quarta, che comprime i valori alti e lascia nullo ciò che è nullo; media e deviazione standard descrivono la radice e non il valore originale. A differenza del logaritmo, la radice è definita anche per i valori nulli e non richiede una costante aggiuntiva.
+% Confronto con radice quadrata e logaritmo: fatto sui dati senza modello
+% (controllo_normalizzazione.log). Da riportare con i numeri riletti nel log.
+
+La deviazione standard $\sigma_{nfog}$ non può scendere sotto una frazione della deviazione standard complessiva della variabile sul training: 0.1 per la precipitazione e per l'umidità del primo strato del suolo, 0.01 per le altre tredici variabili. Il limite evita la divisione per valori quasi nulli, come accade per la radiazione solare di notte. I due valori sono stati scelti provandone alcuni e osservando la scala dei dati normalizzati sull'intero periodo, anni di test compresi; nessun risultato del modello è stato usato nella scelta.
+
+L'ultimo passaggio riguarda il tempo. Gli anni di test seguono quelli di training, fino a oltre vent'anni dopo. Per una variabile che nel periodo ha una tendenza, la differenza fra il clima degli anni di test e quello degli anni di training entrerebbe in ogni valore standardizzato, e crescerebbe con la distanza dal training. Per tre variabili, temperatura a due metri, temperatura a 850~hPa e umidità del primo strato del suolo, ai valori standardizzati è quindi sottratta una retta nel tempo. La retta è una per variabile, uguale per tutte le celle: passa per le medie annuali dei valori standardizzati sull'intero dominio, è stimata sui soli anni di training e viene prolungata agli anni successivi. La scelta segue la definizione adottata nella tesi: un'anomalia è uno scostamento rispetto al clima del momento, e non rispetto al clima degli anni di training. Per le altre dodici variabili la retta non è sottratta.
+% Misura della deriva per variabile (controllo_deriva_clima.log) e deriva che
+% resta dopo la retta: da riportare con i numeri riletti nel log.
+
+Dopo questi passaggi è applicato lo stesso min--max della prima normalizzazione, stimato sul training.
+
+Finestra recente, codifica temporale e normalizzazione modificano l'ingresso del modello: ogni scelta richiede un nuovo addestramento.
+
+\subsection{Pesi delle variabili nell'errore di ricostruzione}
+\label{sec:era5-pesi}
+
+Nell'articolo tutte le variabili contano allo stesso modo nell'errore di ricostruzione. Nella configurazione finale su ERA5 l'errore è invece pesato per variabile, per evitare che le variabili con le variazioni più ampie da un giorno all'altro dominino l'errore. Indicando con $m_f$ il quadrato medio della variazione della variabile $f$ su 24 ore, calcolato sui dati di training normalizzati, il peso è
+\begin{equation}
+w_f=\frac{\bar{m}}{m_f},
+\qquad
+\bar{m}=\frac{1}{F}\sum_{f=1}^{F}m_f,
+\end{equation}
+con $F=15$. La differenza a 24 ore confronta istanti alla stessa ora del giorno e non contiene quindi il ciclo giornaliero. Il fattore $\bar{m}$ lascia invariata la loss per un errore proporzionale a $m_f$. I pesi moltiplicano l'errore quadratico di ciascuna variabile nel termine di ricostruzione della loss del generatore e nell'errore di ricostruzione da cui è calcolato lo score.
 
 \subsection{Monitoraggio senza etichette e spazio PCA di riferimento}
 \label{sec:era5-monitoraggio}

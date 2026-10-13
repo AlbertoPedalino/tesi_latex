@@ -262,6 +262,45 @@ Una finestra su cinque contiene almeno un'osservazione segnalata, benché le oss
 %    o fusioni; un esempio di evento su mappa. Senza attribuire cause
 %    meteorologiche agli eventi se non c'è una fonte.
 %
+% ---------------------------------------------------------------------------
+% AGGIORNAMENTO DEL 13 OTTOBRE 2026: TABELLE A TRE SCORE AFFIANCATI
+% La scaletta qui sopra precede il percorso in quattro passi (prima run ConvGRU
+% con la correzione del dropout, due prove da un'epoca, run finale) e va
+% riscritta quando l'impostazione del capitolo è decisa. Vale già questo:
+% ogni controllo è riportato con tre colonne affiancate, per la prima run e
+% per la run finale. Il ruolo del ribilanciamento non è deciso: si riportano
+% per primi i risultati senza, e il ribilanciamento è presentato come una
+% regola applicata a posteriori. Decisione definitiva dopo la run finale.
+%
+% Colonne (nomi descrittivi, mai i nomi delle opzioni):
+%   A = score dell'articolo (ricostruzione più discriminatore)
+%   B = sola ricostruzione
+%   C = ricostruzione ribilanciata
+%
+% Righe, con i valori della prima run che compaiono negli appunti. Nessuno è
+% ancora stato riletto nel log: prima di scriverli vanno riletti tutti.
+%
+%   Controllo                                    |   A   |   B    |    C
+%   ---------------------------------------------+-------+--------+-----------
+%   Giornate documentate del 2019 sopra il 95°   |   ?   | 2/50   | 17/52 o 16/52
+%   Arrivi di polvere 2011-2024 sopra il 90°     | 10%?  | 32%    | 54% o 53%
+%     (atteso per caso 10%; 138 episodi)         |       |        |
+%   Eventi di durata superiore a 72 ore          |  0?   |   ?    | 453 o 472
+%   Tempeste maggiori ritrovate (su 10 cercate)  |   ?   |   ?    | 10
+%   Quota della variabile più presente           |   ?   | 97.5%  | sotto 9%
+%     nell'1% più alto dello score               |       | (nuvolosità) |
+%
+% Da chiarire rileggendo i log:
+%  - giornate del 2019: il denominatore è 50 in B e 52 in C; in C esistono due
+%    letture (17 e 16) con definizioni diverse. Va scelta una definizione sola
+%    e applicata alle tre colonne.
+%  - polvere: il 10% della colonna A e il 53% della C vengono dal confronto
+%    all'epoca 3 (controllo_epoch3_confronto.log); il 54% e il 32% dall'analisi
+%    del 12 ottobre. Va usata la stessa epoca nelle tre colonne.
+%  - eventi oltre 72 ore: 453 e 472 sono due conteggi di analisi diverse.
+% Run finale: stesse righe e stesse colonne, celle vuote fino ai risultati.
+% ---------------------------------------------------------------------------
+%
 % Limiti da scrivere comunque: un solo seme per variante; nessuna verità di
 % riferimento, quindi nessuna misura di accuratezza; soglia e normalizzazione
 % calcolate sull'intero test (protocollo retrospettivo).
