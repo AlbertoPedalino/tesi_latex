@@ -673,3 +673,39 @@
 % - Incertezza MC: notebook, sezione 3.
 % Figure era5_sovrapposizione.pdf ed era5_eobs.pdf: generate da
 % figures/genera_figure_era5.py con gli stessi valori (15 ottobre 2026).
+
+% ======================================================================
+% Ristrutturazione del 16 ottobre 2026 (indicazione di Simone: metodi e
+% risultati solo sulle GAN su ERA5, il resto nello stato dell'arte)
+% ======================================================================
+% Capitoli prima della ristrutturazione: backup/2026-10-16_prima_ristrutturazione.
+% Le sezioni PVGIS dei Risultati (previsori, intervalli, decisioni dei
+% detector, previsore sulle osservazioni segnalate) sono uscite dalla tesi; i
+% numeri di STGAN su PVGIS che motivano il passaggio a ERA5 sono ora nella
+% Sezione sec:exp-pvgis (Esperimenti), con le stesse fonti indicate sopra.
+%
+% Nuovi numeri, tutti dalla run ..._wdaily_seasonal_trend_ep3, letti dai log
+% incollati dall'autore il 16 ottobre 2026:
+% - Temperatura E-OBS (score di ricostruzione con climatologia, _gen_clim):
+%   pesi_temperatura.log, blocco "gen". Caldo: solo/tutte 1.53 (1.45-1.60),
+%   anello 1.25 (1.22-1.28), solo rilevatore 1.18 (1.11-1.26), entrambi 1.70
+%   (1.61-1.78). Freddo: 0.82 (0.79-0.86), 0.92 (0.90-0.95), 0.54 (0.50-0.58),
+%   1.07 (1.00-1.14). Celle con stazioni per la temperatura: 4421 (scarico_eobs.log).
+% - Score combinato contro score di ricostruzione: combinato_eobs.log (tre
+%   score, sei indicatori) e combinato_climatologia.log (quote per fascia di
+%   latitudine e mese, giorni documentati). Score combinato = anomaly_mean.npy
+%   della run (modo "paper", estremi sul test); con climatologia = _comb_clim.
+%   Giorni documentati dello score di ricostruzione (13) dal controllo del
+%   criterio della climatologia (sessione dac4bff4).
+% - Climatologia necessaria: quote per fascia e mese dello score di sola
+%   ricostruzione 1.5-13.7%, con climatologia 3.6-5.8% (stessa sessione).
+% - Pesi delle variabili: score della singola cella (feature_scores.npy)
+%   ricalcolato con rebalance_era5_stgan_scores.py: --scale weights (24 h,
+%   pesi della run), --scale none, --scale change --change-steps 1 (3 h, pesi
+%   calcolati sulla cache dello sweep, 1980-1999). Log: pesi_preparazione.log,
+%   pesi_confronto.log, pesi_eobs.log, pesi_temperatura.log,
+%   pesi3h_preparazione.log, pesi3h_confronto.log. Variabile più presente
+%   nell'1% più alto: 24 h precipitazione 27.8%, nessun peso precipitazione
+%   40.8%, 3 h umidità del suolo 32.0%. Criterio fissato prima di leggere i
+%   risultati (sessione del 16 ottobre 2026).
+% - Polvere sahariana (non riportata nella tesi): pesi_polvere.log.

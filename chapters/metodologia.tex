@@ -1,501 +1,62 @@
 \chapter{Metodologia}
 \label{chap:metodologia}
 
-\section{Panoramica del percorso metodologico}
+Il capitolo descrive il detector nella forma usata sui campi ERA5. La Sezione~\ref{sec:stgan} presenta l'architettura, cioè il generatore che opera sul campo intero e il discriminatore locale, e gli obiettivi dell'addestramento avversario. La Sezione~\ref{sec:ingresso-normalizzazione-era5} descrive l'ingresso del modello: finestra recente, codifica temporale e normalizzazione stagionale. Seguono i pesi delle variabili nell'errore di ricostruzione, il dropout Monte Carlo nelle due reti e gli score che ne derivano, la normalizzazione climatologica degli score, la validazione senza etichette e la ricostruzione di eventi geografici a partire dagli score. L'ultima sezione descrive una variante del generatore con attenzione su grafo. Il percorso che ha portato a queste scelte, a partire dalla configurazione dell'articolo, è descritto nel Capitolo~\ref{chap:esperimenti}.
 
-La metodologia parte dal previsore: il backbone deterministico BiLSTM--GAT, le soglie climatologiche della Sezione~\ref{sec:soglie-climatologiche}, che forniscono le prime etichette di condizioni insolite, gli esperimenti preliminari con dropout Monte Carlo e Deep Ensemble, valutati su quelle etichette, e le due varianti basate su equazioni differenziali stocastiche, SDE U-Net e SDE-Net. La variante SDE-Net include una previsione diretta multiorizzonte. Il rilevamento delle anomalie con modelli appresi costituisce una linea distinta, condotta dapprima sui dati PVGIS, come analisi iniziale, con MTGFlow, STGAN e un adattamento di STGAN a griglia basato su una ConvGRU, che conserva la LSTM del trend e permette un'ablazione della dimensione dei kernel. Un'estensione separata applica lo stesso detector a ERA5 e introduce la ricostruzione di eventi geografici a partire dagli score. Su ERA5 il detector viene poi dotato di dropout nel generatore e di uno score Monte Carlo con una misura di dispersione associata. Due varianti intervengono sul generatore: la prima sostituisce, nei gate dell'unità ricorrente, la convoluzione con l'attenzione su grafo definita sull'intera griglia; la seconda applica la ConvGRU al campo completo invece che a singole patch. In entrambe il discriminatore rimane locale.
-
-La Figura~\ref{fig:schema-percorso} riassume le due linee e il punto in cui si incontrano.
-
-\begin{figure}[htbp]
-    \centering
-    \input{figures/schema_percorso}
-    \caption{Quadro d'insieme del metodo. In alto il previsore della produzione, addestrato sui dati PVGIS; in basso il rilevamento delle anomalie, con le soglie climatologiche e con i detector appresi, prima sui dati PVGIS e poi sui campi ERA5. Le soglie climatologiche forniscono anche il filtro per l'addestramento sulle sole finestre normali. Le due linee si incontrano nel confronto degli errori e degli intervalli del previsore fra osservazioni normali e segnalate.}
-    \label{fig:schema-percorso}
-\end{figure}
-
-Le analisi post-hoc utilizzano previsioni e score già prodotti. Il cambiamento della soglia o del raggruppamento delle osservazioni modifica il protocollo di valutazione, senza comportare un nuovo addestramento del previsore.
-
-\section{Backbone BiLSTM--GAT}
-\label{sec:backbone}
-
-Il backbone è l'architettura comune ai previsori della tesi, addestrati sui dati PVGIS. Non è stato addestrato come modello a sé con il protocollo delle varianti SDE: è il modello di base degli esperimenti preliminari della Sezione~\ref{sec:probabilistici-preliminari}.
-
-La Figura~\ref{fig:schema-backbone} ne mostra i tre stadi, descritti nelle sottosezioni che seguono.
-
-\begin{figure}[htbp]
-    \centering
-    \input{figures/schema_backbone}
-    \caption{Backbone del previsore. L'encoder temporale elabora la finestra di ogni località con parametri condivisi; lo stadio spaziale scambia informazione fra località vicine sul grafo geografico; due teste restituiscono la produzione e l'indice di cielo sereno.}
-    \label{fig:schema-backbone}
-\end{figure}
-
-\subsection{Tensori di input, encoder temporale e attention pooling}
-
-Il previsore riceve un tensore $X\in\mathbb{R}^{B\times N\times L\times F}$: $B$ esempi, $N$ località, una finestra di $L=24$ ore e le $F$ feature descritte nel Capitolo~\ref{chap:dati}. L'uscita è la produzione normalizzata di ogni località all'ora successiva, di forma $[B,N]$.
-
-L'encoder temporale elabora la sequenza di ciascuna località con parametri condivisi fra le località. È una LSTM bidirezionale a due strati, con 128 unità per direzione, che restituisce per ogni passo $t$ uno stato $h_t\in\mathbb{R}^{256}$. Gli stati sono aggregati con un pooling ad attenzione: un punteggio scalare per passo, ottenuto da una trasformazione lineare, è normalizzato con una softmax sui passi e usato come peso,
-\begin{equation}
-    w_t=\frac{\exp\!\left(a^{\top}h_t+b\right)}{\sum_{s=1}^{L}\exp\!\left(a^{\top}h_s+b\right)},
-    \qquad
-    h=\operatorname{LayerNorm}\!\left(\sum_{t=1}^{L}w_t\,h_t\right).
-    \label{eq:attention-pooling}
-\end{equation}
-La rappresentazione $h$ è poi proiettata in uno spazio latente di 96 dimensioni da uno strato lineare seguito da GELU e da una normalizzazione di strato. Questo vettore, uno per località, è l'ingresso dello stadio spaziale.
-
-\subsection{Grafo geografico Haversine}
-
-Ogni località è un nodo. Due località sono collegate, in entrambe le direzioni, quando la loro distanza sulla superficie terrestre, calcolata con la formula di Haversine, non supera 20~km; una località senza vicini entro questo raggio è collegata alla più vicina, e ogni nodo ha un arco verso sé stesso. A ogni arco è associato un peso che decresce con la distanza $d_{ij}$,
-\begin{equation}
-    p_{ij}=\exp\!\left[-\frac{1}{2}\left(\frac{d_{ij}}{s}\right)^{2}\right],
-    \label{eq:prior-geografico}
-\end{equation}
-con scala $s=10$~km e $p_{ii}=1$. Lo stadio spaziale è uno strato di attenzione su grafo~\cite{velickovic2018gat} a quattro teste, seguito da una connessione residua e da una normalizzazione di strato.
-
-Gli archi esprimono quindi relazioni di vicinanza geografica e i pesi gaussiani forniscono un prior ai coefficienti di attenzione. Nella variante SDE-Net, il logaritmo del peso geografico viene aggiunto al logit appreso $e_{ij}$ dell'equazione~\eqref{eq:gat-logit}, prima della softmax sugli archi entranti.
-
-% ABLAZIONE DELLA GAT, TOLTA DAL TESTO l'11 ottobre 2026: il codice esiste
-% (branch ablation/no-gat, 9 settembre 2026) ma sul server non risulta alcuna
-% run: nessun modello del previsore è stato addestrato dopo il 27 agosto. Se la
-% run viene fatta, ripristinare i due paragrafi seguenti, il titolo
-% "Grafo geografico Haversine e ablazione della GAT", la frase nella panoramica
-% e la sottosezione nei Risultati; aggiungere una riga alle tabelle del
-% Capitolo 5. Il branch va prima aggiornato con la correzione dell'inclinazione
-% e con l'opzione senza validation.
-%
-% L'ablazione senza GAT rimuove gli strati di attenzione sul grafo: la proiezione dell'encoder temporale diventa direttamente lo stato iniziale della SDE. Il grafo continua a essere costruito e passato nelle interfacce, ma i suoi archi non sono utilizzati dal forward. L'ablazione riduce anche il numero di parametri, senza introdurre un blocco sostitutivo di pari dimensione.
-%
-% L'assenza di message passing non implica completa indipendenza fra le distribuzioni predittive delle località. La diffusione SDE conserva un pooling degli stati iniziali sui siti e produce una scala comune per esempio. In inferenza stocastica, il contenuto degli altri siti può quindi influire sull'ampiezza delle perturbazioni di una località. Il confronto isola la rimozione della GAT, mantenendo questa componente condivisa.
-
-\subsection{Teste di previsione, funzione di perdita e training}
-
-Lo stato prodotto dallo stadio spaziale alimenta due teste, ciascuna formata da due strati lineari con una GELU intermedia, che riducono le 96 dimensioni a 48 e poi a un valore per località. La testa della produzione applica una softplus e restituisce una previsione non negativa $\hat{y}_{bn}$ della produzione normalizzata. La testa ausiliaria applica una sigmoide moltiplicata per un valore massimo e stima l'indice di cielo sereno $\hat{k}_{bn}$, cioè il rapporto fra l'irradianza globale e quella a cielo sereno; moltiplicata per l'irradianza a cielo sereno fornisce una stima dell'irradianza.
-
-Nel percorso deterministico la funzione di perdita è un errore quadratico medio sulla produzione, a cui si somma, quando la testa ausiliaria è attiva, l'errore quadratico medio sull'indice di cielo sereno con peso $\lambda$:
-\begin{equation}
-    \mathcal{L}
-    =\operatorname{media}_{b,n}\left(y_{bn}-\hat{y}_{bn}\right)^{2}
-    +\lambda\,\operatorname{media}_{b,n}\left(k_{bn}-\hat{k}_{bn}\right)^{2}.
-    \label{eq:loss-deterministica}
-\end{equation}
-Negli esperimenti preliminari della Sezione~\ref{sec:probabilistici-preliminari} la perdita comprende anche un termine di errore assoluto pesato sui valori alti della produzione, che penalizza maggiormente le sottostime; le varianti SDE non lo usano. La testa gaussiana e la negative log-likelihood della variante SDE-Net sono descritte nella Sezione~\ref{sec:sde-net}. Epoche, dimensione del batch e tasso di apprendimento sono riportati nel Capitolo~\ref{chap:esperimenti}.
-% Verificato sul report della run SDE U-Net: peso lambda 0.1 e valore massimo
-% 1.6 dell'indice di cielo sereno. DA VERIFICARE: peso del termine sui picchi
-% (0.25 nel branch degli esperimenti preliminari).
-
-\section{Soglie climatologiche}
-\label{sec:soglie-climatologiche}
-
-Il primo criterio usato per individuare condizioni insolite non è un modello appreso, ma un confronto con la climatologia degli stessi dati PVGIS. Per ogni località e ogni ora del giorno si raccolgono i valori osservati negli anni della climatologia entro una finestra di $\pm15$ giorni di calendario attorno alla data considerata; da questo insieme si ricavano la mediana e i quantili $0.025$ e $0.975$. Un'osservazione è segnalata quando il suo valore cade fuori dalla banda fra i due quantili. Il confronto è svolto separatamente per l'irradianza globale, la produzione teorica, la temperatura e la velocità del vento. Per irradianza e produzione l'etichetta distingue i valori insolitamente alti da quelli insolitamente bassi; per temperatura e vento indica una condizione estrema. Dove la climatologia non contiene dati sufficienti l'osservazione non viene classificata.
-
-Per il 2019, anno di test, la climatologia comprende gli anni 2005--2018. Per gli anni di addestramento del previsore comprende soltanto gli anni precedenti a quello valutato: 2005--2015 per il 2016, 2005--2016 per il 2017 e 2005--2017 per il 2018.
-
-Le etichette hanno due impieghi. Il primo è l'analisi del previsore: errori e intervalli sono confrontati fra le osservazioni segnalate e le altre, e per l'irradianza separatamente sui valori insolitamente alti e su quelli insolitamente bassi. In particolare, le etichette indicano le osservazioni attorno alle quali verificare se gli intervalli degli esperimenti preliminari della Sezione~\ref{sec:probabilistici-preliminari} contengono il valore osservato. Il secondo è l'addestramento sulle sole finestre normali, secondo il protocollo ripreso da SDE U-Net~\cite{monaco2025sdeunet}. Per questo impiego le etichette locali sono aggregate sull'intera regione: per ogni istante e ogni variabile si calcola il quantile $0.99$, fra le località, degli score delle osservazioni segnalate, e l'istante è considerato un evento quando questo valore supera il quantile $0.975$ della sua distribuzione negli anni di addestramento. Dal training e dalla validation sono escluse le finestre che contengono un evento; il test le conserva, come nell'articolo, dove soltanto gli eventi non intensi sono usati per training e validation.
-
-Le soglie climatologiche segnalano i valori estremi di ciascuna variabile rispetto alla sua distribuzione storica. Per verificare se un modello appreso individua anomalie di altro tipo, e come il previsore si comporta su di esse, il lavoro passa ai detector descritti nelle Sezioni~\ref{sec:mtgflow} e~\ref{sec:stgan}. A differenza delle soglie climatologiche, i detector non usano la produzione: operano sulle sole variabili meteorologiche.
-% Fonti dei valori: finestra di 15 giorni, quantile 0.975 e climatologie per anno
-% dalle cartelle sul server; quantili 0.99 (spaziale) e 0.975 (temporale) degli
-% eventi dal README e dalla configurazione di riferimento del branch
-% feat/sde-net-true-minimal. Nello stesso README il training sulle sole finestre
-% normali è un'ablazione opzionale e la validation è il 2018, filtrata allo stesso
-% modo (come in Monaco et al., che hanno training, validation e test): la
-% distinzione fra run base e ablazione va riportata nel capitolo Esperimenti.
-% Verificato sui report delle run (10 ottobre 2026): validation 2018 sia in
-% pvgis_stgnn_normal_only_monaco_ep60_seed42 sia in
-% pvgis_stgnn_paper_faithful_gaussian_ep60_seed1 (selezione su rmse_daytime).
-% Nella prima il filtro conserva 11109 finestre di training su 17496 e 6054 di
-% validation su 8736: numeri da riportare negli Esperimenti.
-
-\section{Esperimenti probabilistici preliminari}
-\label{sec:probabilistici-preliminari}
-
-I primi due metodi usati per associare un intervallo alla previsione non modificano il backbone: ne campionano l'uscita. Entrambi sono valutati sulle osservazioni segnalate dalle soglie climatologiche della Sezione~\ref{sec:soglie-climatologiche}, per verificare se l'intervallo si allarga e contiene il valore osservato nelle condizioni insolite.
-
-\subsection{Dropout Monte Carlo}
-
-Il dropout Monte Carlo~\cite{gal2016dropout} mantiene il dropout attivo in previsione e ripete il passaggio in avanti. Nel backbone il dropout è presente in origine soltanto sui coefficienti di attenzione dello strato su grafo e fra gli strati della LSTM. La versione usata negli esperimenti aggiunge tre strati di dropout: dopo l'encoder temporale, dopo la proiezione nello spazio latente e prima dell'ultimo strato della testa della produzione. La probabilità è 0.2.
-
-In addestramento il dropout agisce da regolarizzatore. In previsione il modello è posto in modalità di valutazione e vengono riattivati i soli strati di dropout, in modo che le normalizzazioni restino quelle di valutazione. Per ogni coppia località--istante si eseguono $J=20$ passaggi in avanti con maschere diverse, che producono $J$ previsioni della produzione.
-
-\subsection{Deep Ensemble di modelli addestrati indipendentemente}
-
-Nel Deep Ensemble~\cite{lakshminarayanan2017ensembles} i campioni non provengono da maschere diverse dello stesso modello, ma da modelli diversi. Ogni membro è lo stesso modello, addestrato in modo indipendente con un seme diverso, sugli stessi dati e con lo stesso protocollo; i membri sono cinque. In previsione ogni membro è usato in modo deterministico, senza dropout attivo. Le previsioni dei membri sul test sono allineate per località e istante, verificando che i valori osservati coincidano, e combinate in una matrice con una riga per membro.
-
-Rispetto all'articolo c'è una differenza: i membri restituiscono una previsione puntuale e non una media e una varianza gaussiane. Della varianza di miscela dell'equazione~\eqref{eq:ensemble-miscela} resta quindi il solo termine di dispersione fra le medie.
-
-\subsection{Previsioni medie, dispersione e intervalli empirici}
-
-I due metodi producono per ogni osservazione un insieme di previsioni $\hat{y}^{(1)},\dots,\hat{y}^{(S)}$, con $S$ pari al numero di passaggi o di membri, e sono riassunti allo stesso modo. La previsione puntuale è la media dell'insieme, come nell'equazione~\eqref{eq:mcdropout-media}, e la dispersione è la sua deviazione standard. L'intervallo al 95\% è delimitato dai quantili empirici 0.025 e 0.975 dell'insieme; la banda gaussiana $\bar{y}\pm1.96\,s_y$ è conservata come diagnostica. Agli intervalli non è applicata alcuna correzione di scala successiva all'addestramento.
-
-Le due dispersioni hanno significato diverso: quella del dropout Monte Carlo misura la variabilità di un solo modello rispetto alle maschere, quella del Deep Ensemble il disaccordo fra modelli addestrati separatamente. Nessuna delle due comprende una stima del rumore dei dati, e con pochi membri i quantili del Deep Ensemble sono necessariamente grossolani. Le metriche con cui gli intervalli sono valutati sono definite nel Capitolo~\ref{chap:esperimenti}.
-% Verificato su W&B, progetto PhysiQ-PV, run del 10 giugno 2026:
-% enhanced-daytime-check-seed1 (dropout Monte Carlo, modello con dropout
-% aggiunto) e sweep vfry1hgx con aggregazione pvgis_deep_ensemble_vfry1hgx
-% (cinque membri). Training 2016--2018, test 2019, nessuna validation, 5 epoche,
-% batch 16, tasso 1e-3, dropout 0.2, 20 passaggi, livello 95%, 64 unità nella
-% LSTM, etichette da una climatologia 2005--2023 senza il 2019 (il codice di
-% giugno esclude per default l'anno valutato). README e notebook del branch
-% ablation/enhanced-mc-dropout riportano una configurazione diversa (60 epoche,
-% 2005--2018, dropout 0.3, 30 passaggi) di cui non risultano run.
-% Per gli Esperimenti (parole dell'autore): run brevi, fatte prima di SDE-Net;
-% non proseguite con run più complete perché non sembravano dare risultati.
-% Per i Risultati: copertura dell'intervallo al 95% pari a 0.028 (dropout Monte
-% Carlo, un modello) e 0.173 (Deep Ensemble); MAE 20.1 e 19.2 W.
-
-\section{Variante SDE U-Net}
-\label{sec:sde-unet}
-
-Questa variante trasferisce al backbone BiLSTM--GAT lo schema di SDE U-Net~\cite{monaco2025sdeunet}, in cui i passi stocastici sono allineati agli stadi dell'encoder e a ciascuno stadio corrisponde un blocco di diffusione. Gli stadi sono qui due: quello temporale e quello spaziale. La Figura~\ref{fig:schema-sde-varianti} mette a confronto questa variante con la variante SDE-Net della Sezione~\ref{sec:sde-net}.
-
-\begin{figure}[htbp]
-    \centering
-    \input{figures/schema_sde_varianti}
-    \caption{Le due varianti SDE del previsore. Nella variante SDE U-Net un percorso di diffusione parallelo al backbone fornisce, a ciascuno dei due stadi, un coefficiente che scala una perturbazione gaussiana. Nella variante SDE-Net il backbone produce lo stato latente iniziale $z_0$, che viene integrato per più passi con lo stesso campo di drift e con una diffusione calcolata una sola volta su $z_0$; la testa restituisce media e deviazione standard.}
-    \label{fig:schema-sde-varianti}
-\end{figure}
-
-\subsection{Backbone paralleli di drift e diffusione}
-
-Il percorso di drift è il backbone della sezione precedente: encoder temporale, proiezione, strato di attenzione su grafo e teste. Il percorso di diffusione ne replica gli stadi con parametri propri: una seconda LSTM bidirezionale con pooling ad attenzione, una proiezione lineare seguita da ReLU e un secondo strato di attenzione su grafo, sullo stesso grafo geografico. A ogni stadio il percorso di diffusione restituisce, attraverso una sigmoide, un coefficiente compreso fra 0 e 1 per ogni località e ogni dimensione latente: $g_1$ per lo stadio temporale e $g_2$ per quello spaziale, entrambi di forma $[B,N,96]$. Lo stato che passa da uno stadio di diffusione al successivo è quello che precede la sigmoide.
-
-\subsection{Perturbazioni Browniane negli stadi BiLSTM e GAT}
-
-Sia $c$ la rappresentazione proiettata dell'encoder temporale del drift. Nello stadio temporale la perturbazione è sommata a $c$ insieme a un raffinamento $r(c)$, formato da uno strato lineare e da una GELU:
-\begin{equation}
-    h_1=\operatorname{LayerNorm}\!\left(r(c)+c+\kappa\,g_1\odot\varepsilon_1\right),
-    \qquad \varepsilon_1\sim\mathcal{N}(0,I).
-    \label{eq:tm-stadio-temporale}
-\end{equation}
-Nello stadio spaziale la perturbazione è sommata all'uscita dello strato di attenzione su grafo $\mathcal{A}$ e alla connessione residua, prima della normalizzazione:
-\begin{equation}
-    h_2=\operatorname{LayerNorm}\!\left(\mathcal{A}(h_1)+h_1+\kappa\,g_2\odot\varepsilon_2\right),
-    \qquad \varepsilon_2\sim\mathcal{N}(0,I).
-    \label{eq:tm-stadio-spaziale}
-\end{equation}
-La scala comune è $\kappa=s_{\max}\sqrt{\Delta\tau}$. L'orizzonte astratto è $T=4$ e il passo è $\Delta\tau=T/(S+1)$, con $S=2$ stadi stocastici; il valore massimo della diffusione è $s_{\max}=0.5$. Le teste ricevono lo stato $h_2$.
-% Nel codice T = 4, il passo e s_max = 0.5 sono annotati come ripresi
-% dall'implementazione pubblica di SDE U-Net: da verificare su quel codice prima
-% di scriverlo nel testo.
-
-A differenza della variante SDE-Net, lo schema non applica più volte lo stesso campo di drift a uno stesso stato: ogni perturbazione è legata a uno stadio diverso della rete, e il tempo $\tau$ serve soltanto a fissare la scala del rumore. Nel percorso deterministico le due perturbazioni sono assenti.
-
-\subsection{Training alternato, pseudo-OOD e inferenza a traiettorie}
-
-A ogni passo di addestramento si alternano due aggiornamenti, con due ottimizzatori Adam~\cite{kingma2015adam} distinti. Il primo aggiorna il percorso di drift e le teste su un passaggio stocastico, minimizzando la perdita dell'equazione~\eqref{eq:loss-deterministica} con $\lambda=0.1$. Il secondo aggiorna il solo percorso di diffusione: i coefficienti $g_1$ e $g_2$ sono spinti verso 0 sugli ingressi di training e verso 1 su ingressi pseudo fuori distribuzione, con una entropia incrociata binaria sommata sui due stadi. Gli ingressi pseudo fuori distribuzione sono ottenuti aggiungendo rumore gaussiano di deviazione standard unitaria alle feature continue dell'ingresso; seno e coseno dell'elevazione solare non sono perturbati.
-
-Il modello valutato sul test è quello dell'epoca con il miglior errore sulla validation, calcolato con il percorso deterministico. Quando è attivo l'addestramento sulle sole finestre normali, training e validation sono filtrati come descritto nella Sezione~\ref{sec:soglie-climatologiche}.
-
-In previsione si campionano $M=20$ traiettorie per ogni ingresso. La previsione puntuale è la media delle $M$ uscite, la dispersione la loro deviazione standard e l'intervallo al 95\% è delimitato dai quantili empirici 0.025 e 0.975, come nella Sezione~\ref{sec:probabilistici-preliminari}. La testa della produzione restituisce un solo valore per traiettoria: non c'è una stima della varianza dei dati, e la dispersione fra le traiettorie non è separata in una componente aleatoria e una epistemica.
-% Verificato sul report di pvgis_stgnn_normal_only_monaco_ep60_seed42 (10 ottobre
-% 2026): s_max = 0.5, due stadi, rumore pseudo-OOD 1.0 (seno e coseno esclusi),
-% 20 traiettorie, peso ausiliario 0.1, limite 1.6 dell'indice di cielo sereno,
-% 11 feature, finestra 24, orizzonte 1, 1149 località, 60 epoche, batch 16,
-% tasso 1e-4, miglior checkpoint all'epoca 60. Esiste anche una run con
-% s_max = 1 (pvgis_stgnn_normal_only_sigma1_ep60_seed42).
-
-\section{Variante SDE-Net}
-\label{sec:sde-net}
-
-\subsection{Campo di drift, diffusione e integrazione Euler--Maruyama}
-
-Il backbone BiLSTM--GAT produce lo stato iniziale $z_0$ della dinamica latente. Il drift applica una trasformazione lineare seguita da ReLU. La rete di diffusione media lo stato iniziale sulle località e restituisce un coefficiente sigmoidale $g(z_0)$ per esempio, condiviso fra nodi e canali. L'integrazione implementata specializza l'equazione~\eqref{eq:euler-maruyama} ed è
-\begin{equation}
-z_{k+1}=z_k+f(z_k)\Delta\tau+
-s_{\max}g(z_0)\sqrt{\Delta\tau}\,\varepsilon_k,
-\qquad \varepsilon_k\sim\mathcal{N}(0,I).
-\end{equation}
-La scala della diffusione viene calcolata una volta sullo stato iniziale e mantenuta lungo la traiettoria. Il tempo latente $\tau$ e il suo passo di integrazione sono distinti dall'orizzonte fisico $h$ della previsione.
-
-\subsection{Testa gaussiana, negative log-likelihood e training}
-
-La testa PV restituisce una media non negativa e una deviazione standard positiva mediante trasformazioni softplus. Nell'estensione multiorizzonte, lo stato finale condiviso alimenta $H$ coppie $(\mu_h,\sigma_h)$. Non viene appresa una matrice di covarianza esplicita fra orizzonti.
-
-L'obiettivo di regressione utilizza la forma
-\begin{equation}
-\mathcal{L}_{\mathrm{PV}}
-=\operatorname{media}_{b,n,h}
-\left[\log \sigma_{bnh}^{2}
-+\frac{(y_{bnh}-\mu_{bnh})^{2}}{\sigma_{bnh}^{2}}\right],
-\end{equation}
-equivalente alla negative log-likelihood gaussiana a meno di una costante e di un fattore moltiplicativo. Quando abilitata, una testa ausiliaria stima l'indice di cielo sereno e aggiunge un termine MSE pesato.
-
-Il training alterna due aggiornamenti: il primo ottimizza encoder, eventuale GAT, drift e teste; il secondo aggiorna soltanto la rete di diffusione. Quest'ultimo usa una BCE con dati di ingresso etichettati zero e pseudo-OOD etichettati uno, ottenuti aggiungendo rumore gaussiano all'intero input. Le rappresentazioni del secondo passo sono staccate dall'encoder. La procedura prevede inoltre un warm-up della scala SDE; l'addestramento dura un numero fissato di epoche e il modello valutato è quello dell'ultima.
-% Verificato su W&B, progetto physiq_pv, run
-% pvgis_stgnn_paper_faithful_gaussian_ep60_seed1 (24 luglio 2026): training
-% effettivo 2016--2017, validation 2018 (rmse_daytime, pazienza 10, miglior epoca
-% 59), test 2019, nessun limite sui campioni, 60 epoche, batch 16, tasso 1e-4 per
-% il drift e 1e-2 per la diffusione, riduzione di un fattore 10 all'epoca 20,
-% quattro passi di integrazione, s_max 0.5 con valore iniziale 0.01 e warm-up di
-% 30 epoche, rumore pseudo-OOD 2, 10 traiettorie, peso ausiliario 0.1, nessun
-% filtro sulle finestre normali, etichette dalla climatologia 2005--2018
-% (8978381 osservazioni normali su 10037664).
-
-\subsection{Campionamento e componenti dell'incertezza predittiva}
-
-Ogni traiettoria browniana $m$ produce una componente gaussiana con parametri $(\mu^{(m)},\sigma^{(m)})$ per ciascuna uscita. La media e la varianza predittiva sono calcolate come
-\begin{align}
-\bar{\mu} &= \frac{1}{M}\sum_{m=1}^{M}\mu^{(m)},\\
-v_{\mathrm{tot}} &=
-\operatorname{Var}_{m}\!\left(\mu^{(m)}\right)
-+\frac{1}{M}\sum_{m=1}^{M}\left(\sigma^{(m)}\right)^2.
-\end{align}
-La varianza $v_{\mathrm{tot}}$ ha la forma della varianza di miscela dell'equazione~\eqref{eq:ensemble-miscela}, con le traiettorie al posto delle reti di un insieme. Il codice conserva separatamente la dispersione delle medie lungo le traiettorie e la varianza delle teste gaussiane, indicate rispettivamente come componenti epistemica e aleatorica.
-
-L'intervallo principale è ottenuto dai quantili a code uguali della miscela gaussiana equiponderata rappresentata dalle traiettorie. La banda $\bar{\mu}\pm z\sqrt{v_{\mathrm{tot}}}$ è mantenuta come approssimazione gaussiana diagnostica. Il percorso senza rumore integra invece il solo drift e non coincide, in generale, con la media esatta delle traiettorie stocastiche.
-
-\section{Rilevamento delle anomalie con MTGFlow}
-\label{sec:mtgflow}
-
-Il primo detector appreso è MTGFlow~\cite{zhou2023labelfree}, nella versione base dell'articolo. Stima la densità delle finestre di training e assegna uno score alto alle finestre a bassa densità; non richiede etichette e non assume che il training sia privo di anomalie.
-
-\subsection{Serie storiche per località, variabili meteorologiche e finestre}
-
-MTGFlow è applicato separatamente a ogni località. Le entità del modello sono le tre variabili meteorologiche della località: irradianza globale, temperatura a due metri e velocità del vento a dieci metri. La produzione e le etichette delle soglie climatologiche non entrano nel detector.
-
-Ogni variabile è normalizzata sottraendo la media e dividendo per la deviazione standard, calcolate sul solo training della località. Le serie sono suddivise in finestre di $T=60$ ore; una finestra ha forma $[K,T]$, con $K=3$ entità. Le finestre che attraversano un'interruzione della cadenza oraria sono scartate. In addestramento le finestre sono estratte con passo 10. Nello scoring il passo è 1: ogni ora riceve lo score della finestra che termina in quell'ora. È uno scostamento dalla configurazione di riferimento, che usa il passo 10 anche nello scoring, ed è necessario per collegare gli score alle previsioni orarie del previsore.
-% Verificato su outputs/pvgis_mtgflow/downstream_dense/run_metadata.json (10 ottobre
-% 2026): finestra 60, passo 10 in training e 1 nello scoring, 40 epoche, batch
-% 256, due blocchi, un solo seme (15), fattore 1.5, scala 0.8; score esportati
-% anche per gli anni 2016--2018.
-
-\subsection{Grafo dinamico tra entità e normalizing flow condizionale}
-
-Per ogni finestra il modello calcola una matrice di adiacenza fra le entità. Indicando con $x^{k}\in\mathbb{R}^{T}$ la finestra dell'entità $k$ e con $W_Q$, $W_K$ due trasformazioni lineari,
-\begin{equation}
-    A_{kj}=\frac{\exp\!\left[(W_Q x^{k})^{\top}(W_K x^{j})/\sqrt{T}\right]}
-    {\sum_{l=1}^{K}\exp\!\left[(W_Q x^{k})^{\top}(W_K x^{l})/\sqrt{T}\right]}.
-    \label{eq:mtgflow-adiacenza}
-\end{equation}
-La matrice cambia da una finestra all'altra e descrive quanto l'entità $j$ contribuisce al contesto dell'entità $k$: collega le variabili di una stessa località, non località diverse.
-
-Una LSTM con parametri condivisi fra le entità elabora la sequenza di ciascuna e restituisce gli stati $H_t\in\mathbb{R}^{K\times d}$. Il condizionamento del passo $t$ combina gli stati delle entità collegate con lo stato del passo precedente,
-\begin{equation}
-    C_t=\operatorname{ReLU}\!\left(A\,H_t\,W_1+H_{t-1}\,W_2\right)W_3.
-    \label{eq:mtgflow-condizionamento}
-\end{equation}
-Il normalizing flow trasforma ogni valore $x^{k}_{t}$ in una variabile $z^{k}_{t}$ con una sequenza di blocchi autoregressivi mascherati, ciascuno dei quali applica una traslazione e una scala calcolate da $C_t$:
-\begin{equation}
-    z=\left(x-m(C_t)\right)\exp\!\left(-a(C_t)\right),
-    \qquad
-    \log\left|\frac{\partial z}{\partial x}\right|=-a(C_t).
-\end{equation}
-I parametri dei blocchi sono condivisi fra le entità; ciò che distingue un'entità dall'altra è la distribuzione di arrivo, una gaussiana di varianza unitaria con media $\mu_k$ propria dell'entità. La log-verosimiglianza della finestra dell'entità $k$ è la somma sui passi della log-densità gaussiana di $z^{k}_{t}$ e dei logaritmi dei determinanti dei blocchi.
-
-L'addestramento massimizza la log-verosimiglianza media delle finestre di training. Nella configurazione di riferimento il modello ha due blocchi di flow e stati di dimensione 32, ed è addestrato per 40 epoche con Adam; il modello usato per lo scoring è quello dell'ultima epoca, senza selezione su una validation.
-
-\subsection{Score aggregato della località, score per variabile e soglie IQR}
-
-Lo score di una finestra è l'opposto della log-verosimiglianza, mediato sulle entità:
-\begin{equation}
-    S=-\frac{1}{K}\sum_{k=1}^{K}\log p\!\left(x^{k}\right)=\sum_{k=1}^{K}S_k,
-    \qquad
-    S_k=-\frac{1}{K}\log p\!\left(x^{k}\right).
-    \label{eq:mtgflow-score}
-\end{equation}
-$S$ è lo score aggregato della località e $S_k$ il contributo della variabile $k$. Lo score è attribuito all'ultimo istante della finestra.
-
-La soglia segue l'articolo ed è ricavata dagli score di training della stessa località: indicando con $Q_1$ e $Q_3$ il primo e il terzo quartile,
-\begin{equation}
-    \theta=Q_3+1.5\,(Q_3-Q_1),
-    \label{eq:mtgflow-soglia}
-\end{equation}
-e una finestra è segnalata quando $S\geq\theta$. Per ogni variabile è calcolata allo stesso modo una soglia sugli score $S_k$, moltiplicata per 0.8. Lo score per variabile indica quale grandezza contribuisce di più alla bassa verosimiglianza; non identifica la causa fisica dell'anomalia.
-
-Con soglie stimate per località, la quota di osservazioni segnalate varia da una località all'altra; i valori osservati sono riportati nel Capitolo~\ref{chap:risultati}.
-% TOLTO il 12 ottobre 2026 perché nei Risultati il confronto non c'è: "Come
-% variante esplorativa le decisioni sono ricalcolate con una quota fissata
-% sull'insieme di tutte le località, ordinando le osservazioni secondo lo scarto
-% dalla soglia della propria località, (S - theta)/(Q3 - Q1). Il confronto fra i
-% due criteri è riportato nel Capitolo dei risultati." Ripristinare se il
-% confronto viene aggiunto.
-
-\subsection{Modelli indipendenti per località e assenza di message passing geografico}
-
-Per ogni località è addestrato un modello distinto, che vede soltanto la serie di quella località, con un solo seme. Gli score delle diverse località sono riuniti soltanto dopo lo scoring. È quindi possibile rappresentarli su una mappa e confrontarli, ma il modello non apprende relazioni fra località: il grafo dinamico dell'equazione~\eqref{eq:mtgflow-adiacenza} riguarda le tre variabili di un sito.
-
-Questo è il limite che motiva il passo successivo. Una condizione meteorologica insolita interessa di norma più località vicine, e un valore insolito in un punto può essere ordinario rispetto al suo intorno. Per introdurre il contesto spaziale il lavoro passa a STGAN, descritto nella sezione seguente.
-% Verificati sui metadati della run: 40 epoche, batch 256, due blocchi, fattore
-% 1.5, scala 0.8, seme 15 (la configurazione di riferimento ne prevede cinque,
-% 15--19). Stato di dimensione 32, tasso 2e-3 e dropout 0.2 sull'adiacenza non
-% compaiono nei metadati, ma lo script di lancio non ha opzioni per cambiarli:
-% sono fissati da mtgflow/config.py. La media mu_k nel codice è estratta una
-% volta da una normale standard e non è addestrata.
-
-\section{STGAN su PVGIS: versione su grafo e variante a griglia}
+\section{Architettura e addestramento avversario}
 \label{sec:stgan}
-% Verificato sui metadati delle run (10 ottobre 2026).
-% pvgis_stgan/paper_reference: sottografo di 9 siti (kNN 8, pesi gaussiani), un
-% passo recente, trend 168, stato 64, due strati, 6 epoche, batch 256, tasso 1e-3,
-% peso di ricostruzione 500, score per ogni ora, top 1% globale sul test, seme 20.
-% pvgis_stgan_cnn/convgru_reference: reticolo EPSG:32632 con passo 5000 m, patch
-% 3, 1149 località (917 patch complete, 232 incomplete, le complete coincidono
-% con i vicini kNN), due strati ConvGRU da 32 canali, stessi valori di training.
-% Da leggere ancora: metadati di convgru_patch3_kernel1 e
-% convgru_patch3_kernel5_optimized (cosa indica "optimized").
+\label{sec:stgan-era5-varianti}
 
-\subsection{Contesto spaziale e architettura GCGRU--LSTM}
+Il detector segue lo schema di STGAN~\cite{deng2022stgan} descritto nella Sezione~\ref{sec:rw-anomalie}: un generatore stima il campo dell'istante successivo a partire dagli istanti precedenti, e un discriminatore giudica se il campo di un istante, insieme alla sua storia recente, è osservato o generato. Il target del generatore è meteorologico e comprende le quindici variabili della Tabella~\ref{tab:variabili-era5}. La griglia è definita direttamente in coordinate geografiche, con passo angolare di $0.5^\circ$, e la cadenza è di tre ore.
 
-La versione STGAN basata su grafo costruisce un sottografo locale di nove siti: la località centrale e gli otto vicini geografici più prossimi. Gli archi diretti derivano da un criterio kNN, con pesi gaussiani delle distanze, self-loop e normalizzazione dell'adiacenza.
-
-Il generatore combina un ramo GCGRU sul contesto recente, una LSTM sulla storia della località centrale e una codifica one-hot dell'ora e del giorno della settimana. Il contesto recente contiene un passo e il trend 168 passi orari. L'uscita stima le tre variabili meteorologiche al timestamp successivo per tutti i nodi del sottografo.
-
-Il discriminatore combina una rappresentazione GCGRU della storia con una convoluzione sul dato corrente, reale o generato, e restituisce un valore sigmoidale. I due componenti operano sullo stesso contesto locale; il generatore non stima direttamente la produzione fotovoltaica.
-
-\subsection{Variante ConvGRU--LSTM e gestione delle celle assenti}
+\subsection{Generatore ConvGRU sul campo intero e celle assenti}
 \label{sec:stgan-convgru}
+\label{sec:convgru-campo-intero}
 
-L'adattamento a griglia sostituisce gli operatori sul grafo con convoluzioni su una patch geografica $P\times P$. Le coordinate vengono proiettate e verificate rispetto a un reticolo prima di assegnare righe e colonne: l'ordine originario dei siti non viene semplicemente rimodellato come un'immagine. Sui dati PVGIS il reticolo è quello della proiezione UTM del fuso 32, con passo di 5~km, e la patch è $3\times3$: 917 località hanno una patch completa e 232 una patch incompleta, perché sul bordo della regione mancano alcune celle. Le celle assenti non vengono sostituite da località più lontane.
+Un campione è il campo completo di un istante, disposto sul reticolo $H\times W$ della Sezione~\ref{sec:dati-era5}. Il generatore ha tre rami. Il ramo recente elabora gli $R$ campi che precedono l'istante da stimare con una ConvGRU~\cite{shi2015convlstm,ballas2016convgru}, l'unità ricorrente convoluzionale delle equazioni~\eqref{eq:convgru-reset}--\eqref{eq:convgru-stato}, che sostituisce la convoluzione su grafo dell'articolo. Il ramo del trend elabora con una LSTM la serie di ciascuna cella su un periodo più lungo. Il ramo del calendario proietta la codifica temporale. Con $R$ passi recenti, $L$ passi di trend e $F$ variabili, gli ingressi hanno forma $[B,R,F,H,W]$ per il ramo recente e $[B,L,N,F]$ per il trend; l'uscita ha forma $[B,F,H,W]$.
 
-L'adattamento impiega una ConvGRU~\cite{shi2015convlstm,ballas2016convgru} sia nel ramo recente del generatore sia in quello storico del discriminatore. Con $R$ passi recenti, $L$ passi di trend e $F$ feature, gli ingressi hanno forma $[B,R,F,P,P]$ per la patch recente e $[B,L,F]$ per la storia del sito centrale; maschera e calendario hanno rispettivamente forma $[B,1,P,P]$ e $[B,31]$.
+Le convoluzioni scorrono sull'intero reticolo: il campo ricettivo non è troncato al bordo di una regione e ogni cella viene ricostruita una sola volta. La LSTM del trend e la codifica temporale sono calcolate per cella e disposte sul reticolo. Le rappresentazioni dei tre rami sono concatenate cella per cella; una proiezione $1\times1$ seguita da tanh produce il campo stimato.
 
-Le feature delle celle assenti sono azzerate dopo normalizzazione e la maschera binaria $M$ viene fornita come canale aggiuntivo a ogni strato ConvGRU. Rispetto alle equazioni~\eqref{eq:convgru-reset}--\eqref{eq:convgru-stato} cambiano l'ingresso e l'ultimo passaggio. I gate e lo stato candidato sono calcolati su $X'_s$, la concatenazione dei valori mascherati e di $M$, al posto di $X_s$; lo stato precedente $H_{s-1}$ è già mascherato e lo stato aggiornato viene moltiplicato per la maschera, replicata sui canali:
+Le celle del reticolo prive di dati sono azzerate dopo la normalizzazione, e una maschera binaria $M$ è fornita come canale aggiuntivo a ogni strato ConvGRU. Rispetto alle equazioni~\eqref{eq:convgru-reset}--\eqref{eq:convgru-stato} cambiano l'ingresso e l'ultimo passaggio. I gate e lo stato candidato sono calcolati su $X'_s$, la concatenazione dei valori mascherati e di $M$, al posto di $X_s$; lo stato precedente $H_{s-1}$ è già mascherato e lo stato aggiornato viene moltiplicato per la maschera, replicata sui canali:
 \begin{equation}
 H_s = M\odot\left[U_s\odot H_{s-1}+(1-U_s)\odot\widetilde{H}_s\right].
-\end{equation} Il mascheramento dello stato impedisce alle celle assenti di conservare attivazioni da propagare negli strati o nei passi successivi. Non viene applicata una rinormalizzazione del kernel in funzione delle celle osservate, come avverrebbe in una partial convolution.
+\end{equation}
+Il mascheramento dello stato impedisce alle celle assenti di conservare attivazioni da propagare negli strati o nei passi successivi. Non viene applicata una rinormalizzazione del kernel in funzione delle celle osservate, come avverrebbe in una partial convolution. Su ERA5 nessuna cella del reticolo è priva di dati, ma la maschera resta necessaria per il discriminatore, le cui patch sul bordo del dominio sono incomplete. Lo stato ricorrente è inizializzato a zero per ogni finestra. Il modello ha due strati ConvGRU da 32 canali con kernel $3\times3$, e una LSTM del trend a due strati con stato nascosto di dimensione 64.
 
-Lo stato ricorrente è inizializzato a zero per ogni finestra. Il modello ha due strati ConvGRU da 32 canali, $R=1$ e una LSTM del trend a due strati con stato nascosto di dimensione 64, con $L=168$ ore. Con un solo passo recente la ConvGRU esegue un solo aggiornamento dallo stato nullo: la ricorrenza sul lungo periodo rimane affidata alla LSTM.
+\subsection{Discriminatore locale}
 
-Nel generatore, l'uscita ConvGRU viene concatenata alla rappresentazione del trend centrale e a quella del calendario, replicate sulle posizioni della patch. Una proiezione $1\times1$ seguita da tanh produce il target meteorologico $[B,F,P,P]$, azzerando le celle assenti. Nel discriminatore, la storia codificata viene appiattita su tutta la patch e proiettata linearmente; il dato corrente passa attraverso una proiezione $1\times1$ e un massimo sulle celle valide. Le due rappresentazioni alimentano la classificazione sigmoidale.
+Il discriminatore giudica ogni cella sulla propria patch $P\times P$, con $P=3$, come nell'articolo, dove giudica ogni nodo sul proprio sottografo. La patch di ogni cella è estratta dal campo, con le celle esterne al reticolo azzerate e indicate dalla maschera. Una ConvGRU codifica la storia recente della patch; la storia codificata è appiattita e proiettata linearmente. Il campo corrente della patch, osservato o generato, passa attraverso una proiezione $1\times1$ seguita da una sigmoide e da un massimo sulle celle valide. Le due rappresentazioni sono concatenate e alimentano uno strato nascosto e un'uscita sigmoidale. Il discriminatore restituisce quindi un valore per cella e per istante.
 
-Il numero di celle osservate può variare fra patch. La loss generativa e lo score di errore sono mediati sulle sole celle valide e sulle feature, prima di aggregare gli esempi. Le patch complete e incomplete vengono mantenute distinte nel confronto dei detector. La presenza delle stesse località, quando verificata, non rende equivalenti gli operatori convoluzionali e quelli sul grafo.
+Le patch di tutte le celle sono valutate in un'unica passata, con le stesse maschere e gli stessi azzeramenti. L'uscita relativa a una cella è quella che il discriminatore produrrebbe sulla sua patch isolata. Una convoluzione che scorresse liberamente sul campo non darebbe lo stesso valore, perché la ConvGRU del discriminatore applica il padding all'interno di ciascuna patch.
 
-\subsection{Ablazione del kernel e supporto spaziale osservato}
-\label{sec:ablation-kernel}
+\subsection{Obiettivi di addestramento}
 
-La dimensione $k$ del kernel è indipendente dal lato $P$ della patch. L'ablazione consente $k=1,3,5$ nei gate reset, update e candidato delle ConvGRU del generatore e del discriminatore, con padding $\lfloor k/2\rfloor$. Le proiezioni finali $1\times1$ rimangono tali in tutte le configurazioni. Il caso di riferimento è $k=3$; la patch resta $P=3$ in tutte le configurazioni.
-
-Con $k=1$ i gate non mescolano celle geografiche diverse mediante convoluzione. Il detector continua tuttavia a utilizzare una patch: il discriminatore aggrega la storia appiattita e il massimo sulle celle valide, mentre loss e score generativo considerano l'intero supporto osservato. L'ablazione elimina quindi il mixing convoluzionale locale, senza rendere l'intero detector indipendente dalle altre celle.
-
-Con $k=5$ aumenta l'ampiezza del kernel, ma non il numero di siti forniti in ingresso. Su una patch $3\times3$ rimangono al massimo nove siti osservati e la parte esterna è gestita dal padding. Modificare $P$ costituirebbe un diverso intervento, perché cambierebbe il supporto geografico e la dimensione della proiezione storica del discriminatore.
-
-A parità di canali e strati, la dimensione del kernel modifica anche il numero di parametri. Il confronto deve pertanto riportare capacità parametrica, patch, lunghezza delle finestre e configurazione di training: non isola automaticamente il solo effetto dell'estensione spaziale a capacità costante.
-
-\subsection{Training avversario, anomaly score e soglia globale}
-
-Il discriminatore viene addestrato con reale uguale a zero e generato uguale a uno. Gli obiettivi sono
+Il discriminatore viene addestrato con reale uguale a zero e generato uguale a uno, come nell'articolo. Indicando con $D_{\mathrm{reale}}$ e $D_{\mathrm{generato}}$ le uscite sulle patch con il campo osservato e con il campo generato, gli obiettivi sono
 \begin{align}
 \mathcal{L}_{D} &=
 \tfrac{1}{2}\bigl[
 \operatorname{BCE}(D_{\mathrm{reale}},0)
 +\operatorname{BCE}(D_{\mathrm{generato}},1)\bigr],\\
 \mathcal{L}_{G} &=
-\lambda_G\,\operatorname{MSE}(\hat{x},x)
-+\operatorname{BCE}(D_{\mathrm{generato}},0).
+\lambda_G\,\operatorname{MSE}_w(\hat{x},x)
++\operatorname{BCE}(D_{\mathrm{generato}},0),
 \end{align}
-Il peso di ricostruzione è $\lambda_G=500$; nella variante ConvGRU la MSE applica la riduzione mascherata descritta sopra. Generatore e discriminatore vengono aggiornati con ottimizzatori Adam separati, prima D e poi G. Nel passo del generatore, i parametri del discriminatore sono congelati ma viene mantenuto il gradiente rispetto alla predizione generata. La storia usata per questa loss è ricalcolata con i pesi aggiornati di D; il riuso del forward del generatore non sostituisce questo aggiornamento. Il valore del discriminatore non viene interpretato come probabilità di anomalia calibrata mediante etichette reali.
+dove $\operatorname{MSE}_w$ è l'errore quadratico medio sulle celle valide e sulle variabili, con i pesi delle variabili della Sezione~\ref{sec:pesi-variabili-ricostruzione}, mediato poi sugli istanti del batch, e la BCE è mediata sulle uscite locali, una per cella. Rispetto alle equazioni~\eqref{eq:stgan-loss-g}--\eqref{eq:stgan-loss-d} dell'articolo, l'errore di ricostruzione è un errore quadratico medio anziché una norma e la loss del discriminatore è dimezzata: la scelta segue il codice pubblicato dagli autori.
 
-Lo score combina l'errore quadratico medio sul contesto spaziale e la differenza $D_{\mathrm{reale}}-D_{\mathrm{generato}}$. Le due componenti vengono normalizzate separatamente con min--max sull'intero insieme di test località--timestamp e sommate. I residui per feature della sola località centrale sono conservati come diagnostica distinta.
+Generatore e discriminatore vengono aggiornati con ottimizzatori Adam~\cite{kingma2015adam} separati. Nel passo del generatore, i parametri del discriminatore sono congelati ma viene mantenuto il gradiente rispetto al campo generato; la storia della patch è ricalcolata con i pesi aggiornati del discriminatore. Il peso di ricostruzione $\lambda_G$ è un parametro, con valore predefinito 500, quello dell'articolo. I tassi di apprendimento dei due ottimizzatori possono essere distinti: quello del discriminatore è espresso come rapporto rispetto a quello del generatore. Il coefficiente $\beta_1$ degli ottimizzatori vale 0.9, il valore del codice degli autori. Con rapporto $n_D{:}n_G$, sullo stesso batch vengono eseguiti prima $n_D$ aggiornamenti del discriminatore e poi $n_G$ del generatore, ciascuno con un proprio passaggio in avanti; il rapporto è un conteggio di aggiornamenti e non va confuso con il rapporto fra i tassi di apprendimento. Tassi, rapporto e peso di ricostruzione sono gli strumenti con cui si regola l'equilibrio fra le due reti; i valori usati sono scelti nel Capitolo~\ref{chap:esperimenti}.
 
-La decisione utilizza un ranking globale stabile: con percentuale $p$, vengono selezionate $\lceil np/100\rceil$ osservazioni fra le $n$ disponibili. Nelle esecuzioni $p=1$. Non viene applicato un budget dell'1\% separatamente a ogni sito. Poiché normalizzazione dello score e ranking dipendono dal test completo, il protocollo è retrospettivo; non definisce da solo una soglia causale per uso online.
+Un'epoca comprende $\lceil T/B\rceil$ aggiornamenti per rete, con $T$ istanti di addestramento utili e $B$ istanti per batch, e ogni gradiente è mediato su tutte le celle di un istante. A ogni epoca vengono salvati i pesi e lo stato dei due ottimizzatori; un addestramento interrotto può essere ripreso soltanto con la stessa configurazione, la stessa normalizzazione e gli stessi riferimenti di validazione. Il calcolo usa la precisione mista BF16, con pesi mantenuti in FP32 e loss avversaria calcolata sui logit.
 
-\subsection{Campionamento e riproducibilità del calcolo}
-
-Il training predefinito visita il prodotto completo fra tempi target e località con ordine casuale. La modalità globale conserva l'ordine del percorso di riferimento; una modalità alternativa mescola blocchi e campioni al loro interno. Quest'ultima conserva insieme e molteplicità dei campioni, ma cambia l'ordine e la distribuzione delle permutazioni: deve essere indicata come parte del protocollo, non soltanto come scelta di memoria.
-
-Estrazione vettoriale delle finestre, cache normalizzata e scoring su disco permettono di elaborare i dati a blocchi. Gli estremi delle due componenti dello score rimangono globali sull'intero test; non vengono stimati separatamente per blocco. Il ranking esterno conserva l'ordinamento decrescente e risolve i pareggi secondo l'indice originale. Il batch di inferenza è configurabile separatamente da quello di training. L'equivalenza prevista dalle implementazioni e dai relativi controlli non costituisce una misura di accelerazione o di riduzione della memoria nelle esecuzioni reali.
-
-\section{Estensione a ERA5 ed estrazione degli eventi}
-\label{sec:eventi-geografici}
-
-\subsection{Adattamento del detector alla cadenza trioraria}
-
-L'estensione utilizza i cubi e la maschera descritti nella Sezione~\ref{sec:dati-era5}, mantenendo l'architettura ConvGRU--LSTM e le loss della Sezione~\ref{sec:stgan}. Il target del generatore resta meteorologico e comprende ora quindici feature. La griglia è definita direttamente in coordinate geografiche, con EPSG:4326 e passo angolare di $0.5^\circ$.
-
-La cadenza diventa di tre ore e il trend viene impostato a 56 passi, conservando una durata di 168 ore. La lunghezza del ramo recente e la codifica temporale usate su ERA5 sono descritte nella Sezione~\ref{sec:stgan-era5-varianti}. Preparazione, training con scoring e analisi degli eventi costituiscono fasi distinte: gli eventi vengono ricavati dagli score già disponibili, senza un nuovo aggiornamento dei pesi del detector.
-
-La Figura~\ref{fig:schema-eventi} riassume i passaggi descritti nelle due sottosezioni che seguono.
-
-\begin{figure}[htbp]
-    \centering
-    \input{figures/schema_eventi}
-    \caption{Dagli score agli eventi geografici, su un esempio illustrativo. Gli score di un istante sono riportati sulla griglia; le celle sopra soglia formano una maschera, da cui apertura e chiusura rimuovono le celle isolate e le sporgenze; le celle rimaste sono riunite in gruppi di celle adiacenti. I gruppi di istanti consecutivi sono poi collegati: un evento è un insieme di gruppi collegati, e resta unico anche quando un gruppo si separa in due o due gruppi si fondono.}
-    \label{fig:schema-eventi}
-\end{figure}
-
-\subsection{Soglia, morfologia e cluster spaziali}
-
-Gli score $[T,N_{\mathrm{valide}}]$ vengono ricollocati sulla griglia $[T,H,W]$, mantenendo non valide le celle escluse. La selezione iniziale può utilizzare una soglia assoluta oppure un percentile degli score finiti, globale per default o distinto per frame. Una cella è selezionata soltanto se lo score è strettamente maggiore della soglia. In presenza di pareggi, questa regola non garantisce lo stesso numero di selezionati del top-K esatto degli export PVGIS.
-
-Per ogni frame, la maschera binaria viene sottoposta ad apertura e chiusura, rispettando le celle valide. Il default usa un elemento strutturante quadrato $3\times3$ e un'iterazione per operazione. Le componenti connesse sono individuate con otto vicini e possono essere filtrate per numero minimo di celle. Le operazioni morfologiche possono rimuovere o aggiungere celle rispetto alla selezione iniziale: i cluster risultanti non coincidono necessariamente con l'insieme degli score sopra soglia.
-
-Il kernel della morfologia e quello della ConvGRU sono parametri di fasi diverse. Un confronto fra kernel neurali $1\times1$ e $5\times5$ non implica una modifica dell'elemento strutturante usato sugli eventi. Le aree dei cluster sono ottenute sommando le aree sferiche delle celle e i centroidi sono pesati con tali aree. Questa correzione geometrica nel postprocessing non rende uniforme in chilometri la patch neurale, la cui estensione fisica varia con la latitudine.
-
-\subsection{Collegamento temporale, separazioni e fusioni}
-
-I cluster di frame consecutivi vengono collegati secondo sovrapposizione, sovrapposizione dopo dilatazione, distanza dei centroidi oppure unione dei criteri. Indicando con $A$ e $B$ i supporti di due cluster, il rapporto di sovrapposizione è
-\begin{equation}
-o(A,B)=\frac{|A\cap B|}{\min(|A|,|B|)}.
-\end{equation}
-Non si tratta dell'intersezione sull'unione. Nel criterio dilatato, $A$ è sostituito dal supporto ottenuto dopo dilatazione, anche nel denominatore. Il default utilizza una dilatazione di una cella e una soglia di sovrapposizione pari a 0.1; la distanza dei centroidi è un criterio alternativo configurabile.
-
-L'identità di un evento corrisponde a una componente connessa del grafo temporale dei cluster. Il collegamento non è vincolato a essere uno a uno: una separazione mantiene i rami nello stesso evento, mentre una fusione unifica retrospettivamente le identità precedenti. Un salto nella cadenza temporale interrompe i collegamenti, evitando di unire automaticamente osservazioni separate da intervalli mancanti.
-
-La durata riportata comprende l'intervallo rappresentato dall'ultimo frame,
-\begin{equation}
-d_{\mathrm{evento}}=t_{\mathrm{fine}}-t_{\mathrm{inizio}}+\Delta t,
-\qquad \Delta t=3\,\mathrm{h}
-\end{equation}
-nel default ERA5; il solo tempo trascorso fra primo e ultimo frame viene conservato separatamente. La normalizzazione degli score sull'intero test, la soglia globale quando utilizzata e l'unificazione retrospettiva degli eventi definiscono un protocollo di analisi successiva al periodo osservato, non un sistema causale di allerta.
-
-\section{STGAN su ERA5: score Monte Carlo e varianti ConvGRU e GAT-GRU}
-\label{sec:stgan-era5-varianti}
-
-Gli sviluppi di questa sezione riguardano il solo percorso ERA5. Feature, griglia, maschera delle celle ed estrazione degli eventi restano quelle delle Sezioni~\ref{sec:dati-era5} e~\ref{sec:eventi-geografici}. Il lavoro procede su due linee parallele, che condividono protocollo di training, score e monitoraggio e si distinguono per l'encoder spaziale del generatore: una ConvGRU, come nella Sezione~\ref{sec:stgan-convgru}, oppure una GAT-GRU, cioè un'unità ricorrente con l'attenzione su grafo nei gate. Nessuna delle due linee è la continuazione dell'altra.
-
-\subsection{Dropout nel generatore e campionamento dello score}
-\label{sec:score-dropout-montecarlo}
-
-Lo score è campionato con il dropout Monte Carlo~\cite{gal2016dropout}. Il generatore riceve tre strati di dropout: sulla rappresentazione spaziale del ramo recente, sulla rappresentazione del trend e sulla loro concatenazione con la codifica temporale, prima della proiezione di uscita. La probabilità è 0.2. Il discriminatore non contiene dropout.
-
-Il discriminatore riceve la ricostruzione calcolata senza dropout, sia nell'addestramento, nel proprio aggiornamento e nel termine avversario del generatore, sia nello scoring. Se ricevesse la ricostruzione con il dropout, potrebbe distinguere i campi generati da quelli osservati per il rumore che il dropout vi introduce, e non per il loro contenuto. Il dropout agisce quindi soltanto sull'errore di ricostruzione: nella loss del generatore e nello score.
-
-Durante lo scoring il modello è in modalità di valutazione, con l'eccezione dei dropout del generatore, che restano attivi. Per ogni osservazione vengono estratti $J=20$ campioni. Gli encoder del generatore, la codifica della storia nel discriminatore e il giudizio del discriminatore non dipendono dal dropout e sono calcolati una sola volta; a ogni campione vengono ripetuti i dropout e la proiezione di uscita.
-
-Per la coppia tempo--località $(t,n)$ e il campione $j$, la ricostruzione $\hat{x}^{(j)}$ dà l'errore di ricostruzione
-\begin{equation}
-s^{(j)}_{tn}=\frac{1}{|P_n|\,F}\sum_{c\in P_n}\sum_{f=1}^{F}w_f\left(\hat{x}^{(j)}_{tcf}-x_{tcf}\right)^{2},
-\end{equation}
-dove $P_n$ sono le celle valide della patch di $n$ e $w_f$ i pesi delle variabili della Sezione~\ref{sec:pesi-variabili-ricostruzione}. Lo score è la media sui campioni,
-\begin{equation}
-\bar{s}_{tn}=\frac{1}{J}\sum_{j=1}^{J}s^{(j)}_{tn},
-\end{equation}
-cioè la media degli errori dei singoli campioni, e non l'errore della ricostruzione media. Per ogni cella e variabile le due quantità differiscono per la varianza delle ricostruzioni:
-\begin{equation}
-\frac{1}{J}\sum_{j=1}^{J}\left(\hat{x}^{(j)}-x\right)^{2}
-=\left(\bar{\hat{x}}-x\right)^{2}+\frac{1}{J}\sum_{j=1}^{J}\left(\hat{x}^{(j)}-\bar{\hat{x}}\right)^{2},
-\qquad
-\bar{\hat{x}}=\frac{1}{J}\sum_{j=1}^{J}\hat{x}^{(j)}.
-\end{equation}
-Lo score cresce quindi sia quando la ricostruzione si allontana dall'osservazione, sia quando i campioni non sono concordi fra loro. La quota dei due termini non è misurata separatamente.
-
-Nella configurazione di base lo score è quello dell'articolo: $\bar{s}_{tn}$ e la differenza $D_{\mathrm{reale}}-D_{\mathrm{generato}}$ fra il giudizio del discriminatore sull'osservazione e sulla ricostruzione, riportati ciascuno fra 0 e 1 con minimo e massimo sull'intero test e sommati, come nella Sezione~\ref{sec:stgan}. Poiché il discriminatore riceve la ricostruzione senza dropout, il suo termine è lo stesso in tutti i campioni. Nella configurazione adattata lo score è il solo errore di ricostruzione $\bar{s}_{tn}$, espresso poi rispetto alla climatologia della propria località come nella Sezione~\ref{sec:normalizzazione-climatologica-score}.
-
-La dispersione associata allo score è la deviazione standard di popolazione dei campioni,
-\begin{equation}
-u_{tn}=\sqrt{\frac{1}{J}\sum_{j=1}^{J}\left(s^{(j)}_{tn}-\bar{s}_{tn}\right)^{2}},
-\end{equation}
-nelle stesse unità dello score. Misura quanto lo score cambia con le maschere di dropout del generatore e non è una probabilità di anomalia; la sua calibrazione come misura di incertezza non è verificata dal metodo. Una segnalazione che resta sopra la soglia anche con lo score diminuito di $u_{tn}$ non dipende dalle maschere estratte.
-
-\subsection{Bilanciamento dell'addestramento avversario}
-
-Gli obiettivi $\mathcal{L}_{D}$ e $\mathcal{L}_{G}$ sono quelli della Sezione~\ref{sec:stgan}. Il peso di ricostruzione $\lambda_G$ diventa un parametro, con valore predefinito invariato. I tassi di apprendimento dei due ottimizzatori Adam possono essere distinti: quello del discriminatore è espresso come rapporto rispetto a quello del generatore oppure come valore indipendente, e le due forme non possono essere indicate insieme. Anche il coefficiente $\beta_1$ dei due ottimizzatori, che regola quanto gli aggiornamenti precedenti pesano nella media dei gradienti, è un parametro: il valore predefinito è 0.9, quello usato dal codice degli autori di STGAN.
-
-Un secondo controllo riguarda il numero di aggiornamenti per batch. Con rapporto $n_D{:}n_G$, sullo stesso batch vengono eseguiti prima $n_D$ aggiornamenti del discriminatore e poi $n_G$ del generatore, ciascuno con un proprio forward completo; il default è $1{:}1$. Il passo del discriminatore e quello del generatore utilizzano forward indipendenti del generatore, quindi maschere di dropout distinte. Questo rapporto è un conteggio di aggiornamenti e non va confuso con il rapporto fra i tassi di apprendimento.
-
-A ogni epoca vengono salvati i pesi e lo stato dei due ottimizzatori. Un training interrotto può essere ripreso soltanto con la stessa configurazione, la stessa normalizzazione e gli stessi riferimenti di monitoraggio. È disponibile un'esecuzione in precisione mista BF16, con pesi mantenuti in FP32 e loss avversaria calcolata sui logit; si tratta di una scelta numerica, da riportare insieme alla configurazione.
-
-Rapporti fra tassi, numero di aggiornamenti e peso di ricostruzione sono strumenti per studiare l'equilibrio fra le due reti. La loro disponibilità non indica quale combinazione sia preferibile.
-
-\subsection{Finestra recente, codifica temporale ciclica e normalizzazione stagionale}
+\section{Ingresso: finestra recente, codifica temporale e normalizzazione stagionale}
 \label{sec:ingresso-normalizzazione-era5}
 
-La finestra recente contiene gli $R$ istanti che precedono quello da stimare. L'unità ricorrente spaziale la percorre in ordine: parte da uno stato nullo ed esegue un aggiornamento per ogni istante, sicché lo stato finale riassume gli $R$ campi osservati. Con $R=1$ il ramo recente vede soltanto l'ultimo istante e la ricorrenza si riduce a un solo aggiornamento: la storia più lunga è affidata alla LSTM del trend, che riguarda la sola cella centrale. Con $R>1$ il modello riceve anche l'evoluzione del campo negli istanti precedenti, e l'area che può influenzare una cella cresce con $R$, perché a ogni aggiornamento lo stato si propaga alle celle vicine.
+\subsection{Finestra recente e trend}
 
-Nell'analisi iniziale sui dati PVGIS la finestra recente è di un passo, cioè un'ora. Su ERA5 è portata a $R=16$ passi, che alla cadenza di tre ore corrispondono a 48 ore; il trend conserva 56 passi, cioè 168 ore.
+La finestra recente contiene gli $R$ istanti che precedono quello da stimare. L'unità ricorrente spaziale la percorre in ordine: parte da uno stato nullo ed esegue un aggiornamento per ogni istante, sicché lo stato finale riassume gli $R$ campi osservati. Con $R=1$ il ramo recente vede soltanto l'ultimo istante e la ricorrenza si riduce a un solo aggiornamento. Con $R>1$ il modello riceve anche l'evoluzione del campo negli istanti precedenti, e l'area che può influenzare una cella cresce con $R$, perché a ogni aggiornamento lo stato si propaga alle celle vicine. Il detector usa $R=16$ passi, cioè 48 ore; il trend comprende 56 passi, cioè 168 ore, la stessa durata dell'articolo.
 
-% Scelte di questa sottosezione e della successiva: motivate nel testo, senza
-% fonti (decisione del 13 ottobre 2026, sul modello della tesi di riferimento).
-Sui dati PVGIS la codifica temporale è quella dell'articolo, a 31 elementi, composta dal giorno della settimana e dall'ora UTC. È pensata per il traffico e su ERA5 è poco adatta, per due motivi. Il primo è che il vettore è lo stesso per tutte le celle, mentre il dominio si estende per 65 gradi di longitudine: alla stessa ora UTC, l'ora solare delle celle più a ovest e quella delle celle più a est differiscono di oltre quattro ore. Il secondo è che non contiene la posizione nell'anno, e non distingue quindi le stagioni. Su ERA5 è perciò sostituita da una codifica ciclica a quattro elementi, diversa per cella. Indicando con $h_t$ l'ora UTC, con $\ell_n$ la longitudine in gradi, con $g_t$ il giorno frazionario dell'anno e con $G_t$ il numero di giorni dell'anno corrispondente, la codifica è
+\subsection{Codifica temporale ciclica}
+
+La codifica temporale dell'articolo, a 31 elementi, è composta dal giorno della settimana e dall'ora UTC. È pensata per il traffico e su ERA5 è poco adatta, per due motivi. Il primo è che il vettore è lo stesso per tutte le celle, mentre il dominio si estende per 65 gradi di longitudine: alla stessa ora UTC, l'ora solare delle celle più a ovest e quella delle celle più a est differiscono di oltre quattro ore. Il secondo è che non contiene la posizione nell'anno, e non distingue quindi le stagioni. È perciò sostituita da una codifica ciclica a quattro elementi, diversa per cella. Indicando con $h_t$ l'ora UTC, con $\ell_n$ la longitudine in gradi, con $g_t$ il giorno frazionario dell'anno e con $G_t$ il numero di giorni dell'anno corrispondente, la codifica è
 \begin{equation}
 c_{tn}=\left[
 \sin\phi_{tn},\;\cos\phi_{tn},\;
@@ -507,84 +68,207 @@ c_{tn}=\left[
 \end{equation}
 Il primo angolo rappresenta l'ora solare locale, ottenuta dalla sola longitudine senza fusi orari; il secondo la posizione nell'anno. Seno e coseno rendono vicini gli istanti vicini nel ciclo, come le ore 23 e le ore 1 oppure la fine di dicembre e l'inizio di gennaio. La codifica ciclica non contiene il giorno della settimana.
 
-Su ERA5 sono usate due normalizzazioni. La prima è il min--max per variabile stimato sul training, lo stesso dei dati PVGIS. Usa un solo intervallo per variabile, valido per tutte le celle e per tutto l'anno. Su un dominio che va dal Sahara all'Europa settentrionale questo ha un limite: la scala non distingue un valore alto in assoluto, ma abituale per quella cella e quella stagione, da un valore lontano dagli estremi, ma insolito per quella cella e quella stagione. La seconda normalizzazione, stagionale, riferisce invece ogni valore a ciò che è abituale nella stessa cella, nello stesso periodo dell'anno e alla stessa ora. Per ogni cella $n$, variabile $f$, ora del giorno $o$ e giorno dell'anno $g$ il valore è standardizzato,
+\subsection{Normalizzazione stagionale}
+% Scelte di questa sottosezione: motivate nel testo, senza fonti (decisione del
+% 13 ottobre 2026, sul modello della tesi di riferimento).
+
+La normalizzazione dell'articolo è un min--max per variabile stimato sul training. Usa un solo intervallo per variabile, valido per tutte le celle e per tutto l'anno. Su un dominio che va dal Sahara all'Europa settentrionale questo ha un limite: la scala non distingue un valore alto in assoluto, ma abituale per quella cella e quella stagione, da un valore lontano dagli estremi, ma insolito per quella cella e quella stagione. La normalizzazione stagionale riferisce invece ogni valore a ciò che è abituale nella stessa cella, nello stesso periodo dell'anno e alla stessa ora. Per ogni cella $n$, variabile $f$, ora del giorno $o$ e giorno dell'anno $g$ il valore è standardizzato,
 \begin{equation}
 z_{tnf}=\frac{x_{tnf}-\mu_{nfog}}{\sigma_{nfog}},
 \end{equation}
-con otto ore del giorno e 366 giorni dell'anno. Media e deviazione standard sono stimate sui soli anni di training, raccogliendo i quindici giorni che precedono $g$ e i quindici che lo seguono. La deviazione standard è calcolata attorno alla media lisciata di ciascun giorno, in modo che la variazione del ciclo stagionale all'interno della finestra non venga contata come variabilità.
+con otto ore del giorno e 366 giorni dell'anno. Media e deviazione standard sono stimate sui soli anni di addestramento, raccogliendo i quindici giorni che precedono $g$ e i quindici che lo seguono. La deviazione standard è calcolata attorno alla media lisciata di ciascun giorno, in modo che la variazione del ciclo stagionale all'interno della finestra non venga contata come variabilità.
 
 La precipitazione richiede un passaggio in più. È nulla nella maggior parte degli istanti e assume di rado valori molto alti: media e deviazione standard dei valori originali sono determinate in larga parte da questi pochi valori. Prima della standardizzazione la precipitazione è quindi sostituita dalla sua radice quarta, che comprime i valori alti e lascia nullo ciò che è nullo; media e deviazione standard descrivono la radice e non il valore originale. A differenza del logaritmo, la radice è definita anche per i valori nulli e non richiede una costante aggiuntiva.
 % Confronto con radice quadrata e logaritmo: fatto sui dati senza modello
 % (controllo_normalizzazione.log). Da riportare con i numeri riletti nel log.
 
-La deviazione standard $\sigma_{nfog}$ non può scendere sotto una frazione della deviazione standard complessiva della variabile sul training: 0.3 per la precipitazione, 0.1 per l'umidità del primo strato del suolo, la copertura nuvolosa e l'altezza dello strato limite, 0.01 per le altre undici variabili. Il limite evita la divisione per valori quasi nulli, come accade per la radiazione solare di notte.
+La deviazione standard $\sigma_{nfog}$ non può scendere sotto una frazione della deviazione standard complessiva della variabile sul training: 0.1 per la precipitazione e per l'umidità del primo strato del suolo, 0.01 per le altre tredici variabili. Il limite evita la divisione per valori quasi nulli, come accade per la radiazione solare di notte.
+% Limiti allineati alla configurazione dello sweep (seasonal_std_floors in
+% sweeps/stgan_era5_normal_validation.yaml: tp 0.1, swvl1 0.1, le altre il
+% valore predefinito 0.01). Il testo precedente (0.3 / 0.1 / 0.01, scelti con il
+% controllo su 1980-1994 contro 1995-2004) descriveva limiti mai usati in una
+% run: è nel backup del 16 ottobre 2026. Se si torna a quei limiti, ripristinare
+% anche il paragrafo sulla loro scelta.
 
-I valori sono scelti sui soli anni di training, fra 0.01, 0.03, 0.1 e 0.3. La norma è stimata sugli anni 1980--1994 e applicata agli anni 1995--2004, che non ha visto. Per ogni variabile si adotta il limite più piccolo con cui questi dieci anni restano sulla scala degli anni di stima: quadrato medio dei valori standardizzati non superiore a 1.5 volte, valore più grande non superiore a 3 volte. Nella scelta non entrano né gli anni di test né risultati del modello. Con i limiti così fissati, la stessa misura sugli anni di test 2005--2025 dà rapporti fra \provv{0.99} e \provv{1.26} per il quadrato medio e fra \provv{0.7} e \provv{2.9} per il valore più grande: nessuna variabile esce dalla scala del training.
-% Scelta: ~/physiq_pv/controllo_limite_training.log. Verifica sugli anni di
-% test: controllo_normalizzazione_run_limiti_training.log, 1062 celle; i quattro
-% numeri sono in \provv perché quello script stima la norma su 1980-2003 e non
-% su 1980-2004. ATTENZIONE: la run finale lanciata il 13 ottobre usa i limiti
-% precedenti (0.1 precipitazione e suolo, 0.01 le altre): i risultati della
-% configurazione finale vanno presi da una run rilanciata con questi limiti.
-
-L'ultimo passaggio riguarda il tempo. Gli anni di test seguono quelli di training, fino a oltre vent'anni dopo. Per una variabile che nel periodo ha una tendenza, la differenza fra il clima degli anni di test e quello degli anni di training entrerebbe in ogni valore standardizzato, e crescerebbe con la distanza dal training. Per tre variabili, temperatura a due metri, temperatura a 850~hPa e umidità del primo strato del suolo, ai valori standardizzati è quindi sottratta una retta nel tempo. La retta è una per variabile, uguale per tutte le celle: passa per le medie annuali dei valori standardizzati sull'intero dominio, è stimata sui soli anni di training e viene prolungata agli anni successivi. La scelta segue la definizione adottata nella tesi: un'anomalia è uno scostamento rispetto al clima del momento, e non rispetto al clima degli anni di training. Per le altre dodici variabili la retta non è sottratta. Fra queste c'è l'umidità specifica: la sua deriva inizia dopo gli anni di training, e una retta stimata su quegli anni non la descrive. Per questa variabile la correzione non può quindi essere applicata senza usare gli anni di test.
+L'ultimo passaggio riguarda il tempo. Gli anni di test seguono quelli di addestramento, fino a oltre vent'anni dopo. Per una variabile che nel periodo ha una tendenza, la differenza fra il clima degli anni di test e quello degli anni di addestramento entrerebbe in ogni valore standardizzato, e crescerebbe con la distanza dal training. Per tre variabili, temperatura a due metri, temperatura a 850~hPa e umidità del primo strato del suolo, ai valori standardizzati è quindi sottratta una retta nel tempo. La retta è una per variabile, uguale per tutte le celle: passa per le medie annuali dei valori standardizzati sull'intero dominio, è stimata sui soli anni di addestramento e viene prolungata agli anni successivi. La scelta segue la definizione adottata nella tesi: un'anomalia è uno scostamento rispetto al clima del momento, e non rispetto al clima degli anni di addestramento. Per le altre dodici variabili la retta non è sottratta. Fra queste c'è l'umidità specifica: la sua deriva inizia dopo gli anni di addestramento, e una retta stimata su quegli anni non la descrive. Per questa variabile la correzione non può quindi essere applicata senza usare gli anni di test.
 % Misura della deriva per variabile (controllo_deriva_clima.log) e deriva che
 % resta dopo la retta: da riportare con i numeri riletti nel log.
 % Umidità specifica, riletta nel log il 13 ottobre 2026 (tabella "all months",
 % norma 1980-2003, medie annuali sul dominio in deviazioni standard): negli
-% anni 1980-2003 fra -0.13 e +0.06, media dei primi dodici anni +0.01 e degli
-% ultimi dodici -0.01, quindi nessuna tendenza; 2004 -0.02; 2005-2009 +0.03,
-% 2010-2014 +0.09, 2015-2019 +0.15, ultimi cinque anni +0.17. La frase sopra
-% è confermata.
+% anni 1980-2003 fra -0.13 e +0.06, nessuna tendenza; 2005-2009 +0.03,
+% 2010-2014 +0.09, 2015-2019 +0.15, ultimi cinque anni +0.17. Con il nuovo
+% training (1980-1999) da ricontrollare.
 
-Dopo questi passaggi è applicato lo stesso min--max della prima normalizzazione, stimato sul training.
+Dopo questi passaggi è applicato un min--max per variabile, stimato sul training, che riporta i valori nell'intervallo $[-1,1]$ dell'uscita del generatore. Valori successivi esterni all'intervallo del training possono superare questi estremi, perché la trasformazione non applica un clipping.
 
-Finestra recente, codifica temporale e normalizzazione modificano l'ingresso del modello: ogni scelta richiede un nuovo addestramento.
-
-\subsection{Pesi delle variabili nell'errore di ricostruzione}
+\section{Pesi delle variabili nell'errore di ricostruzione}
 \label{sec:pesi-variabili-ricostruzione}
 
-Nell'articolo tutte le variabili contano allo stesso modo nell'errore di ricostruzione. Nella configurazione finale su ERA5 l'errore è invece pesato per variabile, per evitare che le variabili con le variazioni più ampie da un giorno all'altro dominino l'errore. Indicando con $m_f$ il quadrato medio della variazione della variabile $f$ su 24 ore, calcolato sui dati di training normalizzati, il peso è
+Nell'articolo tutte le variabili contano allo stesso modo nell'errore di ricostruzione. Il detector pesa invece l'errore per variabile, in modo che ciascuna sia misurata in rapporto a quanto cambia abitualmente. Indicando con $m_f$ il quadrato medio della variazione della variabile $f$ su 24 ore, calcolato sui dati di addestramento normalizzati, il peso è
 \begin{equation}
 w_f=\frac{\bar{m}}{m_f},
 \qquad
 \bar{m}=\frac{1}{F}\sum_{f=1}^{F}m_f,
 \end{equation}
-con $F=15$. La differenza a 24 ore confronta istanti alla stessa ora del giorno e non contiene quindi il ciclo giornaliero. Il fattore $\bar{m}$ lascia invariata la loss per un errore proporzionale a $m_f$. I pesi moltiplicano l'errore quadratico di ciascuna variabile nel termine di ricostruzione della loss del generatore e nell'errore di ricostruzione da cui è calcolato lo score.
+con $F=15$. La differenza a 24 ore confronta istanti alla stessa ora del giorno e non contiene quindi il ciclo giornaliero. Il fattore $\bar{m}$ lascia invariata la loss per un errore proporzionale a $m_f$. Il peso non misura la difficoltà del modello su una variabile: è una misura di quanto la variabile cambia, fissata prima dell'addestramento e senza usare il modello. I pesi moltiplicano l'errore quadratico di ciascuna variabile nel termine di ricostruzione della loss del generatore e nell'errore di ricostruzione da cui sono calcolati gli score. La scelta della distanza di 24 ore, confrontata con 3 ore e con l'assenza di pesi, è discussa nel Capitolo~\ref{chap:risultati}.
 
-\subsection{Monitoraggio senza etichette e spazio PCA di riferimento}
+\section{Dropout Monte Carlo nelle due reti e score}
+\label{sec:score-dropout-montecarlo}
+
+\subsection{Dropout nel generatore e nel discriminatore}
+
+Lo score è campionato con il dropout Monte Carlo~\cite{gal2016dropout}, nella forma che pone il dropout dopo gli encoder e prima degli strati di uscita. Il generatore riceve tre strati di dropout: sulla rappresentazione spaziale del ramo recente, sulla rappresentazione del trend e sulla loro concatenazione con la codifica temporale, prima della proiezione di uscita. Il discriminatore ne riceve altrettanti, nelle posizioni corrispondenti: sulla storia codificata, sul campo corrente codificato e sullo strato nascosto che precede l'uscita. La probabilità è 0.2 in entrambe le reti. I dropout sono attivi nell'addestramento e nel calcolo degli score. L'articolo e il codice degli autori non usano il dropout: è un'aggiunta di questo lavoro.
+
+Il discriminatore riceve il campo generato senza il dropout del generatore, sia nell'addestramento, nel proprio aggiornamento e nel termine avversario del generatore, sia negli score. Se ricevesse il campo con il dropout, potrebbe distinguere i campi generati da quelli osservati per il rumore che il dropout vi introduce, e non per il loro contenuto. Il dropout del generatore agisce quindi sull'errore di ricostruzione, quello del discriminatore sul suo giudizio.
+
+\subsection{Campioni Monte Carlo e componenti dello score}
+
+Durante il calcolo degli score il modello è in modalità di valutazione, con l'eccezione dei dropout, che restano attivi. Per ogni istante vengono estratti $J=20$ campioni. Nel campione $j$ il generatore ricostruisce il campo con una propria maschera, e il discriminatore giudica l'osservazione e il campo generato con una propria maschera, la stessa per i due giudizi: il campione corrisponde a un'unica estrazione delle due reti. Gli encoder del generatore e la codifica della storia nel discriminatore non dipendono dal dropout e sono calcolati una sola volta; a ogni campione vengono ripetuti i dropout e gli strati che li seguono.
+
+Per la coppia tempo--località $(t,n)$ e il campione $j$, la ricostruzione $\hat{x}^{(j)}$ dà l'errore di ricostruzione
+\begin{equation}
+s^{(j)}_{G,tn}=\frac{1}{|P_n|\,F}\sum_{c\in P_n}\sum_{f=1}^{F}w_f\left(\hat{x}^{(j)}_{tcf}-x_{tcf}\right)^{2},
+\end{equation}
+dove $P_n$ sono le celle valide della patch di $n$. La componente del discriminatore è, come nell'articolo, la differenza fra il giudizio sull'osservazione e quello sul campo generato,
+\begin{equation}
+s^{(j)}_{D,tn}=D^{(j)}_{\mathrm{reale},tn}-D^{(j)}_{\mathrm{generato},tn}.
+\end{equation}
+La componente di ricostruzione media sui campioni,
+\begin{equation}
+\bar{s}_{G,tn}=\frac{1}{J}\sum_{j=1}^{J}s^{(j)}_{G,tn},
+\end{equation}
+è la media degli errori dei singoli campioni, e non l'errore della ricostruzione media. Per ogni cella e variabile le due quantità differiscono per la varianza delle ricostruzioni:
+\begin{equation}
+\frac{1}{J}\sum_{j=1}^{J}\left(\hat{x}^{(j)}-x\right)^{2}
+=\left(\bar{\hat{x}}-x\right)^{2}+\frac{1}{J}\sum_{j=1}^{J}\left(\hat{x}^{(j)}-\bar{\hat{x}}\right)^{2},
+\qquad
+\bar{\hat{x}}=\frac{1}{J}\sum_{j=1}^{J}\hat{x}^{(j)}.
+\end{equation}
+La componente cresce quindi sia quando la ricostruzione si allontana dall'osservazione, sia quando i campioni non sono concordi fra loro.
+
+\subsection{Score combinato e score di ricostruzione}
+
+Dalla stessa esecuzione sono ricavati due score. Lo \emph{score combinato} è quello dell'articolo. Le due componenti sono riportate su una scala comune con un min--max e sommate con peso unitario, campione per campione:
+\begin{equation}
+a^{(j)}_{tn}=
+\frac{s^{(j)}_{G,tn}-r_{\min}}{r_{\max}-r_{\min}}
++\frac{s^{(j)}_{D,tn}-d_{\min}}{d_{\max}-d_{\min}},
+\qquad
+\bar{a}_{tn}=\frac{1}{J}\sum_{j=1}^{J}a^{(j)}_{tn}.
+\end{equation}
+L'articolo indica che le due componenti sono normalizzate prima della somma, senza specificare come, e il codice degli autori salva le componenti senza combinarle: il min--max è quindi una scelta di questo lavoro. Gli estremi $r_{\min}$, $r_{\max}$, $d_{\min}$ e $d_{\max}$ sono quelli delle due componenti medie sui campioni negli anni di validazione, esclusi i valori segnati come insoliti (Sezione~\ref{sec:maschere-validazione}), e restano fissi per il test: nessuna quantità dello score è stimata sugli anni valutati. I valori del test possono uscire dall'intervallo $[0,1]$ di ciascuna componente, perché non è applicato un clipping.
+
+Lo \emph{score di ricostruzione} usa la sola componente $\bar{s}_{G,tn}$, espressa poi rispetto alla climatologia della propria località come nella Sezione~\ref{sec:normalizzazione-climatologica-score}. La scelta fra i due score è un risultato del confronto riportato nel Capitolo~\ref{chap:risultati}.
+
+\subsection{Dispersione}
+
+La dispersione associata a ciascuno score è la deviazione standard di popolazione dei suoi campioni; per lo score combinato,
+\begin{equation}
+u_{tn}=\sqrt{\frac{1}{J}\sum_{j=1}^{J}\left(a^{(j)}_{tn}-\bar{a}_{tn}\right)^{2}},
+\end{equation}
+nelle stesse unità dello score, e analogamente per la componente di ricostruzione. Misura quanto lo score cambia con le maschere di dropout delle due reti e non è una probabilità di anomalia; la sua calibrazione come misura di incertezza non è verificata dal metodo. Una segnalazione che resta sopra la soglia anche con lo score diminuito di $u_{tn}$ non dipende dalle maschere estratte. Le singole estrazioni non vengono conservate: media, deviazione standard e covarianza delle due componenti bastano a ricavare la dispersione di qualunque loro combinazione lineare.
+
+\section{Normalizzazione climatologica degli score}
+\label{sec:normalizzazione-climatologica-score}
+
+Una trasformazione successiva al calcolo degli score esprime ogni score rispetto alla climatologia della stessa località. Per la località $n$, il mese $m$ e l'ora UTC $o$ del timestamp $t$, appartenente all'anno $y$,
+\begin{equation}
+\zeta_{tn}=\frac{a_{tn}-\mu^{(-y)}_{nmo}}{\sigma^{(-y)}_{nmo}},
+\end{equation}
+dove media e deviazione standard sono calcolate sugli score della stessa località, mese e ora negli anni di validazione, esclusi i valori segnati come insoliti (Sezione~\ref{sec:maschere-validazione}), e restano fisse per il test. Non possono essere stimate sugli anni di addestramento, perché su quegli anni il modello ha già visto i dati e il suo errore è più basso di quello su anni nuovi. I gruppi con meno di trenta valori di riferimento, nel default, o con varianza nulla non ricevono uno score. La dispersione viene divisa per la stessa deviazione standard.
+
+Lo scopo è rendere confrontabili località e stagioni in cui l'errore di ricostruzione ha una grandezza tipica diversa: senza questo passaggio, le segnalazioni si concentrerebbero dove l'errore è grande per natura. La trasformazione agisce sugli score, dopo l'addestramento, e non modifica il detector. È distinta dalla normalizzazione stagionale della Sezione~\ref{sec:ingresso-normalizzazione-era5}, che agisce sull'ingresso e richiede un nuovo addestramento.
+% DA IMPLEMENTARE NEL CODICE: oggi il comando climatology stima media e
+% deviazione standard sugli anni valutati, escludendo ogni volta l'anno stesso
+% (physiq_pv/era5/seasonality.py). Serve la stima sugli score di validazione
+% (validation_generator_mean.npy, salvato da ogni run) applicata al test.
+
+\section{Validazione senza etichette}
 \label{sec:monitoraggio-senza-etichette}
 
-Le quantità di questa sezione servono a osservare l'addestramento e a confrontare configurazioni. Non entrano in una loss, in un aggiornamento dei pesi, nello score o nella valutazione sul test, e non utilizzano etichette di anomalia. Il loro calcolo avviene senza gradiente e ripristina gli stati dei generatori casuali, così da non alterare la traiettoria del training.
+Gli anni di validazione servono a confrontare configurazioni del detector senza usare il test e senza etichette. Il confronto deve misurare quanto il modello ricostruisce il meteo normale: le condizioni insolite presenti negli anni di validazione sono quindi individuate con un criterio che non usa il modello, e tenute fuori dalle misure.
 
-Al termine di ogni epoca, un sottoinsieme fisso della validation viene elaborato con un forward deterministico, a dropout spento. Il sottoinsieme comprende 32 timestamp equispaziati nel default, ciascuno con tutte le località. Vengono registrate tre diagnostiche: la differenza assoluta media fra le attivazioni del penultimo strato del discriminatore sull'osservazione e sulla ricostruzione; la variazione dello score fra epoche consecutive sulle stesse celle, riassunta da media, mediana e correlazione di Spearman; la Maximum Mean Discrepancy~\cite{gretton2012mmd} fra le stesse attivazioni, con kernel RBF e banda scelta con l'euristica della mediana.
+\subsection{Valori insoliti della validazione}
+\label{sec:maschere-validazione}
 
-Una seconda misura confronta osservazioni e ricostruzioni in uno spazio indipendente dal modello. Lo spazio è ottenuto da un'analisi delle componenti principali dei campi di training: ogni campione è il campo completo di un timestamp, normalizzato e appiattito su località e feature. La PCA è calcolata in forma esatta su un insieme di timestamp equispaziati sull'intero training, 4096 nel default, e viene salvata con le componenti principali e la varianza spiegata. È costruita una sola volta, prima delle esecuzioni, e successivamente soltanto caricata.
+Un valore, cioè una coppia cella--istante, è segnato come insolito con due distanze calcolate sui dati standardizzati della Sezione~\ref{sec:ingresso-normalizzazione-era5}. La prima è la distanza dal normale stagionale: la media sulle variabili del quadrato dei valori standardizzati, con i pesi delle variabili della Sezione~\ref{sec:pesi-variabili-ricostruzione}, che dice quanto il valore è lontano dal normale della propria cella, giorno e ora. La seconda è la variazione dall'istante precedente: la stessa media pesata sul quadrato della differenza rispetto a tre ore prima, che coglie i cambiamenti rapidi anche quando il valore resta vicino al normale. Ciascuna distanza è standardizzata con la media e la deviazione standard della stessa cella, dello stesso mese e della stessa ora negli anni di addestramento, così che un luogo o una stagione più variabili non concentrino le segnalazioni. Un valore è segnato quando almeno una delle due distanze standardizzate supera il livello oltrepassato dal 5\% dei valori di addestramento. Medie, deviazioni standard e livelli sono stimati sui soli anni di addestramento; la validazione riceve soltanto le segnalazioni.
+% Fonte: physiq_pv/anomaly_detection/stgan/normal_masks.py. Quote misurate alla
+% preparazione dello sweep (14 ottobre 2026, outputs/era5_sweep_1999/normal_masks):
+% addestramento 8.62%, validazione 9.75% (distanza dal normale 5.9%, variazione
+% 5.3%). Pesi delle due distanze: quelli dello sweep attuale (variazione su 24
+% ore), indicazione dell'autore del 16 ottobre 2026.
 
-Su questo spazio viene definito un riferimento per la validation: $S$ sottoinsiemi fissi di timestamp, cinque da 512 nel default e disgiunti quando il numero di timestamp lo consente, le feature PCA delle loro osservazioni e una banda $\sigma$ pari alla distanza euclidea mediana fra tali feature. Anche questo riferimento è fissato prima delle esecuzioni. A ogni epoca, per ciascun sottoinsieme, si calcola la stima non distorta
+I valori segnati non entrano nelle misure calcolate sulla validazione, e nelle finestre di ingresso degli istanti di validazione sono sostituiti dal normale stagionale, cioè dal valore standardizzato nullo. In questo modo né il bersaglio né la storia recente da cui il modello parte contengono le condizioni insolite.
+
+\subsection{Distanza fra campi osservati e ricostruiti nello spazio delle componenti principali}
+
+La misura usata per confrontare le configurazioni confronta osservazioni e ricostruzioni in uno spazio indipendente dal modello. Lo spazio è ottenuto da un'analisi delle componenti principali dei campi di addestramento: ogni campione è il campo completo di un istante, normalizzato e appiattito su località e variabili. Sono usati i campi con la quota più bassa di valori insoliti, nello stesso numero per ogni mese, e sono conservate 300 componenti principali. Lo spazio è costruito una sola volta, prima delle esecuzioni, e successivamente soltanto caricato.
+
+Su questo spazio viene definito un riferimento per la validazione: $S=5$ sottoinsiemi fissi e disgiunti di 512 campi normali, scelti con lo stesso criterio, le coordinate delle loro osservazioni nello spazio e una banda $\sigma$ pari alla distanza euclidea mediana fra tali coordinate. Anche questo riferimento è fissato prima delle esecuzioni. A ogni epoca, per ciascun sottoinsieme, si calcola la stima non distorta della Maximum Mean Discrepancy~\cite{gretton2012mmd}
 \begin{equation}
 \widehat{\mathrm{MMD}}^{2}=
 \frac{1}{n(n-1)}\sum_{i\neq i'}k(x_i,x_{i'})
 +\frac{1}{n(n-1)}\sum_{i\neq i'}k(y_i,y_{i'})
 -\frac{2}{n^{2}}\sum_{i,i'}k(x_i,y_{i'}),
 \end{equation}
-dove $x_i$ sono le feature PCA delle osservazioni, $y_i$ quelle delle ricostruzioni del generatore e il kernel è la media di tre RBF,
+dove $x_i$ sono le coordinate delle osservazioni, $y_i$ quelle delle ricostruzioni del generatore e il kernel è la media di tre RBF,
 \begin{equation}
 k(a,b)=\frac{1}{3}\sum_{c\in\{0.5,\,1,\,2\}}
 \exp\!\left(-\frac{\lVert a-b\rVert^{2}}{2(c\sigma)^{2}}\right).
 \end{equation}
-Vengono registrate media e varianza della stima sui sottoinsiemi e la media mobile delle ultime epoche, cinque nel default. Quest'ultima è la quantità proposta per la selezione fra configurazioni. La stima non distorta può assumere valori leggermente negativi.
+Vengono registrate media e varianza della stima sui sottoinsiemi e la media delle ultime cinque epoche, che è la quantità usata per scegliere fra configurazioni. La stima non distorta può assumere valori leggermente negativi. Poiché tutte le esecuzioni confrontate caricano gli stessi riferimenti, le differenze nella misura non dipendono da una nuova stima dello spazio o della banda. Una MMD più bassa indica ricostruzioni più vicine alle osservazioni nello spazio considerato; non misura direttamente la qualità del rilevamento delle anomalie.
+% Riferimenti usati dallo sweep: pca_reference_300 e mmd_reference_300
+% (outputs/era5_sweep_1999), 300 componenti = 78.8% della varianza (100
+% componenti = 67.4%), banda 36.46. La ricetta di Simone indicava 50-100
+% componenti: scelta di 300 da dichiarare.
 
-Dopo l'ultima epoca viene inoltre calcolato, su tutti i punti validi della validation, l'errore di ricostruzione medio sui campioni Monte Carlo, riassunto da media, deviazione standard, mediana e 95-esimo percentile.
+\subsection{Diagnostiche per epoca e misure finali}
 
-Numero di componenti principali, sottoinsiemi e banda fanno parte del protocollo e devono essere riportati. Poiché tutte le esecuzioni confrontate caricano gli stessi riferimenti, le differenze nella misura non dipendono da una nuova stima dello spazio o della banda. Una MMD più bassa indica ricostruzioni più vicine alle osservazioni nello spazio considerato; non misura direttamente la qualità del rilevamento delle anomalie.
+Al termine di ogni epoca un sottoinsieme fisso della validazione, 32 istanti equispaziati con tutte le celle, viene elaborato con un passaggio deterministico, a dropout spento. Vengono registrate la differenza assoluta media fra le attivazioni del penultimo strato del discriminatore sull'osservazione e sulla ricostruzione e la variazione dello score fra epoche consecutive sulle stesse celle. Queste quantità e la MMD non entrano in una loss, in un aggiornamento dei pesi o negli score; sono calcolate senza gradiente e ripristinando gli stati dei generatori casuali, così da non alterare la traiettoria dell'addestramento.
 
-\subsection{Generatore GAT-GRU sul grafo della griglia}
+Dopo l'ultima epoca, su tutti i valori validi e non segnati della validazione, viene calcolata la componente di ricostruzione media sui campioni Monte Carlo, riassunta da media, deviazione standard, mediana e 95-esimo percentile. Gli stessi campioni danno gli estremi delle due componenti usati dallo score combinato.
+
+\section{Eventi geografici}
+\label{sec:eventi-geografici}
+
+Gli score di un istante formano un campo sulla griglia. Gli eventi geografici sono ricavati da questi campi in una fase distinta, successiva al calcolo degli score e senza un nuovo aggiornamento dei pesi del detector. La Figura~\ref{fig:schema-eventi} riassume i passaggi.
+
+\begin{figure}[htbp]
+    \centering
+    \input{figures/schema_eventi}
+    \caption{Dagli score agli eventi geografici, su un esempio illustrativo. Gli score di un istante sono riportati sulla griglia; le celle sopra soglia formano una maschera, da cui apertura e chiusura rimuovono le celle isolate e le sporgenze; le celle rimaste sono riunite in gruppi di celle adiacenti. I gruppi di istanti consecutivi sono poi collegati: un evento è un insieme di gruppi collegati, e resta unico anche quando un gruppo si separa in due o due gruppi si fondono.}
+    \label{fig:schema-eventi}
+\end{figure}
+
+\subsection{Soglia, morfologia e cluster spaziali}
+
+Gli score $[T,N]$ vengono ricollocati sulla griglia $[T,H,W]$. La selezione iniziale può utilizzare una soglia assoluta oppure un percentile degli score finiti, globale per default o distinto per istante. Una cella è selezionata soltanto se lo score è strettamente maggiore della soglia.
+
+Per ogni istante, la maschera binaria viene sottoposta ad apertura e chiusura, rispettando le celle valide. Il default usa un elemento strutturante quadrato $3\times3$ e un'iterazione per operazione. Le componenti connesse sono individuate con otto vicini e possono essere filtrate per numero minimo di celle. Le operazioni morfologiche possono rimuovere o aggiungere celle rispetto alla selezione iniziale: i cluster risultanti non coincidono necessariamente con l'insieme degli score sopra soglia. Le aree dei cluster sono ottenute sommando le aree sferiche delle celle e i centroidi sono pesati con tali aree.
+
+\subsection{Collegamento temporale, separazioni e fusioni}
+
+I cluster di istanti consecutivi vengono collegati secondo sovrapposizione, sovrapposizione dopo dilatazione, distanza dei centroidi oppure unione dei criteri. Indicando con $A$ e $B$ i supporti di due cluster, il rapporto di sovrapposizione è
+\begin{equation}
+o(A,B)=\frac{|A\cap B|}{\min(|A|,|B|)}.
+\end{equation}
+Non si tratta dell'intersezione sull'unione. Nel criterio dilatato, $A$ è sostituito dal supporto ottenuto dopo dilatazione, anche nel denominatore. Il default utilizza una dilatazione di una cella e una soglia di sovrapposizione pari a 0.1.
+
+L'identità di un evento corrisponde a una componente connessa del grafo temporale dei cluster. Il collegamento non è vincolato a essere uno a uno: una separazione mantiene i rami nello stesso evento, mentre una fusione unifica retrospettivamente le identità precedenti. Un salto nella cadenza temporale interrompe i collegamenti. La durata riportata comprende l'intervallo rappresentato dall'ultimo istante,
+\begin{equation}
+d_{\mathrm{evento}}=t_{\mathrm{fine}}-t_{\mathrm{inizio}}+\Delta t,
+\qquad \Delta t=3\,\mathrm{h}.
+\end{equation}
+La dispersione dello score viene riportata per cluster e per evento, come media e massimo sulle celle; non partecipa alla soglia, alla morfologia o ai collegamenti. L'unificazione retrospettiva degli eventi definisce un'analisi successiva al periodo osservato, non un sistema di allerta in tempo reale.
+
+\section{Variante del generatore con attenzione su grafo}
 \label{sec:variante-gat-gru}
+% Variante sul ramo GAT. Da tenere solo se entra nei Risultati con una run
+% valida: i numeri della prima run GAT sono stati dichiarati da rifare.
 
-Nella variante su grafo ogni località valida è un nodo. Ciascun nodo riceve un arco da ognuno degli otto vicini immediati presenti sulla griglia e da sé stesso. Gli archi sono diretti e memorizzati in forma sparsa; i bordi non sono collegati fra loro e una cella senza località non genera archi. A differenza del grafo del previsore, gli archi non hanno pesi geografici.
+Nella variante su grafo ogni cella valida è un nodo. Ciascun nodo riceve un arco da ognuno degli otto vicini immediati presenti sulla griglia e da sé stesso. Gli archi sono diretti e memorizzati in forma sparsa; i bordi del dominio non sono collegati fra loro. Gli archi non hanno pesi geografici.
 
-Lo strato di attenzione è quello delle equazioni~\eqref{eq:gat-logit}--\eqref{eq:gat-uscita}, a più teste e con pendenza negativa 0.2 nella LeakyReLU; $\mathcal{N}(i)$ è l'insieme delle sorgenti degli archi entranti in $i$, compreso $i$ stesso. Nella GAT-GRU lo strato sostituisce la convoluzione nei gate dell'unità ricorrente. Siano $\mathcal{A}_r$, $\mathcal{A}_u$ e $\mathcal{A}_c$ tre strati di attenzione distinti, con le teste mediate e senza non linearità propria, e $X'_s$ l'ingresso del passo $s$ concatenato alla maschera. L'aggiornamento di uno strato ricorrente è
+Lo strato di attenzione è quello delle equazioni~\eqref{eq:gat-logit}--\eqref{eq:gat-uscita}, a più teste e con pendenza negativa 0.2 nella LeakyReLU; $\mathcal{N}(i)$ è l'insieme delle sorgenti degli archi entranti in $i$, compreso $i$ stesso. Lo strato sostituisce la convoluzione nei gate dell'unità ricorrente. Siano $\mathcal{A}_r$, $\mathcal{A}_u$ e $\mathcal{A}_c$ tre strati di attenzione distinti, con le teste mediate e senza non linearità propria, e $X'_s$ l'ingresso del passo $s$ concatenato alla maschera. L'aggiornamento di uno strato ricorrente è
 \begin{align}
 R_s &= \sigma\!\left(\mathcal{A}_r\!\left([X'_s,H_{s-1}]\right)\right),\\
 U_s &= \sigma\!\left(\mathcal{A}_u\!\left([X'_s,H_{s-1}]\right)\right),\\
@@ -593,36 +277,4 @@ H_s &= M\odot\left[U_s\odot H_{s-1}+(1-U_s)\odot\widetilde{H}_s\right].
 \end{align}
 È la forma delle equazioni~\eqref{eq:convgru-reset}--\eqref{eq:convgru-stato}, con l'attenzione su grafo al posto della convoluzione spaziale e con lo stesso trattamento della maschera della Sezione~\ref{sec:stgan-convgru}. I default prevedono due strati ricorrenti, quattro teste e 32 canali. Poiché il gate di reset e lo stato candidato applicano l'operatore in sequenza, a ogni passo lo stato si propaga di due archi: con $R\geq2$ passi recenti e due strati, l'ingresso del primo passo raggiunge i nodi fino a $2R+1$ archi di distanza. La ConvGRU con kernel $3\times3$ ha la stessa struttura e lo stesso raggio.
 
-La LSTM del trend elabora una sequenza per nodo e la codifica temporale è proiettata per nodo o condivisa; seguono i tre dropout della Sezione~\ref{sec:score-dropout-montecarlo} e la proiezione di uscita, che restituisce $[B,N,F]$.
-
-Il discriminatore resta quello a patch. Per ogni nodo vengono estratte le patch $P\times P$ della storia recente, dell'osservazione e della ricostruzione globale del generatore, con le celle assenti azzerate e la relativa maschera. I centri sono elaborati a blocchi per limitare la memoria. La loss di ricostruzione è la media, sui centri, dell'errore quadratico medio sulla patch di ciascun centro: l'errore di un nodo entra quindi attraverso tutte le patch che lo contengono. Le loss dei blocchi sono pesate per la rispettiva frazione di centri, in modo che la loro somma coincida con la media su tutti i centri, e i gradienti vengono accumulati prima di un unico aggiornamento per rete.
-
-Un campione è un timestamp con tutti i nodi e il batch predefinito contiene un solo timestamp. Un'epoca comprende quindi $\lceil T/B\rceil$ aggiornamenti per rete, con $T$ timestamp utili, contro $\lceil TN/B\rceil$ del modello a patch. Score, campionamento Monte Carlo e fusione delle componenti seguono la Sezione~\ref{sec:score-dropout-montecarlo}.
-
-Rispetto alla variante ConvGRU sul campo intero della Sezione~\ref{sec:convgru-campo-intero}, il generatore GAT-GRU ha la stessa unità del campione, lo stesso numero di aggiornamenti per epoca, la stessa struttura ricorrente e lo stesso raggio: cambia il modo di pesare i vicini e, con esso, il numero di parametri. Rispetto alla variante ConvGRU a patch cambiano invece anche l'unità del campione e il numero di aggiornamenti per epoca.
-
-\subsection{Variante convoluzionale sul campo intero}
-\label{sec:convgru-campo-intero}
-
-La variante convoluzionale usata su ERA5 mantiene la ConvGRU e modifica l'unità del campione, perché nel modello a patch il numero di aggiornamenti per epoca cresce con il prodotto fra timestamp e località: invece di una cella con la propria patch, un campione è l'intero campo di un timestamp, disposto sul reticolo $H\times W$. Moduli e parametri sono quelli del modello a patch; cambia ciò a cui vengono applicati. Alla variante porta anche la lunghezza della finestra recente: su una patch $3\times3$ aumentare $R$ moltiplica il costo di ciascuno dei $TN$ campioni senza ampliare l'area osservata, che resta di nove celle. La finestra recente di sedici passi è quindi usata sul campo intero.
-
-Il generatore opera sul campo completo, da $[B,R,F,H,W]$ a $[B,F,H,W]$. Le convoluzioni scorrono sull'intero reticolo, quindi il campo ricettivo non è più troncato al bordo di una patch e ogni cella viene ricostruita una sola volta. La LSTM del trend e la codifica temporale sono calcolate per cella e disposte sul reticolo, dove il modello a patch replicava quelle del sito centrale sulle posizioni della patch.
-
-Il discriminatore rimane locale. La patch di ogni cella viene estratta dal campo e il discriminatore a patch le valuta tutte in un'unica passata, con le stesse maschere e gli stessi azzeramenti. L'uscita relativa a una cella è quella che il discriminatore a patch produrrebbe sulla sua patch. Una convoluzione che scorre liberamente sul campo non darebbe lo stesso valore, perché la ConvGRU del discriminatore applica il padding all'interno di ciascuna patch. Il costo del discriminatore per cella resta pertanto quello del modello a patch.
-
-La loss di ricostruzione è la media su celle con località e feature del campo, poi sui timestamp del batch. La loss avversaria è la media della BCE sugli output locali, uno per cella. Lo score conserva le definizioni per coppia tempo--località: la componente di ricostruzione è l'errore medio sulla patch della cella, calcolato sul campo ricostruito.
-
-Come nella variante su grafo, un'epoca comprende $\lceil T/B\rceil$ aggiornamenti per rete invece di $\lceil TN/B\rceil$. A parità di epoche i due regimi non sono confrontabili: il numero di aggiornamenti dei pesi differisce di un fattore dell'ordine di $N$ e ogni gradiente è mediato su tutte le celle di un timestamp. La variante va quindi trattata come configurazione di training distinta, non come ottimizzazione del modello a patch.
-
-\subsection{Incertezza negli eventi e normalizzazione climatologica degli score}
-\label{sec:normalizzazione-climatologica-score}
-
-L'estrazione degli eventi della Sezione~\ref{sec:eventi-geografici} può operare sullo score combinato oppure su una sola componente. La dispersione $u_{tn}$ viene ricollocata sulla griglia e riportata per cluster, come media e massimo sulle celle, e per evento, come media pesata sulle celle e massimo. Non partecipa alla soglia, alla morfologia o ai collegamenti temporali: è un'annotazione degli eventi già individuati.
-
-Una trasformazione successiva allo scoring esprime ogni score rispetto alla climatologia della stessa località. Per la località $n$, il mese $m$ e l'ora UTC $o$ del timestamp $t$, appartenente all'anno $y$,
-\begin{equation}
-\zeta_{tn}=\frac{a_{tn}-\mu^{(-y)}_{nmo}}{\sigma^{(-y)}_{nmo}},
-\end{equation}
-dove media e deviazione standard sono calcolate sugli score della stessa località, mese e ora negli altri anni del test. Un anno non contribuisce quindi alla propria climatologia. I gruppi con meno di trenta valori di riferimento, nel default, o con varianza nulla non ricevono uno score. La dispersione $u_{tn}$ viene divisa per la stessa deviazione standard. Gli eventi possono essere estratti da questi score normalizzati con lo stesso algoritmo.
-
-Questa trasformazione agisce sugli score, dopo l'addestramento, e non modifica il detector. È distinta dalla normalizzazione stagionale della Sezione~\ref{sec:ingresso-normalizzazione-era5}, che agisce sull'ingresso e richiede un nuovo training. Le due operazioni rimuovono componenti cicliche in punti diversi della catena e il loro uso congiunto deve essere dichiarato.
+La LSTM del trend elabora una sequenza per nodo e la codifica temporale è proiettata per nodo; seguono i dropout della Sezione~\ref{sec:score-dropout-montecarlo} e la proiezione di uscita, che restituisce $[B,N,F]$. Il discriminatore resta quello locale a patch. Un campione è un istante con tutti i nodi: la variante ha la stessa unità del campione, lo stesso numero di aggiornamenti per epoca, la stessa struttura ricorrente e lo stesso raggio del generatore ConvGRU; cambia il modo di pesare i vicini e, con esso, il numero di parametri.

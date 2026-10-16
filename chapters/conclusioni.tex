@@ -3,63 +3,46 @@
 
 \section{Il problema affrontato}
 
-% Riprendere in poche righe il problema e la domanda di ricerca dell'introduzione.
+% Riprendere in poche righe il problema e la domanda di ricerca dell'introduzione:
+% rilevare condizioni meteorologiche anomale in campi senza etichette e con
+% struttura spaziale, e verificare con dati indipendenti che siano insolite.
 
 \section{Sintesi dei risultati}
 
-% Riprendere gli obiettivi dell'introduzione e, per ciascuno, ciò che è stato
+% Riprendere i contributi dell'introduzione e, per ciascuno, ciò che è stato
 % realizzato e ciò che i risultati mostrano. Riportare soltanto conclusioni
-% sostenute dal Capitolo dei risultati; non introdurre numeri nuovi.
+% sostenute dal Capitolo dei risultati; non introdurre numeri nuovi. Da
+% scrivere con la run scelta dalla ricerca dei parametri. Punti già sostenuti
+% dai risultati provvisori: il detector è complementare ai rilevatori senza
+% modello; ciò che segnala da solo è confermato dalle stazioni in misura
+% debole ma reale, quanto ciò che segnalano da soli i rilevatori senza modello;
+% vede i cambiamenti rapidi prima degli altri rilevatori, di un passo; è più
+% debole sul freddo insolito; lo score di ricostruzione è confermato più dello
+% score combinato dell'articolo.
 
 \section{Limiti dello studio}
 
-% Bozza del 12 ottobre 2026, scritta dalla sola parte PVGIS del Capitolo dei
-% risultati. Ogni frase riprende un risultato o una scelta dichiarata nei
-% Capitoli 3--6; non contiene numeri nuovi. I limiti della parte ERA5 sono in
-% fondo alla sezione, come commento, da scrivere a run concluse.
+% Bozza del 16 ottobre 2026, dalla parte ERA5 dei Capitoli 3--6. Nessun numero
+% nuovo.
 
-\paragraph{Assenza di una verità di riferimento.} Nessuno dei due insiemi di dati contiene etichette di anomalia, e l'accuratezza del rilevamento non è quindi misurata. I risultati descrivono quante osservazioni ogni detector segnala, quanto coincidono le decisioni di due detector e come si comporta il previsore sulle osservazioni segnalate. Un errore di previsione più alto su queste osservazioni indica che sono più difficili da prevedere, non che siano anomalie.
+\paragraph{Assenza di una verità di riferimento.} I campi ERA5 non contengono etichette di anomalia, e l'accuratezza del rilevamento non è quindi misurata. I risultati descrivono quanto le segnalazioni del detector coincidono con quelle di rilevatori che non usano un modello, e quanto spesso cadono in giorni in cui le stazioni misurano valori insoliti. Una conferma più frequente della media indica che le segnalazioni riguardano condizioni davvero insolite, non che il detector le trovi tutte.
 
-\paragraph{Una sola esecuzione per configurazione.} Ogni configurazione è stata addestrata una sola volta, con un solo seme. Non è noto quanto concorderebbero due esecuzioni identiche con semi diversi, e le differenze fra configurazioni non possono essere attribuite alla sola architettura. Il limite pesa soprattutto su STGAN: la versione su grafo e la variante ConvGRU segnalano osservazioni in gran parte diverse, e nell'analisi di sensibilità alla soglia portano a conclusioni diverse sul legame fra score ed errore di previsione.
+\paragraph{Una sola esecuzione per configurazione.} Ogni configurazione è stata addestrata una sola volta, con un solo seme. Non è noto quanto concorderebbero due esecuzioni identiche con semi diversi, e le differenze fra configurazioni non possono essere attribuite con certezza alla sola scelta confrontata.
 
-\paragraph{Confronti non a parità di condizioni.} I quattro previsori differiscono per più elementi insieme: durata dell'addestramento, numero di campioni, dimensione dell'encoder temporale, schema stocastico, funzione di perdita, finestre usate nell'addestramento e seme. Il confronto non isola l'effetto di nessuno di questi elementi. In particolare non è disponibile una variante SDE U-Net addestrata su tutte le finestre, e l'effetto dell'addestramento sulle sole finestre normali non è misurato.
+\paragraph{Conferma da dati indipendenti.} Le osservazioni di stazione coprono la sola terraferma europea, con meno stazioni nel sud e nell'est del dominio, e sono aggregate per giorno, mentre il detector lavora ogni tre ore. Per la pressione non è verificato che le misure delle stazioni siano escluse dall'assimilazione di ERA5.
 
-% Da ricontrollare dopo le nuove run SDE: dispersione fra le traiettorie,
-% copertura e ampiezza vengono dalle run attuali (valori \provv nei Risultati).
-\paragraph{Intervalli di previsione.} Nella variante SDE-Net l'intervallo è determinato dalla sola testa gaussiana: la dispersione fra le traiettorie, che nello schema rappresenta l'incertezza epistemica, è trascurabile rispetto all'errore. L'intervallo raggiunge il livello nominale, ma è ampio, non è troncato a zero e ha una copertura diversa fra le fasce di produzione. Nella variante SDE U-Net, in cui l'intervallo deriva dalla dispersione fra le traiettorie, la copertura resta molto sotto il livello nominale.
+\paragraph{Score e dispersione.} La dispersione dello score dipende dal dropout delle due reti e non è calibrata come misura di incertezza. Le ablazioni sui pesi delle variabili sono svolte sullo score della singola cella, che le stazioni confermano meno dello score sulla patch, e su un modello addestrato con una sola delle varianti di pesi.
 
-\paragraph{Dati PVGIS.} La produzione è un valore teorico calcolato da PVGIS e non la misura di un impianto: i risultati non si estendono senza verifica a impianti reali. I dati contengono tre variabili meteorologiche, riguardano una sola regione e la valutazione usa un solo anno di test. Le osservazioni di località vicine e di ore consecutive sono inoltre dipendenti fra loro: i conteggi riportati, dell'ordine dei milioni, non corrispondono ad altrettante osservazioni indipendenti, e per le differenze fra i gruppi non sono stati calcolati intervalli di confidenza.
-
-\paragraph{Protocollo retrospettivo.} Lo score di STGAN è normalizzato sull'intero periodo di test e la soglia è un ranking sullo stesso periodo. Le decisioni sono quindi disponibili soltanto a posteriori, e il protocollo non descrive un utilizzo in tempo reale. Le conclusioni dipendono inoltre dalla soglia scelta: per STGAN il rapporto fra l'errore sulle osservazioni segnalate e quello sulle normali cambia con la quota del ranking.
-
-\paragraph{Uso delle decisioni dei detector.} Le decisioni dei detector entrano soltanto nell'analisi successiva all'addestramento: dividono le previsioni in gruppi. Il previsore non le riceve in ingresso, e la tesi non misura se questa informazione ne ridurrebbe l'errore.
-
-% --- Limiti della parte ERA5, da scrivere a run concluse ---
-% Selezione delle celle complete, griglia angolare, differenze fra soglia
-% percentile e top-K esatto e dipendenza dei cluster dalla morfologia.
-% La ricostruzione degli eventi è retrospettiva; la loro corrispondenza con
-% fenomeni meteorologici reali richiede una validazione indipendente.
-% La dispersione Monte Carlo dipende dal solo dropout del generatore e non è
-% calibrata; il monitoraggio senza etichette orienta la selezione ma non
-% sostituisce una valutazione del rilevamento.
-% Valutare separatamente l'effetto del contesto spaziale e della variazione
-% del numero di parametri, senza attribuire causalità a soli confronti aggregati.
+\paragraph{Validazione breve e clima che cambia.} Soglie e normalizzazione climatologica sono stimate su cinque anni di validazione e applicate a un periodo di test di ventuno anni. Con la deriva del clima, la quota di osservazioni segnalate negli anni più lontani può scostarsi da quella prevista. La ricostruzione degli eventi, inoltre, unifica a posteriori le identità che si fondono, e non descrive un utilizzo in tempo reale.
 
 \section{Sviluppi futuri}
 
-% Bozza del 12 ottobre 2026: ogni sviluppo risponde a un limite della sezione
-% precedente. Gli sviluppi specifici di ERA5 sono in fondo, come commento.
+% Ogni sviluppo risponde a un limite della sezione precedente.
 
-Il primo sviluppo è ripetere ogni configurazione con più semi. L'accordo fra due esecuzioni identiche darebbe il riferimento che oggi manca per leggere l'accordo fra architetture diverse, e permetterebbe di dire se le differenze fra la versione su grafo e la variante ConvGRU di STGAN dipendono dal modo di rappresentare l'intorno.
+Il primo sviluppo è ripetere la configurazione scelta con più semi, per avere un riferimento con cui leggere le differenze fra configurazioni e fra varianti del generatore, convoluzionale e con attenzione su grafo.
 
-Il secondo riguarda la valutazione del rilevamento. Inserendo nei dati anomalie in posizioni note si otterrebbe una misura di accuratezza, che in questa tesi manca; un catalogo esterno di eventi meteorologici avrebbe la stessa funzione sui dati reali.
+Il secondo riguarda il protocollo: aggiornare periodicamente soglie e normalizzazione climatologica su una finestra di anni recenti, invece di tenerle fisse dalla validazione, ridurrebbe l'effetto della deriva del clima sulla quota di osservazioni segnalate.
 
-Per i previsori, un confronto a parità di epoche, campioni, finestre e seme separerebbe l'effetto dello schema stocastico da quello delle altre scelte. Un'esecuzione della variante SDE U-Net su tutte le finestre misurerebbe l'effetto dell'addestramento sulle sole finestre normali.
+Il terzo riguarda la valutazione. Casi studio su eventi documentati, scelti con fonti meteorologiche indipendenti, mostrerebbero che cosa il detector segnala in situazioni note; un catalogo esterno di eventi su tutto il dominio, o anomalie inserite in posizioni note, darebbe una misura del richiamo, che in questa tesi manca.
 
-Gli intervalli di previsione possono essere migliorati in due punti che i risultati indicano: il troncamento a zero dell'estremo inferiore e una calibrazione distinta per fascia di produzione. Resta inoltre da capire perché il termine di diffusione produca una dispersione trascurabile fra le traiettorie, dato che è la quantità da cui lo schema ricava l'incertezza epistemica.
-
-Le decisioni dei detector potrebbero infine essere usate all'interno del previsore, come ingresso o al posto delle soglie climatologiche nella selezione delle finestre di addestramento, e non soltanto nell'analisi successiva. La verifica su dati di produzione misurata resta il passo necessario per estendere i risultati a impianti reali.
-
-% --- Sviluppi della parte ERA5, da scrivere a run concluse ---
-% Confronti a parità di aggiornamenti fra le varianti del detector.
-% Calibrazione della dispersione dello score. Estensione ad altre aree o periodi.
+Infine, la dispersione dello score potrebbe essere confrontata con l'errore effettivo del generatore, per verificare se può essere usata come misura di incertezza, e le segnalazioni del detector potrebbero essere usate dai modelli di previsione da cui il lavoro è partito.

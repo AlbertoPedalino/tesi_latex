@@ -3,11 +3,9 @@
 
 \section{Contesto e motivazioni}
 
-La produzione di un impianto fotovoltaico dipende dalle condizioni meteorologiche: irradianza, temperatura e vento ne determinano l'andamento, dalle variazioni entro la giornata a quelle stagionali. La gestione di una rete con una quota crescente di fotovoltaico richiede quindi previsioni della produzione, possibilmente accompagnate da una misura della loro incertezza~\cite{antonanzas2016review}.
+Le condizioni meteorologiche insolite, come una perturbazione intensa, un fronte che attraversa una regione o un'ondata di caldo, sono quelle in cui i modelli addestrati su dati storici sbagliano di più e in cui servono informazioni aggiuntive. Il lavoro è nato in questo contesto, nell'ambito della previsione della produzione fotovoltaica~\cite{antonanzas2016review}, dove un previsore è affidabile nelle condizioni che i dati di addestramento rappresentano bene e meno in quelle poco frequenti. Riconoscere queste condizioni è però un problema a sé, distinto dalla previsione: richiede di stabilire, per ogni luogo e ogni istante, quanto le condizioni osservate si discostano da quelle abituali. È il compito del rilevamento di anomalie, a cui questa tesi è dedicata.
 
-Un previsore addestrato su dati storici è affidabile nelle condizioni che quei dati rappresentano bene. Le condizioni meteorologiche poco frequenti, o mai osservate, sono quelle in cui l'errore di previsione può crescere e in cui una stima dell'incertezza è più utile. Riconoscerle è un problema a sé, distinto dalla previsione: richiede di stabilire, per ogni località e ogni istante, quanto le condizioni osservate si discostano da quelle abituali. È il compito del rilevamento di anomalie, a cui questa tesi è dedicata.
-
-Il lavoro considera due insiemi di dati. Il primo è costituito da serie orarie PVGIS, con la produzione fotovoltaica teorica e le variabili meteorologiche di un insieme di località. Su questi dati il rilevamento è collegato a un previsore della produzione. I dati PVGIS contengono però soltanto le grandezze che determinano la produzione fotovoltaica: irradianza, temperatura e vento. Un'anomalia rilevata su questi dati non può essere ricondotta a una condizione meteorologica più generale. Per rilevare anomalie di tipo diverso e descriverne l'origine il lavoro passa quindi al secondo insieme: i campi della rianalisi ERA5, con quindici variabili su una griglia regolare e passo di tre ore, sui quali il rilevamento è studiato come problema autonomo, su un dominio più ampio.
+I campi meteorologici delle rianalisi, come ERA5~\cite{hersbach2020era5}, descrivono lo stato dell'atmosfera su una griglia regolare, con molte variabili e per diversi decenni. Sono quindi una base adatta per cercare condizioni insolite in modo sistematico, su un dominio ampio e senza limitarsi alle grandezze di un singolo impiego.
 
 \section{Il problema: anomalie meteorologiche senza etichette}
 
@@ -17,23 +15,30 @@ La prima è l'assenza di etichette. Non esiste un elenco di osservazioni meteoro
 
 La seconda è che i dati di training non sono garantiti privi di anomalie. Molti detector apprendono il comportamento normale da un insieme che si assume pulito; con dati meteorologici non etichettati questa ipotesi non è verificabile. Ne segue una scelta di obiettivo: rilevare le condizioni nuove rispetto al periodo di training, trattando come già osservate quelle che il modello ha incontrato durante l'addestramento.
 
-La terza è la struttura spaziale. Le condizioni di una località dipendono da quelle delle località vicine, e un valore insolito in un punto può essere ordinario se considerato nel suo intorno. I dati non hanno però una topologia fisica, come una rete stradale: sono disposti su un insieme di siti o su un reticolo regolare, e il modo di rappresentare l'intorno va scelto.
+La terza è la struttura spaziale. Le condizioni di un luogo dipendono da quelle dei luoghi vicini, e un valore insolito in un punto può essere ordinario se considerato nel suo intorno. I campi non hanno però una topologia fisica, come una rete stradale: sono disposti su un reticolo regolare, e il modo di rappresentare l'intorno va scelto.
 
 Il termine anomalia indica in questa tesi un'osservazione che si discosta da quanto il modello ha appreso dal periodo di training. Un evento meteorologico estremo è un caso particolare di anomalia, ma non ogni anomalia è un evento estremo.
 
+\section{Approccio proposto}
+
+Il detector parte da STGAN~\cite{deng2022stgan}, una rete avversaria proposta per il rilevamento di anomalie nel traffico: un generatore stima i valori dell'istante successivo a partire dal contesto spaziale e temporale, un discriminatore giudica se una sequenza è osservata o generata, e uno score combina i due. In questa tesi lo schema è adattato e trasformato per i campi ERA5, con quindici variabili in superficie e a 850~hPa, ogni tre ore, su un dominio che comprende l'Europa e il Mediterraneo. Le modifiche principali sono quattro:
+\begin{enumerate}
+    \item un generatore che opera sul campo intero con un'unità ricorrente convoluzionale, mentre il discriminatore resta locale;
+    \item un ingresso riferito al clima di ogni cella, con una normalizzazione stagionale e pesi che misurano l'errore di ogni variabile in rapporto a quanto essa cambia abitualmente;
+    \item il dropout Monte Carlo nelle due reti, che associa a ogni score una misura di dispersione;
+    \item una validazione senza etichette su anni di tempo normale, con cui si scelgono i parametri dell'addestramento avversario senza usare gli anni di test.
+\end{enumerate}
+
 \section{Obiettivi e contributi della tesi}
 
-L'obiettivo della tesi è rilevare condizioni meteorologiche anomale in dati privi di etichette e dotati di struttura spaziale, e usare le decisioni del detector per esaminare il comportamento di un previsore fotovoltaico probabilistico. I due compiti restano distinti: il detector assegna uno score alle osservazioni meteorologiche, il previsore stima la produzione futura. La tesi non propone un nuovo algoritmo di rilevamento: adatta e combina componenti esistenti. I contributi sono i seguenti.
+L'obiettivo della tesi è rilevare condizioni meteorologiche anomale in campi privi di etichette e dotati di struttura spaziale, e verificare, con dati indipendenti, che le condizioni segnalate siano davvero insolite. La tesi non propone un nuovo algoritmo di rilevamento: adatta e combina componenti esistenti. I contributi sono i seguenti.
 \begin{itemize}
-    \item L'adattamento di STGAN~\cite{deng2022stgan}, un detector avversario spazio-temporale nato per il traffico, a variabili meteorologiche prive di topologia fisica, in due varianti che rappresentano l'intorno di una cella con una convoluzione su griglia oppure con l'attenzione su grafo.
-    \item La definizione dell'obiettivo come rilevamento di condizioni nuove rispetto al periodo di training, con uno score continuo e una quota di osservazioni segnalate che è un parametro del protocollo.
-    \item Tre estensioni del detector sui campi ERA5: uno score Monte Carlo con una misura di dispersione, un monitoraggio dell'addestramento privo di etichette e la ricostruzione di eventi geografici a partire dagli score.
-    \item L'analisi degli errori e degli intervalli di un previsore fotovoltaico probabilistico, costruito sugli schemi di SDE-Net~\cite{kong2020sdenet} e di SDE U-Net~\cite{monaco2025sdeunet}, rispetto alle soglie climatologiche e alle decisioni dei detector.
+    \item L'adattamento di STGAN a campi meteorologici privi di topologia fisica, con un generatore sul campo intero che rappresenta l'intorno di una cella con una convoluzione su griglia oppure con l'attenzione su grafo, e la definizione dell'obiettivo come rilevamento di condizioni nuove rispetto al periodo di training.
+    \item Uno score Monte Carlo, con il dropout nel generatore e nel discriminatore, e la ricostruzione di eventi geografici a partire dagli score.
+    \item Un protocollo di addestramento e di scelta della configurazione che non usa etichette né anni di test: una validazione da cui le condizioni insolite sono escluse con un criterio indipendente dal modello, e una misura della distanza fra campi osservati e ricostruiti.
+    \item Una valutazione senza etichette: il confronto con rilevatori che non usano un modello, a parità di segnalazioni, e con le osservazioni di stazione di E-OBS~\cite{cornes2018eobs}, che non derivano da ERA5.
 \end{itemize}
-Le varianti architetturali costituiscono confronti da valutare sperimentalmente; la loro implementazione non implica un miglioramento delle prestazioni.
-
-Il lavoro procede in tre passi. Le prime etichette sono soglie climatologiche: un'osservazione è segnalata quando il suo valore esce dalla banda fra i quantili 0.025 e 0.975 della distribuzione storica della stessa località e della stessa ora. Queste etichette servono a esaminare il previsore sulle osservazioni segnalate e ad addestrarlo sulle sole finestre normali. Per individuare anomalie di altro tipo il lavoro passa poi a detector appresi, MTGFlow~\cite{zhou2023labelfree} e STGAN. Infine, poiché i dati PVGIS contengono soltanto irradianza, temperatura e vento, il detector è portato sui campi ERA5. Il percorso è descritto per esteso nel Capitolo~\ref{chap:esperimenti}.
 
 \section{Organizzazione del documento}
 
-Il Capitolo~\ref{chap:stato-arte} presenta i fondamenti teorici e i lavori su cui la tesi è costruita, indicando per ciascuno ciò che propone, ciò che non copre e ciò che la tesi ne riprende. Il Capitolo~\ref{chap:dati} descrive i dati e la loro preparazione. Il Capitolo~\ref{chap:metodologia} presenta i modelli e i loro adattamenti. Il Capitolo~\ref{chap:esperimenti} descrive il percorso degli esperimenti, le configurazioni confrontate e il protocollo di valutazione. Il Capitolo~\ref{chap:risultati} riporta e discute i risultati. Il Capitolo~\ref{chap:conclusioni} riassume il lavoro, ne indica i limiti e gli sviluppi futuri.
+Il Capitolo~\ref{chap:stato-arte} presenta i fondamenti teorici e i lavori su cui la tesi è costruita, compreso il lavoro preliminare sui dati PVGIS da cui il percorso è partito. Il Capitolo~\ref{chap:dati} descrive i campi ERA5 e la loro preparazione. Il Capitolo~\ref{chap:metodologia} presenta il detector nella forma finale. Il Capitolo~\ref{chap:esperimenti} ripercorre l'evoluzione del detector, dalla prima applicazione ai dati PVGIS fino alla configurazione finale, e descrive le configurazioni, il protocollo di valutazione e i rilevatori di confronto. Il Capitolo~\ref{chap:risultati} riporta e discute i risultati, comprese le ablazioni sullo score e sui pesi delle variabili. Il Capitolo~\ref{chap:conclusioni} riassume il lavoro, ne indica i limiti e gli sviluppi futuri.

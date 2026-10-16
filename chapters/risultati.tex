@@ -1,233 +1,63 @@
 \chapter{Risultati e discussione}
 \label{chap:risultati}
+\label{sec:ris-era5}
 
 % Le fonti di ogni valore (file, run, data di lettura) e le note di lavoro sono
 % in chapters/risultati_fonti.tex, che non viene compilato. Prima di cambiare un
 % numero, controllare lì da dove viene.
-% I numeri in \provv vengono dalle run SDE esistenti, che non corrispondono
-% ancora alla descrizione data nei Capitoli 3 e 5 (vedi tesi.tex).
+% Tutti i numeri in \provv vengono dalla run ..._wdaily_seasonal_trend_ep3 (tre
+% epoche, un seme, training 1980-2004 SENZA validazione: climatologia, soglie,
+% scale degli score semplici e confronti fra varianti calcolati sugli anni di
+% test). Sono segnaposto: il testo descrive il protocollo corretto (Sezione
+% sec:exp-protocollo) e i numeri vanno sostituiti con quelli della run scelta
+% dalla ricerca e delle run dell'ablazione, calcolati con quel protocollo.
 % Struttura sul modello della tesi di Stiven Gjinaj: paragrafo di apertura,
-% poche sezioni, titoletti nel testo al posto delle sottosezioni.
+% poche sezioni, titoletti nel testo. I casi studio, quando ci saranno, vanno
+% all'inizio del capitolo, come nella tesi di riferimento.
+% I risultati su PVGIS (previsori, intervalli, decisioni dei detector) sono nel
+% backup del 16 ottobre 2026; quelli di STGAN su PVGIS che motivano il passaggio
+% a ERA5 sono nella Sezione sec:exp-pvgis.
 
-Il capitolo riporta i risultati sui dati PVGIS in quattro parti: l'accuratezza dei previsori, i loro intervalli di previsione, le decisioni dei detector e il comportamento del previsore sulle osservazioni segnalate. L'ultima sezione riguarda il detector sui campi ERA5. I risultati su PVGIS si riferiscono al 2019 e alle 1149 località, con il protocollo della Sezione~\ref{sec:exp-protocollo}; gli errori sono espressi in watt.
+Il capitolo segue il protocollo della Sezione~\ref{sec:exp-protocollo}. La prima sezione misura il contributo di ciascun componente del detector, aggiungendoli uno alla volta alla configurazione dell'articolo. La seconda riporta la ricerca dei parametri dell'addestramento avversario e la configurazione scelta. Le sezioni successive analizzano gli score di questa configurazione sugli anni di test 2005--2025: il confronto con i rilevatori senza modello, la conferma dalle osservazioni di stazione di E-OBS, l'anticipo, l'estensione delle perturbazioni e la dispersione Monte Carlo. Le ultime riguardano la scelta dello score e dei pesi delle variabili, fatta sugli anni di validazione, e i limiti dei risultati. Non esistono etichette di anomalia: tutte le misure sono indirette. Salvo dove indicato, lo score del detector è lo score di ricostruzione con la normalizzazione climatologica.
 
-\section{Accuratezza dei previsori}
-\label{sec:ris-accuratezza}
+\section{Contributo dei componenti}
+\label{sec:ris-componenti}
+% DA FARE: run dell'ablazione con il protocollo dello sweep (training 1980-1999,
+% validazione 2000-2004, test 2005-2025), stesse epoche per tutte, un seme.
+% Quattro varianti: articolo (min-max, senza pesi, D senza dropout); +
+% normalizzazione stagionale; + pesi delle variabili; + dropout nel
+% discriminatore con i parametri scelti dalla ricerca.
 
-La Tabella~\ref{tab:previsori} riassume errore e intervallo dei quattro previsori a un'ora. Il confronto non è a parità di condizioni: gli esperimenti preliminari sono addestrati per 5 epoche su un sottoinsieme dei campioni e con un encoder temporale più piccolo, le varianti SDE per 60 epoche; le due varianti SDE differiscono a loro volta per lo schema stocastico, per la funzione di perdita, per le finestre usate nell'addestramento e per il seme. Per questo nessun valore è indicato come migliore.
-
-\begin{table}[htbp]
-    \centering
-    \footnotesize
-    \setlength{\tabcolsep}{4pt}
-    \caption{Previsione a un'ora sul 2019: errore e intervallo al 95\% dei quattro previsori, su tutte le ore (10037664 previsioni) e sulle ore diurne (4747545). L'ampiezza è quella media dell'intervallo sulle ore diurne. Per gli esperimenti preliminari sono disponibili soltanto i valori su tutte le ore. Errori e ampiezza in watt.}
-    \label{tab:previsori}
-    \vspace{0.6em}
-    \begin{tabular}{@{}L{0.23}L{0.07}L{0.07}L{0.07}L{0.07}L{0.07}L{0.07}L{0.10}@{}}
-        \toprule
-        & \multicolumn{2}{@{}l}{Tutte le ore} & \multicolumn{2}{@{}l}{Ore diurne} & \multicolumn{2}{@{}l}{PICP} & \\
-        Modello & MAE & RMSE & MAE & RMSE & tutte & diurne & Ampiezza \\
-        \midrule
-        Dropout Monte Carlo & 20.1 & -- & -- & -- & 0.028 & -- & -- \\
-        Deep Ensemble & 19.2 & 45.1 & -- & -- & 0.173 & -- & -- \\
-        \addlinespace
-        Variante SDE U-Net & \provv{18.7} & \provv{46.1} & \provv{38.1} & \provv{65.0} & \provv{0.108} & \provv{0.227} & \provv{16.8} \\
-        Variante SDE-Net & \provv{20.6} & \provv{49.2} & \provv{42.8} & \provv{69.6} & \provv{0.977} & \provv{0.953} & \provv{224.6} \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\paragraph{Esperimenti preliminari.} Con l'addestramento breve della Tabella~\ref{tab:configurazioni} l'errore assoluto medio su tutte le ore è 20.1~W per il dropout Monte Carlo e 19.2~W per il Deep Ensemble, dello stesso ordine di quello delle varianti SDE.
-
-\paragraph{Varianti SDE.} La variante SDE U-Net, addestrata sulle sole finestre normali secondo il protocollo della Sezione~\ref{sec:soglie-climatologiche}, ha un errore assoluto medio di \provv{18.7}~W su tutte le ore e di \provv{38.1}~W sulle ore diurne: le ore notturne, in cui produzione e previsione sono quasi nulle, abbassano la media complessiva. Non è disponibile un'esecuzione della stessa variante addestrata su tutte le finestre, e l'effetto del filtro sulle finestre normali non è quindi isolato. La variante SDE-Net ha un errore di \provv{20.6}~W su tutte le ore e di \provv{42.8}~W sulle ore diurne; una seconda esecuzione a un'ora, valutata con le etichette di MTGFlow, dà valori quasi identici (\provv{20.7}~W). La differenza fra le due varianti, circa 2~W su tutte le ore e circa 5~W sulle ore diurne, non misura l'effetto di un singolo elemento, per i motivi indicati sopra.
-
-\paragraph{Orizzonti da una a sei ore.} Con l'uscita diretta su sei orizzonti la variante SDE-Net ha, aggregando gli orizzonti e tutte le ore, un errore assoluto medio di \provv{32.3}~W e una radice dell'errore quadratico medio di \provv{69.0}~W, su 60191514 previsioni. La Figura~\ref{fig:orizzonti} riporta l'errore per orizzonte sulle osservazioni diurne. L'errore assoluto medio cresce da \provv{45.6}~W a un'ora a \provv{82.3}~W a sei ore, e l'incremento si riduce a ogni passo: \provv{11.9}~W fra la prima e la seconda ora, \provv{3.8}~W fra la quinta e la sesta. A un'ora il modello a sei orizzonti ha un errore di circa 3~W superiore a quello del modello addestrato per la sola previsione a un'ora; i due insiemi di osservazioni diurne non coincidono esattamente, e la differenza va letta come indicativa.
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics{errore_orizzonti}
-    \caption{Errore della variante SDE-Net a sei orizzonti sulle osservazioni diurne del 2019, per orizzonte e secondo le decisioni di MTGFlow sull'osservazione prevista. Ogni orizzonte comprende 4761227 previsioni, di cui 314124 su osservazioni segnalate. \notabozza{Valori provvisori.}}
-    \label{fig:orizzonti}
-\end{figure}
-
-\section{Intervalli di previsione}
-\label{sec:ris-intervalli}
-
-I quattro previsori costruiscono l'intervallo al 95\% in modi diversi. Nel dropout Monte Carlo, nel Deep Ensemble e nella variante SDE U-Net l'intervallo è dato dai quantili empirici di un insieme di previsioni: i passaggi con maschere diverse, i membri, le traiettorie. Rappresenta quindi la sola dispersione fra queste previsioni. Nella variante SDE-Net ogni traiettoria produce una media e una varianza, e l'intervallo è dato dai quantili della miscela delle gaussiane: comprende sia la dispersione fra le traiettorie sia la varianza stimata dalla testa gaussiana. Copertura e ampiezza sono nella Tabella~\ref{tab:previsori}.
-
-\paragraph{Dropout Monte Carlo e Deep Ensemble.} L'intervallo del dropout Monte Carlo contiene il 2.8\% delle osservazioni, quello del Deep Ensemble il 17.3\%, contro un livello nominale del 95\%. Per il Deep Ensemble la deviazione standard media fra i cinque membri è 5.8~W, contro un errore assoluto medio di 19.2~W. Il risultato va letto con due cautele: l'addestramento è breve, e l'intervallo del Deep Ensemble, costruito sui quantili di cinque valori, coincide in pratica con l'intervallo fra il membro più basso e quello più alto. Poiché gli intervalli contengono una quota così ridotta delle osservazioni, i due esperimenti non sono stati proseguiti con addestramenti più lunghi, e il lavoro è passato alle varianti basate su equazioni differenziali stocastiche.
-
-\paragraph{Variante SDE U-Net.} L'intervallo contiene il \provv{10.8}\% delle osservazioni su tutte le ore e il \provv{22.7}\% sulle ore diurne. Di giorno l'ampiezza media è \provv{16.8}~W, mentre l'errore assoluto medio è \provv{38.1}~W: l'intervallo è più stretto dell'errore che dovrebbe contenere. Il CLC, che penalizza la copertura insufficiente, è \provv{17.9}, contro \provv{0.22} della variante SDE-Net. La sola dispersione fra le traiettorie non fornisce quindi, in questa configurazione, un intervallo utilizzabile.
-
-\paragraph{Variante SDE-Net.} L'intervallo contiene il \provv{97.7}\% delle osservazioni su tutte le ore e il \provv{95.3}\% sulle ore diurne, in linea con il livello nominale; il valore complessivo è più alto perché di notte la copertura è quasi totale. La copertura è però ottenuta con un intervallo ampio: di giorno l'ampiezza media è \provv{224.6}~W, un quarto dell'intervallo dei valori osservati e oltre cinque volte l'errore assoluto medio diurno. L'intervallo è quindi affidabile, ma la sua ampiezza ne limita l'utilità sulle singole ore. Sui sei orizzonti la copertura su tutte le ore resta \provv{0.977}, mentre la deviazione standard predittiva media sale da \provv{27.6}~W a un'ora a \provv{42.0}~W: l'intervallo si allarga con l'orizzonte.
-
-La Figura~\ref{fig:previsioni-settimana} mostra un esempio: una settimana di previsioni per una località, a una e a sei ore. A sei ore la previsione segue l'andamento giornaliero con meno dettaglio e l'intervallo è visibilmente più ampio. In entrambi i casi l'estremo inferiore scende sotto lo zero in alcune ore: l'intervallo non è troncato ai valori fisicamente possibili della produzione.
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics{previsioni_settimana}
-    \caption{Previsioni della variante SDE-Net a sei orizzonti per una località, dal 9 al 15 maggio 2019, a una e a sei ore, con l'intervallo al 95\% e la produzione osservata. I quadrati indicano le osservazioni segnalate da MTGFlow. \notabozza{Valori provvisori.}}
-    \label{fig:previsioni-settimana}
-\end{figure}
-
-\paragraph{Componenti dell'incertezza.} Le due componenti dell'incertezza della variante SDE-Net sono state separate sull'esecuzione a sei orizzonti, per le ore diurne. A un'ora la deviazione standard dovuta alla dispersione fra le traiettorie è in media \provv{0.04}~W, quella stimata dalla testa gaussiana \provv{62.7}~W; a sei ore \provv{0.03} e \provv{102.8}~W. La dispersione fra le traiettorie contribuisce alla varianza totale per meno di una parte su centomila: l'intervallo è determinato, in pratica, dalla sola testa gaussiana, e il termine di diffusione non produce una dispersione apprezzabile fra le traiettorie. Sulle osservazioni segnalate da MTGFlow questa dispersione è più alta che sulle normali, \provv{0.064} contro \provv{0.043}~W a un'ora, ma resta trascurabile rispetto all'errore. In entrambe le varianti, quindi, la parte di incertezza che lo schema stocastico dovrebbe fornire è molto inferiore all'errore di previsione: di giorno \provv{4.9}~W in media nella variante SDE U-Net e \provv{0.04}~W nella variante SDE-Net, contro errori assoluti medi di circa 40~W.
-
-\paragraph{Fasce di produzione.} La copertura della variante SDE-Net non è uniforme fra le fasce di produzione (Tabella~\ref{tab:fasce}). Cresce con la produzione: a un'ora da \provv{0.934} nella fascia più bassa a \provv{0.988} nella più alta, a sei ore da \provv{0.907} a \provv{0.995}. L'intervallo è quindi leggermente stretto quando la produzione è bassa e più ampio del necessario quando è alta. A sei ore l'ampiezza media nella fascia più alta è \provv{653}~W, quasi tre quarti dell'intervallo dei valori osservati.
+Il contributo di ciascun componente è misurato aggiungendo i componenti uno alla volta, a partire dalla configurazione dell'articolo: normalizzazione min--max, nessun peso fra le variabili, discriminatore senza dropout. Le varianti sono la normalizzazione stagionale (Sezione~\ref{sec:ingresso-normalizzazione-era5}), i pesi delle variabili (Sezione~\ref{sec:pesi-variabili-ricostruzione}) e il dropout nel discriminatore (Sezione~\ref{sec:score-dropout-montecarlo}). Ogni variante è addestrata per \provv{un'epoca}, con la stessa suddivisione degli anni e gli stessi parametri dell'addestramento avversario: il confronto è a parità di addestramento. Per ogni variante sono riportate la distanza fra campi osservati e ricostruiti sulla validazione, la distribuzione delle segnalazioni fra latitudini e mesi e la conferma dalle stazioni E-OBS (Tabella~\ref{tab:ris-componenti}).
 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \setlength{\tabcolsep}{4pt}
-    \caption{Errore assoluto medio, copertura e ampiezza media dell'intervallo al 95\% della variante SDE-Net a sei orizzonti, per fascia di produzione osservata, a una e a sei ore. Ore diurne del 2019; le fasce sono riferite al picco di produzione di riferimento. Errori e ampiezze in watt.}
-    \label{tab:fasce}
+    \caption{Contributo dei componenti, aggiunti uno alla volta alla configurazione dell'articolo. MMD: distanza fra campi osservati e ricostruiti sulla validazione. Quote: intervallo della quota segnalata fra fasce di latitudine e mesi, 5\% se luogo e stagione non contassero. E-OBS: rapporto ``solo detector / tutte'' nello stesso giorno. \notabozza{Da riempire con le run dell'ablazione.}}
+    \label{tab:ris-componenti}
     \vspace{0.6em}
-    \begin{tabular}{@{}L{0.12}L{0.11}L{0.08}L{0.09}L{0.11}L{0.08}L{0.09}L{0.11}@{}}
+    \begin{tabular}{@{}L{0.26}L{0.11}L{0.13}L{0.11}L{0.11}L{0.11}@{}}
         \toprule
-        & & \multicolumn{3}{@{}l}{Un'ora} & \multicolumn{3}{@{}l}{Sei ore} \\
-        Fascia & Numero & MAE & PICP & Ampiezza & MAE & PICP & Ampiezza \\
+        Configurazione & MMD & Quote & Pioggia forte & Pressione bassa & Caldo \\
         \midrule
-        0--20\% & 1934608 & \provv{39.9} & \provv{0.934} & \provv{176.1} & \provv{71.8} & \provv{0.907} & \provv{246.1} \\
-        20--40\% & 856630 & \provv{52.2} & \provv{0.949} & \provv{279.1} & \provv{75.7} & \provv{0.968} & \provv{392.2} \\
-        40--60\% & 736468 & \provv{51.5} & \provv{0.959} & \provv{307.3} & \provv{84.1} & \provv{0.988} & \provv{490.2} \\
-        60--80\% & 669745 & \provv{48.9} & \provv{0.969} & \provv{304.1} & \provv{92.1} & \provv{0.995} & \provv{568.1} \\
-        80--100\% & 550094 & \provv{44.6} & \provv{0.988} & \provv{286.0} & \provv{117.1} & \provv{0.995} & \provv{653.4} \\
+        Articolo & -- & -- & -- & -- & -- \\
+        + normalizzazione stagionale & -- & -- & -- & -- & -- \\
+        + pesi delle variabili & -- & -- & -- & -- & -- \\
+        + dropout nel discriminatore & -- & -- & -- & -- & -- \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\section{Decisioni dei detector}
-\label{sec:ris-stabilita}
+\section{Ricerca dei parametri}
+\label{sec:ris-ricerca}
+% DA FARE: sweep W&B 913ez3rt. Figura: MMD per epoca di ogni esecuzione, con
+% la media mobile; tabella: parametri della configurazione scelta. Riportare
+% anche le esecuzioni interrotte e il motivo (per esempio una perdita non finita).
 
-In assenza di etichette non è possibile stabilire quale detector individui meglio le anomalie. Si può però misurare quante osservazioni ciascuno segnala, di che tipo, e quanto le decisioni di due detector coincidono.
+La ricerca esplora i quattro parametri della Tabella~\ref{tab:configurazioni}. \notabozza{Da scrivere a ricerca conclusa: numero di esecuzioni, andamento della distanza fra campi osservati e ricostruiti per epoca, configurazione scelta e suo valore dell'obiettivo.}
 
-\paragraph{Quante osservazioni e dove.} MTGFlow e STGAN decidono in modo diverso quali osservazioni segnalare. Con la soglia per località, MTGFlow segnala nel 2019 il 6.1\% delle osservazioni con score, ma la quota varia da una località all'altra: la mediana è il 6.0\%, i quartili il 4.7\% e il 7.4\%, il minimo l'1.3\% e il massimo il 13.7\%. STGAN segnala invece una quota fissata, l'1\%, sull'insieme di tutte le località: 100653 delle 10065240 osservazioni.
-
-\paragraph{Che cosa segnala STGAN.} Per le osservazioni segnalate dalla variante ConvGRU con kernel 3 è disponibile la ripartizione dell'errore di ricostruzione fra le tre variabili. In media il 75.5\% dell'errore è dovuto all'irradianza, il 15.8\% alla temperatura e l'8.6\% al vento; l'irradianza è la variabile con il contributo maggiore nell'81.2\% delle osservazioni segnalate. Su PVGIS le segnalazioni riguardano quindi in prevalenza scostamenti dell'irradianza, in accordo con la composizione di questi dati. La stessa ripartizione sulle osservazioni non segnalate non è stata calcolata: non è possibile dire se la prevalenza dell'irradianza sia specifica delle anomalie.
-
-\paragraph{Accordo fra MTGFlow e STGAN.} I due detector segnalano osservazioni quasi del tutto diverse. Sulle 4724704 osservazioni diurne per le quali sono disponibili entrambi gli score, MTGFlow ne segnala 312044 e la versione su grafo di STGAN 94532; quelle segnalate da entrambi sono 6829, con un indice di Jaccard di 0.017. Due detector indipendenti con le stesse quote ne avrebbero in comune circa 6243, con un indice di 0.016: l'accordo osservato supera di poco quello atteso per caso. Delle osservazioni segnalate da STGAN, il 7.2\% è segnalato anche da MTGFlow. Anche aggregando per giorno la relazione resta debole, con una correlazione di 0.14 secondo Pearson e di 0.18 secondo Spearman.
-
-\paragraph{Accordo fra configurazioni di STGAN.} La versione su grafo e la variante ConvGRU sono addestrate sugli stessi dati con lo stesso protocollo; la ConvGRU con kernel di lato 1, 3 e 5, a parità di ogni altra impostazione. La Tabella~\ref{tab:accordo-detector} confronta ciascuna configurazione ConvGRU con la versione su grafo. L'accordo è da sei a dieci volte quello atteso per due detector indipendenti, ma resta basso in valore assoluto: più del 90\% delle osservazioni segnalate da una configurazione ConvGRU non è segnalato dalla versione su grafo. Il risultato non cambia sulle 917 località con patch completa, nelle quali le due versioni osservano gli stessi nove siti.
-
-\begin{table}[htbp]
-    \centering
-    \footnotesize
-    \caption{Accordo fra le osservazioni segnalate dalla variante ConvGRU e dalla versione su grafo di STGAN sui dati PVGIS del 2019. Ogni detector segnala 100653 osservazioni. L'ultima riga riporta il valore atteso per due detector indipendenti con la stessa quota.}
-    \label{tab:accordo-detector}
-    \vspace{0.6em}
-    \begin{tabular}{@{}L{0.24}L{0.15}L{0.10}L{0.10}L{0.11}L{0.11}@{}}
-        \toprule
-        Configurazione & Segnalate da entrambi & Quota & Jaccard & Patch complete & Patch incomplete \\
-        \midrule
-        ConvGRU, kernel 1 & 9956 & 9.9\% & 0.052 & 0.054 & 0.046 \\
-        ConvGRU, kernel 3 & 6267 & 6.2\% & 0.032 & 0.032 & 0.032 \\
-        ConvGRU, kernel 5 & 7325 & 7.3\% & 0.038 & 0.039 & 0.034 \\
-        \addlinespace
-        Detector indipendenti & circa 1007 & 1.0\% & 0.005 & -- & -- \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-Altre due misure vanno nella stessa direzione. La loss del discriminatore resta fra 0.60 e 0.63 per tutte le sei epoche nelle tre configurazioni ConvGRU, mentre un discriminatore che assegna la stessa uscita a ogni ingresso ha loss $\ln 2\approx0.69$. Lo score, somma di due componenti normalizzate in $[0,1]$, è concentrato in un intervallo stretto: con kernel 3, sulle patch complete, la mediana è 0.489 e il quantile 0.95 è 0.553. Una lettura coerente con queste misure è che su questi dati lo score distingua poco le osservazioni fra loro: l'1\% più alto è scelto fra valori vicini, e piccole differenze fra i modelli bastano a cambiarne la composizione. È un'interpretazione e non una dimostrazione, perché le due componenti dello score non sono state salvate separatamente.
-
-Due limiti restringono le conclusioni. Ogni configurazione è stata addestrata con un solo seme: non è noto quanto concorderebbero due esecuzioni identiche con semi diversi, e la differenza osservata non può essere attribuita alla sola architettura. Il confronto è inoltre fra ciascuna ConvGRU e la versione su grafo; l'accordo diretto fra kernel diversi non è stato calcolato. Ne segue che le analisi della sezione successiva si riferiscono alle decisioni di una specifica configurazione, e non a un insieme di anomalie stabile rispetto al modello.
-
-\section{Il previsore sulle osservazioni segnalate}
-\label{sec:ris-posthoc}
-
-Le previsioni sono divise secondo l'etichetta dell'osservazione prevista, prima con le soglie climatologiche e poi con le decisioni dei detector. Nessuna di queste analisi richiede un nuovo addestramento.
-
-\paragraph{Etichette climatologiche.} Un'osservazione è segnalata quando almeno una delle quattro grandezze esce dalla propria banda climatologica (Tabella~\ref{tab:errori-etichette}). Su tutte le ore l'errore assoluto medio sulle osservazioni segnalate è circa 1.6 volte quello sulle normali, in entrambe le varianti SDE. Il confronto su tutte le ore ha però un limite: è diurno il 55.8\% delle osservazioni segnalate, contro il 46.3\% delle normali, e di notte l'errore è quasi nullo. Sulle sole ore diurne il rapporto scende a \provv{1.16} per la variante SDE U-Net e a \provv{1.22} per la variante SDE-Net: una parte consistente della differenza osservata su tutte le ore dipende dalla diversa quota di ore diurne, e non dall'etichetta.
-
-La differenza non è uniforme fra i tipi. L'errore più alto riguarda le osservazioni con irradianza o produzione insolitamente bassa, \provv{98.5} e \provv{112.7}~W, più di cinque volte quello delle normali; su queste la copertura della variante SDE-Net, vicina al livello nominale negli altri gruppi, scende a \provv{0.809}. Sulle osservazioni con temperatura estrema l'errore è invece vicino a quello delle normali.
-
-\begin{table}[htbp]
-    \centering
-    \footnotesize
-    \setlength{\tabcolsep}{4pt}
-    \caption{Errore e copertura dell'intervallo al 95\% delle due varianti SDE a un'ora, per etichetta climatologica dell'osservazione prevista. Bassa e alta indicano valori insolitamente bassi o alti rispetto alla climatologia; le righe per tipo possono sovrapporsi. Per la variante SDE U-Net la copertura è quella della banda $\bar{y}\pm1.96\,s_y$, la sola salvata per tipo; con i quantili empirici è \provv{0.106} sulle normali e \provv{0.127} sulle segnalate su tutte le ore, \provv{0.227} in entrambi i gruppi sulle ore diurne. Errori in watt.}
-    \label{tab:errori-etichette}
-    \vspace{0.6em}
-    \begin{tabular}{@{}L{0.26}L{0.11}L{0.07}L{0.07}L{0.08}L{0.07}L{0.07}L{0.08}@{}}
-        \toprule
-        & & \multicolumn{3}{@{}l}{Variante SDE U-Net} & \multicolumn{3}{@{}l}{Variante SDE-Net} \\
-        Osservazioni & Numero & MAE & RMSE & Cop. & MAE & RMSE & Cop. \\
-        \midrule
-        Normali & 8978381 & \provv{17.6} & \provv{43.1} & \provv{0.120} & \provv{19.3} & \provv{46.0} & \provv{0.979} \\
-        Segnalate & 1059283 & \provv{27.6} & \provv{66.2} & \provv{0.143} & \provv{31.7} & \provv{70.6} & \provv{0.956} \\
-        \addlinespace
-        Normali, ore diurne & 4156850 & \provv{37.3} & \provv{63.3} & \provv{0.257} & \provv{41.6} & \provv{67.6} & \provv{0.955} \\
-        Segnalate, ore diurne & 590695 & \provv{43.2} & \provv{75.6} & \provv{0.256} & \provv{50.9} & \provv{82.7} & \provv{0.937} \\
-        \addlinespace
-        Irradianza o produzione bassa & 115395 & \provv{98.5} & \provv{151.0} & \provv{0.014} & \provv{112.7} & \provv{158.5} & \provv{0.809} \\
-        Irradianza o produzione alta & 39289 & \provv{48.7} & \provv{74.0} & \provv{0.105} & \provv{48.7} & \provv{76.2} & \provv{0.970} \\
-        Temperatura estrema & 512047 & \provv{15.3} & \provv{41.9} & \provv{0.206} & \provv{19.9} & \provv{48.3} & \provv{0.975} \\
-        Vento estremo & 465833 & \provv{23.0} & \provv{53.1} & \provv{0.108} & \provv{25.7} & \provv{57.0} & \provv{0.968} \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\paragraph{Decisioni di MTGFlow.} Le stesse previsioni della variante SDE-Net sono divise secondo le decisioni di MTGFlow, che segnala il 6.1\% delle osservazioni contro il 10.6\% delle soglie climatologiche. Su tutte le ore, a un'ora, l'errore assoluto medio è \provv{26.0}~W sulle segnalate e \provv{20.3}~W sulle normali, un rapporto di \provv{1.28}; la copertura scende da \provv{0.977} a \provv{0.970}. Per orizzonte, sulle osservazioni diurne (Figura~\ref{fig:orizzonti}), la differenza in valore assoluto resta quasi costante, \provv{6.8}~W a un'ora e \provv{7.1}~W a sei ore, e poiché l'errore cresce con l'orizzonte il rapporto scende da \provv{1.15} a \provv{1.09}. La distanza fra osservazioni segnalate e normali non aumenta quindi con l'orizzonte.
-
-\paragraph{Tipo di estremo.} Le osservazioni segnalate da un detector sono divise incrociando la decisione con le etichette climatologiche della stessa località e dello stesso istante: per irradianza, temperatura e vento si distingue se il valore è sopra il quantile alto o sotto quello basso della banda. Un'osservazione segnalata che non ricade in alcun tipo è contata a parte. Le soglie dei detector sono quelle di riferimento, le osservazioni sono le diurne comuni ai due detector e le previsioni quelle della variante SDE-Net a sei orizzonti (Tabella~\ref{tab:errori-tipo}).
-
-\begin{table}[htbp]
-    \centering
-    \footnotesize
-    \setlength{\tabcolsep}{4pt}
-    \caption{Errore assoluto medio della variante SDE-Net, a una e a sei ore, sulle osservazioni diurne segnalate da MTGFlow e dalla versione su grafo di STGAN, per tipo di estremo climatologico. La quota è riferita alle osservazioni segnalate dal detector; i tipi possono sovrapporsi. Errori in watt.}
-    \label{tab:errori-tipo}
-    \vspace{0.6em}
-    \begin{tabular}{@{}L{0.21}L{0.09}L{0.07}L{0.065}L{0.065}L{0.09}L{0.07}L{0.065}L{0.065}@{}}
-        \toprule
-        & \multicolumn{4}{@{}l}{MTGFlow} & \multicolumn{4}{@{}l}{STGAN su grafo} \\
-        Osservazioni & Numero & Quota & 1 ora & 6 ore & Numero & Quota & 1 ora & 6 ore \\
-        \midrule
-        Normali & 4412660 & & \provv{45.0} & \provv{82.1} & 4630172 & & \provv{45.0} & \provv{82.3} \\
-        Segnalate & 312044 & & \provv{51.0} & \provv{89.0} & 94532 & & \provv{61.2} & \provv{93.8} \\
-        \addlinespace
-        Irradianza bassa & 6842 & 2.2\% & \provv{117.8} & \provv{231.5} & 5571 & 5.9\% & \provv{110.1} & \provv{184.6} \\
-        Irradianza alta & 2762 & 0.9\% & \provv{39.7} & \provv{124.8} & 167 & 0.2\% & \provv{62.2} & \provv{147.4} \\
-        Temperatura bassa & 1829 & 0.6\% & \provv{70.0} & \provv{147.8} & 2356 & 2.5\% & \provv{64.5} & \provv{157.9} \\
-        Temperatura alta & 48695 & 15.6\% & \provv{33.5} & \provv{56.9} & 2977 & 3.1\% & \provv{40.3} & \provv{63.1} \\
-        Vento basso & 5948 & 1.9\% & \provv{55.9} & \provv{93.3} & 1594 & 1.7\% & \provv{72.7} & \provv{94.0} \\
-        Vento alto & 20251 & 6.5\% & \provv{68.3} & \provv{115.3} & 3700 & 3.9\% & \provv{69.6} & \provv{123.3} \\
-        Nessun tipo & 231716 & 74.3\% & \provv{51.1} & \provv{88.7} & 79668 & 84.3\% & \provv{58.1} & \provv{86.7} \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-La maggior parte delle osservazioni segnalate non corrisponde ad alcun estremo climatologico: il 74.3\% per MTGFlow e l'84.3\% per STGAN. I detector appresi individuano quindi, in prevalenza, osservazioni che le soglie climatologiche non segnalano. Su queste l'errore del previsore è superiore a quello delle normali, ma in misura contenuta: a un'ora \provv{51.1}~W per MTGFlow e \provv{58.1}~W per STGAN contro \provv{45.0}~W. Gli errori più alti si trovano dove la segnalazione del detector coincide con un'irradianza insolitamente bassa, \provv{117.8} e \provv{110.1}~W a un'ora, più del doppio dell'errore sulle normali; seguono la temperatura bassa e il vento alto. Con temperatura alta l'errore è invece inferiore a quello delle normali, a entrambi gli orizzonti e per entrambi i detector. Il risultato concorda con quello ottenuto con le sole etichette climatologiche: la condizione su cui il previsore sbaglia di più è l'irradianza insolitamente bassa.
-
-\paragraph{Sensibilità alla soglia.} La decisione di un detector dipende da una soglia: per MTGFlow il moltiplicatore $k$ della soglia per località, pari a 1.5 nel protocollo di base, per STGAN la quota del ranking globale, pari all'1\%. Le due soglie sono state fatte variare, ricalcolando a ogni valore i due gruppi e i loro errori; per STGAN l'analisi è svolta sulla versione su grafo e sulla variante ConvGRU con kernel 3. Le previsioni sono quelle della variante SDE-Net a sei orizzonti, sulle osservazioni diurne per le quali sono disponibili gli score dei detector, il 99.5\% delle diurne. Per STGAN il ranking è ricalcolato dopo aver escluso 18 istanti riconducibili a un difetto dei dati: un azzeramento isolato dell'irradianza sull'intera regione e l'ora immediatamente successiva.
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics{sensibilita_soglia}
-    \caption{Rapporto fra l'errore assoluto medio della variante SDE-Net sulle osservazioni segnalate e quello sulle normali, al variare della soglia dei detector, a una e a sei ore. In ascissa la quota di osservazioni diurne segnalate: per MTGFlow diminuisce al crescere del moltiplicatore $k$, da 0.5 a 3; per STGAN cresce con la quota del ranking globale, dallo 0.25\% al 5\%. Il simbolo cerchiato indica la soglia di riferimento, $k=1.5$ e 1\%. Sopra la linea orizzontale l'errore sulle segnalate è maggiore di quello sulle normali. \notabozza{Valori provvisori.}}
-    \label{fig:sensibilita}
-\end{figure}
-
-Per MTGFlow, passando da $k=0.5$ a $k=3$ la quota di osservazioni segnalate scende dal 15.9\% al 2.8\% (Figura~\ref{fig:sensibilita}), ma il rapporto fra l'errore sulle segnalate e quello sulle normali resta fra \provv{1.13} e \provv{1.14} a un'ora e fra \provv{1.07} e \provv{1.09} a sei ore. In questo intervallo una soglia più severa non seleziona osservazioni più difficili per il previsore.
-
-Per STGAN il rapporto cresce invece al restringersi della quota, in entrambe le configurazioni, ma a partire da livelli molto diversi. Nella versione su grafo, passando dal 5\% allo 0.25\% del ranking, il rapporto a un'ora sale da \provv{1.07} a \provv{1.69} e a sei ore da \provv{1.10} a \provv{1.24}. Nella variante ConvGRU il rapporto a un'ora va da \provv{0.88} a \provv{1.17} e supera 1 soltanto sotto l'1.25\% del ranking; a sei ore resta sotto 1 a tutte le soglie: le osservazioni segnalate hanno un errore inferiore a quello delle normali. A quote vicine di osservazioni diurne segnalate, il 2.8\% per MTGFlow con $k=3$ e il 3.0\% per STGAN con l'1.5\% del ranking, i rapporti a un'ora sono \provv{1.14}, \provv{1.27} per la versione su grafo e \provv{0.98} per la variante ConvGRU.
-
-L'associazione fra lo score di STGAN e la difficoltà della previsione non è quindi una proprietà del metodo: è marcata nella versione su grafo e quasi assente nella variante ConvGRU. Il risultato è coerente con il basso accordo fra le osservazioni segnalate dalle due configurazioni (Sezione~\ref{sec:ris-stabilita}). Con una sola esecuzione per configurazione non è possibile stabilire quale delle due sia rappresentativa, né attribuire la differenza al modo di rappresentare l'intorno.
-
-\paragraph{Finestra di ingresso.} L'etichetta dell'osservazione prevista non è l'unica informazione disponibile: anche la finestra di ingresso può contenere osservazioni segnalate. Le previsioni sono quindi divise in quattro casi, secondo che la finestra di ingresso e l'osservazione prevista siano normali o anomale. La finestra comprende le 24 ore della stessa località che precedono l'emissione della previsione, ed è considerata anomala quando contiene almeno un'osservazione segnalata. Le decisioni sono quelle della versione su grafo di STGAN, con l'1\% del ranking; le previsioni sono quelle della variante SDE-Net a sei orizzonti sulle ore diurne. Sono escluse le previsioni con finestra incompleta o con osservazione prevista priva di score, circa il 3\%.
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics{quattro_casi}
-    \caption{Errore assoluto medio della variante SDE-Net nei quattro casi definiti dalle decisioni di STGAN sulla finestra di ingresso e sull'osservazione prevista, a una e a sei ore. Ore diurne del 2019. I quattro casi comprendono il 77.4\%, il 20.6\%, l'1.4\% e lo 0.6\% delle 4611053 previsioni a un'ora; le quote a sei ore differiscono di meno di 0.1 punti. \notabozza{Valori provvisori.}}
-    \label{fig:quattro-casi}
-\end{figure}
-
-Una finestra su cinque contiene almeno un'osservazione segnalata, benché le osservazioni segnalate siano l'1\% (Figura~\ref{fig:quattro-casi}). In questi casi l'errore è maggiore anche quando l'osservazione prevista è normale: \provv{50.3} contro \provv{42.9}~W a un'ora, il \provv{17}\% in più, e \provv{90.2} contro \provv{79.7}~W a sei ore, il \provv{13}\% in più. Un'anomalia nelle ore precedenti è quindi associata a una previsione peggiore anche quando l'ora prevista non è segnalata. L'effetto dell'osservazione prevista è più forte a un'ora e si attenua a sei: con ingresso normale e target anomalo l'errore aumenta del \provv{39}\% a un'ora e del \provv{16}\% a sei ore, un valore vicino a quello dovuto al solo ingresso anomalo. I conteggi sono previsioni per località e istante, non giorni indipendenti, e finestre vicine nel tempo condividono gran parte delle ore.
-
-\section{Anomalie ed eventi geografici su ERA5}
-\label{sec:ris-era5}
-
-Questa sezione riporta i risultati della configurazione adattata sugli anni 2005--2025, con il protocollo della Sezione~\ref{sec:exp-protocollo}. Non esistono etichette di anomalia: il detector è confrontato con i tre rilevatori senza modello, a parità di segnalazioni, e le sue segnalazioni sono confrontate con le osservazioni di stazione di E-OBS.
+\section{Confronto con i rilevatori senza modello}
+\label{sec:ris-confronto}
 
 \begin{figure}[htbp]
     \centering
@@ -240,26 +70,32 @@ Questa sezione riporta i risultati della configurazione adattata sugli anni 2005
 
 \paragraph{Cosa segnala il solo detector.} Rispetto al maggiore dei due rilevatori senza modello, il detector segnala da solo il \provv{42}\% delle proprie osservazioni. Questi valori non sono meteo ordinario: nei due rilevatori senza modello si collocano, in mediana, all'\provv{88}° e al \provv{91}° percentile, appena sotto la loro soglia, mentre le osservazioni non segnalate da nessuno stanno intorno al \provv{47}°. Il \provv{37}\% è segnalato di nuovo dal detector tre ore dopo, nella stessa cella, contro il \provv{2}\% delle osservazioni non segnalate. Fra le osservazioni che il detector segnala senza la distanza dal normale, sono più spesso lontane dal normale stagionale, di oltre una deviazione standard, la velocità verticale, la precipitazione e la radiazione solare (\provv{49}, \provv{42} e \provv{25}\%, contro \provv{23}, \provv{16} e \provv{13}\% di tutte le osservazioni). Nel \provv{10.6}\% delle segnalazioni del solo detector la combinazione delle variabili è insolita senza che alcuna variabile lo sia da sola, contro l'\provv{1.4}\% di tutte le osservazioni. Il detector aggiunge quindi soprattutto situazioni in cui più variabili legate alla precipitazione e ai moti verticali si discostano insieme, in misura moderata.
 
+\section{Conferma dalle stazioni}
+\label{sec:ris-eobs}
+
 \begin{table}[htbp]
     \centering
-    \footnotesize
+    \scriptsize
     \caption{Conferma dalle stazioni E-OBS. Rapporto $R$ fra la quota di coppie cella--giorno con un valore insolito nel gruppo indicato e quella di riferimento, nello stesso giorno della segnalazione; fra parentesi l'intervallo al 95\% ottenuto ricampionando gli anni. Il detector è confrontato con il maggiore dei due rilevatori senza modello; le soglie sono al 5\%.}
     \label{tab:era5-eobs}
     \vspace{0.6em}
-    \begin{tabular}{@{}L{0.25}L{0.155}L{0.155}L{0.155}L{0.155}@{}}
+    \setlength{\tabcolsep}{2pt}
+    \begin{tabular}{@{}L{0.16}L{0.13}L{0.13}L{0.13}L{0.13}L{0.13}L{0.13}@{}}
         \toprule
-        Gruppo / riferimento & Pioggia forte & Pressione bassa & Calo di pressione & Radiazione bassa \\
+        Gruppo / riferimento & Pioggia forte & Pressione bassa & Calo di pressione & Radiazione bassa & Caldo & Freddo \\
         \midrule
-        Solo detector / tutte & \provv{1.17} (\provv{1.12}--\provv{1.21}) & \provv{1.34} (\provv{1.27}--\provv{1.40}) & \provv{1.16} (\provv{1.11}--\provv{1.22}) & \provv{1.04} (\provv{1.00}--\provv{1.07}) \\
-        Solo detector / anello & \provv{1.58} (\provv{1.55}--\provv{1.62}) & \provv{1.35} (\provv{1.32}--\provv{1.37}) & \provv{1.27} (\provv{1.25}--\provv{1.29}) & \provv{1.22} (\provv{1.20}--\provv{1.25}) \\
-        Solo detector / solo rilevatore & \provv{1.01} (\provv{0.98}--\provv{1.05}) & \provv{1.14} (\provv{1.09}--\provv{1.19}) & \provv{1.00} (\provv{0.97}--\provv{1.04}) & \provv{0.80} (\provv{0.76}--\provv{0.83}) \\
+        Solo detector / tutte & \provv{1.17} (\provv{1.12}--\provv{1.21}) & \provv{1.34} (\provv{1.27}--\provv{1.40}) & \provv{1.16} (\provv{1.11}--\provv{1.22}) & \provv{1.04} (\provv{1.00}--\provv{1.07}) & \provv{1.53} (\provv{1.45}--\provv{1.60}) & \provv{0.82} (\provv{0.79}--\provv{0.86}) \\
+        Solo detector / anello & \provv{1.58} (\provv{1.55}--\provv{1.62}) & \provv{1.35} (\provv{1.32}--\provv{1.37}) & \provv{1.27} (\provv{1.25}--\provv{1.29}) & \provv{1.22} (\provv{1.20}--\provv{1.25}) & \provv{1.25} (\provv{1.22}--\provv{1.28}) & \provv{0.92} (\provv{0.90}--\provv{0.95}) \\
+        Solo detector / solo rilevatore & \provv{1.01} (\provv{0.98}--\provv{1.05}) & \provv{1.14} (\provv{1.09}--\provv{1.19}) & \provv{1.00} (\provv{0.97}--\provv{1.04}) & \provv{0.80} (\provv{0.76}--\provv{0.83}) & \provv{1.18} (\provv{1.11}--\provv{1.26}) & \provv{0.54} (\provv{0.50}--\provv{0.58}) \\
         \addlinespace
-        Entrambi / tutte & \provv{3.61} (\provv{3.48}--\provv{3.74}) & \provv{3.04} (\provv{2.95}--\provv{3.12}) & \provv{2.46} (\provv{2.39}--\provv{2.53}) & \provv{2.25} (\provv{2.16}--\provv{2.34}) \\
+        Entrambi / tutte & \provv{3.61} (\provv{3.48}--\provv{3.74}) & \provv{3.04} (\provv{2.95}--\provv{3.12}) & \provv{2.46} (\provv{2.39}--\provv{2.53}) & \provv{2.25} (\provv{2.16}--\provv{2.34}) & \provv{1.70} (\provv{1.61}--\provv{1.78}) & \provv{1.07} (\provv{1.00}--\provv{1.14}) \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\paragraph{Conferma dalle stazioni.} Le osservazioni di stazione confermano che le segnalazioni del solo detector cadono in giornate perturbate (Tabella~\ref{tab:era5-eobs}). Pioggia forte, pressione bassa e calo di pressione vi sono più frequenti della media, da \provv{1.16} a \provv{1.34} volte, con intervalli interamente sopra 1, e più frequenti che nelle celle immediatamente intorno, da \provv{1.27} a \provv{1.58} volte. Il segnale è debole rispetto a quello delle osservazioni segnalate anche dal rilevatore senza modello, da \provv{2.3} a \provv{3.6} volte la media, ed è dello stesso ordine di quello delle osservazioni segnalate dal solo rilevatore senza modello: le parti che ciascuno segnala da solo sono confermate in misura simile, con un leggero vantaggio del detector sulla pressione bassa e del rilevatore senza modello sulla radiazione bassa. Il giorno successivo il rapporto del solo detector sale a \provv{1.44} per la pioggia e a \provv{1.18} per la radiazione bassa; poiché il giorno di E-OBS non coincide sempre con il giorno UTC, questo aumento non basta a indicare un anticipo.
+\paragraph{Perturbazioni.} Le osservazioni di stazione confermano che le segnalazioni del solo detector cadono in giornate perturbate (Tabella~\ref{tab:era5-eobs}). Pioggia forte, pressione bassa e calo di pressione vi sono più frequenti della media, da \provv{1.16} a \provv{1.34} volte, con intervalli interamente sopra 1, e più frequenti che nelle celle immediatamente intorno, da \provv{1.27} a \provv{1.58} volte. Il segnale è debole rispetto a quello delle osservazioni segnalate anche dal rilevatore senza modello, da \provv{2.3} a \provv{3.6} volte la media, ed è dello stesso ordine di quello delle osservazioni segnalate dal solo rilevatore senza modello: le parti che ciascuno segnala da solo sono confermate in misura simile, con un leggero vantaggio del detector sulla pressione bassa e del rilevatore senza modello sulla radiazione bassa. Il giorno successivo il rapporto del solo detector sale a \provv{1.44} per la pioggia e a \provv{1.18} per la radiazione bassa; poiché il giorno di E-OBS non coincide sempre con il giorno UTC, questo aumento non basta a indicare un anticipo.
+
+\paragraph{Temperatura.} Sul caldo insolito le segnalazioni del solo detector sono confermate \provv{1.53} volte la media, e più di quelle del solo rilevatore senza modello (\provv{1.18}). Sul freddo insolito il rapporto è invece sotto 1, \provv{0.82}: le segnalazioni del solo detector cadono nei giorni freddi meno spesso di un giorno qualsiasi, e anche le osservazioni segnalate insieme al rilevatore senza modello sono confermate appena più della media. Il caldo insolito è definito sull'intero periodo di test e si concentra negli anni più recenti, nei quali anche lo score è un poco più alto: questo può aumentare il rapporto sul caldo indipendentemente dal detector.
 
 \begin{figure}[htbp]
     \centering
@@ -268,179 +104,84 @@ Questa sezione riporta i risultati della configurazione adattata sugli anni 2005
     \label{fig:era5-eobs}
 \end{figure}
 
-\paragraph{Anticipo.} All'inizio degli episodi dell'1\% dei cambiamenti più rapidi, il detector, al 5\%, segnala già la stessa cella nel \provv{50.1}\% dei casi, e da almeno sei ore nel \provv{19.8}\%. Nelle stesse condizioni la variazione in tre ore, alla stessa soglia del 5\%, segnala già il \provv{38.1}\% degli inizi e il maggiore dei due rilevatori senza modello il \provv{40.7}\%; negli istanti senza alcun inizio la quota è del \provv{3}\%. L'anticipo è in prevalenza di tre ore, un passo temporale, e il detector non segnala affatto il \provv{6.4}\% di questi episodi. Sugli scostamenti lenti dal clima il vantaggio non si ripete: all'inizio degli episodi più forti della distanza dal normale il detector è già attivo nel \provv{45.7}\% dei casi, contro il \provv{54.8}\% della stessa distanza dal normale alla soglia del 5\%. Si tratta di un anticipo rispetto agli altri rilevatori sugli stessi dati, non di una previsione.
+\section{Anticipo}
+\label{sec:ris-anticipo}
 
-\paragraph{Estensione delle perturbazioni.} Le celle che il detector segnala da solo sono per l'\provv{86}--\provv{94}\% contigue a una perturbazione segnalata dai rilevatori senza modello. Aggiungendo le segnalazioni del detector, l'area delle perturbazioni di almeno dieci celle cresce in mediana del \provv{30}--\provv{34}\%, e più di una su tre cresce di almeno la metà; usando al loro posto le segnalazioni del detector di un mese dopo, che conservano la quota e la struttura spaziale ma non il legame con il giorno, l'area mediana non cresce e solo il \provv{13}\% delle perturbazioni cresce di almeno la metà. All'1\% l'area complessiva cresce del \provv{40}--\provv{53}\% contro l'\provv{7}--\provv{10}\% del riferimento. Il detector estende quindi le perturbazioni già individuate più che segnalarne di nuove.
+All'inizio degli episodi dell'1\% dei cambiamenti più rapidi, il detector, al 5\%, segnala già la stessa cella nel \provv{50.1}\% dei casi, e da almeno sei ore nel \provv{19.8}\%. Nelle stesse condizioni la variazione in tre ore, alla stessa soglia del 5\%, segnala già il \provv{38.1}\% degli inizi e il maggiore dei due rilevatori senza modello il \provv{40.7}\%; negli istanti senza alcun inizio la quota è del \provv{3}\%. L'anticipo è in prevalenza di tre ore, un passo temporale, e il detector non segnala affatto il \provv{6.4}\% di questi episodi. Sugli scostamenti lenti dal clima il vantaggio non si ripete: all'inizio degli episodi più forti della distanza dal normale il detector è già attivo nel \provv{45.7}\% dei casi, contro il \provv{54.8}\% della stessa distanza dal normale alla soglia del 5\%. Si tratta di un anticipo rispetto agli altri rilevatori sugli stessi dati, non di una previsione.
 
-\paragraph{Incertezza Monte Carlo.} La deviazione standard dei 20 campioni è più alta dove il detector segnala: in mediana circa \provv{0.31}--\provv{0.41} nelle unità dello score normalizzato, contro \provv{0.09} sulle osservazioni non segnalate da nessuno. Restano sopra la soglia anche abbassando lo score di una deviazione standard l'\provv{82}--\provv{86}\% delle segnalazioni condivise con un rilevatore senza modello e il \provv{67}--\provv{72}\% di quelle del solo detector. Le segnalazioni del solo detector sono più vicine alla soglia, in rapporto alla dispersione dei campioni, e quindi più spesso dipendenti dalle maschere di dropout estratte.
+\section{Estensione delle perturbazioni}
+\label{sec:ris-estensione}
 
-\paragraph{Limiti.} I risultati vengono da una sola esecuzione, con un solo seme. La normalizzazione climatologica e le soglie sono calcolate sugli anni di test. La conferma da E-OBS riguarda la sola terraferma europea, dove le stazioni sono presenti, ed è aggregata per giorno.
+Le celle che il detector segnala da solo sono per l'\provv{86}--\provv{94}\% contigue a una perturbazione segnalata dai rilevatori senza modello. Aggiungendo le segnalazioni del detector, l'area delle perturbazioni di almeno dieci celle cresce in mediana del \provv{30}--\provv{34}\%, e più di una su tre cresce di almeno la metà; usando al loro posto le segnalazioni del detector di un mese dopo, che conservano la quota e la struttura spaziale ma non il legame con il giorno, l'area mediana non cresce e solo il \provv{13}\% delle perturbazioni cresce di almeno la metà. All'1\% l'area complessiva cresce del \provv{40}--\provv{53}\% contro l'\provv{7}--\provv{10}\% del riferimento. Il detector estende quindi le perturbazioni già individuate più che segnalarne di nuove.
 
+\section{Incertezza Monte Carlo}
+\label{sec:ris-incertezza}
 
-% ---------------------------------------------------------------------------
-% SCALETTA DA RIEMPIRE A RUN CONCLUSE (preparata il 12 ottobre 2026)
-% Stessa forma delle sezioni PVGIS: titoletti nel testo, poche tabelle, figure
-% generate da figures/genera_figure_risultati.py. Si riporta solo ciò che è
-% stato fatto nella forma corretta: una run per variante, a sedici passi sul
-% campo intero. Ciò che nella Metodologia non trova qui un risultato va tolto
-% dalla Metodologia.
-%
-% 1. Configurazioni e addestramento (un paragrafo + una tabella)
-%    Tabella: variante (ConvGRU, GAT-GRU), passi recenti, epoche, aggiornamenti
-%    per epoca, tassi di apprendimento, precisione, parametri di G e D, tempo.
-%    Comandi, per ogni cartella di run <RUN> in ~/physiq_pv/outputs:
-%      python3 -c "import json;m=json.load(open('<RUN>/metadata.json'));print(json.dumps({k:v for k,v in m.items() if not isinstance(v,(list,dict))},indent=1))"
-%      cat <RUN>/training_history.csv
-%
-% 2. Andamento dell'addestramento e monitoraggio (un paragrafo + una figura)
-%    Figura: loss di G e di D per epoca nelle due varianti; MMD nello spazio PCA
-%    per epoca, se il monitoraggio era attivo. Dati: training_history.csv.
-%    Da dire: se la loss di D resta vicina a ln 2 (0.69) o scende; nessuna
-%    conclusione sulla qualità del rilevamento dalla sola loss.
-%
-% 3. Score e dispersione Monte Carlo (un paragrafo + una figura)
-%    Figura: mappa del dominio con la quota di istanti segnalati per cella (o lo
-%    score medio), una per variante. Valori: quantili dello score e della
-%    dispersione u. Comando di partenza:
-%      ls -la <RUN>/scores | head -20
-%
-% 4. Accordo fra le due varianti (un paragrafo, numeri nel testo)
-%    Stesso calcolo fatto su PVGIS: osservazioni segnalate da entrambe, indice
-%    di Jaccard, valore atteso per caso. Su PVGIS era 0.03-0.05: dire se su ERA5
-%    le due varianti concordano di più.
-%
-% 5. Eventi geografici (un paragrafo + una tabella o una figura)
-%    Numero di eventi, durata e area (mediana, quartili), quota con separazioni
-%    o fusioni; un esempio di evento su mappa. Senza attribuire cause
-%    meteorologiche agli eventi se non c'è una fonte.
-%
-% ---------------------------------------------------------------------------
-% AGGIORNAMENTO DEL 13 OTTOBRE 2026: TABELLE A TRE SCORE AFFIANCATI
-% La scaletta qui sopra precede il percorso in quattro passi (prima run ConvGRU
-% con la correzione del dropout, due prove da un'epoca, run finale) e va
-% riscritta quando l'impostazione del capitolo è decisa. Vale già questo:
-% ogni controllo è riportato con tre colonne affiancate, per la prima run e
-% per la run finale. Il ruolo del ribilanciamento non è deciso: si riportano
-% per primi i risultati senza, e il ribilanciamento è presentato come una
-% regola applicata a posteriori. Decisione definitiva dopo la run finale.
-%
-% Colonne (nomi descrittivi, mai i nomi delle opzioni):
-%   A = score dell'articolo (ricostruzione più discriminatore)
-%   B = sola ricostruzione
-%   C = ricostruzione ribilanciata
-%
-% Righe, con i valori della prima run che compaiono negli appunti. Nessuno è
-% ancora stato riletto nel log: prima di scriverli vanno riletti tutti.
-%
-%   Controllo                                    |   A   |   B    |    C
-%   ---------------------------------------------+-------+--------+-----------
-%   Giornate documentate del 2019 sopra il 95°   |   ?   | 2/50   | 17/52 o 16/52
-%   Arrivi di polvere 2011-2024 sopra il 90°     | 10%?  | 32%    | 54% o 53%
-%     (atteso per caso 10%; 138 episodi)         |       |        |
-%   Eventi di durata superiore a 72 ore          |  0?   |   ?    | 453 o 472
-%   Tempeste maggiori ritrovate (su 10 cercate)  |   ?   |   ?    | 10
-%   Quota della variabile più presente           |   ?   | 97.5%  | sotto 9%
-%     nell'1% più alto dello score               |       | (nuvolosità) |
-%
-% Da chiarire rileggendo i log:
-%  - giornate del 2019: il denominatore è 50 in B e 52 in C; in C esistono due
-%    letture (17 e 16) con definizioni diverse. Va scelta una definizione sola
-%    e applicata alle tre colonne.
-%  - polvere: il 10% della colonna A e il 53% della C vengono dal confronto
-%    all'epoca 3 (controllo_epoch3_confronto.log); il 54% e il 32% dall'analisi
-%    del 12 ottobre. Va usata la stessa epoca nelle tre colonne.
-%  - eventi oltre 72 ore: 453 e 472 sono due conteggi di analisi diverse.
-% Run finale: stesse righe e stesse colonne, celle vuote fino ai risultati.
-% ---------------------------------------------------------------------------
-%
-% Limiti da scrivere comunque: un solo seme per variante; nessuna verità di
-% riferimento, quindi nessuna misura di accuratezza; soglia e normalizzazione
-% calcolate sull'intero test (protocollo retrospettivo).
-% ---------------------------------------------------------------------------
+La deviazione standard dei 20 campioni è più alta dove il detector segnala: in mediana circa \provv{0.31}--\provv{0.41} nelle unità dello score normalizzato, contro \provv{0.09} sulle osservazioni non segnalate da nessuno. Restano sopra la soglia anche abbassando lo score di una deviazione standard l'\provv{82}--\provv{86}\% delle segnalazioni condivise con un rilevatore senza modello e il \provv{67}--\provv{72}\% di quelle del solo detector. Le segnalazioni del solo detector sono più vicine alla soglia, in rapporto alla dispersione dei campioni, e quindi più spesso dipendenti dalle maschere di dropout estratte.
+% Nella run ep3 il discriminatore non ha dropout: la dispersione è quella del
+% solo generatore. Con la run scelta dalla ricerca va riportata anche la
+% dispersione dello score combinato, che comprende quella del discriminatore.
 
-% 13 ottobre 2026: la configurazione di base, con i due limiti osservati, è
-% raccontata nel Capitolo degli esperimenti (Sezione sec:configurazione-base-era5), sul
-% modello della tesi di riferimento. Questa sezione è riservata alla
-% configurazione finale e si scrive a run conclusa, con le stesse misure:
-% composizione dell'errore per variabile, stabilità fra le epoche, eventi per
-% durata, quota di celle segnalate per mese. I valori della configurazione di
-% base per il confronto, compresi quelli con l'errore ribilanciato (eventi
-% 44863 / 25265 / 2666 / 453), sono in risultati_fonti.tex.
+\section{Scelta dello score e dei pesi delle variabili}
+\label{sec:ris-ablazioni}
+% I numeri di questa sezione sono segnaposto della run ep3, calcolati sugli
+% anni di test perché quella run non ha validazione. Vanno rifatti sulla run
+% scelta dalla ricerca, sugli anni di validazione 2000-2004 (E-OBS li copre).
 
-% \subsection{Copertura dei dati e configurazione del detector}
+Le due scelte del metodo che si discostano di più dall'articolo, lo score e i pesi delle variabili, sono fatte sugli anni di validazione, confrontando ciascuna con le sue alternative sugli stessi controlli: la distribuzione delle segnalazioni fra fasce di latitudine e mesi, che dovrebbe restare vicina al 5\% ovunque, e la conferma dalle stazioni E-OBS, che copre anche gli anni di validazione. Tutte le alternative si calcolano dagli score della stessa esecuzione, senza un nuovo addestramento. Un'alternativa prevale su un indicatore E-OBS quando l'intervallo del suo rapporto ``solo detector / tutte'' sta sopra quelli delle altre senza sovrapporsi.
 
-% Riportare il periodo realmente acquisito, le quindici feature, la cadenza
-% trioraria, la griglia 0.5 gradi e il numero di celle complete effettivamente
-% usate. Lo split 1980-2003 / 2004 / 2005-latest è un default, non una run
-% attestata; indicare se il 2004 è stato escluso dal training.
-% Distinguere file scaricati, cubi preparati e training/scoring completati.
-% Documentare la maschera statica e le celle escluse; il trend di 56 passi
-% copre 168 ore. Non riutilizzare risultati PVGIS come risultati ERA5.
-% Per ogni run riportare: encoder del generatore (ConvGRU o GAT), unità del
-% campione (patch o campo intero), passi recenti, codifica temporale,
-% normalizzazione, precisione, batch, epoche completate, tassi di G e D,
-% rapporto di aggiornamento D:G e peso di ricostruzione.
+\paragraph{Score combinato e score di ricostruzione.} La Tabella~\ref{tab:ris-score} confronta lo score di ricostruzione con lo score combinato dell'articolo, con e senza normalizzazione climatologica, sulla stessa esecuzione. Lo score combinato non richiede la climatologia per essere distribuito in modo uniforme fra luoghi e stagioni: senza di essa la quota segnalata resta fra il \provv{4.3}\% e il \provv{6.7}\%, mentre lo score di ricostruzione senza climatologia andava dall'\provv{1.5}\% al \provv{13.7}\%. Le segnalazioni condivise con il rilevatore senza modello sono confermate in misura simile dai tre score. La differenza è nella parte che il detector aggiunge da solo: con lo score combinato le segnalazioni del solo detector cadono nei giorni di pioggia forte, di pressione bassa o di caldo insolito meno spesso della media, con rapporti fra \provv{0.60} e \provv{0.97}, contro \provv{1.17}--\provv{1.53} dello score di ricostruzione. Lo score di ricostruzione prevale su quattro indicatori su sei e non è mai sotto le alternative; resta quindi lo score principale, e lo score combinato è riportato come riferimento dell'articolo. Il risultato è coerente con l'instabilità dello score combinato osservata nella configurazione di base (Sezione~\ref{sec:configurazione-base-era5}).
 
-% \subsection{Score Monte Carlo e dispersione}
+\begin{table}[htbp]
+    \centering
+    \scriptsize
+    \caption{Score di ricostruzione e score combinato, sulla stessa esecuzione. Per gli indicatori E-OBS è riportato il rapporto ``solo detector / tutte'' nello stesso giorno, con l'intervallo al 95\%; in grassetto i valori il cui intervallo sta sopra quelli delle altre colonne. Quote: intervallo della quota segnalata fra fasce di latitudine e mesi, 5\% se luogo e stagione non contassero.}
+    \label{tab:ris-score}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.22}L{0.22}L{0.22}L{0.22}@{}}
+        \toprule
+        Controllo & Ricostruzione, con climatologia & Combinato & Combinato, con climatologia \\
+        \midrule
+        Pioggia forte & \textbf{\provv{1.17}} (\provv{1.12}--\provv{1.21}) & \provv{0.60} (\provv{0.58}--\provv{0.61}) & \provv{0.59} (\provv{0.58}--\provv{0.60}) \\
+        Pressione bassa & \textbf{\provv{1.34}} (\provv{1.27}--\provv{1.40}) & \provv{0.73} (\provv{0.71}--\provv{0.76}) & \provv{0.71} (\provv{0.69}--\provv{0.74}) \\
+        Calo di pressione & \textbf{\provv{1.16}} (\provv{1.11}--\provv{1.22}) & \provv{0.82} (\provv{0.80}--\provv{0.85}) & \provv{0.81} (\provv{0.78}--\provv{0.83}) \\
+        Radiazione bassa & \provv{1.04} (\provv{1.00}--\provv{1.07}) & \provv{1.00} (\provv{0.97}--\provv{1.02}) & \provv{0.96} (\provv{0.94}--\provv{0.99}) \\
+        Caldo & \textbf{\provv{1.53}} (\provv{1.45}--\provv{1.60}) & \provv{0.97} (\provv{0.94}--\provv{1.00}) & \provv{0.95} (\provv{0.92}--\provv{0.98}) \\
+        Freddo & \provv{0.82} (\provv{0.79}--\provv{0.86}) & \provv{0.87} (\provv{0.83}--\provv{0.90}) & \provv{0.89} (\provv{0.86}--\provv{0.92}) \\
+        \addlinespace
+        Quote per latitudine e mese & \provv{3.6}--\provv{5.8}\% & \provv{4.3}--\provv{6.7}\% & \provv{3.2}--\provv{5.9}\% \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
-% Inserire soltanto mappe e statistiche di run completate, secondo la
-% Sezione~\ref{sec:score-dropout-montecarlo}. Riportare numero di campioni e probabilità
-% di dropout, estremi del min-max delle due componenti e statistiche descrittive
-% delle componenti non normalizzate.
-% La dispersione è nelle unità dello score normalizzato: non presentarla come
-% probabilità di anomalia. Nel confronto fra celle anomale e normali ricordare
-% che le prime sono selezionate per score alto; una dispersione maggiore può
-% riflettere la scala dello score.
-% Se si usa lo z-score climatologico, dichiararlo e riportare i valori esclusi
-% per campioni insufficienti; non mescolare eventi estratti dai due score.
+\paragraph{Pesi delle variabili.} La Tabella~\ref{tab:ris-pesi} confronta tre modi di pesare le variabili nello score: i pesi della variazione su 24 ore della Sezione~\ref{sec:pesi-variabili-ricostruzione}, nessun peso, e pesi calcolati allo stesso modo sulla variazione in tre ore, il passo che il modello ricostruisce. Il confronto è svolto sullo score della singola cella, l'unico che si può ricalcolare dagli errori per variabile salvati, con la stessa normalizzazione climatologica per le tre varianti; il modello è lo stesso, addestrato con i pesi su 24 ore.
 
-% \subsection{Monitoraggio per epoca e selezione delle configurazioni}
+\begin{table}[htbp]
+    \centering
+    \scriptsize
+    \caption{Pesi delle variabili nello score, sullo score della singola cella della stessa esecuzione. Stesse convenzioni della Tabella~\ref{tab:ris-score}. L'ultima riga indica la variabile con la quota maggiore dello score nell'1\% delle osservazioni con lo score più alto.}
+    \label{tab:ris-pesi}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.22}L{0.22}L{0.22}L{0.22}@{}}
+        \toprule
+        Controllo & Pesi su 24 ore & Nessun peso & Pesi su 3 ore \\
+        \midrule
+        Pioggia forte & \provv{0.83} (\provv{0.80}--\provv{0.85}) & \provv{0.64} (\provv{0.62}--\provv{0.66}) & \provv{0.87} (\provv{0.82}--\provv{0.92}) \\
+        Pressione bassa & \provv{1.02} (\provv{0.97}--\provv{1.07}) & \provv{1.03} (\provv{0.98}--\provv{1.09}) & \textbf{\provv{2.40}} (\provv{2.22}--\provv{2.61}) \\
+        Calo di pressione & \provv{0.91} (\provv{0.88}--\provv{0.94}) & \provv{0.86} (\provv{0.83}--\provv{0.90}) & \textbf{\provv{1.13}} (\provv{1.08}--\provv{1.19}) \\
+        Radiazione bassa & \provv{0.90} (\provv{0.87}--\provv{0.93}) & \provv{0.74} (\provv{0.71}--\provv{0.76}) & \provv{0.94} (\provv{0.88}--\provv{1.00}) \\
+        Caldo & \provv{1.20} (\provv{1.15}--\provv{1.25}) & \provv{1.46} (\provv{1.39}--\provv{1.52}) & \provv{1.50} (\provv{1.42}--\provv{1.59}) \\
+        Freddo & \provv{0.91} (\provv{0.89}--\provv{0.94}) & \provv{0.83} (\provv{0.80}--\provv{0.86}) & \textbf{\provv{1.06}} (\provv{0.97}--\provv{1.14}) \\
+        \addlinespace
+        Quote per latitudine e mese & \provv{3.4}--\provv{6.0}\% & \provv{2.9}--\provv{6.0}\% & \provv{3.4}--\provv{6.1}\% \\
+        Variabile più presente nell'1\% più alto & Precipitazione, \provv{28}\% & Precipitazione, \provv{41}\% & Umidità del suolo, \provv{32}\% \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
-% LOSS LETTE DAI LOG SUL SERVER (10 ottobre 2026). D_mean e G_mean sono medie
-% sull'ultimo tratto, non cumulative.
-% ConvGRU a patch, 1 passo recente (train_cnn_mc_paper_run2.log), 3025793
-% aggiornamenti per epoca, 6 epoche, run conclusa:
-%   epoca 1: D 0.317 (151289 agg.), 0.197 (302578), 0.141 (453867), 0.071
-%   (1512890), 0.0035 (2874491); G 10.9, 13.3, 16.9, 30.9, 101.9
-%   epoche 2-6: D da 0.0034 a 0.0017; G da 102.8 a 107.
-% ConvGRU sul campo intero, 16 passi (train_fullgrid_recent16.log), 70072
-% aggiornamenti per epoca, bf16; il log copre le epoche 3-5:
-%   fine epoca 3: D 0.21, G 10.8; fine epoca 4: D 0.19, G 11.3-13.4;
-%   epoca 5: D 0.18, G 11.8, poi G 26.4 e 17.0 e il log si interrompe.
-% GAT-GRU, 16 passi (train_gatgru.log), 70072 aggiornamenti per epoca, bf16:
-%   fine epoca 3: D 0.196, G 12.8; epoca 4 all'80%: D 0.177, G 13.6.
-% ATTENZIONE: a parità di aggiornamenti la loss di D è simile nei due casi
-% (circa 0.20 a 300000 aggiornamenti sia con 1 passo sia con 16). La run a patch
-% fa 43 volte più aggiornamenti per epoca. Dai log non si può attribuire il
-% crollo di D al numero di passi: unità del campione e numero di aggiornamenti
-% cambiano insieme. Con D vicino a zero la loss di G attorno a 107 è compatibile
-% con il termine avversario saturato (deduzione).
+Le tre varianti distribuiscono le segnalazioni fra luoghi e stagioni in modo simile, con quote fra il \provv{2.9}\% e il \provv{6.1}\%. Senza pesi la precipitazione produce il \provv{41}\% dell'1\% più alto dello score; con i pesi su 24 ore la quota scende al \provv{28}\% e il resto si ripartisce fra più variabili. Rispetto all'assenza di pesi, i pesi su 24 ore hanno l'intervallo sopra su tre indicatori, pioggia forte, radiazione bassa e freddo, e sotto su uno, il caldo: i pesi spostano lo score dal caldo prolungato verso le perturbazioni. I pesi su tre ore prevalgono su tre indicatori, pressione bassa, calo di pressione e freddo, e non sono mai sotto le altre varianti. Il loro vantaggio riguarda però in buona parte la pressione, il cui peso è quasi cinque volte quello su 24 ore e la cui indipendenza da ERA5 non è verificata; con questi pesi, inoltre, l'umidità del suolo, una sola variabile lenta, produce un terzo dell'1\% più alto dello score, cioè lo squilibrio che i pesi dovrebbero evitare. Il detector usa quindi i pesi su 24 ore. Il confronto ha due limiti: lo score della singola cella conferma le segnalazioni meno dello score sulla patch, per esempio \provv{0.83} contro \provv{1.17} per la pioggia con gli stessi pesi, e il modello è addestrato con i pesi su 24 ore, che possono quindi risultare favoriti.
 
-% Riportare le curve per epoca della Sezione~\ref{sec:monitoraggio-senza-etichette}:
-% termini separati delle loss, uscite medie di D su reale e generato,
-% discrepanza delle feature di D, stabilità dello score, MMD in spazio PCA con
-% media, varianza sui sottoinsiemi e media mobile.
-% Indicare numero di componenti PCA, sottoinsiemi e banda del riferimento usato;
-% confrontare soltanto run che caricano gli stessi riferimenti.
-% Una MMD più bassa non è una misura di accuratezza del rilevamento.
+\section{Limiti dei risultati}
+\label{sec:ris-limiti}
 
-% \subsection{Confronto fra generatore ConvGRU e GAT e fra unità di training}
-
-% Confrontare ConvGRU a patch, ConvGRU sul campo intero e GAT soltanto su run
-% identificate. Le tre configurazioni differiscono per operatore spaziale,
-% unità del campione e numero di aggiornamenti per epoca: riportare gli
-% aggiornamenti effettivi, non soltanto le epoche.
-% Non attribuire le differenze al solo operatore spaziale.
-% L'accordo fra le anomalie delle configurazioni non equivale ad accuratezza.
-
-% \subsection{Cluster spaziali, traiettorie e sensibilità del postprocessing}
-
-% Integrare risultati verificati del metodo della Sezione~\ref{sec:eventi-geografici}.
-% Riportare soglia e sua popolazione, confronto stretto, kernel morfologico,
-% apertura/chiusura, dimensione minima e criterio di collegamento.
-% Non confondere il kernel morfologico con quello della ConvGRU.
-% Distinguere celle inizialmente sopra soglia da celle dei cluster finali.
-% Descrivere aree, durata, separazioni e fusioni con le convenzioni adottate;
-% le fusioni retrospettive modificano l'identità e il conteggio degli eventi.
-% Ogni confronto di sensibilità richiede esecuzioni documentate; la sola
-% parametrizzazione dell'algoritmo non costituisce un risultato quantitativo.
+I risultati vengono da una sola esecuzione per configurazione, con un solo seme. La conferma da E-OBS riguarda la sola terraferma europea, dove le stazioni sono presenti, ed è aggregata per giorno; per la pressione l'indipendenza da ERA5 non è verificata.

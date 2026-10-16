@@ -1,53 +1,79 @@
 \chapter{Esperimenti}
 \label{chap:esperimenti}
 
-Il capitolo descrive gli esperimenti nell'ordine in cui sono stati condotti, le configurazioni di addestramento, il protocollo con cui i modelli sono valutati e le metriche. I metodi sono quelli del Capitolo~\ref{chap:metodologia}; i risultati, con la descrizione delle singole analisi, sono nel Capitolo~\ref{chap:risultati}.
+Il capitolo ripercorre l'evoluzione del detector, dalla prima applicazione di STGAN ai dati PVGIS fino alla configurazione descritta nel Capitolo~\ref{chap:metodologia}, e definisce poi le configurazioni di addestramento, il protocollo di valutazione, le metriche e i rilevatori senza modello con cui il detector è confrontato. I risultati sono nel Capitolo~\ref{chap:risultati}.
 
-\section{Percorso degli esperimenti}
+\section{Evoluzione del detector}
+\label{sec:exp-evoluzione}
 \label{sec:exp-percorso}
 
-Gli esperimenti seguono due linee che si incontrano nell'analisi finale: il previsore della produzione e il rilevamento delle anomalie. La Tabella~\ref{tab:esperimenti} le riassume.
-
-Il primo passo riguarda il previsore. Le soglie climatologiche della Sezione~\ref{sec:soglie-climatologiche} indicano le osservazioni insolite dell'anno di test, e su di esse si verifica se un intervallo costruito attorno alla previsione contiene il valore osservato. I primi due metodi provati sono il dropout Monte Carlo e il Deep Ensemble, applicati al backbone; il primo richiede soltanto l'aggiunta di tre strati di dropout. Sono esperimenti preliminari, con un addestramento breve: poiché gli intervalli ottenuti contengono una quota ridotta delle osservazioni, come riportato nel Capitolo~\ref{chap:risultati}, non sono stati proseguiti con addestramenti più lunghi.
-
-Il secondo passo introduce le due varianti basate su equazioni differenziali stocastiche. La variante SDE U-Net segue l'articolo di Monaco et al.~\cite{monaco2025sdeunet}, compreso l'addestramento sulle sole finestre normali. La variante SDE-Net segue l'articolo di Kong et al.~\cite{kong2020sdenet} ed è eseguita in tre configurazioni: a un'ora, con uscita diretta su sei orizzonti da una a sei ore, e con le etichette di MTGFlow al posto di quelle climatologiche.
-
-La seconda linea cerca le anomalie con modelli appresi, per verificare se individuano condizioni diverse dai valori estremi segnalati dalle soglie climatologiche. Sui dati PVGIS, come analisi iniziale, sono addestrati MTGFlow, che non usa il contesto geografico, la versione su grafo di STGAN e la variante ConvGRU, quest'ultima con kernel di lato 1, 3 e 5. Poiché i dati PVGIS contengono soltanto irradianza, temperatura e vento, il detector è poi portato sui campi ERA5, sul campo intero e con sedici passi recenti, nelle due varianti ConvGRU e GAT-GRU.
-
-Le due linee si incontrano nell'analisi della Sezione~\ref{sec:ris-posthoc}: gli errori e gli intervalli del previsore sono confrontati fra le osservazioni che un detector segnala e le altre.
+Il detector non è stato definito in un solo passo. È il risultato di un percorso in cui ogni configurazione ha mostrato un limite misurato, e il limite ha motivato la modifica successiva. La sezione ripercorre i passi in ordine; la Tabella~\ref{tab:esperimenti} li riassume.
 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Esperimenti condotti, nell'ordine del percorso, con i dati usati e lo scopo di ciascuno.}
+    \caption{Passi dell'evoluzione del detector, con il limite osservato che ha motivato il passo successivo.}
     \label{tab:esperimenti}
     \vspace{0.6em}
-    \begin{tabular}{@{}L{0.30}L{0.12}L{0.50}@{}}
+    \begin{tabular}{@{}L{0.27}L{0.33}L{0.34}@{}}
         \toprule
-        Esperimento & Dati & Scopo \\
+        Passo & Che cosa cambia & Limite osservato \\
         \midrule
-        Soglie climatologiche & PVGIS & Prime etichette di condizioni insolite, per località e ora \\
-        Dropout Monte Carlo, Deep Ensemble & PVGIS & Verificare se un intervallo ottenuto campionando il backbone contiene le osservazioni \\
-        Variante SDE U-Net & PVGIS & Schema di Monaco et al. sul backbone, con addestramento sulle sole finestre normali \\
-        Variante SDE-Net & PVGIS & Schema di Kong et al. con testa gaussiana; un'ora, sei orizzonti, etichette MTGFlow \\
+        STGAN sui dati PVGIS & Detector dell'articolo su tre variabili di 1149 località, su grafo e su griglia & Solo grandezze legate al fotovoltaico; decisioni poco stabili fra configurazioni \\
         \addlinespace
-        MTGFlow & PVGIS & Detector appreso senza contesto geografico, un modello per località \\
-        STGAN su grafo & PVGIS & Detector con contesto spaziale, come nell'articolo \\
-        STGAN con ConvGRU & PVGIS & Stesso detector su griglia; kernel di lato 1, 3 e 5 \\
-        STGAN con ConvGRU e con GAT-GRU & ERA5 & Stesso detector su quindici variabili e su un dominio più ampio \\
+        STGAN su ERA5, a patch & Quindici variabili su un dominio ampio & Milioni di aggiornamenti per epoca; il discriminatore prevale nella prima epoca \\
+        \addlinespace
+        Campo intero & Un campione è il campo di un istante; sedici passi recenti & Il discriminatore riconosce il dropout del generatore \\
+        \addlinespace
+        Discriminatore senza il dropout del generatore & Il discriminatore giudica la ricostruzione senza dropout & L'errore è dominato da una variabile; lo score combinato è instabile \\
+        \addlinespace
+        Configurazione adattata & Normalizzazione stagionale, pesi delle variabili, score di ricostruzione con climatologia & Soglie e scelte calcolate sugli anni di test \\
+        \addlinespace
+        Validazione di tempo normale & Anni di validazione senza valori insoliti, ricerca dei parametri, dropout nel discriminatore, estremi dello score dalla validazione & -- \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\section{Dalla configurazione di base a quella adattata su ERA5}
+\subsection{STGAN sui dati PVGIS}
+\label{sec:exp-pvgis}
+
+Il detector è stato applicato per la prima volta alle serie orarie PVGIS del lavoro preliminare (Sezione~\ref{sec:rw-pvgis}): 1149 località del Piemonte, disposte su un reticolo regolare con passo di 5~km nella proiezione UTM del fuso 32, con tre variabili meteorologiche, cioè irradianza globale, temperatura a due metri e velocità del vento a dieci metri. Gli anni 2005--2018 sono usati per l'addestramento e il 2019 per il test. Sono state addestrate due versioni con gli stessi dati e lo stesso protocollo, per sei epoche con il tasso di apprendimento e il peso di ricostruzione dell'articolo. La versione su grafo segue l'articolo: il contesto di una località è il sottografo dei suoi otto vicini più prossimi, con pesi gaussiani delle distanze, il ramo recente contiene un passo e il trend 168 ore. La variante a griglia sostituisce la convoluzione su grafo con una ConvGRU su una patch $3\times3$ del reticolo, con kernel di lato 1, 3 e 5; sul bordo della regione 232 località hanno una patch incompleta. Lo score combinato è calcolato con minimo e massimo delle due componenti sull'intero test, e sono segnalate le osservazioni nell'1\% più alto.
+
+Due risultati hanno indirizzato il lavoro. Il primo riguarda il contenuto delle segnalazioni. Nella variante a griglia con kernel 3 il 75.5\% dell'errore di ricostruzione delle osservazioni segnalate è dovuto all'irradianza, il 15.8\% alla temperatura e l'8.6\% al vento. I dati PVGIS contengono soltanto le grandezze da cui dipende la produzione fotovoltaica, e un'osservazione segnalata non può essere ricondotta a una condizione meteorologica più generale.
+
+Il secondo riguarda la stabilità delle decisioni. Le configurazioni a griglia e la versione su grafo segnalano osservazioni in gran parte diverse: l'indice di Jaccard fra le segnalazioni di ciascuna configurazione a griglia e quelle della versione su grafo è compreso fra 0.032 e 0.052, da sei a dieci volte il valore atteso per due detector indipendenti, 0.005, ma più del 90\% delle osservazioni segnalate da una configurazione a griglia non è segnalato dalla versione su grafo. La loss del discriminatore resta fra 0.60 e 0.63 per tutte le sei epoche, vicina al valore $\ln 2\approx0.69$ di un discriminatore che non distingue, e lo score è concentrato in un intervallo stretto: con kernel 3, sulle patch complete, la mediana è 0.489 e il 95-esimo percentile 0.553. Una lettura coerente con queste misure è che su questi dati lo score distingua poco le osservazioni fra loro, e che piccole differenze fra i modelli bastino a cambiare la composizione dell'1\% più alto.
+
+Per individuare condizioni meteorologiche insolite di tipo più generale e descriverne l'origine, il lavoro è passato ai campi ERA5 del Capitolo~\ref{chap:dati}: quindici variabili in superficie e a 850~hPa, su un dominio che comprende l'Europa e il Mediterraneo.
+% Fonti: run_metadata.json delle run pvgis_stgan/paper_reference e
+% pvgis_stgan_cnn/convgru_* (10 ottobre 2026); ripartizione dell'errore e
+% accordo dai log di confronto; i valori erano nella Sezione "Decisioni dei
+% detector" dei Risultati, ora nel backup del 16 ottobre 2026.
+
+\subsection{Dalla patch al campo intero}
+
+Su ERA5 il detector ha mantenuto dapprima l'unità del campione della variante a griglia: una cella con la propria patch. Con questa unità il numero di campioni per epoca è il prodotto fra istanti e celle, e un'epoca comprendeva \provv{3025793} aggiornamenti dei pesi. Con il dropout nel generatore, la loss del discriminatore è scesa da \provv{0.32} a \provv{0.0035} entro la prima epoca, ed è rimasta su quel livello: il discriminatore distingueva quasi perfettamente i campi generati da quelli osservati. Un ramo recente più lungo non risolveva il problema, perché su una patch $3\times3$ moltiplica il costo di ogni campione senza ampliare l'area osservata.
+
+Il generatore è stato quindi portato sul campo intero (Sezione~\ref{sec:stgan-convgru}): un campione è il campo completo di un istante, ogni cella è ricostruita una sola volta e la ConvGRU scorre sull'intero reticolo. Il numero di aggiornamenti per epoca scende al numero di istanti, \provv{70072}, e la finestra recente è portata a sedici passi, cioè 48 ore. Il discriminatore resta locale.
+% Fonti: train_cnn_mc_paper_run2.log (patch, 1 passo recente, 6 epoche: D
+% 0.317 a 151289 aggiornamenti, 0.0035 a 2874491) e train_fullgrid_recent16.log
+% (campo intero, 70072 aggiornamenti per epoca con training 1980-2003).
+
+\subsection{Il discriminatore e il dropout del generatore}
+
+Anche sul campo intero il discriminatore tendeva a prevalere. La causa è stata individuata confrontando, a pesi e dati fissati, il giudizio del discriminatore sulla ricostruzione calcolata con e senza il dropout del generatore. Su 400 istanti di test, con il modello alla terza epoca, la mediana del giudizio sulla ricostruzione è 0.007 senza dropout e 0.84 con il dropout dei 20 campioni Monte Carlo; il giudizio sull'osservazione non cambia. Il discriminatore riconosceva quindi i campi generati soprattutto dal rumore del dropout, che il generatore non può eliminare perché è introdotto per costruzione. Da allora il discriminatore riceve la ricostruzione senza il dropout del generatore, nell'addestramento e negli score (Sezione~\ref{sec:score-dropout-montecarlo}). Il generatore dell'articolo non contiene dropout, e il problema non si pone.
+% Fonte: scripts/analyze_era5_stgan_checkpoints.py sulla run
+% stgan_convgru_fullgrid_recent16_cyclic_fp32, checkpoint dell'epoca 3, 11
+% ottobre 2026. Nelle run PVGIS a griglia, senza dropout, la loss di D resta
+% 0.60-0.63 per sei epoche: confronto non controllato (dati diversi).
+
+\subsection{Dalla configurazione di base a quella adattata}
 \label{sec:configurazione-base-era5}
 
-% Sezione scritta il 13 ottobre 2026 sul modello della tesi di riferimento
-% (una configurazione di partenza, i limiti osservati, le modifiche che ne
-% seguono). Numeri dai log letti lo stesso giorno, in risultati_fonti.tex; sono
-% in \provv perché la run esistente è addestrata su 1980-2003.
+% Sezione scritta il 13 ottobre 2026 sul modello della tesi di riferimento.
+% Numeri dai log letti lo stesso giorno, in risultati_fonti.tex; sono in \provv
+% perché la run esistente è addestrata su 1980-2003.
 
-Su ERA5 il detector non è stato portato subito nella forma finale. Il punto di partenza è una configurazione di base: la variante ConvGRU sul campo intero, con la normalizzazione min--max, lo stesso peso per tutte le variabili nell'errore di ricostruzione e lo score dell'articolo, somma dell'errore di ricostruzione e del termine del discriminatore. È addestrata sugli anni 1980--2004 per sei epoche e valutata sugli anni 2005--2025. Su questa configurazione sono emersi due limiti, e ciascuno ha motivato una modifica.
+Con il campo intero e la correzione del dropout si ottiene la configurazione di base: normalizzazione min--max, lo stesso peso per tutte le variabili nell'errore di ricostruzione e lo score dell'articolo, somma dell'errore di ricostruzione e del termine del discriminatore. È addestrata per sei epoche e valutata sugli anni 2005--2025. Su questa configurazione sono emersi due limiti, e ciascuno ha motivato una modifica.
 
 \paragraph{Una sola variabile domina l'errore.} La Tabella~\ref{tab:era5-variabili} riporta quanta parte dell'errore quadratico di ricostruzione è dovuta a ciascuna variabile, su 400 istanti del periodo di test e tutte le 10611 celle. La copertura nuvolosa produce il \provv{77.8}\% dell'errore, e il \provv{97.5}\% nell'1\% di osservazioni con l'errore più alto; con quote uguali ogni variabile avrebbe il 6.7\%. In pratica, le osservazioni con l'errore più alto sono errori sulla copertura nuvolosa.
 
@@ -93,147 +119,99 @@ Lo squilibrio è già nei dati. La copertura nuvolosa produce l'\provv{84.5}\% d
     \end{tabular}
 \end{table}
 
-Lo score dell'articolo segue quasi soltanto il termine del discriminatore: alla sesta epoca la sua correlazione con questo termine è \provv{0.92}, quella con l'errore di ricostruzione \provv{$-0.03$}. Cambia molto da un'epoca all'altra e non produce eventi che superano le 24 ore. L'errore di ricostruzione segnala in gran parte le stesse osservazioni e produce eventi che durano nel tempo. Su questi dati è quindi più informativo dello score combinato, e nella configurazione adattata lo score è il solo errore di ricostruzione.
+Lo score dell'articolo segue quasi soltanto il termine del discriminatore: alla sesta epoca la sua correlazione con questo termine è \provv{0.92}, quella con l'errore di ricostruzione \provv{$-0.03$}. Cambia molto da un'epoca all'altra e non produce eventi che superano le 24 ore. L'errore di ricostruzione segnala in gran parte le stesse osservazioni e produce eventi che durano nel tempo.
 
-\paragraph{Configurazione adattata.} La configurazione finale mantiene il modello e cambia tre elementi: la normalizzazione stagionale della Sezione~\ref{sec:ingresso-normalizzazione-era5}, i pesi delle variabili della Sezione~\ref{sec:pesi-variabili-ricostruzione} e lo score, ridotto al solo errore di ricostruzione. I suoi risultati sono nel Capitolo~\ref{chap:risultati}. Le osservazioni di questa sezione vengono da una sola esecuzione, con un solo seme; composizione dell'errore e stabilità sono misurate su 400 istanti e non sull'intero periodo di test.
+\paragraph{Configurazione adattata.} La configurazione adattata mantiene il modello e cambia tre elementi: la normalizzazione stagionale della Sezione~\ref{sec:ingresso-normalizzazione-era5}, i pesi delle variabili della Sezione~\ref{sec:pesi-variabili-ricostruzione} e lo score, che diventa il solo errore di ricostruzione espresso rispetto alla climatologia della propria cella (Sezione~\ref{sec:normalizzazione-climatologica-score}). La climatologia è necessaria perché l'errore di ricostruzione ha una grandezza tipica diversa da luogo a luogo e da stagione a stagione: senza di essa la quota di osservazioni segnalate, che sarebbe del 5\% ovunque se luogo e stagione non contassero, va dal \provv{1.5}\% al \provv{13.7}\% fra fasce di latitudine e mesi, con il massimo nelle zone più meridionali d'estate; con la climatologia resta fra il \provv{3.6}\% e il \provv{5.8}\%. Le osservazioni di questa sezione vengono da una sola esecuzione, con un solo seme; composizione dell'errore e stabilità sono misurate su 400 istanti e non sull'intero periodo di test.
+% Quote per fascia di latitudine e mese: check_era5_score_by_place.py sulla run
+% ..._ep3 (solo ricostruzione) e su ..._ep3_gen_clim; criterio fissato prima di
+% guardare (fra 2.5% e 10%).
+
+\subsection{Validazione di tempo normale e dropout nel discriminatore}
+
+Nella configurazione adattata le soglie, la climatologia degli score e, per lo score combinato, gli estremi delle due componenti sono calcolati sugli stessi anni su cui il detector è valutato, e le scelte fra configurazioni non hanno una misura calcolata fuori dal test. L'ultimo passo non nasce da un limite del modello ma da questo requisito del protocollo. I dati sono divisi in anni di addestramento, di validazione e di test (Sezione~\ref{sec:dati-split}); dalla validazione sono tolte le condizioni insolite, individuate senza modello (Sezione~\ref{sec:maschere-validazione}); le configurazioni sono confrontate con la distanza fra campi osservati e ricostruiti della Sezione~\ref{sec:monitoraggio-senza-etichette}, e i parametri che regolano l'equilibrio fra le due reti sono scelti con una ricerca automatica (Sezione~\ref{sec:exp-configurazioni}).
+
+Nello stesso passo il dropout è stato aggiunto anche al discriminatore. Con il discriminatore che riceve la ricostruzione senza il dropout del generatore e privo di dropout proprio, la sua componente dello score era identica in tutti i campioni Monte Carlo, e la dispersione dello score combinato veniva dal solo generatore. Con il dropout nelle due reti entrambe le componenti hanno una dispersione, e gli estremi con cui sono riportate sulla stessa scala sono fissati sulla validazione (Sezione~\ref{sec:score-dropout-montecarlo}).
 
 \section{Configurazioni di addestramento}
 \label{sec:exp-configurazioni}
 
-La Tabella~\ref{tab:configurazioni} riporta anni, numero di epoche, dimensione del batch, tasso di apprendimento e semi dei modelli addestrati sui dati PVGIS. Tutti usano le 1149 località e il 2019 come anno di test.
+La configurazione del detector è fissata, a eccezione dei quattro parametri che regolano l'equilibrio fra generatore e discriminatore, scelti con una ricerca bayesiana. La Tabella~\ref{tab:configurazioni} riporta gli uni e gli altri.
 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \setlength{\tabcolsep}{4pt}
-    \caption{Configurazioni di addestramento sui dati PVGIS. Per la variante SDE-Net il secondo tasso è quello della rete di diffusione. L'ultima colonna indica il numero di esecuzioni con semi diversi.}
+    \caption{Configurazione del detector su ERA5. Nella parte superiore i valori fissati, nella parte inferiore i parametri della ricerca, con l'intervallo esplorato; la distribuzione logaritmica rende equidistanti, per esempio, i rapporti 0.5 e 2.}
     \label{tab:configurazioni}
     \vspace{0.6em}
-    \begin{tabular}{@{}L{0.25}L{0.13}L{0.11}L{0.08}L{0.07}L{0.14}L{0.09}@{}}
+    \begin{tabular}{@{}L{0.44}L{0.48}@{}}
         \toprule
-        Modello & Training & Validation & Epoche & Batch & Tasso & Esecuzioni \\
+        Elemento & Valore \\
         \midrule
-        Dropout Monte Carlo & 2016--2018 & -- & 5 & 16 & $10^{-3}$ & 1 \\
-        Deep Ensemble & 2016--2018 & -- & 5 & 16 & $10^{-3}$ & 5 \\
-        Variante SDE U-Net & 2016--2017 & 2018 & 60 & 16 & $10^{-4}$ & 1 \\
-        Variante SDE-Net & 2016--2018 & -- & 60 & 16 & $10^{-4}$, $10^{-2}$ & 1 \\
+        Anni di addestramento, validazione, test & 1980--1999, 2000--2004, 2005--2025 \\
+        Unità del campione e batch & Campo intero, un istante per batch \\
+        Generatore & ConvGRU, due strati da 32 canali, kernel $3\times3$ \\
+        Finestra recente e trend & 16 e 56 passi, cioè 48 e 168 ore \\
+        Codifica temporale & Ciclica, per cella \\
+        Normalizzazione & Stagionale, con retta per tre variabili, poi min--max \\
+        Pesi delle variabili & Inversi della variazione su 24 ore \\
+        Dropout & 0.2, nel generatore e nel discriminatore \\
+        Campioni Monte Carlo negli score & 20 \\
+        Epoche & 6 \\
+        Precisione & BF16 \\
         \addlinespace
-        MTGFlow & 2005--2018 & -- & 40 & 256 & $2\cdot10^{-3}$ & 1 \\
-        STGAN su grafo & 2005--2018 & -- & 6 & 256 & $10^{-3}$ & 1 \\
-        STGAN con ConvGRU & 2005--2018 & -- & 6 & 256 & $10^{-3}$ & 1 \\
+        Tasso di apprendimento del generatore & da $10^{-4}$ a $3\cdot10^{-3}$, logaritmica \\
+        Rapporto fra i tassi del discriminatore e del generatore & da 0.25 a 4, logaritmica \\
+        Peso di ricostruzione $\lambda_G$ & da 50 a 2000, logaritmica \\
+        Aggiornamenti per batch, $n_D{:}n_G$ & 1:1, 2:1 oppure 1:2 \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-I previsori ricevono una finestra di 24 ore e undici feature. Il dropout Monte Carlo usa 20 passaggi in avanti e il Deep Ensemble cinque membri; la variante SDE U-Net campiona 20 traiettorie e la variante SDE-Net 10. Negli esperimenti preliminari l'addestramento usa al più 50000 campioni e l'encoder temporale ha dimensione nascosta 64 invece di 128. Gli esperimenti preliminari sono addestrati per 5 epoche e le due varianti SDE per 60: i due gruppi non sono a parità di addestramento, e i loro risultati non vanno letti come un confronto alla pari.
+L'obiettivo della ricerca è la media delle ultime cinque epoche della distanza fra campi osservati e ricostruiti della Sezione~\ref{sec:monitoraggio-senza-etichette}, da minimizzare. Ogni esecuzione della ricerca è addestrata e misurata sulla validazione, senza calcolare gli score sul test; la configurazione scelta è valutata sul test a partire dai pesi salvati. Un'epoca comprende 58384 aggiornamenti per rete, cioè gli istanti di addestramento meno i 56 di contesto del trend, e dura circa 2.4 ore.
 
-La variante SDE U-Net sceglie sul 2018 l'epoca del modello valutato; quando è addestrata sulle sole finestre normali, il filtro conserva 11109 delle 17496 finestre di training e 6054 delle 8736 di validation. La variante SDE-Net, come l'articolo, è addestrata per un numero fissato di epoche e valutata all'ultima; la sua diffusione massima parte da 0.01 e passa a 0.5 dopo 30 epoche, e il tasso di apprendimento del drift è ridotto di un fattore 10 dopo l'epoca 20.
-
-I detector su PVGIS usano tre variabili. MTGFlow è addestrato con finestre di 60 ore, un modello per località. Le versioni di STGAN usano un passo recente, 168 passi di trend e nove siti per contesto; ogni epoca visita tutte le coppie fra località e istanti, 140803056 campioni, e la variante ConvGRU ha 140931 parametri nel generatore e 114593 nel discriminatore con kernel 3.
-
-Su ERA5 il test comprende gli anni 2005--2025. La configurazione di base della Sezione~\ref{sec:configurazione-base-era5}, con la normalizzazione min--max e senza pesi fra le variabili, è addestrata sugli anni 1980--2004 per sei epoche. Un campione è l'intero campo di un istante, e un'epoca comprende \provv{70072} aggiornamenti dei pesi. La configurazione adattata è addestrata sugli stessi anni per \provv{sei} epoche, con 20 campioni Monte Carlo nello scoring.
-% La run da cui vengono i numeri dei Risultati sulla configurazione adattata
-% (..._wdaily_seasonal_trend_ep3) ha TRE epoche: "sei" è in \provv per scelta
-% dell'autore del 15 ottobre 2026 (testo scritto come per la run finale); da
-% sostituire con la run finale o da correggere prima della consegna.
-
-I modelli sono implementati in PyTorch~\cite{paszke2019pytorch}. I dati PVGIS ed ERA5 sono letti con xarray~\cite{hoyer2017xarray}; le tabelle di previsioni e di score sono elaborate con pandas~\cite{mckinney2010pandas}. Tutti i modelli sono addestrati su una scheda NVIDIA RTX PRO 6000 Blackwell.
-% Scheda grafica: stesso server usato nella tesi di Stiven Gjinaj, che riporta
-% lo stesso modello (confermato dall'autore l'11 ottobre 2026).
-% Fonti dei valori (verificati il 10 ottobre 2026): W&B per dropout Monte Carlo e
-% Deep Ensemble (run del 10 giugno 2026); report e W&B per le varianti SDE;
-% run_metadata.json per MTGFlow e STGAN; log di training per ERA5.
-% MTGFlow, anni: pvgis_mtgflow/prepared/loc_0000_0/metadata.json riporta
-% train_years [2005, 2018], validation_year null, test_year 2019, tre feature,
-% nessuna normalizzazione stagionale (riletto l'11 ottobre 2026). Il campo
-% export_train_years [2016, 2017, 2018] di run_metadata.json indica gli anni di
-% training di cui sono esportati gli score, non gli anni di addestramento.
-% DA FARE PRIMA DELLA CONSEGNA: la riga della variante SDE-Net descrive la run da
-% rifare con --no-validation; la run esistente ha training 2016--2017 e
-% validation 2018. Scelta dell'autore dell'11 ottobre 2026: intanto i Risultati
-% si scrivono con i numeri delle run esistenti, marcati con \provv (rosso nella
-% bozza). Prima della consegna: o si rifanno le run e si sostituiscono i numeri,
-% o in questa tabella e nel Capitolo dei dati si scrive training 2016--2017 e
-% validation 2018. Lo stesso vale per il riferimento a cielo sereno, calcolato
-% nelle run esistenti con inclinazione di 30 gradi.
-% Verificare anche il seme della nuova run SDE U-Net (quella
-% esistente, solo finestre normali, ha seme 42) e completare la parte ERA5 con le
-% configurazioni delle run concluse (precisione, tassi, codifica temporale).
+I modelli sono implementati in PyTorch~\cite{paszke2019pytorch}. I dati sono letti con xarray~\cite{hoyer2017xarray}; le tabelle di score sono elaborate con pandas~\cite{mckinney2010pandas}. Tutti i modelli sono addestrati su una scheda NVIDIA RTX PRO 6000 Blackwell.
+% Ricerca: sweep W&B 913ez3rt, creato il 16 ottobre 2026 da
+% sweeps/stgan_era5_normal_validation.yaml (sostituisce hk81wr16, senza dropout
+% nel discriminatore). Durata di un'epoca: 7.1 minuti ogni 2919 batch nel log
+% dell'agente. Scheda grafica: stesso server della tesi di Stiven Gjinaj.
+% ATTENZIONE: i numeri provvisori dei Risultati vengono dalla run
+% ..._wdaily_seasonal_trend_ep3: tre epoche, un seme, training fino al 2003,
+% tassi 1e-3, rapporto 1:1, peso 500, nessun dropout nel discriminatore,
+% climatologia e soglie sugli anni di test. Da sostituire con la run scelta.
 
 \section{Protocollo di valutazione}
 \label{sec:exp-protocollo}
 
-Tutti i modelli sui dati PVGIS sono valutati sul 2019, che non entra in alcun addestramento. Per i previsori ogni previsione richiede le 24 ore precedenti: le previsioni sono 8736 per località, in tutto 10037664. STGAN assegna uno score a ogni ora dell'anno, usando come contesto la coda del periodo di training: le osservazioni valutate sono 10065240. MTGFlow assegna lo score all'ultima ora di ogni finestra di 60 ore interna all'anno, cioè a 8701 ore per località, 9997449 in tutto.
+Gli score sono valutati sugli anni 2005--2025, su tutti gli istanti e tutte le 10611 celle. Dalla stessa esecuzione sono ricavati lo score combinato e lo score di ricostruzione della Sezione~\ref{sec:score-dropout-montecarlo}. Il protocollo separa ciò che si stima da ciò che si valuta. Le quantità che descrivono l'errore abituale del modello, cioè la climatologia degli score, gli estremi dello score combinato e le soglie, sono stimate sugli anni di validazione e restano fisse per il test; le scelte fra varianti dello score sono fatte anch'esse sulla validazione. Le soglie sono il 95-esimo e il 99-esimo percentile degli score di validazione, che sul test segnalano circa il 5\% e l'1\% delle osservazioni. Non esistono etichette di anomalia: il detector è confrontato con i rilevatori senza modello della Sezione~\ref{sec:exp-baseline}, con soglie fissate allo stesso modo, e con le osservazioni di stazione.
+% DA IMPLEMENTARE NEL CODICE: soglie dalla validazione (oggi i controlli
+% prendono il 5% o l'1% più alto degli anni valutati). Le quote effettive sul
+% test vanno riportate nei Risultati, perché con la deriva del clima possono
+% scostarsi dal 5% e dall'1%. Rispetto a ciascun rilevatore senza modello le osservazioni sono divise in quattro gruppi: segnalate dal solo detector, da entrambi, dal solo rilevatore senza modello, da nessuno dei due.
 
-Le metriche del previsore sono calcolate sull'insieme completo e separatamente sulle ore diurne, definite da un'irradianza al target maggiore di $10\,\mathrm{W\,m^{-2}}$: sono 4747545, il 47.3\% del totale. Le fasce di produzione dividono le osservazioni diurne in intervalli di 20 punti percentuali rispetto a un riferimento unico per tutte le località, il percentile 99 della produzione positiva diurna. La fascia è assegnata dalla produzione osservata e non da quella prevista.
+\paragraph{Osservazioni di stazione.} La conferma esterna viene da E-OBS~\cite{cornes2018eobs}, una griglia giornaliera costruita da osservazioni di stazione sulla terraferma europea e non derivata da ERA5. È usata la media dell'ensemble a 0.25°, versione 33.0e, distribuita dal Climate Data Store di Copernicus; ogni cella riceve la media dei punti E-OBS che contiene. Come indicatori sono usate la precipitazione giornaliera, la pressione al livello del mare, la sua variazione rispetto al giorno precedente, la radiazione solare e la temperatura media giornaliera. Un valore è insolito quando è nel 5\% più estremo per la cella e il mese di calendario: il più alto per la precipitazione, il più basso per pressione, variazione della pressione e radiazione, il più alto oppure il più basso per la temperatura. Una coppia cella--giorno è segnalata da un rilevatore se lo è almeno uno degli istanti di quel giorno. Il valore giornaliero di E-OBS segue la convenzione di ciascun fornitore di dati e non coincide necessariamente con il giorno UTC~\cite{cornes2018eobs}: il confronto è fatto con lo stesso giorno e con il successivo. Le celle con almeno una stazione sono \provv{4670} per la precipitazione, \provv{3518} per la pressione, \provv{3156} per la radiazione e \provv{4421} per la temperatura; le stazioni sono più rade nel sud e nell'est del dominio~\cite{cornes2018eobs}. Non è stato verificato se le misure di pressione delle stazioni entrino nell'assimilazione di ERA5: per questo indicatore l'indipendenza fra i due insiemi di dati potrebbe essere solo parziale.
 
-Le osservazioni sono divise in normali e segnalate secondo le etichette disponibili. Le soglie climatologiche sono calcolate sugli anni 2005--2018, che precedono l'anno di test: con queste le segnalate sono 1059283, il 10.6\%.
-% DA FARE PRIMA DELLA CONSEGNA: il testo descrive un'unica climatologia
-% (2005--2018) per tutti i previsori, per scelta dell'autore. Le run di giugno di
-% dropout Monte Carlo e Deep Ensemble hanno però usato le etichette della
-% cartella pvgis_anomaly_2019_2005_2023_w15_q0975: anni 2005--2018 e 2020--2023,
-% anno di test escluso (codice del 3 giugno 2026, commit 9a174145), con 983379
-% segnalate invece di 1059283. Le loro metriche complessive (copertura, MAE,
-% RMSE) non dipendono dalle etichette e si possono riportare. Le loro metriche
-% sulle sole osservazioni segnalate NON vanno riportate dalle run di giugno:
-% servono una nuova valutazione o una nuova run con le etichette 2005--2018.
-
-Per i detector la decisione dipende dal metodo: MTGFlow usa la soglia per località dell'equazione~\eqref{eq:mtgflow-soglia}, STGAN segnala l'1\% delle osservazioni con lo score più alto sull'intero test, cioè 100653 osservazioni.
-
-Nel confronto fra previsore e detector ogni previsione è associata alla decisione del detector sulla stessa località e sullo stesso istante previsto. Con sei orizzonti la stessa osservazione è associata a più previsioni, emesse in ore diverse. La restrizione alle ore diurne è applicata dopo la decisione: l'1\% di STGAN resta calcolato su tutte le ore e non soltanto su quelle diurne. Il modo in cui è calcolata ciascuna analisi è descritto insieme al risultato, nel Capitolo~\ref{chap:risultati}.
-
-
-\paragraph{Valutazione su ERA5.} Su ERA5 lo score della configurazione adattata è valutato sugli anni 2005--2025, su tutti gli istanti e tutte le 10611 celle. In assenza di etichette, il detector è confrontato con tre rilevatori che non usano un modello e sono calcolati sugli stessi dati standardizzati della Sezione~\ref{sec:ingresso-normalizzazione-era5}. La \emph{distanza dal normale} è l'errore che si commetterebbe rispondendo, in ogni cella, con il valore normale per quel giorno e quell'ora; la \emph{variazione in tre ore} è l'errore che si commetterebbe rispondendo con il valore dell'istante precedente; il terzo rilevatore prende il maggiore dei due. In entrambi gli errori ogni variabile è divisa per il proprio errore medio, così che le quindici variabili contino allo stesso modo, e ai tre score è applicata la stessa normalizzazione climatologica dello score del detector (Sezione~\ref{sec:normalizzazione-climatologica-score}).
-
-Ogni rilevatore segnala la stessa quota di osservazioni, il 5\% o l'1\% con lo score più alto, e i confronti sono quindi a parità di segnalazioni. Rispetto a ciascun rilevatore senza modello le osservazioni sono divise in quattro gruppi: segnalate dal solo detector, da entrambi, dal solo rilevatore senza modello, da nessuno dei due.
-
-La conferma esterna viene da E-OBS~\cite{cornes2018eobs}, una griglia giornaliera costruita da osservazioni di stazione sulla terraferma europea e non derivata da ERA5. È usata la media dell'ensemble a 0.25°, versione 33.0e, distribuita dal Climate Data Store di Copernicus; ogni cella riceve la media dei punti E-OBS che contiene. Come indicatori di una perturbazione sono usate la precipitazione giornaliera, la pressione al livello del mare, la sua variazione rispetto al giorno precedente e la radiazione solare. Un valore è insolito quando è nel 5\% più estremo per la cella e il mese di calendario: il più alto per la precipitazione, il più basso per le altre tre grandezze. Una coppia cella--giorno è segnalata da un rilevatore se lo è almeno uno degli istanti di quel giorno. Il valore giornaliero di E-OBS segue la convenzione di ciascun fornitore di dati e non coincide necessariamente con il giorno UTC~\cite{cornes2018eobs}: il confronto è fatto con lo stesso giorno e con il successivo. Le celle con almeno una stazione sono \provv{4670} per la precipitazione, \provv{3518} per la pressione e \provv{3156} per la radiazione; le stazioni sono più rade nel sud e nell'est del dominio~\cite{cornes2018eobs}.
-
-L'anticipo è misurato cella per cella. Un episodio di un rilevatore inizia quando una cella è segnalata dopo almeno 24 ore senza segnalazioni; a ogni inizio si verifica se l'altro rilevatore segnalava già la stessa cella senza interruzioni, e da quante ore. Come riferimento, la stessa verifica è svolta negli istanti in cui il primo rilevatore è quieto da altrettanto tempo e non inizia un episodio.
+\paragraph{Anticipo.} L'anticipo è misurato cella per cella. Un episodio di un rilevatore inizia quando una cella è segnalata dopo almeno 24 ore senza segnalazioni; a ogni inizio si verifica se l'altro rilevatore segnalava già la stessa cella senza interruzioni, e da quante ore. Come riferimento, la stessa verifica è svolta negli istanti in cui il primo rilevatore è quieto da altrettanto tempo e non inizia un episodio.
 
 \section{Metriche}
 \label{sec:exp-metriche}
 
-Per un gruppo di $n$ previsioni, le metriche puntuali sono l'errore assoluto medio e la radice dell'errore quadratico medio,
-\begin{equation}
-\operatorname{MAE}=\frac{1}{n}\sum_{i=1}^{n}|y_i-\hat{y}_i|,
-\qquad
-\operatorname{RMSE}=\sqrt{\frac{1}{n}\sum_{i=1}^{n}(y_i-\hat{y}_i)^2},
-\end{equation}
-espresse in watt. Le aggregazioni per orizzonte, fascia di produzione, etichetta o caso input--target utilizzano i campioni appartenenti al gruppo; il RMSE complessivo non viene ottenuto mediando i RMSE dei sottogruppi.
-
-Un intervallo predittivo $[l_i,u_i]$ è valutato per affidabilità e per ampiezza. La copertura è la quota di osservazioni contenute nell'intervallo,
-\begin{equation}
-\operatorname{PICP}=\frac{1}{n}\sum_{i=1}^{n}\mathbb{1}\left[l_i\leq y_i\leq u_i\right],
-\end{equation}
-e per un intervallo al 95\% dovrebbe essere vicina a 0.95. L'ampiezza media, divisa per l'intervallo dei valori osservati $R$, è
-\begin{equation}
-\operatorname{NMPIL}=\frac{1}{nR}\sum_{i=1}^{n}(u_i-l_i).
-\end{equation}
-Un intervallo utile è stretto e insieme affidabile. Il criterio usato da Monaco et al.~\cite{monaco2025sdeunet} combina le due misure penalizzando l'ampiezza quando la copertura scende sotto il livello $\gamma$:
-\begin{equation}
-\operatorname{CLC}=\operatorname{NMPIL}\left[1+\exp\!\left(-\eta\,(\operatorname{PICP}-\gamma)\right)\right],
-\end{equation}
-con $\gamma=0.95$ e $\eta=9$. Valori più bassi sono migliori.
-
-L'accordo fra due detector che segnalano gli insiemi di osservazioni $A$ e $B$ è misurato dall'indice di Jaccard,
+L'accordo fra due rilevatori che segnalano gli insiemi di osservazioni $A$ e $B$ è misurato dall'indice di Jaccard,
 \begin{equation}
 J(A,B)=\frac{|A\cap B|}{|A\cup B|},
 \end{equation}
-che vale 1 quando gli insiemi coincidono e 0 quando sono disgiunti. Non è una misura di accuratezza: due detector possono concordare ed entrambi sbagliare.
-Su ERA5, dove i rilevatori segnalano la stessa quota di osservazioni, è riportata la quota delle segnalazioni di $A$ che anche $B$ segnala, $|A\cap B|/|A|$, che a parità di segnalazioni coincide con $|A\cap B|/|B|$.
+che vale 1 quando gli insiemi coincidono e 0 quando sono disgiunti. Quando i rilevatori segnalano la stessa quota di osservazioni è riportata anche la quota delle segnalazioni di $A$ che anche $B$ segnala, $|A\cap B|/|A|$, che a parità di segnalazioni coincide con $|A\cap B|/|B|$. Nessuna delle due è una misura di accuratezza: due rilevatori possono concordare ed entrambi sbagliare.
 
 La conferma da E-OBS di un gruppo $G$ di coppie cella--giorno confronta la quota di coppie con un valore insolito nel gruppo con quella di tutte le coppie misurate:
 \begin{equation}
 R(G)=\frac{|G\cap U|\,/\,|G|}{|U|\,/\,|\Omega|},
 \end{equation}
 dove $U$ è l'insieme delle coppie con un valore insolito e $\Omega$ quello di tutte le coppie con un valore misurato. Con $R=1$ il gruppo ha valori insoliti quanto la media, con $R>1$ più spesso. Per distinguere una perturbazione dal semplice vicinato di una perturbazione, il gruppo segnalato dal solo detector è confrontato anche con il suo anello: le coppie entro una cella da una coppia del gruppo, nello stesso giorno, non segnalate da alcun rilevatore. Celle e giorni vicini non sono indipendenti; l'intervallo al 95\% di ogni rapporto è quindi ottenuto ricampionando con reinserimento gli anni interi, 2000 volte. Un intervallo interamente sopra 1 indica una quota più alta della media non spiegata dalla variabilità fra gli anni.
-% Formule lette nel codice (reporting/daytime_bin_anomaly_report.py). R è il
-% massimo della produzione osservata sul test (893.27 W nel 2019). Negli
-% esperimenti preliminari di giugno eta valeva 10; nelle run SDE vale 9, come
-% nell'articolo.
-% DECISO l'11 ottobre 2026: un solo valore, eta = 9 di Monaco et al., in tutta
-% la tesi. DA FARE NEI RISULTATI: il CLC di dropout Monte Carlo e Deep Ensemble
-% salvato su W&B (eta = 10) non va copiato; va ricalcolato con la formula sopra
-% da PICP e ampiezza media salvati (PICP 0.028 e 0.173; ampiezza da leggere su
-% W&B, run x4eic20l e 29yahjvt).
+
+\section{Rilevatori di confronto senza modello}
+\label{sec:exp-baseline}
+
+Il detector è confrontato con tre rilevatori che non usano un modello appreso. Rappresentano i due modi più semplici di dire che il tempo di una cella è insolito, e servono a stabilire che cosa il detector aggiunge a ciò che si ottiene senza addestramento. Sono calcolati sugli stessi dati standardizzati della Sezione~\ref{sec:ingresso-normalizzazione-era5}.
+
+La \emph{distanza dal normale} è l'errore che si commetterebbe rispondendo, in ogni cella, con il valore normale per quel giorno e quell'ora: misura lo scostamento dal clima, e coglie per esempio il caldo o il freddo prolungati. La \emph{variazione in tre ore} è l'errore che si commetterebbe rispondendo con il valore dell'istante precedente: misura il cambiamento rapido, e coglie per esempio il passaggio di un fronte. Il terzo rilevatore prende, cella per cella, il maggiore dei due. In entrambi gli errori ogni variabile è divisa per il proprio errore medio, così che le quindici variabili contino allo stesso modo, e ai tre score è applicata la stessa forma di normalizzazione climatologica dello score di ricostruzione (Sezione~\ref{sec:normalizzazione-climatologica-score}). Poiché questi rilevatori non usano un modello, errori medi e climatologia possono essere stimati direttamente sugli anni di addestramento, senza il problema dell'errore più basso sui dati già visti. Le soglie sono fissate come per il detector, al 95-esimo e al 99-esimo percentile degli score di validazione: i confronti sono quindi a parità di criterio.
+% DA IMPLEMENTARE: oggi scale e climatologia degli score semplici sono stimate
+% sugli anni valutati (rebalance --scale mean e climatology sul test).
