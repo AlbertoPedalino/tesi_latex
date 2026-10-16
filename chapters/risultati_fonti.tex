@@ -639,3 +639,37 @@
 % alzato il limite guardando gli anni di test; con dieci anni tenuti da parte
 % i valori estremi sono piu' frequenti e tre variabili chiedono un limite piu' alto.
 % DA FARE: rilanciare la run finale con questi limiti.
+
+% ======================================================================
+% Anomalie ed eventi geografici su ERA5 (sezione sec:ris-era5), 15 ottobre 2026
+% ======================================================================
+% TUTTI i numeri della sezione sono in \provv. Vengono dalla run
+% outputs/stgan_convgru_fullgrid_recent16_cyclic_bf16_cleanD_wdaily_seasonal_trend_ep3
+% (TRE epoche, un seme, climatologia e soglie sugli anni di test), letti dai
+% log incollati dall'autore; il testo è scritto come per la run finale a sei
+% epoche, per scelta dell'autore del 15 ottobre 2026. Da sostituire con la run
+% scelta dallo sweep, con soglie e climatologia dalla validazione.
+% Score: _gen_clim (errore di ricostruzione, media MC, climatologia); rilevatori
+% senza modello: _no_model_bal_clim, _previous_bal_clim e il loro massimo.
+% - Sovrapposizioni 50/52/58% (5%) e 43/44/51% (1%), 34/28% fra i due
+%   rilevatori senza modello: notebook era5_stgan_ep3_risultati.ipynb, sezione 1
+%   (un istante ogni 29).
+% - Cambiamenti più rapidi 75.6 / 53.1 / 89.8%: confronto_cambiamento_rapido.log
+%   e modello_contro_somma.log.
+% - Solo detector contro il maggiore dei due: 42%, percentili 97/88/91/89,
+%   nessuno 46-47, di nuovo 3 h dopo 37.1% contro 2.3%: notebook, sezione 2.
+% - Variabili lontane dal normale (49/42/25 contro 23/16/13%): log
+%   variabili_fuori_posto.log, detector contro la SOLA distanza dal normale.
+% - Combinazioni insolite 10.6% contro 1.4%: combinazione_insolita.log, detector
+%   contro il massimo dei due (_simple_max).
+% - E-OBS: pioggia_intervalli.log, pressione_bassa_intervalli.log,
+%   pressione_calo_intervalli.log, radiazione_intervalli.log (2000 estrazioni di
+%   anni); celle con stazioni 4670 / 3518 / 3156 da scarico_eobs.log.
+% - Anticipo 50.1 / 19.8 / 38.1 / 40.7 / 3.2 / 6.4; 45.7 contro 54.8:
+%   anticipo_modello_tutti.log, anticipo_controlli.log.
+% - Estensione delle perturbazioni: notebook, sezione 4 (anello di 1 cella,
+%   controllo con le segnalazioni di circa 30 giorni dopo, perturbazioni di
+%   almeno 10 celle).
+% - Incertezza MC: notebook, sezione 3.
+% Figure era5_sovrapposizione.pdf ed era5_eobs.pdf: generate da
+% figures/genera_figure_era5.py con gli stessi valori (15 ottobre 2026).

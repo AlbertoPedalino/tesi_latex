@@ -225,8 +225,57 @@ L'associazione fra lo score di STGAN e la difficoltà della previsione non è qu
 Una finestra su cinque contiene almeno un'osservazione segnalata, benché le osservazioni segnalate siano l'1\% (Figura~\ref{fig:quattro-casi}). In questi casi l'errore è maggiore anche quando l'osservazione prevista è normale: \provv{50.3} contro \provv{42.9}~W a un'ora, il \provv{17}\% in più, e \provv{90.2} contro \provv{79.7}~W a sei ore, il \provv{13}\% in più. Un'anomalia nelle ore precedenti è quindi associata a una previsione peggiore anche quando l'ora prevista non è segnalata. L'effetto dell'osservazione prevista è più forte a un'ora e si attenua a sei: con ingresso normale e target anomalo l'errore aumenta del \provv{39}\% a un'ora e del \provv{16}\% a sei ore, un valore vicino a quello dovuto al solo ingresso anomalo. I conteggi sono previsioni per località e istante, non giorni indipendenti, e finestre vicine nel tempo condividono gran parte delle ore.
 
 \section{Anomalie ed eventi geografici su ERA5}
+\label{sec:ris-era5}
 
-\notabozza{Sezione da scrivere a run conclusa: risultati della configurazione adattata, con le misure della Sezione~\ref{sec:exp-era5-base}.}
+Questa sezione riporta i risultati della configurazione adattata sugli anni 2005--2025, con il protocollo della Sezione~\ref{sec:exp-protocollo}. Non esistono etichette di anomalia: il detector è confrontato con i tre rilevatori senza modello, a parità di segnalazioni, e le sue segnalazioni sono confrontate con le osservazioni di stazione di E-OBS.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics{era5_sovrapposizione}
+    \caption{Sovrapposizione fra le segnalazioni del detector e dei tre rilevatori senza modello, al 5\% e all'1\% delle osservazioni. Ogni casella riporta la quota delle segnalazioni del rilevatore della riga segnalate anche dal rilevatore della colonna. Anni 2005--2025, un istante ogni 29. \notabozza{Valori provvisori.}}
+    \label{fig:era5-sovrapposizione}
+\end{figure}
+
+\paragraph{Complementarità.} Il detector e i rilevatori senza modello segnalano in parte le stesse osservazioni (Figura~\ref{fig:era5-sovrapposizione}). Al 5\%, delle segnalazioni del detector il \provv{50}\% è segnalato anche dalla distanza dal normale, il \provv{52}\% dalla variazione in tre ore e il \provv{58}\% dal maggiore dei due; all'1\% le quote scendono a \provv{43}, \provv{44} e \provv{51}\%. I due rilevatori senza modello sono fra loro ancora meno simili: hanno in comune il \provv{34}\% delle segnalazioni al 5\% e il \provv{28}\% all'1\%. Misurano infatti due aspetti diversi del meteo, lo scostamento dal clima e il cambiamento rapido, e il detector condivide una parte delle segnalazioni con ciascuno. Sui cambiamenti più rapidi, l'1\% delle variazioni in tre ore, il detector segnala il \provv{75.6}\% dei valori, la distanza dal normale il \provv{53.1}\% e il maggiore dei due rilevatori il \provv{89.8}\%: il detector segue i cambiamenti rapidi più della distanza dal normale, meno del rilevatore costruito proprio su di essi.
+
+\paragraph{Cosa segnala il solo detector.} Rispetto al maggiore dei due rilevatori senza modello, il detector segnala da solo il \provv{42}\% delle proprie osservazioni. Questi valori non sono meteo ordinario: nei due rilevatori senza modello si collocano, in mediana, all'\provv{88}° e al \provv{91}° percentile, appena sotto la loro soglia, mentre le osservazioni non segnalate da nessuno stanno intorno al \provv{47}°. Il \provv{37}\% è segnalato di nuovo dal detector tre ore dopo, nella stessa cella, contro il \provv{2}\% delle osservazioni non segnalate. Fra le osservazioni che il detector segnala senza la distanza dal normale, sono più spesso lontane dal normale stagionale, di oltre una deviazione standard, la velocità verticale, la precipitazione e la radiazione solare (\provv{49}, \provv{42} e \provv{25}\%, contro \provv{23}, \provv{16} e \provv{13}\% di tutte le osservazioni). Nel \provv{10.6}\% delle segnalazioni del solo detector la combinazione delle variabili è insolita senza che alcuna variabile lo sia da sola, contro l'\provv{1.4}\% di tutte le osservazioni. Il detector aggiunge quindi soprattutto situazioni in cui più variabili legate alla precipitazione e ai moti verticali si discostano insieme, in misura moderata.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Conferma dalle stazioni E-OBS. Rapporto $R$ fra la quota di coppie cella--giorno con un valore insolito nel gruppo indicato e quella di riferimento, nello stesso giorno della segnalazione; fra parentesi l'intervallo al 95\% ottenuto ricampionando gli anni. Il detector è confrontato con il maggiore dei due rilevatori senza modello; le soglie sono al 5\%.}
+    \label{tab:era5-eobs}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.25}L{0.155}L{0.155}L{0.155}L{0.155}@{}}
+        \toprule
+        Gruppo / riferimento & Pioggia forte & Pressione bassa & Calo di pressione & Radiazione bassa \\
+        \midrule
+        Solo detector / tutte & \provv{1.17} (\provv{1.12}--\provv{1.21}) & \provv{1.34} (\provv{1.27}--\provv{1.40}) & \provv{1.16} (\provv{1.11}--\provv{1.22}) & \provv{1.04} (\provv{1.00}--\provv{1.07}) \\
+        Solo detector / anello & \provv{1.58} (\provv{1.55}--\provv{1.62}) & \provv{1.35} (\provv{1.32}--\provv{1.37}) & \provv{1.27} (\provv{1.25}--\provv{1.29}) & \provv{1.22} (\provv{1.20}--\provv{1.25}) \\
+        Solo detector / solo rilevatore & \provv{1.01} (\provv{0.98}--\provv{1.05}) & \provv{1.14} (\provv{1.09}--\provv{1.19}) & \provv{1.00} (\provv{0.97}--\provv{1.04}) & \provv{0.80} (\provv{0.76}--\provv{0.83}) \\
+        \addlinespace
+        Entrambi / tutte & \provv{3.61} (\provv{3.48}--\provv{3.74}) & \provv{3.04} (\provv{2.95}--\provv{3.12}) & \provv{2.46} (\provv{2.39}--\provv{2.53}) & \provv{2.25} (\provv{2.16}--\provv{2.34}) \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\paragraph{Conferma dalle stazioni.} Le osservazioni di stazione confermano che le segnalazioni del solo detector cadono in giornate perturbate (Tabella~\ref{tab:era5-eobs}). Pioggia forte, pressione bassa e calo di pressione vi sono più frequenti della media, da \provv{1.16} a \provv{1.34} volte, con intervalli interamente sopra 1, e più frequenti che nelle celle immediatamente intorno, da \provv{1.27} a \provv{1.58} volte. Il segnale è debole rispetto a quello delle osservazioni segnalate anche dal rilevatore senza modello, da \provv{2.3} a \provv{3.6} volte la media, ed è dello stesso ordine di quello delle osservazioni segnalate dal solo rilevatore senza modello: le parti che ciascuno segnala da solo sono confermate in misura simile, con un leggero vantaggio del detector sulla pressione bassa e del rilevatore senza modello sulla radiazione bassa. Il giorno successivo il rapporto del solo detector sale a \provv{1.44} per la pioggia e a \provv{1.18} per la radiazione bassa; poiché il giorno di E-OBS non coincide sempre con il giorno UTC, questo aumento non basta a indicare un anticipo.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics{era5_eobs}
+    \caption{Conferma dalle stazioni E-OBS per quattro indicatori di perturbazione, nello stesso giorno della segnalazione e nel successivo. Le barre riportano il rapporto $R$ con il suo intervallo al 95\%; la linea verticale corrisponde a $R=1$, una quota pari alla media. Scala logaritmica. \notabozza{Valori provvisori.}}
+    \label{fig:era5-eobs}
+\end{figure}
+
+\paragraph{Anticipo.} All'inizio degli episodi dell'1\% dei cambiamenti più rapidi, il detector, al 5\%, segnala già la stessa cella nel \provv{50.1}\% dei casi, e da almeno sei ore nel \provv{19.8}\%. Nelle stesse condizioni la variazione in tre ore, alla stessa soglia del 5\%, segnala già il \provv{38.1}\% degli inizi e il maggiore dei due rilevatori senza modello il \provv{40.7}\%; negli istanti senza alcun inizio la quota è del \provv{3}\%. L'anticipo è in prevalenza di tre ore, un passo temporale, e il detector non segnala affatto il \provv{6.4}\% di questi episodi. Sugli scostamenti lenti dal clima il vantaggio non si ripete: all'inizio degli episodi più forti della distanza dal normale il detector è già attivo nel \provv{45.7}\% dei casi, contro il \provv{54.8}\% della stessa distanza dal normale alla soglia del 5\%. Si tratta di un anticipo rispetto agli altri rilevatori sugli stessi dati, non di una previsione.
+
+\paragraph{Estensione delle perturbazioni.} Le celle che il detector segnala da solo sono per l'\provv{86}--\provv{94}\% contigue a una perturbazione segnalata dai rilevatori senza modello. Aggiungendo le segnalazioni del detector, l'area delle perturbazioni di almeno dieci celle cresce in mediana del \provv{30}--\provv{34}\%, e più di una su tre cresce di almeno la metà; usando al loro posto le segnalazioni del detector di un mese dopo, che conservano la quota e la struttura spaziale ma non il legame con il giorno, l'area mediana non cresce e solo il \provv{13}\% delle perturbazioni cresce di almeno la metà. All'1\% l'area complessiva cresce del \provv{40}--\provv{53}\% contro l'\provv{7}--\provv{10}\% del riferimento. Il detector estende quindi le perturbazioni già individuate più che segnalarne di nuove.
+
+\paragraph{Incertezza Monte Carlo.} La deviazione standard dei 20 campioni è più alta dove il detector segnala: in mediana circa \provv{0.31}--\provv{0.41} nelle unità dello score normalizzato, contro \provv{0.09} sulle osservazioni non segnalate da nessuno. Restano sopra la soglia anche abbassando lo score di una deviazione standard l'\provv{82}--\provv{86}\% delle segnalazioni condivise con un rilevatore senza modello e il \provv{67}--\provv{72}\% di quelle del solo detector. Le segnalazioni del solo detector sono più vicine alla soglia, in rapporto alla dispersione dei campioni, e quindi più spesso dipendenti dalle maschere di dropout estratte.
+
+\paragraph{Limiti.} I risultati vengono da una sola esecuzione, con un solo seme. La normalizzazione climatologica e le soglie sono calcolate sugli anni di test. La conferma da E-OBS riguarda la sola terraferma europea, dove le stazioni sono presenti, ed è aggregata per giorno.
+
 
 % ---------------------------------------------------------------------------
 % SCALETTA DA RIEMPIRE A RUN CONCLUSE (preparata il 12 ottobre 2026)
@@ -310,7 +359,7 @@ Una finestra su cinque contiene almeno un'osservazione segnalata, benché le oss
 % ---------------------------------------------------------------------------
 
 % 13 ottobre 2026: la configurazione di base, con i due limiti osservati, è
-% raccontata nel Capitolo degli esperimenti (Sezione sec:exp-era5-base), sul
+% raccontata nel Capitolo degli esperimenti (Sezione sec:configurazione-base-era5), sul
 % modello della tesi di riferimento. Questa sezione è riservata alla
 % configurazione finale e si scrive a run conclusa, con le stesse misure:
 % composizione dell'errore per variabile, stabilità fra le epoche, eventi per
@@ -335,7 +384,7 @@ Una finestra su cinque contiene almeno un'osservazione segnalata, benché le oss
 % \subsection{Score Monte Carlo e dispersione}
 
 % Inserire soltanto mappe e statistiche di run completate, secondo la
-% Sezione~\ref{sec:era5-mcdropout}. Riportare numero di campioni e probabilità
+% Sezione~\ref{sec:score-dropout-montecarlo}. Riportare numero di campioni e probabilità
 % di dropout, estremi del min-max delle due componenti e statistiche descrittive
 % delle componenti non normalizzate.
 % La dispersione è nelle unità dello score normalizzato: non presentarla come
@@ -367,7 +416,7 @@ Una finestra su cinque contiene almeno un'osservazione segnalata, benché le oss
 % cambiano insieme. Con D vicino a zero la loss di G attorno a 107 è compatibile
 % con il termine avversario saturato (deduzione).
 
-% Riportare le curve per epoca della Sezione~\ref{sec:era5-monitoraggio}:
+% Riportare le curve per epoca della Sezione~\ref{sec:monitoraggio-senza-etichette}:
 % termini separati delle loss, uscite medie di D su reale e generato,
 % discrepanza delle feature di D, stabilità dello score, MMD in spazio PCA con
 % media, varianza sui sottoinsiemi e media mobile.
@@ -386,7 +435,7 @@ Una finestra su cinque contiene almeno un'osservazione segnalata, benché le oss
 
 % \subsection{Cluster spaziali, traiettorie e sensibilità del postprocessing}
 
-% Integrare risultati verificati del metodo della Sezione~\ref{sec:era5-eventi}.
+% Integrare risultati verificati del metodo della Sezione~\ref{sec:eventi-geografici}.
 % Riportare soglia e sua popolazione, confronto stretto, kernel morfologico,
 % apertura/chiusura, dimensione minima e criterio di collegamento.
 % Non confondere il kernel morfologico con quello della ConvGRU.

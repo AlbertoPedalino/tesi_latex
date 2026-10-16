@@ -395,13 +395,13 @@ Il training predefinito visita il prodotto completo fra tempi target e località
 Estrazione vettoriale delle finestre, cache normalizzata e scoring su disco permettono di elaborare i dati a blocchi. Gli estremi delle due componenti dello score rimangono globali sull'intero test; non vengono stimati separatamente per blocco. Il ranking esterno conserva l'ordinamento decrescente e risolve i pareggi secondo l'indice originale. Il batch di inferenza è configurabile separatamente da quello di training. L'equivalenza prevista dalle implementazioni e dai relativi controlli non costituisce una misura di accelerazione o di riduzione della memoria nelle esecuzioni reali.
 
 \section{Estensione a ERA5 ed estrazione degli eventi}
-\label{sec:era5-eventi}
+\label{sec:eventi-geografici}
 
 \subsection{Adattamento del detector alla cadenza trioraria}
 
 L'estensione utilizza i cubi e la maschera descritti nella Sezione~\ref{sec:dati-era5}, mantenendo l'architettura ConvGRU--LSTM e le loss della Sezione~\ref{sec:stgan}. Il target del generatore resta meteorologico e comprende ora quindici feature. La griglia è definita direttamente in coordinate geografiche, con EPSG:4326 e passo angolare di $0.5^\circ$.
 
-La cadenza diventa di tre ore e il trend viene impostato a 56 passi, conservando una durata di 168 ore. La lunghezza del ramo recente e la codifica temporale usate su ERA5 sono descritte nella Sezione~\ref{sec:era5-mc}. Preparazione, training con scoring e analisi degli eventi costituiscono fasi distinte: gli eventi vengono ricavati dagli score già disponibili, senza un nuovo aggiornamento dei pesi del detector.
+La cadenza diventa di tre ore e il trend viene impostato a 56 passi, conservando una durata di 168 ore. La lunghezza del ramo recente e la codifica temporale usate su ERA5 sono descritte nella Sezione~\ref{sec:stgan-era5-varianti}. Preparazione, training con scoring e analisi degli eventi costituiscono fasi distinte: gli eventi vengono ricavati dagli score già disponibili, senza un nuovo aggiornamento dei pesi del detector.
 
 La Figura~\ref{fig:schema-eventi} riassume i passaggi descritti nelle due sottosezioni che seguono.
 
@@ -438,37 +438,43 @@ d_{\mathrm{evento}}=t_{\mathrm{fine}}-t_{\mathrm{inizio}}+\Delta t,
 nel default ERA5; il solo tempo trascorso fra primo e ultimo frame viene conservato separatamente. La normalizzazione degli score sull'intero test, la soglia globale quando utilizzata e l'unificazione retrospettiva degli eventi definiscono un protocollo di analisi successiva al periodo osservato, non un sistema causale di allerta.
 
 \section{STGAN su ERA5: score Monte Carlo e varianti ConvGRU e GAT-GRU}
-\label{sec:era5-mc}
+\label{sec:stgan-era5-varianti}
 
-Gli sviluppi di questa sezione riguardano il solo percorso ERA5. Feature, griglia, maschera delle celle ed estrazione degli eventi restano quelle delle Sezioni~\ref{sec:dati-era5} e~\ref{sec:era5-eventi}. Il lavoro procede su due linee parallele, che condividono protocollo di training, score e monitoraggio e si distinguono per l'encoder spaziale del generatore: una ConvGRU, come nella Sezione~\ref{sec:stgan-convgru}, oppure una GAT-GRU, cioè un'unità ricorrente con l'attenzione su grafo nei gate. Nessuna delle due linee è la continuazione dell'altra.
+Gli sviluppi di questa sezione riguardano il solo percorso ERA5. Feature, griglia, maschera delle celle ed estrazione degli eventi restano quelle delle Sezioni~\ref{sec:dati-era5} e~\ref{sec:eventi-geografici}. Il lavoro procede su due linee parallele, che condividono protocollo di training, score e monitoraggio e si distinguono per l'encoder spaziale del generatore: una ConvGRU, come nella Sezione~\ref{sec:stgan-convgru}, oppure una GAT-GRU, cioè un'unità ricorrente con l'attenzione su grafo nei gate. Nessuna delle due linee è la continuazione dell'altra.
 
 \subsection{Dropout nel generatore e campionamento dello score}
-\label{sec:era5-mcdropout}
+\label{sec:score-dropout-montecarlo}
 
-Lo score è campionato con il dropout Monte Carlo~\cite{gal2016dropout}. Il generatore riceve tre strati di dropout: sulla rappresentazione spaziale del ramo recente, sulla rappresentazione del trend e sulla loro concatenazione con la codifica temporale, prima della proiezione di uscita. La probabilità predefinita è 0.2. Il discriminatore non contiene dropout.
+Lo score è campionato con il dropout Monte Carlo~\cite{gal2016dropout}. Il generatore riceve tre strati di dropout: sulla rappresentazione spaziale del ramo recente, sulla rappresentazione del trend e sulla loro concatenazione con la codifica temporale, prima della proiezione di uscita. La probabilità è 0.2. Il discriminatore non contiene dropout.
 
-% Da allineare quando si riscrive lo score (ruolo del discriminatore e del
-% ribilanciamento, dopo la run finale): il discriminatore riceve la
-% ricostruzione calcolata senza dropout, in addestramento e nello scoring, e
-% il dropout agisce soltanto sull'errore di ricostruzione. Va descritto come
-% forma del metodo, senza raccontarlo come correzione.
-Durante lo scoring il modello è in modalità di valutazione, con l'eccezione dei dropout del generatore, che restano attivi. Per ogni osservazione vengono estratti $J$ campioni, 20 nel default. Gli encoder del generatore, la codifica della storia nel discriminatore e il valore $D_{\mathrm{reale}}$ non dipendono dal dropout e sono calcolati una sola volta; a ogni campione vengono ripetuti i dropout, la proiezione di uscita e la valutazione del dato generato.
+Il discriminatore riceve la ricostruzione calcolata senza dropout, sia nell'addestramento, nel proprio aggiornamento e nel termine avversario del generatore, sia nello scoring. Se ricevesse la ricostruzione con il dropout, potrebbe distinguere i campi generati da quelli osservati per il rumore che il dropout vi introduce, e non per il loro contenuto. Il dropout agisce quindi soltanto sull'errore di ricostruzione: nella loss del generatore e nello score.
 
-Per la coppia tempo--località $(t,n)$ e il campione $j$, le due componenti sono l'errore quadratico medio $s^{(j)}_{G,tn}$ sulle celle valide del contesto spaziale e la differenza $s^{(j)}_{D,tn}=D_{\mathrm{reale}}-D^{(j)}_{\mathrm{generato}}$. Indicando con $\bar{s}_{G}$ e $\bar{s}_{D}$ le rispettive medie sui $J$ campioni, lo score è
+Durante lo scoring il modello è in modalità di valutazione, con l'eccezione dei dropout del generatore, che restano attivi. Per ogni osservazione vengono estratti $J=20$ campioni. Gli encoder del generatore, la codifica della storia nel discriminatore e il giudizio del discriminatore non dipendono dal dropout e sono calcolati una sola volta; a ogni campione vengono ripetuti i dropout e la proiezione di uscita.
+
+Per la coppia tempo--località $(t,n)$ e il campione $j$, la ricostruzione $\hat{x}^{(j)}$ dà l'errore di ricostruzione
 \begin{equation}
-a_{tn}=
-\frac{\bar{s}_{G,tn}-\min\bar{s}_{G}}{\max\bar{s}_{G}-\min\bar{s}_{G}}
-+\frac{\bar{s}_{D,tn}-\min\bar{s}_{D}}{\max\bar{s}_{D}-\min\bar{s}_{D}},
+s^{(j)}_{tn}=\frac{1}{|P_n|\,F}\sum_{c\in P_n}\sum_{f=1}^{F}w_f\left(\hat{x}^{(j)}_{tcf}-x_{tcf}\right)^{2},
 \end{equation}
-dove minimi e massimi sono presi sull'intero prodotto tempo--località del test. La fusione mantiene quindi lo schema della Sezione~\ref{sec:stgan}, applicato alle mappe medie. Una componente costante contribuisce zero.
-
-Gli stessi estremi trasformano ciascun campione, producendo $a^{(j)}_{tn}$. La dispersione associata allo score è la deviazione standard di popolazione
+dove $P_n$ sono le celle valide della patch di $n$ e $w_f$ i pesi delle variabili della Sezione~\ref{sec:pesi-variabili-ricostruzione}. Lo score è la media sui campioni,
 \begin{equation}
-u_{tn}=\sqrt{\frac{1}{J}\sum_{j=1}^{J}\left(a^{(j)}_{tn}-a_{tn}\right)^{2}}.
+\bar{s}_{tn}=\frac{1}{J}\sum_{j=1}^{J}s^{(j)}_{tn},
 \end{equation}
-Con $J=1$ lo score coincide con quello deterministico e $u_{tn}$ è nulla. Vengono conservati anche media e deviazione standard delle due componenti non normalizzate e la loro covarianza.
+cioè la media degli errori dei singoli campioni, e non l'errore della ricostruzione media. Per ogni cella e variabile le due quantità differiscono per la varianza delle ricostruzioni:
+\begin{equation}
+\frac{1}{J}\sum_{j=1}^{J}\left(\hat{x}^{(j)}-x\right)^{2}
+=\left(\bar{\hat{x}}-x\right)^{2}+\frac{1}{J}\sum_{j=1}^{J}\left(\hat{x}^{(j)}-\bar{\hat{x}}\right)^{2},
+\qquad
+\bar{\hat{x}}=\frac{1}{J}\sum_{j=1}^{J}\hat{x}^{(j)}.
+\end{equation}
+Lo score cresce quindi sia quando la ricostruzione si allontana dall'osservazione, sia quando i campioni non sono concordi fra loro. La quota dei due termini non è misurata separatamente.
 
-La quantità $u_{tn}$ misura la variabilità dello score rispetto alle maschere di dropout del generatore. È espressa nelle unità dello score normalizzato e non è una probabilità di anomalia; la sua calibrazione come misura di incertezza non è verificata dal metodo. Come nel caso deterministico, la normalizzazione dipende da tutti gli score del test, senza uso di etichette: estendere il periodo di test può modificare estremi e ordinamento.
+Nella configurazione di base lo score è quello dell'articolo: $\bar{s}_{tn}$ e la differenza $D_{\mathrm{reale}}-D_{\mathrm{generato}}$ fra il giudizio del discriminatore sull'osservazione e sulla ricostruzione, riportati ciascuno fra 0 e 1 con minimo e massimo sull'intero test e sommati, come nella Sezione~\ref{sec:stgan}. Poiché il discriminatore riceve la ricostruzione senza dropout, il suo termine è lo stesso in tutti i campioni. Nella configurazione adattata lo score è il solo errore di ricostruzione $\bar{s}_{tn}$, espresso poi rispetto alla climatologia della propria località come nella Sezione~\ref{sec:normalizzazione-climatologica-score}.
+
+La dispersione associata allo score è la deviazione standard di popolazione dei campioni,
+\begin{equation}
+u_{tn}=\sqrt{\frac{1}{J}\sum_{j=1}^{J}\left(s^{(j)}_{tn}-\bar{s}_{tn}\right)^{2}},
+\end{equation}
+nelle stesse unità dello score. Misura quanto lo score cambia con le maschere di dropout del generatore e non è una probabilità di anomalia; la sua calibrazione come misura di incertezza non è verificata dal metodo. Una segnalazione che resta sopra la soglia anche con lo score diminuito di $u_{tn}$ non dipende dalle maschere estratte.
 
 \subsection{Bilanciamento dell'addestramento avversario}
 
@@ -481,7 +487,7 @@ A ogni epoca vengono salvati i pesi e lo stato dei due ottimizzatori. Un trainin
 Rapporti fra tassi, numero di aggiornamenti e peso di ricostruzione sono strumenti per studiare l'equilibrio fra le due reti. La loro disponibilità non indica quale combinazione sia preferibile.
 
 \subsection{Finestra recente, codifica temporale ciclica e normalizzazione stagionale}
-\label{sec:era5-input}
+\label{sec:ingresso-normalizzazione-era5}
 
 La finestra recente contiene gli $R$ istanti che precedono quello da stimare. L'unità ricorrente spaziale la percorre in ordine: parte da uno stato nullo ed esegue un aggiornamento per ogni istante, sicché lo stato finale riassume gli $R$ campi osservati. Con $R=1$ il ramo recente vede soltanto l'ultimo istante e la ricorrenza si riduce a un solo aggiornamento: la storia più lunga è affidata alla LSTM del trend, che riguarda la sola cella centrale. Con $R>1$ il modello riceve anche l'evoluzione del campo negli istanti precedenti, e l'area che può influenzare una cella cresce con $R$, perché a ogni aggiornamento lo stato si propaga alle celle vicine.
 
@@ -524,13 +530,19 @@ I valori sono scelti sui soli anni di training, fra 0.01, 0.03, 0.1 e 0.3. La no
 L'ultimo passaggio riguarda il tempo. Gli anni di test seguono quelli di training, fino a oltre vent'anni dopo. Per una variabile che nel periodo ha una tendenza, la differenza fra il clima degli anni di test e quello degli anni di training entrerebbe in ogni valore standardizzato, e crescerebbe con la distanza dal training. Per tre variabili, temperatura a due metri, temperatura a 850~hPa e umidità del primo strato del suolo, ai valori standardizzati è quindi sottratta una retta nel tempo. La retta è una per variabile, uguale per tutte le celle: passa per le medie annuali dei valori standardizzati sull'intero dominio, è stimata sui soli anni di training e viene prolungata agli anni successivi. La scelta segue la definizione adottata nella tesi: un'anomalia è uno scostamento rispetto al clima del momento, e non rispetto al clima degli anni di training. Per le altre dodici variabili la retta non è sottratta. Fra queste c'è l'umidità specifica: la sua deriva inizia dopo gli anni di training, e una retta stimata su quegli anni non la descrive. Per questa variabile la correzione non può quindi essere applicata senza usare gli anni di test.
 % Misura della deriva per variabile (controllo_deriva_clima.log) e deriva che
 % resta dopo la retta: da riportare con i numeri riletti nel log.
+% Umidità specifica, riletta nel log il 13 ottobre 2026 (tabella "all months",
+% norma 1980-2003, medie annuali sul dominio in deviazioni standard): negli
+% anni 1980-2003 fra -0.13 e +0.06, media dei primi dodici anni +0.01 e degli
+% ultimi dodici -0.01, quindi nessuna tendenza; 2004 -0.02; 2005-2009 +0.03,
+% 2010-2014 +0.09, 2015-2019 +0.15, ultimi cinque anni +0.17. La frase sopra
+% è confermata.
 
 Dopo questi passaggi è applicato lo stesso min--max della prima normalizzazione, stimato sul training.
 
 Finestra recente, codifica temporale e normalizzazione modificano l'ingresso del modello: ogni scelta richiede un nuovo addestramento.
 
 \subsection{Pesi delle variabili nell'errore di ricostruzione}
-\label{sec:era5-pesi}
+\label{sec:pesi-variabili-ricostruzione}
 
 Nell'articolo tutte le variabili contano allo stesso modo nell'errore di ricostruzione. Nella configurazione finale su ERA5 l'errore è invece pesato per variabile, per evitare che le variabili con le variazioni più ampie da un giorno all'altro dominino l'errore. Indicando con $m_f$ il quadrato medio della variazione della variabile $f$ su 24 ore, calcolato sui dati di training normalizzati, il peso è
 \begin{equation}
@@ -541,7 +553,7 @@ w_f=\frac{\bar{m}}{m_f},
 con $F=15$. La differenza a 24 ore confronta istanti alla stessa ora del giorno e non contiene quindi il ciclo giornaliero. Il fattore $\bar{m}$ lascia invariata la loss per un errore proporzionale a $m_f$. I pesi moltiplicano l'errore quadratico di ciascuna variabile nel termine di ricostruzione della loss del generatore e nell'errore di ricostruzione da cui è calcolato lo score.
 
 \subsection{Monitoraggio senza etichette e spazio PCA di riferimento}
-\label{sec:era5-monitoraggio}
+\label{sec:monitoraggio-senza-etichette}
 
 Le quantità di questa sezione servono a osservare l'addestramento e a confrontare configurazioni. Non entrano in una loss, in un aggiornamento dei pesi, nello score o nella valutazione sul test, e non utilizzano etichette di anomalia. Il loro calcolo avviene senza gradiente e ripristina gli stati dei generatori casuali, così da non alterare la traiettoria del training.
 
@@ -568,7 +580,7 @@ Dopo l'ultima epoca viene inoltre calcolato, su tutti i punti validi della valid
 Numero di componenti principali, sottoinsiemi e banda fanno parte del protocollo e devono essere riportati. Poiché tutte le esecuzioni confrontate caricano gli stessi riferimenti, le differenze nella misura non dipendono da una nuova stima dello spazio o della banda. Una MMD più bassa indica ricostruzioni più vicine alle osservazioni nello spazio considerato; non misura direttamente la qualità del rilevamento delle anomalie.
 
 \subsection{Generatore GAT-GRU sul grafo della griglia}
-\label{sec:era5-gat}
+\label{sec:variante-gat-gru}
 
 Nella variante su grafo ogni località valida è un nodo. Ciascun nodo riceve un arco da ognuno degli otto vicini immediati presenti sulla griglia e da sé stesso. Gli archi sono diretti e memorizzati in forma sparsa; i bordi non sono collegati fra loro e una cella senza località non genera archi. A differenza del grafo del previsore, gli archi non hanno pesi geografici.
 
@@ -581,16 +593,16 @@ H_s &= M\odot\left[U_s\odot H_{s-1}+(1-U_s)\odot\widetilde{H}_s\right].
 \end{align}
 È la forma delle equazioni~\eqref{eq:convgru-reset}--\eqref{eq:convgru-stato}, con l'attenzione su grafo al posto della convoluzione spaziale e con lo stesso trattamento della maschera della Sezione~\ref{sec:stgan-convgru}. I default prevedono due strati ricorrenti, quattro teste e 32 canali. Poiché il gate di reset e lo stato candidato applicano l'operatore in sequenza, a ogni passo lo stato si propaga di due archi: con $R\geq2$ passi recenti e due strati, l'ingresso del primo passo raggiunge i nodi fino a $2R+1$ archi di distanza. La ConvGRU con kernel $3\times3$ ha la stessa struttura e lo stesso raggio.
 
-La LSTM del trend elabora una sequenza per nodo e la codifica temporale è proiettata per nodo o condivisa; seguono i tre dropout della Sezione~\ref{sec:era5-mcdropout} e la proiezione di uscita, che restituisce $[B,N,F]$.
+La LSTM del trend elabora una sequenza per nodo e la codifica temporale è proiettata per nodo o condivisa; seguono i tre dropout della Sezione~\ref{sec:score-dropout-montecarlo} e la proiezione di uscita, che restituisce $[B,N,F]$.
 
 Il discriminatore resta quello a patch. Per ogni nodo vengono estratte le patch $P\times P$ della storia recente, dell'osservazione e della ricostruzione globale del generatore, con le celle assenti azzerate e la relativa maschera. I centri sono elaborati a blocchi per limitare la memoria. La loss di ricostruzione è la media, sui centri, dell'errore quadratico medio sulla patch di ciascun centro: l'errore di un nodo entra quindi attraverso tutte le patch che lo contengono. Le loss dei blocchi sono pesate per la rispettiva frazione di centri, in modo che la loro somma coincida con la media su tutti i centri, e i gradienti vengono accumulati prima di un unico aggiornamento per rete.
 
-Un campione è un timestamp con tutti i nodi e il batch predefinito contiene un solo timestamp. Un'epoca comprende quindi $\lceil T/B\rceil$ aggiornamenti per rete, con $T$ timestamp utili, contro $\lceil TN/B\rceil$ del modello a patch. Score, campionamento Monte Carlo e fusione delle componenti seguono la Sezione~\ref{sec:era5-mcdropout}.
+Un campione è un timestamp con tutti i nodi e il batch predefinito contiene un solo timestamp. Un'epoca comprende quindi $\lceil T/B\rceil$ aggiornamenti per rete, con $T$ timestamp utili, contro $\lceil TN/B\rceil$ del modello a patch. Score, campionamento Monte Carlo e fusione delle componenti seguono la Sezione~\ref{sec:score-dropout-montecarlo}.
 
-Rispetto alla variante ConvGRU sul campo intero della Sezione~\ref{sec:era5-fullgrid}, il generatore GAT-GRU ha la stessa unità del campione, lo stesso numero di aggiornamenti per epoca, la stessa struttura ricorrente e lo stesso raggio: cambia il modo di pesare i vicini e, con esso, il numero di parametri. Rispetto alla variante ConvGRU a patch cambiano invece anche l'unità del campione e il numero di aggiornamenti per epoca.
+Rispetto alla variante ConvGRU sul campo intero della Sezione~\ref{sec:convgru-campo-intero}, il generatore GAT-GRU ha la stessa unità del campione, lo stesso numero di aggiornamenti per epoca, la stessa struttura ricorrente e lo stesso raggio: cambia il modo di pesare i vicini e, con esso, il numero di parametri. Rispetto alla variante ConvGRU a patch cambiano invece anche l'unità del campione e il numero di aggiornamenti per epoca.
 
 \subsection{Variante convoluzionale sul campo intero}
-\label{sec:era5-fullgrid}
+\label{sec:convgru-campo-intero}
 
 La variante convoluzionale usata su ERA5 mantiene la ConvGRU e modifica l'unità del campione, perché nel modello a patch il numero di aggiornamenti per epoca cresce con il prodotto fra timestamp e località: invece di una cella con la propria patch, un campione è l'intero campo di un timestamp, disposto sul reticolo $H\times W$. Moduli e parametri sono quelli del modello a patch; cambia ciò a cui vengono applicati. Alla variante porta anche la lunghezza della finestra recente: su una patch $3\times3$ aumentare $R$ moltiplica il costo di ciascuno dei $TN$ campioni senza ampliare l'area osservata, che resta di nove celle. La finestra recente di sedici passi è quindi usata sul campo intero.
 
@@ -603,9 +615,9 @@ La loss di ricostruzione è la media su celle con località e feature del campo,
 Come nella variante su grafo, un'epoca comprende $\lceil T/B\rceil$ aggiornamenti per rete invece di $\lceil TN/B\rceil$. A parità di epoche i due regimi non sono confrontabili: il numero di aggiornamenti dei pesi differisce di un fattore dell'ordine di $N$ e ogni gradiente è mediato su tutte le celle di un timestamp. La variante va quindi trattata come configurazione di training distinta, non come ottimizzazione del modello a patch.
 
 \subsection{Incertezza negli eventi e normalizzazione climatologica degli score}
-\label{sec:era5-climatologia}
+\label{sec:normalizzazione-climatologica-score}
 
-L'estrazione degli eventi della Sezione~\ref{sec:era5-eventi} può operare sullo score combinato oppure su una sola componente. La dispersione $u_{tn}$ viene ricollocata sulla griglia e riportata per cluster, come media e massimo sulle celle, e per evento, come media pesata sulle celle e massimo. Non partecipa alla soglia, alla morfologia o ai collegamenti temporali: è un'annotazione degli eventi già individuati.
+L'estrazione degli eventi della Sezione~\ref{sec:eventi-geografici} può operare sullo score combinato oppure su una sola componente. La dispersione $u_{tn}$ viene ricollocata sulla griglia e riportata per cluster, come media e massimo sulle celle, e per evento, come media pesata sulle celle e massimo. Non partecipa alla soglia, alla morfologia o ai collegamenti temporali: è un'annotazione degli eventi già individuati.
 
 Una trasformazione successiva allo scoring esprime ogni score rispetto alla climatologia della stessa località. Per la località $n$, il mese $m$ e l'ora UTC $o$ del timestamp $t$, appartenente all'anno $y$,
 \begin{equation}
@@ -613,4 +625,4 @@ Una trasformazione successiva allo scoring esprime ogni score rispetto alla clim
 \end{equation}
 dove media e deviazione standard sono calcolate sugli score della stessa località, mese e ora negli altri anni del test. Un anno non contribuisce quindi alla propria climatologia. I gruppi con meno di trenta valori di riferimento, nel default, o con varianza nulla non ricevono uno score. La dispersione $u_{tn}$ viene divisa per la stessa deviazione standard. Gli eventi possono essere estratti da questi score normalizzati con lo stesso algoritmo.
 
-Questa trasformazione agisce sugli score, dopo l'addestramento, e non modifica il detector. È distinta dalla normalizzazione stagionale della Sezione~\ref{sec:era5-input}, che agisce sull'ingresso e richiede un nuovo training. Le due operazioni rimuovono componenti cicliche in punti diversi della catena e il loro uso congiunto deve essere dichiarato.
+Questa trasformazione agisce sugli score, dopo l'addestramento, e non modifica il detector. È distinta dalla normalizzazione stagionale della Sezione~\ref{sec:ingresso-normalizzazione-era5}, che agisce sull'ingresso e richiede un nuovo training. Le due operazioni rimuovono componenti cicliche in punti diversi della catena e il loro uso congiunto deve essere dichiarato.

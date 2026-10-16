@@ -40,7 +40,7 @@ Le due linee si incontrano nell'analisi della Sezione~\ref{sec:ris-posthoc}: gli
 \end{table}
 
 \section{Dalla configurazione di base a quella adattata su ERA5}
-\label{sec:exp-era5-base}
+\label{sec:configurazione-base-era5}
 
 % Sezione scritta il 13 ottobre 2026 sul modello della tesi di riferimento
 % (una configurazione di partenza, i limiti osservati, le modifiche che ne
@@ -72,9 +72,9 @@ Su ERA5 il detector non è stato portato subito nella forma finale. Il punto di 
     \end{tabular}
 \end{table}
 
-Lo squilibrio è già nei dati. La copertura nuvolosa produce l'\provv{84.5}\% della variazione quadratica media su 24 ore dei dati normalizzati, e sulle quindici variabili la correlazione di rango fra questa quota e la quota di errore è \provv{0.87}: dopo il min--max, una variabile pesa nell'errore quanto cambia da un giorno all'altro. Da qui i pesi della Sezione~\ref{sec:era5-pesi}, che riportano le variabili sulla stessa scala di variazione.
+Lo squilibrio è già nei dati. La copertura nuvolosa produce l'\provv{84.5}\% della variazione quadratica media su 24 ore dei dati normalizzati, e sulle quindici variabili la correlazione di rango fra questa quota e la quota di errore è \provv{0.87}: dopo il min--max, una variabile pesa nell'errore quanto cambia da un giorno all'altro. Da qui i pesi della Sezione~\ref{sec:pesi-variabili-ricostruzione}, che riportano le variabili sulla stessa scala di variazione.
 
-\paragraph{Lo score combinato è instabile.} Il secondo limite riguarda lo score. La Tabella~\ref{tab:era5-score} confronta lo score dell'articolo con il solo errore di ricostruzione su due misure che non richiedono etichette: quanto lo score segnala le stesse osservazioni dopo un'epoca di addestramento in più, e quanto durano gli eventi costruiti con la procedura della Sezione~\ref{sec:era5-eventi}.
+\paragraph{Lo score combinato è instabile.} Il secondo limite riguarda lo score. La Tabella~\ref{tab:era5-score} confronta lo score dell'articolo con il solo errore di ricostruzione su due misure che non richiedono etichette: quanto lo score segnala le stesse osservazioni dopo un'epoca di addestramento in più, e quanto durano gli eventi costruiti con la procedura della Sezione~\ref{sec:eventi-geografici}.
 
 \begin{table}[htbp]
     \centering
@@ -95,7 +95,7 @@ Lo squilibrio è già nei dati. La copertura nuvolosa produce l'\provv{84.5}\% d
 
 Lo score dell'articolo segue quasi soltanto il termine del discriminatore: alla sesta epoca la sua correlazione con questo termine è \provv{0.92}, quella con l'errore di ricostruzione \provv{$-0.03$}. Cambia molto da un'epoca all'altra e non produce eventi che superano le 24 ore. L'errore di ricostruzione segnala in gran parte le stesse osservazioni e produce eventi che durano nel tempo. Su questi dati è quindi più informativo dello score combinato, e nella configurazione adattata lo score è il solo errore di ricostruzione.
 
-\paragraph{Configurazione adattata.} La configurazione finale mantiene il modello e cambia tre elementi: la normalizzazione stagionale della Sezione~\ref{sec:era5-input}, i pesi delle variabili della Sezione~\ref{sec:era5-pesi} e lo score, ridotto al solo errore di ricostruzione. I suoi risultati sono nel Capitolo~\ref{chap:risultati}. Le osservazioni di questa sezione vengono da una sola esecuzione, con un solo seme; composizione dell'errore e stabilità sono misurate su 400 istanti e non sull'intero periodo di test.
+\paragraph{Configurazione adattata.} La configurazione finale mantiene il modello e cambia tre elementi: la normalizzazione stagionale della Sezione~\ref{sec:ingresso-normalizzazione-era5}, i pesi delle variabili della Sezione~\ref{sec:pesi-variabili-ricostruzione} e lo score, ridotto al solo errore di ricostruzione. I suoi risultati sono nel Capitolo~\ref{chap:risultati}. Le osservazioni di questa sezione vengono da una sola esecuzione, con un solo seme; composizione dell'errore e stabilità sono misurate su 400 istanti e non sull'intero periodo di test.
 
 \section{Configurazioni di addestramento}
 \label{sec:exp-configurazioni}
@@ -131,9 +131,11 @@ La variante SDE U-Net sceglie sul 2018 l'epoca del modello valutato; quando è a
 
 I detector su PVGIS usano tre variabili. MTGFlow è addestrato con finestre di 60 ore, un modello per località. Le versioni di STGAN usano un passo recente, 168 passi di trend e nove siti per contesto; ogni epoca visita tutte le coppie fra località e istanti, 140803056 campioni, e la variante ConvGRU ha 140931 parametri nel generatore e 114593 nel discriminatore con kernel 3.
 
-Su ERA5 il test comprende gli anni 2005--2025. La configurazione di base della Sezione~\ref{sec:exp-era5-base}, con la normalizzazione min--max e senza pesi fra le variabili, è addestrata sugli anni 1980--2004 per sei epoche. Un campione è l'intero campo di un istante, e un'epoca comprende \provv{70072} aggiornamenti dei pesi.
-% Configurazione finale (normalizzazione stagionale, pesi, training 1980-2004,
-% tre epoche): da aggiungere con i valori letti in metadata.json a run conclusa.
+Su ERA5 il test comprende gli anni 2005--2025. La configurazione di base della Sezione~\ref{sec:configurazione-base-era5}, con la normalizzazione min--max e senza pesi fra le variabili, è addestrata sugli anni 1980--2004 per sei epoche. Un campione è l'intero campo di un istante, e un'epoca comprende \provv{70072} aggiornamenti dei pesi. La configurazione adattata è addestrata sugli stessi anni per \provv{sei} epoche, con 20 campioni Monte Carlo nello scoring.
+% La run da cui vengono i numeri dei Risultati sulla configurazione adattata
+% (..._wdaily_seasonal_trend_ep3) ha TRE epoche: "sei" è in \provv per scelta
+% dell'autore del 15 ottobre 2026 (testo scritto come per la run finale); da
+% sostituire con la run finale o da correggere prima della consegna.
 
 I modelli sono implementati in PyTorch~\cite{paszke2019pytorch}. I dati PVGIS ed ERA5 sono letti con xarray~\cite{hoyer2017xarray}; le tabelle di previsioni e di score sono elaborate con pandas~\cite{mckinney2010pandas}. Tutti i modelli sono addestrati su una scheda NVIDIA RTX PRO 6000 Blackwell.
 % Scheda grafica: stesso server usato nella tesi di Stiven Gjinaj, che riporta
@@ -180,6 +182,15 @@ Per i detector la decisione dipende dal metodo: MTGFlow usa la soglia per locali
 
 Nel confronto fra previsore e detector ogni previsione è associata alla decisione del detector sulla stessa località e sullo stesso istante previsto. Con sei orizzonti la stessa osservazione è associata a più previsioni, emesse in ore diverse. La restrizione alle ore diurne è applicata dopo la decisione: l'1\% di STGAN resta calcolato su tutte le ore e non soltanto su quelle diurne. Il modo in cui è calcolata ciascuna analisi è descritto insieme al risultato, nel Capitolo~\ref{chap:risultati}.
 
+
+\paragraph{Valutazione su ERA5.} Su ERA5 lo score della configurazione adattata è valutato sugli anni 2005--2025, su tutti gli istanti e tutte le 10611 celle. In assenza di etichette, il detector è confrontato con tre rilevatori che non usano un modello e sono calcolati sugli stessi dati standardizzati della Sezione~\ref{sec:ingresso-normalizzazione-era5}. La \emph{distanza dal normale} è l'errore che si commetterebbe rispondendo, in ogni cella, con il valore normale per quel giorno e quell'ora; la \emph{variazione in tre ore} è l'errore che si commetterebbe rispondendo con il valore dell'istante precedente; il terzo rilevatore prende il maggiore dei due. In entrambi gli errori ogni variabile è divisa per il proprio errore medio, così che le quindici variabili contino allo stesso modo, e ai tre score è applicata la stessa normalizzazione climatologica dello score del detector (Sezione~\ref{sec:normalizzazione-climatologica-score}).
+
+Ogni rilevatore segnala la stessa quota di osservazioni, il 5\% o l'1\% con lo score più alto, e i confronti sono quindi a parità di segnalazioni. Rispetto a ciascun rilevatore senza modello le osservazioni sono divise in quattro gruppi: segnalate dal solo detector, da entrambi, dal solo rilevatore senza modello, da nessuno dei due.
+
+La conferma esterna viene da E-OBS~\cite{cornes2018eobs}, una griglia giornaliera costruita da osservazioni di stazione sulla terraferma europea e non derivata da ERA5. È usata la media dell'ensemble a 0.25°, versione 33.0e, distribuita dal Climate Data Store di Copernicus; ogni cella riceve la media dei punti E-OBS che contiene. Come indicatori di una perturbazione sono usate la precipitazione giornaliera, la pressione al livello del mare, la sua variazione rispetto al giorno precedente e la radiazione solare. Un valore è insolito quando è nel 5\% più estremo per la cella e il mese di calendario: il più alto per la precipitazione, il più basso per le altre tre grandezze. Una coppia cella--giorno è segnalata da un rilevatore se lo è almeno uno degli istanti di quel giorno. Il valore giornaliero di E-OBS segue la convenzione di ciascun fornitore di dati e non coincide necessariamente con il giorno UTC~\cite{cornes2018eobs}: il confronto è fatto con lo stesso giorno e con il successivo. Le celle con almeno una stazione sono \provv{4670} per la precipitazione, \provv{3518} per la pressione e \provv{3156} per la radiazione; le stazioni sono più rade nel sud e nell'est del dominio~\cite{cornes2018eobs}.
+
+L'anticipo è misurato cella per cella. Un episodio di un rilevatore inizia quando una cella è segnalata dopo almeno 24 ore senza segnalazioni; a ogni inizio si verifica se l'altro rilevatore segnalava già la stessa cella senza interruzioni, e da quante ore. Come riferimento, la stessa verifica è svolta negli istanti in cui il primo rilevatore è quieto da altrettanto tempo e non inizia un episodio.
+
 \section{Metriche}
 \label{sec:exp-metriche}
 
@@ -210,6 +221,13 @@ L'accordo fra due detector che segnalano gli insiemi di osservazioni $A$ e $B$ �
 J(A,B)=\frac{|A\cap B|}{|A\cup B|},
 \end{equation}
 che vale 1 quando gli insiemi coincidono e 0 quando sono disgiunti. Non è una misura di accuratezza: due detector possono concordare ed entrambi sbagliare.
+Su ERA5, dove i rilevatori segnalano la stessa quota di osservazioni, è riportata la quota delle segnalazioni di $A$ che anche $B$ segnala, $|A\cap B|/|A|$, che a parità di segnalazioni coincide con $|A\cap B|/|B|$.
+
+La conferma da E-OBS di un gruppo $G$ di coppie cella--giorno confronta la quota di coppie con un valore insolito nel gruppo con quella di tutte le coppie misurate:
+\begin{equation}
+R(G)=\frac{|G\cap U|\,/\,|G|}{|U|\,/\,|\Omega|},
+\end{equation}
+dove $U$ è l'insieme delle coppie con un valore insolito e $\Omega$ quello di tutte le coppie con un valore misurato. Con $R=1$ il gruppo ha valori insoliti quanto la media, con $R>1$ più spesso. Per distinguere una perturbazione dal semplice vicinato di una perturbazione, il gruppo segnalato dal solo detector è confrontato anche con il suo anello: le coppie entro una cella da una coppia del gruppo, nello stesso giorno, non segnalate da alcun rilevatore. Celle e giorni vicini non sono indipendenti; l'intervallo al 95\% di ogni rapporto è quindi ottenuto ricampionando con reinserimento gli anni interi, 2000 volte. Un intervallo interamente sopra 1 indica una quota più alta della media non spiegata dalla variabilità fra gli anni.
 % Formule lette nel codice (reporting/daytime_bin_anomaly_report.py). R è il
 % massimo della produzione osservata sul test (893.27 W nel 2019). Negli
 % esperimenti preliminari di giugno eta valeva 10; nelle run SDE vale 9, come
