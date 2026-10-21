@@ -100,7 +100,18 @@ L'ultimo passaggio riguarda il tempo. Gli anni di test seguono quelli di addestr
 % 2015-2019 +0.15, ultimi cinque anni +0.17. La retta stimata su 1980-1999
 % lascia +0.13 negli ultimi cinque anni. Nello stesso log la precipitazione
 % totale passa da circa 0 negli anni di addestramento a +0.09/+0.26 dal 2000 in
-% poi (un gradino, non una tendenza; la retta lascia +0.16): da discutere.
+% poi. Non è nei dati: gradino_precipitazione.log (21 ottobre 2026,
+% scripts/check_era5_precipitation_step.py) mostra per anno media, quota di zeri,
+% di valori minimi e di ore piovose senza salto nel 2000, file grezzi salvati
+% allo stesso modo (float32, stessa conversione) e identici ai dati preparati.
+% Il salto compare in gennaio 2000 a ogni ora ed è più forte nelle celle più
+% secche (+0.2/+0.5 contro +0.1): è la media della distanza di una variabile
+% asimmetrica fuori dagli anni su cui è stimata la sua norma, non un cambiamento
+% del clima. Conferma in deriva_clima_1994.log: con la norma 1980-1994 la
+% precipitazione salta a +0.28 nel 1995, il primo anno fuori, e resta fra +0.14
+% e +0.38; l'umidità specifica resta fra -0.06 e +0.09 fino al 2009 e sale dopo.
+% Il detector usa la radice quarta e una soglia minima di 0.1 per la
+% deviazione standard della precipitazione.
 
 Dopo questi passaggi è applicato un min--max per variabile, stimato sugli anni di addestramento, che riporta i valori nell'intervallo $[-1,1]$ dell'uscita del generatore. Negli anni successivi, i valori esterni all'intervallo degli anni di addestramento possono superare questi estremi, perché la trasformazione non applica un clipping.
 
