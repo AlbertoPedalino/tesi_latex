@@ -1,7 +1,7 @@
 \chapter{Metodologia}
 \label{chap:metodologia}
 
-Il capitolo descrive il detector nella forma usata sui campi ERA5. La Sezione~\ref{sec:stgan} presenta l'architettura, cioè il generatore che opera sul campo intero e il discriminatore locale, e gli obiettivi dell'addestramento avversario. La Sezione~\ref{sec:ingresso-normalizzazione-era5} descrive l'ingresso del modello: finestra recente, codifica temporale e normalizzazione stagionale. Seguono i pesi delle variabili nell'errore di ricostruzione, il dropout Monte Carlo nelle due reti e gli score che ne derivano, la normalizzazione climatologica degli score, la validazione senza etichette e la ricostruzione di eventi geografici a partire dagli score. L'ultima sezione descrive una variante del generatore con attenzione su grafo. Il percorso che ha portato a queste scelte, a partire dalla configurazione dell'articolo, è descritto nel Capitolo~\ref{chap:esperimenti}.
+Il capitolo descrive il detector nella forma usata sui campi ERA5. La Sezione~\ref{sec:stgan} presenta l'architettura, cioè il generatore che opera sul campo intero e il discriminatore locale, e gli obiettivi dell'addestramento avversario. La Sezione~\ref{sec:ingresso-normalizzazione-era5} descrive l'ingresso del modello: finestra recente, codifica temporale e normalizzazione stagionale. Seguono i pesi delle variabili nell'errore di ricostruzione, il dropout Monte Carlo nelle due reti e gli score che ne derivano, la normalizzazione climatologica degli score, la validazione senza etichette e la ricostruzione di eventi geografici a partire dagli score. Il percorso che ha portato a queste scelte, a partire dalla configurazione dell'articolo, è descritto nel Capitolo~\ref{chap:esperimenti}.
 
 \section{Architettura e addestramento avversario}
 \label{sec:stgan}
@@ -168,20 +168,31 @@ u_{tn}=\sqrt{\frac{1}{J}\sum_{j=1}^{J}\left(a^{(j)}_{tn}-\bar{a}_{tn}\right)^{2}
 \end{equation}
 nelle stesse unità dello score, e analogamente per la componente di ricostruzione. Misura quanto lo score cambia con le maschere di dropout delle due reti e non è una probabilità di anomalia; la sua calibrazione come misura di incertezza non è verificata dal metodo. Una segnalazione che resta sopra la soglia anche con lo score diminuito di $u_{tn}$ non dipende dalle maschere estratte. Le singole estrazioni non vengono conservate: media, deviazione standard e covarianza delle due componenti bastano a ricavare la dispersione di qualunque loro combinazione lineare.
 
+\subsection{Classi di fiducia}
+\label{sec:classi-fiducia}
+
+La dispersione dei campioni del generatore cresce con l'errore di ricostruzione: un'osservazione ricostruita male ha in genere anche campioni più discordi. Per ricavarne un'informazione che l'errore non contiene già, la deviazione standard dei campioni del generatore di una segnalazione è confrontata con quella delle segnalazioni che hanno un errore simile. Sugli anni di validazione le segnalazioni sono divise in venti fasce di uguale numerosità secondo la componente di ricostruzione media $\bar{s}_{G,tn}$; in ogni fascia i quintili della deviazione standard dei campioni del generatore definiscono cinque classi. La classe 1 raccoglie le segnalazioni i cui campioni sono i più concordi per il loro errore, la classe 5 quelle con i campioni più discordi. I limiti delle fasce e dei quintili restano fissi per il test. La classe accompagna ogni segnalazione come indicazione di fiducia: non entra nello score né nella soglia, e non decide se un'osservazione è segnalata.
+
 \section{Normalizzazione climatologica degli score}
 \label{sec:normalizzazione-climatologica-score}
 
-Una trasformazione successiva al calcolo degli score esprime ogni score rispetto alla climatologia della stessa località. Per la località $n$, il mese $m$ e l'ora UTC $o$ del timestamp $t$, appartenente all'anno $y$,
+Una trasformazione successiva al calcolo degli score esprime ogni score rispetto alla climatologia della stessa località. Per la località $n$, il mese $m$ e l'ora UTC $o$ del timestamp $t$,
 \begin{equation}
-\zeta_{tn}=\frac{a_{tn}-\mu^{(-y)}_{nmo}}{\sigma^{(-y)}_{nmo}},
+\zeta_{tn}=\frac{a_{tn}-\mu_{nmo}}{\sigma_{nmo}},
 \end{equation}
-dove media e deviazione standard sono calcolate sugli score della stessa località, mese e ora negli anni di validazione, esclusi i valori segnati come insoliti (Sezione~\ref{sec:maschere-validazione}), e restano fisse per il test. Non possono essere stimate sugli anni di addestramento, perché su quegli anni il modello ha già visto i dati e il suo errore è più basso di quello su anni nuovi. I gruppi con meno di trenta valori di riferimento, nel default, o con varianza nulla non ricevono uno score. La dispersione viene divisa per la stessa deviazione standard.
+dove media e deviazione standard sono calcolate sugli score della stessa località, mese e ora negli anni di validazione, esclusi i valori segnati come insoliti (Sezione~\ref{sec:maschere-validazione}), e restano fisse per il test. Non possono essere stimate sugli anni di addestramento, perché su quegli anni il modello ha già visto i dati e il suo errore è più basso di quello su anni nuovi. Quando lo score trasformato serve sugli anni di validazione stessi, per le scelte e per fissare le soglie, media e deviazione standard di un anno $y$ sono calcolate sugli altri quattro anni di validazione, $\mu^{(-y)}_{nmo}$ e $\sigma^{(-y)}_{nmo}$: nessun valore entra nella propria climatologia. I gruppi con meno di trenta valori di riferimento o con varianza nulla non ricevono uno score. La dispersione viene divisa per la stessa deviazione standard.
+
+Gli score di validazione da cui sono stimate queste quantità sono calcolati con la storia reale degli istanti di validazione, come quelli del test. La sostituzione dei valori insoliti nella storia (Sezione~\ref{sec:maschere-validazione}) serve soltanto alla misura con cui si confrontano le configurazioni durante l'addestramento: una climatologia stimata su errori calcolati da una storia ripulita descriverebbe un errore più basso di quello che il modello commette sul test, dove la storia contiene le condizioni insolite.
 
 Lo scopo è rendere confrontabili località e stagioni in cui l'errore di ricostruzione ha una grandezza tipica diversa: senza questo passaggio, le segnalazioni si concentrerebbero dove l'errore è grande per natura. La trasformazione agisce sugli score, dopo l'addestramento, e non modifica il detector. È distinta dalla normalizzazione stagionale della Sezione~\ref{sec:ingresso-normalizzazione-era5}, che agisce sull'ingresso e richiede un nuovo addestramento.
-% DA IMPLEMENTARE NEL CODICE: oggi il comando climatology stima media e
-% deviazione standard sugli anni valutati, escludendo ogni volta l'anno stesso
-% (physiq_pv/era5/seasonality.py). Serve la stima sugli score di validazione
-% (validation_generator_mean.npy, salvato da ogni run) applicata al test.
+% Codice: reference_zscores (validazione -> test) e climatology_zscores con
+% excluded (validazione, lasciando fuori l'anno) in physiq_pv/era5/seasonality.py;
+% comando climatology --reference validation --reference-run-dir --normal-masks-dir.
+% Score di validazione con la storia reale: scripts/score_era5_stgan_run.py
+% --period validation (outputs/stgan_good_sweep_2_validation). Con la climatologia
+% stimata dagli errori a storia ripulita le quote per luogo erano disuguali
+% (1.5-12.5%), con la storia reale piatte (3.3-6.7%): numeri da riportare nei
+% Risultati, non qui.
 
 \section{Validazione senza etichette}
 \label{sec:monitoraggio-senza-etichette}
@@ -203,6 +214,8 @@ I valori segnati non entrano nelle misure calcolate sulla validazione, e nelle f
 \subsection{Distanza fra campi osservati e ricostruiti nello spazio delle componenti principali}
 
 La misura usata per confrontare le configurazioni confronta osservazioni e ricostruzioni in uno spazio indipendente dal modello. Lo spazio è ottenuto da un'analisi delle componenti principali dei campi di addestramento: ogni campione è il campo completo di un istante, normalizzato e appiattito su località e variabili. Sono usati i campi con la quota più bassa di valori insoliti, nello stesso numero per ogni mese, e sono conservate 300 componenti principali. Lo spazio è costruito una sola volta, prima delle esecuzioni, e successivamente soltanto caricato.
+
+I campi di tempo normale sono scelti, non corretti. Sostituire i valori insoliti con il normale stagionale darebbe campi più lisci di qualunque campo osservato, e una distanza calcolata su di essi premierebbe un generatore che ricostruisce campi lisci. Un campo scelto può contenere ancora qualche valore insolito, entro la quota che lo fa rientrare fra i campi normali del suo mese. Per lo stesso motivo il valore da ricostruire, quando è insolito, non è sostituito ma escluso dalle misure: si sostituisce soltanto la storia da cui il modello parte.
 
 Su questo spazio viene definito un riferimento per la validazione: $S=5$ sottoinsiemi fissi e disgiunti di 512 campi normali, scelti con lo stesso criterio, le coordinate delle loro osservazioni nello spazio e una banda $\sigma$ pari alla distanza euclidea mediana fra tali coordinate. Anche questo riferimento è fissato prima delle esecuzioni. A ogni epoca, per ciascun sottoinsieme, si calcola la stima non distorta della Maximum Mean Discrepancy~\cite{gretton2012mmd}
 \begin{equation}
@@ -260,21 +273,3 @@ d_{\mathrm{evento}}=t_{\mathrm{fine}}-t_{\mathrm{inizio}}+\Delta t,
 \qquad \Delta t=3\,\mathrm{h}.
 \end{equation}
 La dispersione dello score viene riportata per cluster e per evento, come media e massimo sulle celle; non partecipa alla soglia, alla morfologia o ai collegamenti. L'unificazione retrospettiva degli eventi definisce un'analisi successiva al periodo osservato, non un sistema di allerta in tempo reale.
-
-\section{Variante del generatore con attenzione su grafo}
-\label{sec:variante-gat-gru}
-% Variante sul ramo GAT. Da tenere solo se entra nei Risultati con una run
-% valida: i numeri della prima run GAT sono stati dichiarati da rifare.
-
-Nella variante su grafo ogni cella valida è un nodo. Ciascun nodo riceve un arco da ognuno degli otto vicini immediati presenti sulla griglia e da sé stesso. Gli archi sono diretti e memorizzati in forma sparsa; i bordi del dominio non sono collegati fra loro. Gli archi non hanno pesi geografici.
-
-Lo strato di attenzione è quello delle equazioni~\eqref{eq:gat-logit}--\eqref{eq:gat-uscita}, a più teste e con pendenza negativa 0.2 nella LeakyReLU; $\mathcal{N}(i)$ è l'insieme delle sorgenti degli archi entranti in $i$, compreso $i$ stesso. Lo strato sostituisce la convoluzione nei gate dell'unità ricorrente. Siano $\mathcal{A}_r$, $\mathcal{A}_u$ e $\mathcal{A}_c$ tre strati di attenzione distinti, con le teste mediate e senza non linearità propria, e $X'_s$ l'ingresso del passo $s$ concatenato alla maschera. L'aggiornamento di uno strato ricorrente è
-\begin{align}
-R_s &= \sigma\!\left(\mathcal{A}_r\!\left([X'_s,H_{s-1}]\right)\right),\\
-U_s &= \sigma\!\left(\mathcal{A}_u\!\left([X'_s,H_{s-1}]\right)\right),\\
-\widetilde{H}_s &= \tanh\!\left(\mathcal{A}_c\!\left([X'_s,R_s\odot H_{s-1}]\right)\right),\\
-H_s &= M\odot\left[U_s\odot H_{s-1}+(1-U_s)\odot\widetilde{H}_s\right].
-\end{align}
-È la forma delle equazioni~\eqref{eq:convgru-reset}--\eqref{eq:convgru-stato}, con l'attenzione su grafo al posto della convoluzione spaziale e con lo stesso trattamento della maschera della Sezione~\ref{sec:stgan-convgru}. I default prevedono due strati ricorrenti, quattro teste e 32 canali. Poiché il gate di reset e lo stato candidato applicano l'operatore in sequenza, a ogni passo lo stato si propaga di due archi: con $R\geq2$ passi recenti e due strati, l'ingresso del primo passo raggiunge i nodi fino a $2R+1$ archi di distanza. La ConvGRU con kernel $3\times3$ ha la stessa struttura e lo stesso raggio.
-
-La LSTM del trend elabora una sequenza per nodo e la codifica temporale è proiettata per nodo; seguono i dropout della Sezione~\ref{sec:score-dropout-montecarlo} e la proiezione di uscita, che restituisce $[B,N,F]$. Il discriminatore resta quello locale a patch. Un campione è un istante con tutti i nodi: la variante ha la stessa unità del campione, lo stesso numero di aggiornamenti per epoca, la stessa struttura ricorrente e lo stesso raggio del generatore ConvGRU; cambia il modo di pesare i vicini e, con esso, il numero di parametri.
