@@ -5,9 +5,8 @@ Il capitolo descrive il detector nella forma usata sui campi ERA5. La Sezione~\r
 
 \section{Architettura e addestramento avversario}
 \label{sec:stgan}
-\label{sec:stgan-era5-varianti}
 
-Il detector segue lo schema di STGAN~\cite{deng2022stgan} descritto nella Sezione~\ref{sec:rw-anomalie}: un generatore stima il campo dell'istante successivo a partire dagli istanti precedenti, e un discriminatore giudica se il campo di un istante, insieme alla sua storia recente, è osservato o generato. Il target del generatore è meteorologico e comprende le quindici variabili della Tabella~\ref{tab:variabili-era5}. La griglia è definita direttamente in coordinate geografiche, con passo angolare di $0.5^\circ$, e la cadenza è di tre ore.
+Il detector segue lo schema di STGAN~\cite{deng2022stgan} descritto nella Sezione~\ref{sec:rw-stgan}: un generatore stima il campo dell'istante successivo a partire dagli istanti precedenti, e un discriminatore giudica se il campo di un istante, insieme alla sua storia recente, è osservato o generato. Il bersaglio del generatore è meteorologico e comprende le quindici variabili della Tabella~\ref{tab:variabili-era5}. La griglia è definita direttamente in coordinate geografiche, con passo angolare di $0.5^\circ$, e la cadenza è di tre ore.
 
 \subsection{Generatore ConvGRU sul campo intero e celle assenti}
 \label{sec:stgan-convgru}
@@ -25,13 +24,13 @@ Il mascheramento dello stato impedisce alle celle assenti di conservare attivazi
 
 \subsection{Discriminatore locale}
 
-Il discriminatore giudica ogni cella sulla propria patch $P\times P$, con $P=3$, come nell'articolo, dove giudica ogni nodo sul proprio sottografo. La patch di ogni cella è estratta dal campo, con le celle esterne al reticolo azzerate e indicate dalla maschera. Una ConvGRU codifica la storia recente della patch; la storia codificata è appiattita e proiettata linearmente. Il campo corrente della patch, osservato o generato, passa attraverso una proiezione $1\times1$ seguita da una sigmoide e da un massimo sulle celle valide. Le due rappresentazioni sono concatenate e alimentano uno strato nascosto e un'uscita sigmoidale. Il discriminatore restituisce quindi un valore per cella e per istante.
+Il discriminatore giudica ogni cella sulla propria patch $P\times P$, con $P=3$, così come nell'articolo giudica ogni nodo sul proprio sottografo. La patch di ogni cella è estratta dal campo, con le celle esterne al reticolo azzerate e indicate dalla maschera. Una ConvGRU codifica la storia recente della patch; la storia codificata è appiattita e proiettata linearmente. Il campo corrente della patch, osservato o generato, passa attraverso una proiezione $1\times1$ seguita da una sigmoide e da un massimo sulle celle valide. Le due rappresentazioni sono concatenate e alimentano uno strato nascosto e un'uscita sigmoidale. Il discriminatore restituisce quindi un valore per cella e per istante.
 
 Le patch di tutte le celle sono valutate in un'unica passata, con le stesse maschere e gli stessi azzeramenti. L'uscita relativa a una cella è quella che il discriminatore produrrebbe sulla sua patch isolata. Una convoluzione che scorresse liberamente sul campo non darebbe lo stesso valore, perché la ConvGRU del discriminatore applica il padding all'interno di ciascuna patch.
 
 \subsection{Obiettivi di addestramento}
 
-Il discriminatore viene addestrato con reale uguale a zero e generato uguale a uno, come nell'articolo. Indicando con $D_{\mathrm{reale}}$ e $D_{\mathrm{generato}}$ le uscite sulle patch con il campo osservato e con il campo generato, gli obiettivi sono
+Il discriminatore viene addestrato con etichetta zero per il campo reale e uno per il campo generato, come nell'articolo. Indicando con $D_{\mathrm{reale}}$ e $D_{\mathrm{generato}}$ le uscite sulle patch con il campo osservato e con il campo generato, gli obiettivi sono
 \begin{align}
 \mathcal{L}_{D} &=
 \tfrac{1}{2}\bigl[
@@ -43,9 +42,9 @@ Il discriminatore viene addestrato con reale uguale a zero e generato uguale a u
 \end{align}
 dove $\operatorname{MSE}_w$ è l'errore quadratico medio sulle celle valide e sulle variabili, con i pesi delle variabili della Sezione~\ref{sec:pesi-variabili-ricostruzione}, mediato poi sugli istanti del batch, e la BCE è mediata sulle uscite locali, una per cella. Rispetto alle equazioni~\eqref{eq:stgan-loss-g}--\eqref{eq:stgan-loss-d} dell'articolo, l'errore di ricostruzione è un errore quadratico medio anziché una norma e la loss del discriminatore è dimezzata: la scelta segue il codice pubblicato dagli autori.
 
-Generatore e discriminatore vengono aggiornati con ottimizzatori Adam~\cite{kingma2015adam} separati. Nel passo del generatore, i parametri del discriminatore sono congelati ma viene mantenuto il gradiente rispetto al campo generato; la storia della patch è ricalcolata con i pesi aggiornati del discriminatore. Il peso di ricostruzione $\lambda_G$ è un parametro, con valore predefinito 500, quello dell'articolo. I tassi di apprendimento dei due ottimizzatori possono essere distinti: quello del discriminatore è espresso come rapporto rispetto a quello del generatore. Il coefficiente $\beta_1$ degli ottimizzatori vale 0.9, il valore del codice degli autori. Con rapporto $n_D{:}n_G$, sullo stesso batch vengono eseguiti prima $n_D$ aggiornamenti del discriminatore e poi $n_G$ del generatore, ciascuno con un proprio passaggio in avanti; il rapporto è un conteggio di aggiornamenti e non va confuso con il rapporto fra i tassi di apprendimento. Tassi, rapporto e peso di ricostruzione sono gli strumenti con cui si regola l'equilibrio fra le due reti; i valori usati sono scelti nel Capitolo~\ref{chap:esperimenti}.
+Generatore e discriminatore vengono aggiornati con ottimizzatori Adam~\cite{kingma2015adam} separati. Nel passo del generatore, i parametri del discriminatore sono congelati ma viene mantenuto il gradiente rispetto al campo generato; la storia della patch è ricalcolata con i pesi aggiornati del discriminatore. Il peso di ricostruzione $\lambda_G$ è un parametro, con valore predefinito 500, quello dell'articolo. I tassi di apprendimento dei due ottimizzatori possono essere distinti: quello del discriminatore è espresso come rapporto rispetto a quello del generatore. Il coefficiente $\beta_1$ degli ottimizzatori vale 0.9, il valore del codice degli autori. Con rapporto $n_D{:}n_G$, sullo stesso batch vengono eseguiti prima $n_D$ aggiornamenti del discriminatore e poi $n_G$ del generatore, ciascuno con un proprio passaggio in avanti. Il rapporto è un conteggio di aggiornamenti e non va confuso con il rapporto fra i tassi di apprendimento. Tassi, rapporto e peso di ricostruzione sono gli strumenti con cui si regola l'equilibrio fra le due reti; i valori usati sono scelti nel Capitolo~\ref{chap:esperimenti}.
 
-Un'epoca comprende $\lceil T/B\rceil$ aggiornamenti per rete, con $T$ istanti di addestramento utili e $B$ istanti per batch, e ogni gradiente è mediato su tutte le celle di un istante. A ogni epoca vengono salvati i pesi e lo stato dei due ottimizzatori; un addestramento interrotto può essere ripreso soltanto con la stessa configurazione, la stessa normalizzazione e gli stessi riferimenti di validazione. Il calcolo usa la precisione mista BF16, con pesi mantenuti in FP32 e loss avversaria calcolata sui logit.
+Un'epoca comprende $\lceil T/B\rceil$ batch, con $T$ istanti di addestramento utili e $B$ istanti per batch, e ogni gradiente è mediato su tutte le celle di un istante. A ogni epoca vengono salvati i pesi e lo stato dei due ottimizzatori; un addestramento interrotto può essere ripreso soltanto con la stessa configurazione, la stessa normalizzazione e gli stessi riferimenti di validazione. Il calcolo usa la precisione mista BF16, con pesi mantenuti in FP32 e loss avversaria calcolata sui logit.
 
 \section{Ingresso: finestra recente, codifica temporale e normalizzazione stagionale}
 \label{sec:ingresso-normalizzazione-era5}
@@ -72,7 +71,7 @@ Il primo angolo rappresenta l'ora solare locale, ottenuta dalla sola longitudine
 % Scelte di questa sottosezione: motivate nel testo, senza fonti (decisione del
 % 13 ottobre 2026, sul modello della tesi di riferimento).
 
-La normalizzazione dell'articolo è un min--max per variabile stimato sul training. Usa un solo intervallo per variabile, valido per tutte le celle e per tutto l'anno. Su un dominio che va dal Sahara all'Europa settentrionale questo ha un limite: la scala non distingue un valore alto in assoluto, ma abituale per quella cella e quella stagione, da un valore lontano dagli estremi, ma insolito per quella cella e quella stagione. La normalizzazione stagionale riferisce invece ogni valore a ciò che è abituale nella stessa cella, nello stesso periodo dell'anno e alla stessa ora. Per ogni cella $n$, variabile $f$, ora del giorno $o$ e giorno dell'anno $g$ il valore è standardizzato,
+La normalizzazione dell'articolo è un min--max per variabile stimato sui dati di addestramento. Usa un solo intervallo per variabile, valido per tutte le celle e per tutto l'anno. Su un dominio che va dal Sahara all'Europa settentrionale questo ha un limite: la scala non distingue un valore alto in assoluto, ma abituale per quella cella e quella stagione, da un valore lontano dagli estremi, ma insolito per quella cella e quella stagione. La normalizzazione stagionale riferisce invece ogni valore a ciò che è abituale nella stessa cella, nello stesso periodo dell'anno e alla stessa ora. Per ogni cella $n$, variabile $f$, ora del giorno $o$ e giorno dell'anno $g$ il valore è standardizzato,
 \begin{equation}
 z_{tnf}=\frac{x_{tnf}-\mu_{nfog}}{\sigma_{nfog}},
 \end{equation}
@@ -82,7 +81,7 @@ La precipitazione richiede un passaggio in più. È nulla nella maggior parte de
 % Confronto con radice quadrata e logaritmo: fatto sui dati senza modello
 % (controllo_normalizzazione.log). Da riportare con i numeri riletti nel log.
 
-La deviazione standard $\sigma_{nfog}$ non può scendere sotto una frazione della deviazione standard complessiva della variabile sul training: 0.1 per la precipitazione e per l'umidità del primo strato del suolo, 0.01 per le altre tredici variabili. Il limite evita la divisione per valori quasi nulli, come accade per la radiazione solare di notte.
+La deviazione standard $\sigma_{nfog}$ non può scendere sotto una frazione della deviazione standard complessiva della variabile sugli anni di addestramento: 0.1 per la precipitazione e per l'umidità del primo strato del suolo, 0.01 per le altre tredici variabili. Il limite evita la divisione per valori quasi nulli, come accade per la radiazione solare di notte.
 % Limiti allineati alla configurazione dello sweep (seasonal_std_floors in
 % sweeps/stgan_era5_normal_validation.yaml: tp 0.1, swvl1 0.1, le altre il
 % valore predefinito 0.01). Il testo precedente (0.3 / 0.1 / 0.01, scelti con il
@@ -90,7 +89,7 @@ La deviazione standard $\sigma_{nfog}$ non può scendere sotto una frazione dell
 % run: è nel backup del 16 ottobre 2026. Se si torna a quei limiti, ripristinare
 % anche il paragrafo sulla loro scelta.
 
-L'ultimo passaggio riguarda il tempo. Gli anni di test seguono quelli di addestramento, fino a oltre vent'anni dopo. Per una variabile che nel periodo ha una tendenza, la differenza fra il clima degli anni di test e quello degli anni di addestramento entrerebbe in ogni valore standardizzato, e crescerebbe con la distanza dal training. Per tre variabili, temperatura a due metri, temperatura a 850~hPa e umidità del primo strato del suolo, ai valori standardizzati è quindi sottratta una retta nel tempo. La retta è una per variabile, uguale per tutte le celle: passa per le medie annuali dei valori standardizzati sull'intero dominio, è stimata sui soli anni di addestramento e viene prolungata agli anni successivi. La scelta segue la definizione adottata nella tesi: un'anomalia è uno scostamento rispetto al clima del momento, e non rispetto al clima degli anni di addestramento. Per le altre dodici variabili la retta non è sottratta. Fra queste c'è l'umidità specifica: la sua deriva inizia dopo gli anni di addestramento, e una retta stimata su quegli anni non la descrive. Per questa variabile la correzione non può quindi essere applicata senza usare gli anni di test.
+L'ultimo passaggio riguarda il tempo. Gli anni di test seguono quelli di addestramento, fino a oltre vent'anni dopo. Per una variabile che nel periodo ha una tendenza, la differenza fra il clima degli anni di test e quello degli anni di addestramento entrerebbe in ogni valore standardizzato, e crescerebbe con la distanza dagli anni di addestramento. Per tre variabili (temperatura a due metri, temperatura a 850~hPa e umidità del primo strato del suolo) ai valori standardizzati è quindi sottratta una retta nel tempo. La retta è una per variabile, uguale per tutte le celle: passa per le medie annuali dei valori standardizzati sull'intero dominio, è stimata sui soli anni di addestramento e viene prolungata agli anni successivi. La scelta precisa la definizione adottata nella tesi: le condizioni nuove sono valutate rispetto al clima del momento, e non rispetto al clima degli anni di addestramento. Per le altre dodici variabili la retta non è sottratta. Fra queste c'è l'umidità specifica: la sua deriva inizia dopo gli anni di addestramento, e una retta stimata su quegli anni non la descrive. Per questa variabile la correzione non può quindi essere applicata senza usare gli anni di test.
 % Misura della deriva per variabile (controllo_deriva_clima.log) e deriva che
 % resta dopo la retta: da riportare con i numeri riletti nel log.
 % Umidità specifica, riletta nel log il 13 ottobre 2026 (tabella "all months",
@@ -99,7 +98,7 @@ L'ultimo passaggio riguarda il tempo. Gli anni di test seguono quelli di addestr
 % 2010-2014 +0.09, 2015-2019 +0.15, ultimi cinque anni +0.17. Con il nuovo
 % training (1980-1999) da ricontrollare.
 
-Dopo questi passaggi è applicato un min--max per variabile, stimato sul training, che riporta i valori nell'intervallo $[-1,1]$ dell'uscita del generatore. Valori successivi esterni all'intervallo del training possono superare questi estremi, perché la trasformazione non applica un clipping.
+Dopo questi passaggi è applicato un min--max per variabile, stimato sugli anni di addestramento, che riporta i valori nell'intervallo $[-1,1]$ dell'uscita del generatore. Negli anni successivi, i valori esterni all'intervallo degli anni di addestramento possono superare questi estremi, perché la trasformazione non applica un clipping.
 
 \section{Pesi delle variabili nell'errore di ricostruzione}
 \label{sec:pesi-variabili-ricostruzione}
@@ -119,13 +118,13 @@ con $F=15$. La differenza a 24 ore confronta istanti alla stessa ora del giorno 
 
 Lo score è campionato con il dropout Monte Carlo~\cite{gal2016dropout}, nella forma che pone il dropout dopo gli encoder e prima degli strati di uscita. Il generatore riceve tre strati di dropout: sulla rappresentazione spaziale del ramo recente, sulla rappresentazione del trend e sulla loro concatenazione con la codifica temporale, prima della proiezione di uscita. Il discriminatore ne riceve altrettanti, nelle posizioni corrispondenti: sulla storia codificata, sul campo corrente codificato e sullo strato nascosto che precede l'uscita. La probabilità è 0.2 in entrambe le reti. I dropout sono attivi nell'addestramento e nel calcolo degli score. L'articolo e il codice degli autori non usano il dropout: è un'aggiunta di questo lavoro.
 
-Il discriminatore riceve il campo generato senza il dropout del generatore, sia nell'addestramento, nel proprio aggiornamento e nel termine avversario del generatore, sia negli score. Se ricevesse il campo con il dropout, potrebbe distinguere i campi generati da quelli osservati per il rumore che il dropout vi introduce, e non per il loro contenuto. Il dropout del generatore agisce quindi sull'errore di ricostruzione, quello del discriminatore sul suo giudizio.
+Il discriminatore riceve il campo generato senza il dropout del generatore: nell'addestramento, sia nel proprio aggiornamento sia nel termine avversario del generatore, e nel calcolo degli score. Se ricevesse il campo con il dropout, potrebbe distinguere i campi generati da quelli osservati per il rumore che il dropout vi introduce, e non per il loro contenuto. Il dropout del generatore agisce quindi sull'errore di ricostruzione, quello del discriminatore sul suo giudizio.
 
 \subsection{Campioni Monte Carlo e componenti dello score}
 
-Durante il calcolo degli score il modello è in modalità di valutazione, con l'eccezione dei dropout, che restano attivi. Per ogni istante vengono estratti $J=20$ campioni. Nel campione $j$ il generatore ricostruisce il campo con una propria maschera, e il discriminatore giudica l'osservazione e il campo generato con una propria maschera, la stessa per i due giudizi: il campione corrisponde a un'unica estrazione delle due reti. Gli encoder del generatore e la codifica della storia nel discriminatore non dipendono dal dropout e sono calcolati una sola volta; a ogni campione vengono ripetuti i dropout e gli strati che li seguono.
+Durante il calcolo degli score il modello è in modalità di valutazione, con l'eccezione dei dropout, che restano attivi. Per ogni istante vengono estratti $J=20$ campioni. Nel campione $j$ il generatore ricostruisce il campo con una propria maschera, e il discriminatore giudica l'osservazione e il campo generato senza dropout con una propria maschera, la stessa per i due giudizi: il campione corrisponde a un'unica estrazione delle due reti. Gli encoder del generatore e la codifica della storia nel discriminatore non dipendono dal dropout e sono calcolati una sola volta; a ogni campione vengono ripetuti i dropout e gli strati che li seguono.
 
-Per la coppia tempo--località $(t,n)$ e il campione $j$, la ricostruzione $\hat{x}^{(j)}$ dà l'errore di ricostruzione
+Per la coppia istante--cella $(t,n)$ e il campione $j$, la ricostruzione $\hat{x}^{(j)}$ dà l'errore di ricostruzione
 \begin{equation}
 s^{(j)}_{G,tn}=\frac{1}{|P_n|\,F}\sum_{c\in P_n}\sum_{f=1}^{F}w_f\left(\hat{x}^{(j)}_{tcf}-x_{tcf}\right)^{2},
 \end{equation}
@@ -158,7 +157,7 @@ a^{(j)}_{tn}=
 \end{equation}
 L'articolo indica che le due componenti sono normalizzate prima della somma, senza specificare come, e il codice degli autori salva le componenti senza combinarle: il min--max è quindi una scelta di questo lavoro. Gli estremi $r_{\min}$, $r_{\max}$, $d_{\min}$ e $d_{\max}$ sono quelli delle due componenti medie sui campioni negli anni di validazione, esclusi i valori segnati come insoliti (Sezione~\ref{sec:maschere-validazione}), e restano fissi per il test: nessuna quantità dello score è stimata sugli anni valutati. I valori del test possono uscire dall'intervallo $[0,1]$ di ciascuna componente, perché non è applicato un clipping.
 
-Lo \emph{score di ricostruzione} usa la sola componente $\bar{s}_{G,tn}$, espressa poi rispetto alla climatologia della propria località come nella Sezione~\ref{sec:normalizzazione-climatologica-score}. È lo score del detector: è scelto sulla validazione con il criterio della Sezione~\ref{sec:exp-protocollo}, e il confronto è riportato nel Capitolo~\ref{chap:risultati}. Lo score combinato è mantenuto come riferimento dell'articolo.
+Lo \emph{score di ricostruzione} usa la sola componente $\bar{s}_{G,tn}$, espressa poi rispetto alla climatologia della propria cella come nella Sezione~\ref{sec:normalizzazione-climatologica-score}. È lo score del detector: è scelto sulla validazione con il criterio della Sezione~\ref{sec:exp-protocollo}, e il confronto è riportato nel Capitolo~\ref{chap:risultati}. Lo score combinato è mantenuto come riferimento dell'articolo.
 
 \subsection{Dispersione}
 
@@ -176,15 +175,15 @@ La dispersione dei campioni del generatore cresce con l'errore di ricostruzione:
 \section{Normalizzazione climatologica degli score}
 \label{sec:normalizzazione-climatologica-score}
 
-Una trasformazione successiva al calcolo degli score esprime ogni score rispetto alla climatologia della stessa località. Per la località $n$, il mese $m$ e l'ora UTC $o$ del timestamp $t$,
+Una trasformazione successiva al calcolo degli score esprime ogni score rispetto alla climatologia della stessa cella. Per la cella $n$, il mese $m$ e l'ora UTC $o$ dell'istante $t$,
 \begin{equation}
 \zeta_{tn}=\frac{a_{tn}-\mu_{nmo}}{\sigma_{nmo}},
 \end{equation}
-dove media e deviazione standard sono calcolate sugli score della stessa località, mese e ora negli anni di validazione, esclusi i valori segnati come insoliti (Sezione~\ref{sec:maschere-validazione}), e restano fisse per il test. Non possono essere stimate sugli anni di addestramento, perché su quegli anni il modello ha già visto i dati e il suo errore è più basso di quello su anni nuovi. Quando lo score trasformato serve sugli anni di validazione stessi, per le scelte e per fissare le soglie, media e deviazione standard di un anno $y$ sono calcolate sugli altri quattro anni di validazione, $\mu^{(-y)}_{nmo}$ e $\sigma^{(-y)}_{nmo}$: nessun valore entra nella propria climatologia. I gruppi con meno di trenta valori di riferimento o con varianza nulla non ricevono uno score. La dispersione viene divisa per la stessa deviazione standard.
+dove $a_{tn}$ è lo score da trasformare, lo score di ricostruzione $\bar{s}_{G,tn}$ o lo score combinato $\bar{a}_{tn}$, e media e deviazione standard sono calcolate sugli score della stessa cella, dello stesso mese e della stessa ora negli anni di validazione, esclusi i valori segnati come insoliti (Sezione~\ref{sec:maschere-validazione}), e restano fisse per il test. Non possono essere stimate sugli anni di addestramento, perché su quegli anni il modello ha già visto i dati e il suo errore è più basso di quello su anni nuovi. Quando lo score trasformato serve sugli anni di validazione stessi, per le scelte e per fissare le soglie, media e deviazione standard di un anno $y$ sono calcolate sugli altri quattro anni di validazione, $\mu^{(-y)}_{nmo}$ e $\sigma^{(-y)}_{nmo}$: nessun valore entra nella propria climatologia. I gruppi con meno di trenta valori di riferimento o con varianza nulla non ricevono uno score. La dispersione viene divisa per la stessa deviazione standard.
 
-Gli score di validazione da cui sono stimate queste quantità sono calcolati con la storia reale degli istanti di validazione, come quelli del test. La sostituzione dei valori insoliti nella storia (Sezione~\ref{sec:maschere-validazione}) serve soltanto alla misura con cui si confrontano le configurazioni durante l'addestramento: una climatologia stimata su errori calcolati da una storia ripulita descriverebbe un errore più basso di quello che il modello commette sul test, dove la storia contiene le condizioni insolite.
+Gli score di validazione da cui sono stimate queste quantità sono calcolati con la storia reale degli istanti di validazione, come quelli del test. La sostituzione dei valori insoliti nella storia (Sezione~\ref{sec:maschere-validazione}) serve alla misura con cui si confrontano le configurazioni durante l'addestramento e al passaggio di validazione che chiude l'addestramento, da cui vengono gli estremi dello score combinato; non entra nella climatologia. Una climatologia stimata su errori calcolati da una storia ripulita descriverebbe un errore più basso di quello che il modello commette sul test, dove la storia contiene le condizioni insolite.
 
-Lo scopo è rendere confrontabili località e stagioni in cui l'errore di ricostruzione ha una grandezza tipica diversa: senza questo passaggio, le segnalazioni si concentrerebbero dove l'errore è grande per natura. La trasformazione agisce sugli score, dopo l'addestramento, e non modifica il detector. È distinta dalla normalizzazione stagionale della Sezione~\ref{sec:ingresso-normalizzazione-era5}, che agisce sull'ingresso e richiede un nuovo addestramento.
+Lo scopo è rendere confrontabili celle e stagioni in cui l'errore di ricostruzione ha una grandezza tipica diversa: senza questo passaggio, le segnalazioni si concentrerebbero dove l'errore è grande per natura. La trasformazione agisce sugli score, dopo l'addestramento, e non modifica il detector. È distinta dalla normalizzazione stagionale della Sezione~\ref{sec:ingresso-normalizzazione-era5}, che agisce sull'ingresso e richiede un nuovo addestramento.
 % Codice: reference_zscores (validazione -> test) e climatology_zscores con
 % excluded (validazione, lasciando fuori l'anno) in physiq_pv/era5/seasonality.py;
 % comando climatology --reference validation --reference-run-dir --normal-masks-dir.
@@ -197,12 +196,12 @@ Lo scopo è rendere confrontabili località e stagioni in cui l'errore di ricost
 \section{Validazione senza etichette}
 \label{sec:monitoraggio-senza-etichette}
 
-Gli anni di validazione servono a confrontare configurazioni del detector senza usare il test e senza etichette. Il confronto deve misurare quanto il modello ricostruisce il meteo normale: le condizioni insolite presenti negli anni di validazione sono quindi individuate con un criterio che non usa il modello, e tenute fuori dalle misure.
+Gli anni di validazione servono a confrontare configurazioni del detector senza usare il test e senza etichette. Il confronto deve misurare quanto bene il modello ricostruisce il tempo normale: le condizioni insolite presenti negli anni di validazione sono quindi individuate con un criterio che non usa il modello, e tenute fuori dalle misure.
 
 \subsection{Valori insoliti della validazione}
 \label{sec:maschere-validazione}
 
-Un valore, cioè una coppia cella--istante, è segnato come insolito con due distanze calcolate sui dati standardizzati della Sezione~\ref{sec:ingresso-normalizzazione-era5}. La prima è la distanza dal normale stagionale: la media sulle variabili del quadrato dei valori standardizzati, con i pesi delle variabili della Sezione~\ref{sec:pesi-variabili-ricostruzione}, che dice quanto il valore è lontano dal normale della propria cella, giorno e ora. La seconda è la variazione dall'istante precedente: la stessa media pesata sul quadrato della differenza rispetto a tre ore prima, che coglie i cambiamenti rapidi anche quando il valore resta vicino al normale. Ciascuna distanza è standardizzata con la media e la deviazione standard della stessa cella, dello stesso mese e della stessa ora negli anni di addestramento, così che un luogo o una stagione più variabili non concentrino le segnalazioni. Un valore è segnato quando almeno una delle due distanze standardizzate supera il livello oltrepassato dal 5\% dei valori di addestramento. Medie, deviazioni standard e livelli sono stimati sui soli anni di addestramento; la validazione riceve soltanto le segnalazioni.
+Un valore, cioè una coppia istante--cella, è segnato come insolito con due distanze calcolate sui dati standardizzati della Sezione~\ref{sec:ingresso-normalizzazione-era5}. La prima è la distanza dal normale stagionale: la media sulle variabili del quadrato dei valori standardizzati, con i pesi delle variabili della Sezione~\ref{sec:pesi-variabili-ricostruzione}, che dice quanto il valore è lontano dal normale della propria cella, giorno e ora. La seconda è la variazione dall'istante precedente: la stessa media pesata sul quadrato della differenza rispetto a tre ore prima, che coglie i cambiamenti rapidi anche quando il valore resta vicino al normale. Ciascuna distanza è standardizzata con la media e la deviazione standard della stessa cella, dello stesso mese e della stessa ora negli anni di addestramento, così che un luogo o una stagione più variabili non concentrino le segnalazioni. Un valore è segnato quando almeno una delle due distanze standardizzate supera il livello oltrepassato dal 5\% dei valori di addestramento. Medie, deviazioni standard e livelli sono stimati sui soli anni di addestramento; la validazione riceve soltanto le segnalazioni.
 % Fonte: physiq_pv/anomaly_detection/stgan/normal_masks.py. Quote misurate alla
 % preparazione dello sweep (14 ottobre 2026, outputs/era5_sweep_1999/normal_masks):
 % addestramento 8.62%, validazione 9.75% (distanza dal normale 5.9%, variazione
@@ -213,11 +212,11 @@ I valori segnati non entrano nelle misure calcolate sulla validazione, e nelle f
 
 \subsection{Distanza fra campi osservati e ricostruiti nello spazio delle componenti principali}
 
-La misura usata per confrontare le configurazioni confronta osservazioni e ricostruzioni in uno spazio indipendente dal modello. Lo spazio è ottenuto da un'analisi delle componenti principali dei campi di addestramento: ogni campione è il campo completo di un istante, normalizzato e appiattito su località e variabili. Sono usati i campi con la quota più bassa di valori insoliti, nello stesso numero per ogni mese, e sono conservate 300 componenti principali. Lo spazio è costruito una sola volta, prima delle esecuzioni, e successivamente soltanto caricato.
+La misura usata per confrontare le configurazioni confronta osservazioni e ricostruzioni in uno spazio indipendente dal modello. Lo spazio è ottenuto da un'analisi delle componenti principali dei campi di addestramento: ogni campione è il campo completo di un istante, normalizzato e appiattito su celle e variabili. Sono usati i campi con la quota più bassa di valori insoliti, nello stesso numero per ogni mese, e sono conservate 300 componenti principali. Lo spazio è costruito una sola volta, prima delle esecuzioni, e successivamente soltanto caricato.
 
 I campi di tempo normale sono scelti, non corretti. Sostituire i valori insoliti con il normale stagionale darebbe campi più lisci di qualunque campo osservato, e una distanza calcolata su di essi premierebbe un generatore che ricostruisce campi lisci. Un campo scelto può contenere ancora qualche valore insolito, entro la quota che lo fa rientrare fra i campi normali del suo mese. Per lo stesso motivo il valore da ricostruire, quando è insolito, non è sostituito ma escluso dalle misure: si sostituisce soltanto la storia da cui il modello parte.
 
-Su questo spazio viene definito un riferimento per la validazione: $S=5$ sottoinsiemi fissi e disgiunti di 512 campi normali, scelti con lo stesso criterio, le coordinate delle loro osservazioni nello spazio e una banda $\sigma$ pari alla distanza euclidea mediana fra tali coordinate. Anche questo riferimento è fissato prima delle esecuzioni. A ogni epoca, per ciascun sottoinsieme, si calcola la stima non distorta della Maximum Mean Discrepancy~\cite{gretton2012mmd}
+Su questo spazio viene definito un riferimento per la validazione. È formato da $S=5$ sottoinsiemi fissi e disgiunti di 512 campi normali, scelti con lo stesso criterio, dalle coordinate delle loro osservazioni nello spazio e da una banda $\sigma$ pari alla distanza euclidea mediana fra tali coordinate. Anche questo riferimento è fissato prima delle esecuzioni. A ogni epoca, per ciascun sottoinsieme, si calcola la stima non distorta della Maximum Mean Discrepancy~\cite{gretton2012mmd}
 \begin{equation}
 \widehat{\mathrm{MMD}}^{2}=
 \frac{1}{n(n-1)}\sum_{i\neq i'}k(x_i,x_{i'})
@@ -237,9 +236,9 @@ Vengono registrate media e varianza della stima sui sottoinsiemi e la media dell
 
 \subsection{Diagnostiche per epoca e misure finali}
 
-Al termine di ogni epoca un sottoinsieme fisso della validazione, 32 istanti equispaziati con tutte le celle, viene elaborato con un passaggio deterministico, a dropout spento. Vengono registrate la differenza assoluta media fra le attivazioni del penultimo strato del discriminatore sull'osservazione e sulla ricostruzione e la variazione dello score fra epoche consecutive sulle stesse celle. Queste quantità e la MMD non entrano in una loss, in un aggiornamento dei pesi o negli score; sono calcolate senza gradiente e ripristinando gli stati dei generatori casuali, così da non alterare la traiettoria dell'addestramento.
+Al termine di ogni epoca un sottoinsieme fisso della validazione, 32 istanti equispaziati con tutte le celle, viene elaborato con un passaggio deterministico, a dropout spento. Vengono registrate due quantità: la differenza assoluta media fra le attivazioni del penultimo strato del discriminatore sull'osservazione e sulla ricostruzione, e la variazione dello score fra epoche consecutive sulle stesse celle. Queste quantità e la MMD non entrano in una loss, in un aggiornamento dei pesi o negli score; sono calcolate senza gradiente e ripristinando gli stati dei generatori di numeri casuali, così da non alterare la traiettoria dell'addestramento.
 
-Dopo l'ultima epoca, su tutti i valori validi e non segnati della validazione, viene calcolata la componente di ricostruzione media sui campioni Monte Carlo, riassunta da media, deviazione standard, mediana e 95-esimo percentile. Gli stessi campioni danno gli estremi delle due componenti usati dallo score combinato.
+Dopo l'ultima epoca, su tutti i valori validi e non segnati della validazione, viene calcolata la componente di ricostruzione media sui campioni Monte Carlo, riassunta da media, deviazione standard, mediana e 95° percentile. Gli stessi campioni danno gli estremi delle due componenti usati dallo score combinato.
 
 \section{Eventi geografici}
 \label{sec:eventi-geografici}
@@ -249,15 +248,15 @@ Gli score di un istante formano un campo sulla griglia. Gli eventi geografici so
 \begin{figure}[htbp]
     \centering
     \input{figures/schema_eventi}
-    \caption{Dagli score agli eventi geografici, su un esempio illustrativo. Gli score di un istante sono riportati sulla griglia; le celle sopra soglia formano una maschera, da cui apertura e chiusura rimuovono le celle isolate e le sporgenze; le celle rimaste sono riunite in gruppi di celle adiacenti. I gruppi di istanti consecutivi sono poi collegati: un evento è un insieme di gruppi collegati, e resta unico anche quando un gruppo si separa in due o due gruppi si fondono.}
+    \caption{Dagli score agli eventi geografici, su un esempio illustrativo. Gli score di un istante sono riportati sulla griglia; le celle sopra soglia formano una maschera, da cui apertura e chiusura rimuovono le celle isolate e le sporgenze; le celle rimaste sono riunite in cluster, gruppi di celle adiacenti. I cluster di istanti consecutivi sono poi collegati: un evento è un insieme di cluster collegati, e resta unico anche quando un cluster si separa in due o due cluster si fondono.}
     \label{fig:schema-eventi}
 \end{figure}
 
 \subsection{Soglia, morfologia e cluster spaziali}
 
-Gli score $[T,N]$ vengono ricollocati sulla griglia $[T,H,W]$. La selezione iniziale può utilizzare una soglia assoluta oppure un percentile degli score finiti, globale per default o distinto per istante. Una cella è selezionata soltanto se lo score è strettamente maggiore della soglia.
+Gli score $[T,N]$ vengono ricollocati sulla griglia $[T,H,W]$. La selezione iniziale può utilizzare una soglia assoluta oppure un percentile degli score finiti, globale in modo predefinito o distinto per istante. Una cella è selezionata soltanto se lo score è strettamente maggiore della soglia.
 
-Per ogni istante, la maschera binaria viene sottoposta ad apertura e chiusura, rispettando le celle valide. Il default usa un elemento strutturante quadrato $3\times3$ e un'iterazione per operazione. Le componenti connesse sono individuate con otto vicini e possono essere filtrate per numero minimo di celle. Le operazioni morfologiche possono rimuovere o aggiungere celle rispetto alla selezione iniziale: i cluster risultanti non coincidono necessariamente con l'insieme degli score sopra soglia. Le aree dei cluster sono ottenute sommando le aree sferiche delle celle e i centroidi sono pesati con tali aree.
+Per ogni istante, la maschera binaria viene sottoposta ad apertura e chiusura, rispettando le celle valide. La configurazione predefinita usa un elemento strutturante quadrato $3\times3$ e un'iterazione per operazione. Le componenti connesse, cioè i cluster, sono individuate con otto vicini e possono essere filtrate per numero minimo di celle. Le operazioni morfologiche possono rimuovere o aggiungere celle rispetto alla selezione iniziale: i cluster risultanti non coincidono necessariamente con l'insieme degli score sopra soglia. Le aree dei cluster sono ottenute sommando le aree sferiche delle celle e i centroidi sono pesati con tali aree.
 
 \subsection{Collegamento temporale, separazioni e fusioni}
 
@@ -265,7 +264,7 @@ I cluster di istanti consecutivi vengono collegati secondo sovrapposizione, sovr
 \begin{equation}
 o(A,B)=\frac{|A\cap B|}{\min(|A|,|B|)}.
 \end{equation}
-Non si tratta dell'intersezione sull'unione. Nel criterio dilatato, $A$ è sostituito dal supporto ottenuto dopo dilatazione, anche nel denominatore. Il default utilizza una dilatazione di una cella e una soglia di sovrapposizione pari a 0.1.
+Non si tratta dell'intersezione sull'unione. Nel criterio dilatato, $A$ è sostituito dal supporto ottenuto dopo dilatazione, anche nel denominatore. La configurazione predefinita usa una dilatazione di una cella e una soglia di sovrapposizione pari a 0.1.
 
 L'identità di un evento corrisponde a una componente connessa del grafo temporale dei cluster. Il collegamento non è vincolato a essere uno a uno: una separazione mantiene i rami nello stesso evento, mentre una fusione unifica retrospettivamente le identità precedenti. Un salto nella cadenza temporale interrompe i collegamenti. La durata riportata comprende l'intervallo rappresentato dall'ultimo istante,
 \begin{equation}
