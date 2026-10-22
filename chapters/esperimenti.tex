@@ -19,7 +19,7 @@ Il detector non è stato definito in un solo passo. È il risultato di un percor
         \toprule
         Passo & Che cosa cambia & Limite osservato \\
         \midrule
-        STGAN sui dati PVGIS & Detector dell'articolo su tre variabili di 1149 località, su grafo e su griglia & Solo grandezze legate al fotovoltaico; decisioni poco stabili fra configurazioni \\
+        STGAN sui dati PVGIS & Detector dell'articolo su tre variabili di 1149 località, su grafo e su griglia & Solo grandezze legate al fotovoltaico \\
         \addlinespace
         STGAN su ERA5, a patch & Quindici variabili su un dominio ampio & Milioni di aggiornamenti per epoca; il discriminatore prevale nella prima epoca \\
         \addlinespace
@@ -37,17 +37,16 @@ Il detector non è stato definito in un solo passo. È il risultato di un percor
 \subsection{STGAN sui dati PVGIS}
 \label{sec:exp-pvgis}
 
-Il detector è stato applicato per la prima volta alle serie orarie PVGIS del lavoro preliminare (Sezione~\ref{sec:rw-pvgis}): 1149 località del Piemonte, disposte su un reticolo regolare con passo di 5~km nella proiezione UTM del fuso 32, con tre variabili meteorologiche, cioè irradianza globale, temperatura a due metri e velocità del vento a dieci metri. Gli anni 2005--2018 sono usati per l'addestramento e il 2019 per il test. Sono state addestrate due versioni con gli stessi dati e lo stesso protocollo, per sei epoche con il tasso di apprendimento e il peso di ricostruzione dell'articolo. La versione su grafo segue l'articolo: il contesto di una località è il sottografo dei suoi otto vicini più prossimi, con pesi gaussiani delle distanze, il ramo recente contiene un passo e il trend 168 ore. La variante a griglia sostituisce la convoluzione su grafo con una ConvGRU su una patch $3\times3$ del reticolo, con kernel di lato 1, 3 e 5; sul bordo della regione 232 località hanno una patch incompleta. Lo score combinato è calcolato con minimo e massimo delle due componenti sull'intero test, e sono segnalate le osservazioni nell'1\% più alto.
-
-Due risultati hanno indirizzato il lavoro. Il primo riguarda il contenuto delle segnalazioni. Nella variante a griglia con kernel 3 il 75.5\% dell'errore di ricostruzione delle osservazioni segnalate è dovuto all'irradianza, il 15.8\% alla temperatura e l'8.6\% al vento. I dati PVGIS contengono soltanto le grandezze da cui dipende la produzione fotovoltaica, e un'osservazione segnalata non può essere ricondotta a una condizione meteorologica più generale.
-
-Il secondo riguarda la stabilità delle decisioni. Le configurazioni a griglia e la versione su grafo segnalano osservazioni in gran parte diverse: l'indice di Jaccard fra le segnalazioni di ciascuna configurazione a griglia e quelle della versione su grafo è compreso fra 0.032 e 0.052, da sei a dieci volte il valore atteso per due detector indipendenti, 0.005, ma più del 90\% delle osservazioni segnalate da una configurazione a griglia non è segnalato dalla versione su grafo. La loss del discriminatore resta fra 0.60 e 0.63 per tutte le sei epoche, vicina al valore $\ln 2\approx0.69$ di un discriminatore che non distingue, e lo score è concentrato in un intervallo stretto: con kernel 3, sulle patch complete, la mediana è 0.489 e il 95-esimo percentile 0.553. Una lettura coerente con queste misure è che su questi dati lo score distingua poco le osservazioni fra loro, e che piccole differenze fra i modelli bastino a cambiare la composizione dell'1\% più alto.
-
-Per individuare condizioni meteorologiche insolite di tipo più generale e descriverne l'origine, il lavoro è passato ai campi ERA5 del Capitolo~\ref{chap:dati}: quindici variabili in superficie e a 850~hPa, su un dominio che comprende l'Europa e il Mediterraneo.
+Il detector è stato applicato per la prima volta alle serie orarie PVGIS del lavoro preliminare (Sezione~\ref{sec:rw-pvgis}): 1149 località del Piemonte, con irradianza globale, temperatura a due metri e velocità del vento a dieci metri, addestramento sugli anni 2005--2018 e test sul 2019. Accanto alla versione su grafo dell'articolo è stata provata una variante a griglia, perché anche le località PVGIS sono disposte su un reticolo regolare e le posizioni dei vicini sono quindi definite: la convoluzione su grafo è sostituita da una ConvGRU sulla patch $3\times3$ di ogni località. Nella variante a griglia con kernel di lato 3 il 75.5\% dell'errore di ricostruzione delle osservazioni segnalate è dovuto all'irradianza, il 15.8\% alla temperatura e l'8.6\% al vento. I dati PVGIS contengono soltanto le grandezze da cui dipende la produzione fotovoltaica, e un'osservazione segnalata non può essere ricondotta a una condizione meteorologica più generale. Per individuare condizioni insolite di tipo più generale il lavoro è passato ai campi ERA5 del Capitolo~\ref{chap:dati}: quindici variabili in superficie e a 850~hPa, su un dominio che comprende l'Europa e il Mediterraneo.
 % Fonti: run_metadata.json delle run pvgis_stgan/paper_reference e
 % pvgis_stgan_cnn/convgru_* (10 ottobre 2026); ripartizione dell'errore e
 % accordo dai log di confronto; i valori erano nella Sezione "Decisioni dei
 % detector" dei Risultati, ora nel backup del 16 ottobre 2026.
+% Il 22 ottobre 2026 la sottosezione è ridotta a un paragrafo (indicazione del
+% relatore: solo un accenno a ciò che non è STGAN ConvGRU su ERA5). Tolti: periodo
+% e grafo della versione su grafo, kernel 1/3/5, 232 patch incomplete, Jaccard
+% 0.032-0.052 contro 0.005, loss di D 0.60-0.63, mediana 0.489 e 95-esimo
+% percentile 0.553 dello score; il testo completo è nella cronologia git.
 
 \subsection{Dalla patch al campo intero}
 
