@@ -74,3 +74,40 @@ I primi istanti di ciascun periodo usano come contesto la coda del periodo prece
 % ..._wdaily_seasonal_trend_ep3 (suddivisione precedente). La run della tesi è
 % good-sweep-2 (sweep 913ez3rt, W&B 5qlj2lwg), con la suddivisione qui descritta:
 % i risultati vanno riscritti con i suoi numeri (outputs/good2v, analisi_good2).
+
+\section{Caratteristiche dei campi}
+\label{sec:dati-caratteristiche}
+
+Tre proprietà dei campi motivano altrettante scelte del Capitolo~\ref{chap:metodologia}. Sono misurate sugli anni di addestramento, senza alcun modello.
+
+\paragraph{Cicli diversi da luogo a luogo.} La temperatura a due metri e la copertura nuvolosa hanno un ciclo stagionale e uno giornaliero, con livello e ampiezza diversi da una cella all'altra (Figura~\ref{fig:era5-cicli}). La media mensile della temperatura va da 1 a 17~°C in una cella dell'Europa settentrionale, da 2 a 24~°C nella Pianura Padana e da 11 a 32~°C nel Sahara; la copertura nuvolosa media sta fra 0.60 e 0.78 nella prima cella e fra 0.04 e 0.29 nell'ultima. Lo stesso valore è quindi abituale in un luogo e in una stagione e insolito in altri. Per questo i valori in ingresso sono riferiti al normale della propria cella, del giorno e dell'ora (Sezione~\ref{sec:ingresso-normalizzazione-era5}), e gli score alla climatologia della propria cella (Sezione~\ref{sec:normalizzazione-climatologica-score}).
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics{era5_cicli}
+    \caption{Ciclo stagionale e giornaliero della temperatura a due metri e della copertura nuvolosa in tre celle: Europa settentrionale ($55^\circ$N, $10^\circ$E), Pianura Padana ($45^\circ$N, $9^\circ$E) e Sahara ($25^\circ$N, $10^\circ$E). A sinistra la media per mese, con una deviazione standard; a destra la media per ora UTC in gennaio e in luglio. Anni 1980--1999.}
+    \label{fig:era5-cicli}
+\end{figure}
+
+\paragraph{Variazioni di grandezza diversa.} Con il min--max dell'articolo, che riporta ogni variabile fra il minimo e il massimo degli anni di addestramento, la copertura nuvolosa produce l'84.1\% della variazione quadratica media su 24 ore delle quindici variabili, e nessuna delle altre supera il 3.3\% (Figura~\ref{fig:era5-variazione}). La copertura nuvolosa passa spesso da sereno a coperto nel corso di un giorno e attraversa quasi tutto il proprio intervallo; la temperatura cambia di pochi gradi, in un intervallo che comprende tutte le celle e tutte le stagioni. Un errore di ricostruzione che somma le variabili con lo stesso peso sarebbe quindi in gran parte un errore sulla copertura nuvolosa. Dopo la normalizzazione stagionale e il min--max del detector le quote vanno dallo 0.9\% dell'umidità del suolo al 16.6\% dell'umidità specifica, e la copertura nuvolosa ha il 6.7\%, la quota di una variabile media: la normalizzazione stagionale rende confrontabili anche le variabili fra loro. Le differenze che restano sono corrette dai pesi della Sezione~\ref{sec:pesi-variabili-ricostruzione}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics{era5_variazione_24h}
+    \caption{Quota di ciascuna variabile nella variazione quadratica media su 24 ore, dopo il min--max dell'articolo e dopo la normalizzazione stagionale e il min--max del detector. Anni 1980--1999; la seconda quota è ricavata dai pesi della Sezione~\ref{sec:pesi-variabili-ricostruzione}. La linea tratteggiata indica la quota uguale per tutte le variabili, un quindicesimo.}
+    \label{fig:era5-variazione}
+\end{figure}
+
+\paragraph{Legame spaziale a corto raggio.} Le anomalie di due celle, cioè gli scostamenti dalla media della propria cella, del mese e dell'ora, sono tanto meno correlate quanto più le celle sono lontane (Figura~\ref{fig:era5-correlazione}). La correlazione mediana scende sotto 0.5 oltre circa 1300~km per la pressione al livello del mare e 900~km per la temperatura a due metri, ma già oltre 200~km per la copertura nuvolosa e 100~km per la precipitazione. Le variabili legate alle perturbazioni dipendono quindi dalle celle vicine, entro poche celle di $0.5^\circ$: è il contesto che il detector rappresenta con la ConvGRU del generatore e con la patch del discriminatore (Sezione~\ref{sec:stgan}).
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics{era5_correlazione_distanza}
+    \caption{Correlazione delle anomalie di due celle in funzione della loro distanza: mediana e quartili per fasce di 100~km, su 300 celle scelte a caso e un istante ogni nove degli anni 1980--1999. Il primo punto, entro 100~km, si basa su 36 coppie di celle.}
+    \label{fig:era5-correlazione}
+\end{figure}
+% Numeri da figure_dati.log e figures/dati/era5_dati.json (22 ottobre 2026,
+% scripts/summarize_era5_data_figures.py --train-end-year 1999 del repository del
+% codice); quote del detector da figures/dati/era5_pesi_good2.json (pesi salvati
+% nei metadati di good-sweep-2, stimati su 720 istanti). Figure generate da
+% figures/genera_figure_dati.py.

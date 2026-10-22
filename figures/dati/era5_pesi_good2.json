@@ -1,0 +1,21 @@
+{
+ "source": "reconstruction_feature_weights in outputs/stgan_good_sweep_2_scored/metadata.json on newzealand, read on 22 October 2026",
+ "note": "w_f = mean(m) / m_f, with m_f the mean squared change over 24 hours on the training data after the seasonal normalization and the min-max; the share of m_f is (1 / w_f) / 15",
+ "weights": {
+  "2m_temperature": 1.6879808189839476,
+  "10m_u_component_of_wind": 1.8570141325515428,
+  "10m_v_component_of_wind": 1.9928427616791888,
+  "mean_sea_level_pressure": 0.4815134585601067,
+  "total_precipitation": 0.8180227504784858,
+  "total_cloud_cover": 0.9962377461008192,
+  "surface_solar_radiation_downwards": 1.7778836175522164,
+  "volumetric_soil_water_layer_1": 7.136483562611375,
+  "friction_velocity": 0.9008118976614619,
+  "boundary_layer_height": 1.2657359712459044,
+  "u_component_of_wind": 0.8687137450601351,
+  "v_component_of_wind": 1.4993592518787864,
+  "vertical_velocity": 1.7133507776735413,
+  "temperature": 0.6386334647809987,
+  "specific_humidity": 0.4009734172136579
+ }
+}

@@ -98,7 +98,7 @@ Con il campo intero e la correzione del dropout si ottiene la configurazione di 
     \end{tabular}
 \end{table}
 
-Lo squilibrio è già nei dati. La copertura nuvolosa produce l'\provv{84.5}\% della variazione quadratica media su 24 ore dei dati normalizzati, e sulle quindici variabili la correlazione di rango fra questa quota e la quota di errore è \provv{0.87}: dopo il min--max, una variabile pesa nell'errore quanto cambia da un giorno all'altro. Da qui i pesi della Sezione~\ref{sec:pesi-variabili-ricostruzione}, che riportano le variabili sulla stessa scala di variazione.
+Lo squilibrio è già nei dati. Dopo il min--max la copertura nuvolosa produce l'84.1\% della variazione quadratica media su 24 ore (Sezione~\ref{sec:dati-caratteristiche}), e sulle quindici variabili la correlazione di rango fra questa quota e la quota di errore è \provv{0.87}: dopo il min--max, una variabile pesa nell'errore quanto cambia da un giorno all'altro. Da qui la normalizzazione stagionale e i pesi delle Sezioni~\ref{sec:ingresso-normalizzazione-era5} e~\ref{sec:pesi-variabili-ricostruzione}: la prima porta la quota della copertura nuvolosa al 6.7\%, i secondi riportano le variabili sulla stessa scala di variazione.
 
 \paragraph{Lo score combinato è instabile.} Il secondo limite riguarda lo score. La Tabella~\ref{tab:era5-score} confronta lo score dell'articolo con il solo errore di ricostruzione su due misure che non richiedono etichette: quanto lo score segnala le stesse osservazioni dopo un'epoca di addestramento in più, e quanto durano gli eventi costruiti con la procedura della Sezione~\ref{sec:eventi-geografici}.
 
