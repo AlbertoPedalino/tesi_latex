@@ -7,7 +7,7 @@ Il capitolo ripercorre l'evoluzione del detector, dalla prima applicazione di ST
 \label{sec:exp-evoluzione}
 \label{sec:exp-percorso}
 
-Il detector non è stato definito in un solo passo. È il risultato di un percorso in cui ogni configurazione ha mostrato un limite misurato, e il limite ha motivato la modifica successiva. La sezione ripercorre i passi in ordine; la Tabella~\ref{tab:esperimenti} li riassume.
+Il detector non è stato definito in un solo passo. È il risultato di un percorso in cui ogni configurazione ha mostrato un limite misurato, e il limite ha motivato la modifica successiva. La sezione ripercorre i passi in ordine; la Tabella~\ref{tab:esperimenti} li riassume. I numeri della sezione vengono da esecuzioni preliminari, più brevi della configurazione finale e addestrate prima che fosse fissata la suddivisione degli anni del Capitolo~\ref{chap:dati}. Servono a mostrare i limiti che hanno motivato ciascun passo; i risultati del detector finale sono nel Capitolo~\ref{chap:risultati}.
 
 \begin{table}[htbp]
     \centering
@@ -50,9 +50,9 @@ Il detector è stato applicato per la prima volta alle serie orarie PVGIS del la
 
 \subsection{Dalla patch al campo intero}
 
-Su ERA5 il detector ha mantenuto dapprima l'unità del campione della variante a griglia: una cella con la propria patch. Con questa unità il numero di campioni per epoca è il prodotto fra istanti e celle, e un'epoca comprendeva \provv{3025793} aggiornamenti dei pesi. Con il dropout nel generatore, la loss del discriminatore è scesa da \provv{0.32} a \provv{0.0035} entro la prima epoca, ed è rimasta su quel livello: il discriminatore distingueva quasi perfettamente i campi generati da quelli osservati. Un ramo recente più lungo non risolveva il problema, perché su una patch $3\times3$ moltiplica il costo di ogni campione senza ampliare l'area osservata.
+Su ERA5 il detector ha mantenuto dapprima l'unità del campione della variante a griglia: una cella con la propria patch. Con questa unità il numero di campioni per epoca è il prodotto fra istanti e celle, e un'epoca comprendeva milioni di aggiornamenti dei pesi. Con il dropout nel generatore, la loss del discriminatore è scesa da 0.32 a 0.0035 entro la prima epoca, ed è rimasta su quel livello: il discriminatore distingueva quasi perfettamente i campi generati da quelli osservati. Un ramo recente più lungo non risolveva il problema, perché su una patch $3\times3$ moltiplica il costo di ogni campione senza ampliare l'area osservata.
 
-Il generatore è stato quindi portato sul campo intero (Sezione~\ref{sec:stgan-convgru}): un campione è il campo completo di un istante, ogni cella è ricostruita una sola volta e la ConvGRU scorre sull'intero reticolo. Il numero di aggiornamenti per epoca scende al numero di istanti, \provv{70072}, e la finestra recente è portata a sedici passi, cioè 48 ore. Il discriminatore resta locale.
+Il generatore è stato quindi portato sul campo intero (Sezione~\ref{sec:stgan-convgru}): un campione è il campo completo di un istante, ogni cella è ricostruita una sola volta e la ConvGRU scorre sull'intero reticolo. Il numero di aggiornamenti per epoca scende al numero di istanti, e la finestra recente è portata a sedici passi, cioè 48 ore. Il discriminatore resta locale.
 % Fonti: train_cnn_mc_paper_run2.log (patch, 1 passo recente, 6 epoche: D
 % 0.317 a 151289 aggiornamenti, 0.0035 a 2874491) e train_fullgrid_recent16.log
 % (campo intero, 70072 aggiornamenti per epoca con training 1980-2003).
@@ -69,12 +69,16 @@ Anche sul campo intero il discriminatore tendeva a prevalere. La causa è stata 
 \label{sec:configurazione-base-era5}
 
 % Sezione scritta il 13 ottobre 2026 sul modello della tesi di riferimento.
-% Numeri dai log letti lo stesso giorno, in risultati_fonti.tex; sono in \provv
-% perché la run esistente è addestrata su 1980-2003.
+% Numeri dai log letti lo stesso giorno, fonti in risultati_fonti.tex ("ERA5, PRIMA
+% CONFIGURAZIONE"): configurazione di base = ..._cleanD (metadata: training
+% 1980-2003, 6 epoche); quote per luogo e mese = ..._ep3 e ..._ep3_gen_clim
+% (training 1980-2004, 3 epoche). Il 22 ottobre 2026 l'autore ha deciso di
+% presentarle come esecuzioni preliminari, senza anni di training e senza
+% conteggi di aggiornamenti per epoca (non più \provv).
 
 Con il campo intero e la correzione del dropout si ottiene la configurazione di base: normalizzazione min--max, lo stesso peso per tutte le variabili nell'errore di ricostruzione e lo score dell'articolo, somma dell'errore di ricostruzione e del termine del discriminatore. È addestrata per sei epoche e valutata sugli anni 2005--2025. Su questa configurazione sono emersi due limiti, e ciascuno ha motivato una modifica.
 
-\paragraph{Una sola variabile domina l'errore.} La Tabella~\ref{tab:era5-variabili} riporta quanta parte dell'errore quadratico di ricostruzione è dovuta a ciascuna variabile, su 400 istanti del periodo di test e tutte le 10611 celle. La copertura nuvolosa produce il \provv{77.8}\% dell'errore, e il \provv{97.5}\% nell'1\% di osservazioni con l'errore più alto; con quote uguali ogni variabile avrebbe il 6.7\%. In pratica, le osservazioni con l'errore più alto sono errori sulla copertura nuvolosa.
+\paragraph{Una sola variabile domina l'errore.} La Tabella~\ref{tab:era5-variabili} riporta quanta parte dell'errore quadratico di ricostruzione è dovuta a ciascuna variabile, su 400 istanti del periodo di test e tutte le 10611 celle. La copertura nuvolosa produce il 77.8\% dell'errore, e il 97.5\% nell'1\% di osservazioni con l'errore più alto; con quote uguali ogni variabile avrebbe il 6.7\%. In pratica, le osservazioni con l'errore più alto sono errori sulla copertura nuvolosa.
 
 \begin{table}[htbp]
     \centering
@@ -86,18 +90,18 @@ Con il campo intero e la correzione del dropout si ottiene la configurazione di 
         \toprule
         Variabile & Quota dell'errore & Quota nell'1\% più alto \\
         \midrule
-        Copertura nuvolosa totale & \provv{77.8\%} & \provv{97.5\%} \\
-        Radiazione solare discendente alla superficie & \provv{3.6\%} & \provv{0.6\%} \\
-        Umidità specifica a 850 hPa & \provv{3.5\%} & \provv{0.4\%} \\
-        Altezza dello strato limite & \provv{2.9\%} & \provv{0.3\%} \\
-        Velocità d'attrito & \provv{2.0\%} & \provv{0.2\%} \\
+        Copertura nuvolosa totale & 77.8\% & 97.5\% \\
+        Radiazione solare discendente alla superficie & 3.6\% & 0.6\% \\
+        Umidità specifica a 850 hPa & 3.5\% & 0.4\% \\
+        Altezza dello strato limite & 2.9\% & 0.3\% \\
+        Velocità d'attrito & 2.0\% & 0.2\% \\
         \addlinespace
-        Altre dieci variabili, ciascuna & al più \provv{1.6\%} & al più \provv{0.2\%} \\
+        Altre dieci variabili, ciascuna & al più 1.6\% & al più 0.2\% \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-Lo squilibrio è già nei dati. Dopo il min--max la copertura nuvolosa produce l'84.1\% della variazione quadratica media su 24 ore (Sezione~\ref{sec:dati-caratteristiche}), e sulle quindici variabili la correlazione di rango fra questa quota e la quota di errore è \provv{0.87}: dopo il min--max, una variabile pesa nell'errore quanto cambia da un giorno all'altro. Da qui la normalizzazione stagionale e i pesi delle Sezioni~\ref{sec:ingresso-normalizzazione-era5} e~\ref{sec:pesi-variabili-ricostruzione}: la prima porta la quota della copertura nuvolosa al 6.7\%, i secondi riportano le variabili sulla stessa scala di variazione.
+Lo squilibrio è già nei dati. Dopo il min--max la copertura nuvolosa produce l'84.1\% della variazione quadratica media su 24 ore (Sezione~\ref{sec:dati-caratteristiche}), e sulle quindici variabili la correlazione di rango fra questa quota e la quota di errore è 0.87: dopo il min--max, una variabile pesa nell'errore quanto cambia da un giorno all'altro. Da qui la normalizzazione stagionale e i pesi delle Sezioni~\ref{sec:ingresso-normalizzazione-era5} e~\ref{sec:pesi-variabili-ricostruzione}: la prima porta la quota della copertura nuvolosa al 6.7\%, i secondi riportano le variabili sulla stessa scala di variazione.
 
 \paragraph{Lo score combinato è instabile.} Il secondo limite riguarda lo score. La Tabella~\ref{tab:era5-score} confronta lo score dell'articolo con il solo errore di ricostruzione su due misure che non richiedono etichette: quanto lo score segnala le stesse osservazioni dopo un'epoca di addestramento in più, e quanto durano gli eventi costruiti con la procedura della Sezione~\ref{sec:eventi-geografici}.
 
@@ -111,16 +115,16 @@ Lo squilibrio è già nei dati. Dopo il min--max la copertura nuvolosa produce l
         \toprule
         Misura & Score dell'articolo & Errore di ricostruzione \\
         \midrule
-        Stabilità fra epoche consecutive & \provv{30.3\%}--\provv{48.3\%} & \provv{72.5\%}--\provv{82.1\%} \\
-        Eventi di durata superiore a 24 ore & \provv{0} & \provv{1501} \\
-        Eventi di un solo istante & \provv{93.8\%} & \provv{74.3\%} \\
+        Stabilità fra epoche consecutive & 30.3\%--48.3\% & 72.5\%--82.1\% \\
+        Eventi di durata superiore a 24 ore & 0 & 1501 \\
+        Eventi di un solo istante & 93.8\% & 74.3\% \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-Lo score dell'articolo segue quasi soltanto il termine del discriminatore: alla sesta epoca la sua correlazione con questo termine è \provv{0.92}, quella con l'errore di ricostruzione \provv{$-0.03$}. Cambia molto da un'epoca all'altra e non produce eventi che superano le 24 ore. L'errore di ricostruzione segnala in gran parte le stesse osservazioni e produce eventi che durano nel tempo.
+Lo score dell'articolo segue quasi soltanto il termine del discriminatore: alla sesta epoca la sua correlazione con questo termine è 0.92, quella con l'errore di ricostruzione $-0.03$. Cambia molto da un'epoca all'altra e non produce eventi che superano le 24 ore. L'errore di ricostruzione segnala in gran parte le stesse osservazioni e produce eventi che durano nel tempo.
 
-\paragraph{Configurazione adattata.} La configurazione adattata mantiene il modello e cambia tre elementi: la normalizzazione stagionale della Sezione~\ref{sec:ingresso-normalizzazione-era5}, i pesi delle variabili della Sezione~\ref{sec:pesi-variabili-ricostruzione} e lo score, che diventa il solo errore di ricostruzione espresso rispetto alla climatologia della propria cella (Sezione~\ref{sec:normalizzazione-climatologica-score}). La climatologia è necessaria perché l'errore di ricostruzione ha una grandezza tipica diversa da luogo a luogo e da stagione a stagione: senza di essa la quota di osservazioni segnalate, che sarebbe del 5\% ovunque se luogo e stagione non contassero, va dal \provv{1.5}\% al \provv{13.7}\% fra fasce di latitudine e mesi, con il massimo nelle zone più meridionali d'estate; con la climatologia resta fra il \provv{3.6}\% e il \provv{5.8}\%. Le osservazioni di questa sezione vengono da una sola esecuzione, con un solo seme; composizione dell'errore e stabilità sono misurate su 400 istanti e non sull'intero periodo di test.
+\paragraph{Configurazione adattata.} La configurazione adattata mantiene il modello e cambia tre elementi: la normalizzazione stagionale della Sezione~\ref{sec:ingresso-normalizzazione-era5}, i pesi delle variabili della Sezione~\ref{sec:pesi-variabili-ricostruzione} e lo score, che diventa il solo errore di ricostruzione espresso rispetto alla climatologia della propria cella (Sezione~\ref{sec:normalizzazione-climatologica-score}). La climatologia è necessaria perché l'errore di ricostruzione ha una grandezza tipica diversa da luogo a luogo e da stagione a stagione: nell'esecuzione preliminare della configurazione adattata, addestrata per tre epoche, senza la climatologia la quota di osservazioni segnalate, che sarebbe del 5\% ovunque se luogo e stagione non contassero, va dal 1.5\% al 13.7\% fra fasce di latitudine e mesi, con il massimo nelle zone più meridionali d'estate; con la climatologia resta fra il 3.6\% e il 5.8\%. La configurazione di base e quella adattata sono misurate ciascuna su una sola esecuzione, con un solo seme; composizione dell'errore e stabilità sono misurate su 400 istanti e non sull'intero periodo di test.
 % Quote per fascia di latitudine e mese: check_era5_score_by_place.py sulla run
 % ..._ep3 (solo ricostruzione) e su ..._ep3_gen_clim; criterio fissato prima di
 % guardare (fra 2.5% e 10%).
