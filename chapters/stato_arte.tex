@@ -129,14 +129,7 @@ In pratica l'equazione è integrata a passi discreti con lo schema di Euler--Mar
     \qquad Z_k\sim\mathcal{N}(0,1):
     \label{eq:euler-maruyama}
 \end{equation}
-a ogni passo lo stato avanza del drift moltiplicato per l'ampiezza del passo e di un termine gaussiano scalato dalla diffusione e dalla radice dell'ampiezza del passo. Ripetendo l'integrazione con estrazioni diverse di $Z_k$ si ottengono traiettorie diverse dallo stesso ingresso, tanto più disperse quanto maggiore è la diffusione (Figura~\ref{fig:sde-traiettorie}). Il tempo di integrazione è una variabile interna del modello e non coincide con l'orizzonte fisico della previsione. I due lavori descritti di seguito applicano questo schema alla stima dell'incertezza.
-
-\begin{figure}[htbp]
-    \centering
-    \input{figures/sde_traiettorie}
-    \caption{Cinque traiettorie di un'equazione differenziale stocastica lineare con lo stesso drift e due valori della diffusione, integrate con lo schema di Euler--Maruyama. La dispersione fra le traiettorie è la quantità da cui SDE-Net ricava l'incertezza epistemica. Simulazione illustrativa sul modello della figura analoga di Kong et al.~\cite{kong2020sdenet}; non è un risultato della tesi.}
-    \label{fig:sde-traiettorie}
-\end{figure}
+a ogni passo lo stato avanza del drift moltiplicato per l'ampiezza del passo e di un termine gaussiano scalato dalla diffusione e dalla radice dell'ampiezza del passo. Ripetendo l'integrazione con estrazioni diverse di $Z_k$ si ottengono traiettorie diverse dallo stesso ingresso, tanto più disperse quanto maggiore è la diffusione. Il tempo di integrazione è una variabile interna del modello e non coincide con l'orizzonte fisico della previsione. I due lavori descritti di seguito applicano questo schema alla stima dell'incertezza.
 
 \subsection{SDE-Net}
 
