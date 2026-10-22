@@ -1,0 +1,15 @@
+% Dai file di ERA5 ai dati letti dal modello: scarico, verifica, preparazione,
+% lettura. Fatti da scripts/download_era5.py e physiq_pv/era5/data.py.
+% Figura originale della tesi.
+\begin{tikzpicture}[font=\footnotesize,
+        fase/.style={draw=black!70,rounded corners=2pt,fill=black!4,align=center,
+                     text width=2.6cm,minimum height=1.45cm,inner sep=3pt},
+        freccia/.style={-{Stealth[length=4.5pt,width=4pt]},black!75}]
+    \node[fase] (scarico) at (0,0) {\textbf{Scarico}\\[2pt]\scriptsize Climate Data Store\\1104 richieste};
+    \node[fase] (verifica) at (3.4,0) {\textbf{Verifica}\\[2pt]\scriptsize file NetCDF\\con ricevuta};
+    \node[fase] (preparazione) at (6.8,0) {\textbf{Preparazione}\\[2pt]\scriptsize array \texttt{.npy}\\$[T,10611,15]$};
+    \node[fase] (lettura) at (10.2,0) {\textbf{Lettura}\\[2pt]\scriptsize finestre del modello\\dal disco};
+    \draw[freccia] (scarico) -- (verifica);
+    \draw[freccia] (verifica) -- (preparazione);
+    \draw[freccia] (preparazione) -- (lettura);
+\end{tikzpicture}

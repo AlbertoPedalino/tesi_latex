@@ -3,7 +3,7 @@
 
 Il capitolo descrive i campi meteorologici su cui il detector è addestrato e valutato: le variabili della rianalisi ERA5, il dominio e la cadenza temporale, la preparazione dei dati e la loro suddivisione in anni di addestramento, di validazione e di test. Le trasformazioni che dipendono dal modello, come la normalizzazione stagionale, sono descritte nel Capitolo~\ref{chap:metodologia}; le osservazioni di stazione usate per la valutazione sono descritte nel Capitolo~\ref{chap:esperimenti}.
 
-\section{Campi ERA5, allineamento e celle valide}
+\section{Campi ERA5, dominio e celle valide}
 \label{sec:dati-era5}
 
 I dati della rianalisi ERA5~\cite{hersbach2020era5} provengono da due prodotti distinti: variabili a livello singolo e variabili su livelli di pressione, di cui è usato soltanto il livello di 850 hPa. Le variabili sono quindici. Le dieci variabili a livello singolo sono temperatura a due metri, componenti orizzontali del vento a dieci metri, pressione al livello medio del mare, precipitazione totale, copertura nuvolosa totale, radiazione solare discendente alla superficie, umidità volumetrica del primo strato del suolo, velocità d'attrito e altezza dello strato limite. Le altre cinque sono le componenti orizzontali del vento, la velocità verticale, la temperatura e l'umidità specifica a 850 hPa. La Tabella~\ref{tab:variabili-era5} le elenca con le unità di ERA5, che non vengono convertite.
@@ -40,7 +40,7 @@ I dati della rianalisi ERA5~\cite{hersbach2020era5} provengono da due prodotti d
 
 I dati coprono gli anni dal 1980 al 2025. Sono selezionati gli istanti UTC 00, 03, 06, 09, 12, 15, 18 e 21, su una griglia di $0.5^\circ\times0.5^\circ$ nell'area compresa fra $20^\circ$ e $60^\circ$ di latitudine nord e fra $15^\circ$ di longitudine ovest e $50^\circ$ di longitudine est (Figura~\ref{fig:dominio-era5}). Il dominio comprende l'Europa, il Mediterraneo e parte dell'Africa settentrionale e del Medio Oriente. Il campionamento ogni tre ore è una selezione di tempi validi, non un'aggregazione temporale: precipitazione e radiazione conservano gli accumuli di un'ora associati ai tempi selezionati, senza somme triorarie o conversioni locali delle unità.
 
-I file mensili vengono verificati rispetto a tempi, griglia, variabili e livello di pressione richiesti. La preparazione allinea i due prodotti sulle stesse coordinate e sugli stessi istanti, e ordina le latitudini da nord a sud e le longitudini da ovest a est. Il reticolo contiene $81\times131=10611$ celle.
+Il reticolo contiene $81\times131=10611$ celle.
 
 \begin{figure}[htbp]
     \centering
@@ -56,6 +56,30 @@ I file mensili vengono verificati rispetto a tempi, griglia, variabili e livello
 % località PVGIS: se la figura viene rigenerata, si può togliere.
 
 Sono conservate le celle per le quali tutte le variabili sono definite nel primo istante di addestramento, e si verifica che questo insieme rimanga identico nel resto del periodo; se cambia, la preparazione si interrompe. La selezione non utilizza il test e non viene applicata imputazione. Il criterio è la completezza delle variabili, non una classificazione terra--mare: nei dati usati nessuna cella è esclusa.
+
+\section{Acquisizione e preparazione dei dati}
+\label{sec:dati-pipeline}
+
+I dati comprendono 134416 istanti, 10611 celle e 15 variabili: circa $2.1\times10^{10}$ valori, 85.6~GB in precisione singola. Il passaggio dai file di ERA5 ai dati letti dal modello è quindi automatizzato, in modo che nessun passo richieda di tenere in memoria l'intero periodo. Si articola in quattro fasi: scarico, verifica, preparazione e lettura (Figura~\ref{fig:pipeline-era5}).
+
+\begin{figure}[htbp]
+    \centering
+    \input{figures/schema_pipeline_era5}
+    \caption{Dai file di ERA5 ai dati letti dal modello. I campi sono scaricati mese per mese dal Climate Data Store e conservati solo se superano la verifica; la preparazione li riunisce in array su disco, da cui il modello legge le sole finestre che usa.}
+    \label{fig:pipeline-era5}
+\end{figure}
+
+\paragraph{Scarico.} I campi sono richiesti al Climate Data Store di Copernicus attraverso la sua interfaccia di programmazione, con una richiesta per mese e per prodotto: 552 mesi e 1104 richieste. Ogni richiesta fissa le variabili, gli otto istanti del giorno, la griglia di $0.5^\circ$, il dominio e, per il secondo prodotto, il livello di 850~hPa. Il passaggio alla griglia di $0.5^\circ$ è svolto dal servizio; i file ricevuti, in formato NetCDF~\cite{rew1990netcdf}, non vengono riscritti. Prima dello scarico i nomi delle variabili sono confrontati con quelli accettati dal servizio. Fino a otto richieste sono eseguite in parallelo, e una richiesta respinta per un limite temporaneo del servizio viene ripetuta dopo un'attesa crescente.
+
+\paragraph{Verifica.} Un mese è conservato solo se supera tutti i controlli. Gli istanti devono essere esattamente quelli richiesti, senza mancanti né duplicati; latitudini e longitudini devono essere quelle del dominio, con passo di $0.5^\circ$; il livello di pressione deve essere soltanto 850~hPa. Devono essere presenti tutte le variabili, senza valori infiniti e, tranne per l'umidità del suolo, che può mancare sul mare, senza campi interamente mancanti in un istante. Per ogni mese è salvata una ricevuta con la richiesta e l'impronta SHA-256 di ciascun file. Quando lo scarico viene ripreso, i mesi con ricevuta e impronta corrette sono saltati e gli altri sono scaricati di nuovo.
+
+\paragraph{Preparazione.} Un secondo programma controlla prima che tutti i mesi del periodo siano presenti, poi legge i file mese per mese, a blocchi di 32 istanti. Ripete i controlli su istanti, griglia e livello di pressione, allinea i due prodotti sugli stessi istanti e sulle stesse coordinate, e ordina le latitudini da nord a sud e le longitudini da ovest a est. Ogni blocco diventa un array di forma $[\text{istanti},N,15]$ in precisione singola, senza conversioni di unità né imputazione, ed è scritto direttamente nella sua posizione in file in formato \texttt{.npy} di NumPy~\cite{harris2020numpy}. Un file di metadati registra la griglia, le variabili, gli anni e il numero di celle escluse.
+
+\paragraph{Lettura.} I file sono aperti in mappatura di memoria: durante l'addestramento e il calcolo degli score si leggono dal disco soltanto gli istanti e le celle di ciascuna finestra. La suddivisione negli anni della Sezione~\ref{sec:dati-split} è applicata alla lettura.
+% Fonti (22 ottobre 2026): scripts/download_era5.py e physiq_pv/era5/data.py
+% (prepare_era5, load_prepared) del repository del codice. 552 mesi = 46 anni
+% 1980-2025 per 12; due prodotti. 85.6 GB = 134416 x 10611 x 15 x 4 byte.
+% Il controllo sui campi interamente mancanti esclude volumetric_soil_water_layer_1.
 
 \section{Anni di addestramento, di validazione e di test}
 \label{sec:dati-split}
