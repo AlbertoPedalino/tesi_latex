@@ -1,0 +1,51 @@
+% Struttura del generatore e del discriminatore sul campo intero, con le
+% posizioni dei dropout. Da physiq_pv/anomaly_detection/stgan/model.py e
+% full_grid.py (FullGridGenerator, FullGridDiscriminator).
+% Figura originale della tesi.
+\begin{tikzpicture}[font=\footnotesize,
+        blocco/.style={draw=black!70,rounded corners=2pt,fill=black!4,align=center,
+                       minimum height=1.1cm,inner sep=3pt},
+        ingresso/.style={blocco,fill=white,text width=2.75cm},
+        modulo/.style={blocco,text width=2.7cm},
+        drop/.style={draw=black!60,dashed,rounded corners=2pt,fill=white,
+                     font=\scriptsize,inner sep=2pt},
+        unione/.style={draw=black!70,rounded corners=2pt,fill=black!12,
+                       minimum width=0.55cm,inner sep=2pt},
+        freccia/.style={-{Stealth[length=4.5pt,width=4pt]},black!75}]
+    % ---- (a) generatore ------------------------------------------------------
+    \node[anchor=west,font=\small\bfseries] at (-1.45,2.6) {(a) Generatore};
+    \node[ingresso] (gr) at (0,1.6) {Finestra recente\\\scriptsize $R=16$ campi};
+    \node[ingresso] (gt) at (0,0) {Trend per cella\\\scriptsize 56 passi};
+    \node[ingresso] (gc) at (0,-1.6) {Calendario\\\scriptsize 4 valori per cella};
+    \node[modulo] (gconv) at (3.3,1.6) {ConvGRU\\\scriptsize 2 strati, 32 canali};
+    \node[modulo] (glstm) at (3.3,0) {LSTM\\\scriptsize 2 strati, 64};
+    \node[modulo] (glin) at (3.3,-1.6) {Lineare e ReLU\\\scriptsize 64};
+    \node[unione,minimum height=4.3cm] (gcat) at (6.6,0) {};
+    \node[rotate=90,font=\scriptsize] at (gcat) {concatenazione per cella};
+    \node[modulo] (gout) at (10.0,0) {Proiezione $1\times1$\\e tanh\\\scriptsize campo stimato};
+    \draw[freccia] (gr) -- (gconv);
+    \draw[freccia] (gt) -- (glstm);
+    \draw[freccia] (gc) -- (glin);
+    \draw[freccia] (gconv) -- node[drop] {dropout} (gconv-|gcat.west);
+    \draw[freccia] (glstm) -- node[drop] {dropout} (glstm-|gcat.west);
+    \draw[freccia] (glin) -- (glin-|gcat.west);
+    \draw[freccia] (gcat) -- node[drop] {dropout} (gout);
+    % ---- (b) discriminatore --------------------------------------------------
+    \begin{scope}[yshift=-5.6cm]
+        \node[anchor=west,font=\small\bfseries] at (-1.45,1.95) {(b) Discriminatore};
+        \node[ingresso] (dh) at (0,0.85) {Storia della patch\\\scriptsize $3\times3$ celle, $R$ campi};
+        \node[ingresso] (dc) at (0,-0.85) {Patch corrente\\\scriptsize osservata o generata};
+        \node[modulo] (dconv) at (3.3,0.85) {ConvGRU\\\scriptsize poi lineare e ReLU};
+        \node[modulo] (dproj) at (3.3,-0.85) {$1\times1$ e sigmoide\\\scriptsize massimo sulle celle};
+        \node[unione,minimum height=2.8cm] (dcat) at (6.6,0) {};
+        \node[rotate=90,font=\scriptsize] at (dcat) {concatenazione};
+        \node[blocco,text width=1.7cm] (dhid) at (8.2,0) {Strato\\nascosto\\\scriptsize ReLU};
+        \node[blocco,text width=1.6cm] (dout) at (11.2,0) {Sigmoide\\\scriptsize un valore\\per cella};
+        \draw[freccia] (dh) -- (dconv);
+        \draw[freccia] (dc) -- (dproj);
+        \draw[freccia] (dconv) -- node[drop] {dropout} (dconv-|dcat.west);
+        \draw[freccia] (dproj) -- node[drop] {dropout} (dproj-|dcat.west);
+        \draw[freccia] (dcat) -- (dhid);
+        \draw[freccia] (dhid) -- node[drop] {dropout} (dout);
+    \end{scope}
+\end{tikzpicture}

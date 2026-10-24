@@ -3,10 +3,26 @@
 
 Il capitolo descrive il detector nella forma usata sui campi ERA5. La Sezione~\ref{sec:stgan} presenta l'architettura, cioè il generatore che opera sul campo intero e il discriminatore locale, e gli obiettivi dell'addestramento avversario. La Sezione~\ref{sec:ingresso-normalizzazione-era5} descrive l'ingresso del modello: finestra recente, codifica temporale e normalizzazione stagionale. Seguono i pesi delle variabili nell'errore di ricostruzione, il dropout Monte Carlo nelle due reti e gli score che ne derivano, la normalizzazione climatologica degli score, la validazione senza etichette e la ricostruzione di eventi geografici a partire dagli score. Il percorso che ha portato a queste scelte, a partire dalla configurazione dell'articolo, è descritto nel Capitolo~\ref{chap:esperimenti}.
 
+La Figura~\ref{fig:catena-detector} riporta l'ordine in cui questi passaggi agiscono su un istante. I campi ERA5 sono riferiti al normale stagionale della propria cella (Sezione~\ref{sec:ingresso-normalizzazione-era5}) e dati in ingresso al generatore, che stima il campo dell'istante. L'errore di ricostruzione, pesato per variabile (Sezione~\ref{sec:pesi-variabili-ricostruzione}) e mediato sui campioni Monte Carlo (Sezione~\ref{sec:score-dropout-montecarlo}), è lo score di ricostruzione. Lo score è poi espresso rispetto alla climatologia del proprio errore (Sezione~\ref{sec:normalizzazione-climatologica-score}) e confrontato con una soglia; le celle sopra soglia formano gli eventi geografici (Sezione~\ref{sec:eventi-geografici}). Normalizzazione stagionale e pesi sono stimati sugli anni di addestramento, prima di addestrare il modello; climatologia e soglia sono stimate sugli anni di validazione, dopo l'addestramento. Il discriminatore non compare nella catena: serve all'addestramento del generatore e allo score combinato, mantenuto come riferimento dell'articolo.
+
+\begin{figure}[htbp]
+    \centering
+    \input{figures/schema_catena_detector}
+    \caption{Ordine dei passaggi del detector su un istante, dai campi ERA5 agli eventi geografici. In corsivo, gli anni su cui è stimata ciascuna quantità: le scale della normalizzazione stagionale e i pesi sugli anni di addestramento, la climatologia dello score e la soglia sugli anni di validazione.}
+    \label{fig:catena-detector}
+\end{figure}
+
 \section{Architettura e addestramento avversario}
 \label{sec:stgan}
 
-Il detector segue lo schema di STGAN~\cite{deng2022stgan} descritto nella Sezione~\ref{sec:rw-stgan}: un generatore stima il campo dell'istante successivo a partire dagli istanti precedenti, e un discriminatore giudica se il campo di un istante, insieme alla sua storia recente, è osservato o generato. Il bersaglio del generatore è meteorologico e comprende le quindici variabili della Tabella~\ref{tab:variabili-era5}. La griglia è definita direttamente in coordinate geografiche, con passo angolare di $0.5^\circ$, e la cadenza è di tre ore.
+Il detector segue lo schema di STGAN~\cite{deng2022stgan} descritto nella Sezione~\ref{sec:rw-stgan}: un generatore stima il campo dell'istante successivo a partire dagli istanti precedenti, e un discriminatore giudica se il campo di un istante, insieme alla sua storia recente, è osservato o generato. Il bersaglio del generatore è meteorologico e comprende le quindici variabili della Tabella~\ref{tab:variabili-era5}. La griglia è definita direttamente in coordinate geografiche, con passo angolare di $0.5^\circ$, e la cadenza è di tre ore. La Figura~\ref{fig:architettura-stgan} riporta la struttura delle due reti, descritta nelle sottosezioni seguenti.
+
+\begin{figure}[htbp]
+    \centering
+    \input{figures/schema_architettura_stgan}
+    \caption{Struttura del generatore (a) e del discriminatore (b). Il generatore unisce cella per cella i tre rami, recente, trend e calendario, e produce il campo stimato dell'istante. Il discriminatore giudica ogni cella sulla propria patch, a partire dalla storia recente e dal campo corrente, osservato o generato. I riquadri tratteggiati indicano i dropout, con probabilità 0.2 (Sezione~\ref{sec:score-dropout-montecarlo}).}
+    \label{fig:architettura-stgan}
+\end{figure}
 
 \subsection{Generatore ConvGRU sul campo intero e celle assenti}
 \label{sec:stgan-convgru}
@@ -75,7 +91,7 @@ La normalizzazione dell'articolo è un min--max per variabile stimato sui dati d
 \begin{equation}
 z_{tnf}=\frac{x_{tnf}-\mu_{nfog}}{\sigma_{nfog}},
 \end{equation}
-con otto ore del giorno e 366 giorni dell'anno. Media e deviazione standard sono stimate sui soli anni di addestramento, raccogliendo i quindici giorni che precedono $g$ e i quindici che lo seguono. La deviazione standard è calcolata attorno alla media lisciata di ciascun giorno, in modo che la variazione del ciclo stagionale all'interno della finestra non venga contata come variabilità. Espresse in deviazioni standard del proprio normale, le variabili diventano confrontabili anche fra loro: la copertura nuvolosa, che con il solo min--max produce l'84.1\% della variazione su 24 ore, ne produce il 6.7\% (Sezione~\ref{sec:dati-caratteristiche}).
+con otto ore del giorno e 366 giorni dell'anno. Media e deviazione standard sono quindi due tensori di forma $[8,366,N,F]$, con una voce per ogni ora, giorno, cella e variabile, e la standardizzazione è un unico passaggio: ogni valore è confrontato direttamente con la media e la deviazione della propria ora, del proprio giorno, della propria cella e della propria variabile, senza una normalizzazione nel tempo seguita da una nello spazio. Media e deviazione standard sono stimate sui soli anni di addestramento, raccogliendo i quindici giorni che precedono $g$ e i quindici che lo seguono. La deviazione standard è calcolata attorno alla media lisciata di ciascun giorno, in modo che la variazione del ciclo stagionale all'interno della finestra non venga contata come variabilità. Espresse in deviazioni standard del proprio normale, le variabili diventano confrontabili anche fra loro: la copertura nuvolosa, che con il solo min--max produce l'84.1\% della variazione su 24 ore, ne produce il 6.7\% (Sezione~\ref{sec:dati-caratteristiche}).
 
 La precipitazione richiede un passaggio in più. È nulla nella maggior parte degli istanti e assume di rado valori molto alti: media e deviazione standard dei valori originali sono determinate in larga parte da questi pochi valori. Prima della standardizzazione la precipitazione è quindi sostituita dalla sua radice quarta, che comprime i valori alti e lascia nullo ciò che è nullo; media e deviazione standard descrivono la radice e non il valore originale. A differenza del logaritmo, la radice è definita anche per i valori nulli e non richiede una costante aggiuntiva.
 % Confronto con radice quadrata e logaritmo: fatto sui dati senza modello
