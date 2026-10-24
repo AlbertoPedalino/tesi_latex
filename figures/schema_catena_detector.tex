@@ -12,7 +12,7 @@
     \node[fase] (errore) at (10.35,0) {\textbf{Errore pesato}\\[2pt]\scriptsize pesi $w_f$ per variabile\\\emph{addestramento}};
     % Seconda riga, da destra a sinistra: dallo score agli eventi.
     \node[fase] (score) at (10.35,-2.6) {\textbf{Score di}\\\textbf{ricostruzione}\\[2pt]\scriptsize media sui campioni};
-    \node[fase] (climatologia) at (6.9,-2.6) {\textbf{Climatologia}\\\textbf{dello score}\\[2pt]\scriptsize cella, mese, ora\\\emph{validazione}};
+    \node[fase] (climatologia) at (6.9,-2.6) {\textbf{Climatologia}\\\textbf{dello score}\\[2pt]\scriptsize cella, ora,\\giorno $\pm15$\\\emph{validazione}};
     \node[fase] (soglia) at (3.45,-2.6) {\textbf{Soglia}\\[2pt]\scriptsize 95-esimo e 99-esimo\\percentile\\\emph{validazione}};
     \node[fase] (eventi) at (0,-2.6) {\textbf{Eventi}\\\textbf{geografici}\\[2pt]\scriptsize cluster collegati\\nel tempo};
     \draw[freccia] (era5) -- (stagionale);

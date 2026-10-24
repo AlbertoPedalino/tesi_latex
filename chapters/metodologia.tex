@@ -206,18 +206,28 @@ La dispersione dei campioni del generatore cresce con l'errore di ricostruzione:
 \section{Normalizzazione climatologica degli score}
 \label{sec:normalizzazione-climatologica-score}
 
-Una trasformazione successiva al calcolo degli score esprime ogni score rispetto alla climatologia della stessa cella. Per la cella $n$, il mese $m$ e l'ora UTC $o$ dell'istante $t$,
+Una trasformazione successiva al calcolo degli score esprime ogni score rispetto alla climatologia della stessa cella. Per la cella $n$, il giorno dell'anno $g$ e l'ora UTC $o$ dell'istante $t$,
 \begin{equation}
-\zeta_{tn}=\frac{a_{tn}-\mu_{nmo}}{\sigma_{nmo}},
+\zeta_{tn}=\frac{a_{tn}-\mu_{ngo}}{\sigma_{ngo}},
 \end{equation}
-dove $a_{tn}$ è lo score da trasformare, lo score di ricostruzione $\bar{s}_{G,tn}$ o lo score combinato $\bar{a}_{tn}$, e media e deviazione standard sono calcolate sugli score della stessa cella, dello stesso mese e della stessa ora negli anni di validazione, esclusi i valori segnati come insoliti (Sezione~\ref{sec:maschere-validazione}), e restano fisse per il test. Non possono essere stimate sugli anni di addestramento, perché su quegli anni il modello ha già visto i dati e il suo errore è più basso di quello su anni nuovi. Quando lo score trasformato serve sugli anni di validazione stessi, per le scelte e per fissare le soglie, media e deviazione standard di un anno $y$ sono calcolate sugli altri quattro anni di validazione, $\mu^{(-y)}_{nmo}$ e $\sigma^{(-y)}_{nmo}$: nessun valore entra nella propria climatologia. I gruppi con meno di trenta valori di riferimento o con varianza nulla non ricevono uno score. La dispersione viene divisa per la stessa deviazione standard.
+dove $a_{tn}$ è lo score da trasformare, lo score di ricostruzione $\bar{s}_{G,tn}$ o lo score combinato $\bar{a}_{tn}$. Media e deviazione standard sono calcolate con la stessa ricetta della normalizzazione stagionale della Sezione~\ref{sec:ingresso-normalizzazione-era5}: sugli score della stessa cella e della stessa ora nei quindici giorni che precedono $g$ e nei quindici che lo seguono, con una finestra che scavalca la fine dell'anno, e con la deviazione standard calcolata attorno alla media lisciata di ciascun giorno. Lo score è uno per cella e non ha la dimensione delle variabili: media e deviazione standard sono due tensori di forma $[8,366,N]$. Sono stimate negli anni di validazione, esclusi i valori segnati come insoliti (Sezione~\ref{sec:maschere-validazione}), e restano fisse per il test. Non possono essere stimate sugli anni di addestramento, perché su quegli anni il modello ha già visto i dati e il suo errore è più basso di quello su anni nuovi. Quando lo score trasformato serve sugli anni di validazione stessi, per le scelte e per fissare le soglie, media e deviazione standard di un anno $y$ sono calcolate sugli altri quattro anni di validazione, $\mu^{(-y)}_{ngo}$ e $\sigma^{(-y)}_{ngo}$: nessun valore entra nella propria climatologia. I gruppi con meno di trenta valori di riferimento o con varianza nulla non ricevono uno score. La dispersione viene divisa per la stessa deviazione standard.
 
 Gli score di validazione da cui sono stimate queste quantità sono calcolati con la storia reale degli istanti di validazione, come quelli del test. La sostituzione dei valori insoliti nella storia (Sezione~\ref{sec:maschere-validazione}) serve alla misura con cui si confrontano le configurazioni durante l'addestramento e al passaggio di validazione che chiude l'addestramento, da cui vengono gli estremi dello score combinato; non entra nella climatologia. Una climatologia stimata su errori calcolati da una storia ripulita descriverebbe un errore più basso di quello che il modello commette sul test, dove la storia contiene le condizioni insolite.
 
-Lo scopo è rendere confrontabili celle e stagioni in cui l'errore di ricostruzione ha una grandezza tipica diversa: senza questo passaggio, le segnalazioni si concentrerebbero dove l'errore è grande per natura. La trasformazione agisce sugli score, dopo l'addestramento, e non modifica il detector. È distinta dalla normalizzazione stagionale della Sezione~\ref{sec:ingresso-normalizzazione-era5}, che agisce sull'ingresso e richiede un nuovo addestramento.
+Lo scopo è rendere confrontabili celle e stagioni in cui l'errore di ricostruzione ha una grandezza tipica diversa: senza questo passaggio, le segnalazioni si concentrerebbero dove l'errore è grande per natura. La trasformazione applica la stessa idea della normalizzazione stagionale, cioè esprimere un valore rispetto a ciò che è abituale per quella cella, quel periodo dell'anno e quell'ora, ma a un oggetto diverso. La normalizzazione stagionale agisce sui campi in ingresso, prima del modello, ed è stimata sugli anni di addestramento: toglie il ciclo stagionale e giornaliero dei dati, ma non la differenza di prevedibilità fra celle e stagioni. Dove il tempo cambia più rapidamente il generatore sbaglia di più anche su dati standardizzati. La normalizzazione climatologica agisce sull'errore del generatore, dopo l'addestramento, è stimata sugli anni di validazione e toglie questa seconda differenza senza modificare il detector.
 % Codice: reference_zscores (validazione -> test) e climatology_zscores con
 % excluded (validazione, lasciando fuori l'anno) in physiq_pv/era5/seasonality.py;
-% comando climatology --reference validation --reference-run-dir --normal-masks-dir.
+% comando climatology --reference validation --reference-run-dir --normal-masks-dir
+% --period day --window-days 15 (commit 2e65045c, ramo CNN).
+% ATTENZIONE (24 ottobre 2026): i risultati esistenti (outputs/good2v, val_* e
+% test_*) sono calcolati con la climatologia per mese x ora, non con quella qui
+% descritta; vale anche per i rilevatori senza modello, normalizzati allo stesso
+% modo. Nel Capitolo 6 i numeri che ne dipendono vanno marcati \provv e rifatti
+% con --period day prima della consegna (solo le analisi riportate nella tesi).
+% Prova sulla validazione 2000-2004 (outputs/good2v/val_gen_clim_day, log
+% analisi_good2/luogo_mese_vs_giorno_val.log): quote per latitudine x mese al 5%
+% fra 4.0 e 6.3% per mese, fra 3.6 e 6.3% per giorno, differenza media fra le
+% due tabelle 0.12 punti (massima 0.4).
 % Score di validazione con la storia reale: scripts/score_era5_stgan_run.py
 % --period validation (outputs/stgan_good_sweep_2_validation). Con la climatologia
 % stimata dagli errori a storia ripulita le quote per luogo erano disuguali
