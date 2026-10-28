@@ -149,7 +149,7 @@ Tre proprietà dei campi motivano altrettante scelte del Capitolo~\ref{chap:meto
 % fra -33.2 e 40.7 gradi. Nella stessa cartella c'è grid_5km.xlsx, la definizione
 % del reticolo. Il nome solar_irradiance_poa usato nel codice per l'irradianza
 % globale è storico: i dati sono sul piano orizzontale. Testo ripreso dal Capitolo
-% 3 del backup del 16 ottobre 2026; i dettagli sul previsore sono nell'appendice.
+% 3 del backup del 16 ottobre 2026; il lavoro preliminare sui dati non è riportato nella tesi.
 
 Il lavoro è partito, nell'ambito della previsione della produzione fotovoltaica, da serie orarie ottenute dal Photovoltaic Geographical Information System~\cite{huld2012pvgis} con la banca dati di radiazione SARAH3, provenienti dal progetto SentinelPV del Politecnico di Torino. Coprono 1149 località del Piemonte, comprese fra $44.08^\circ$ e $46.47^\circ$ di latitudine nord e fra $6.66^\circ$ e $9.20^\circ$ di longitudine est. Nella proiezione UTM del fuso 32 le località occupano 1149 delle $41\times54$ posizioni di un reticolo regolare con passo di 5~km: quelle che ricadono nel territorio regionale (Figura~\ref{fig:localita-pvgis}), cioè il rettangolo della Figura~\ref{fig:dominio-era5}. Sono disponibili gli anni dal 2005 al 2023, con 8760 ore per anno (8784 negli anni bisestili) e senza valori mancanti; i valori sono riferiti al minuto 10 di ciascuna ora, in tempo universale.
 
@@ -165,23 +165,23 @@ Per ogni località e ogni istante sono disponibili l'irradianza globale con le s
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Grandezze dei dati PVGIS, con l'unità e l'impiego nei metodi dell'Appendice~\ref{app:pvgis}: il previsore della produzione, le soglie climatologiche e i detector MTGFlow e STGAN.}
+    \caption{Grandezze dei dati PVGIS e loro unità.}
     \label{tab:variabili-pvgis}
     \vspace{0.6em}
-    \begin{tabular}{@{}L{0.40}L{0.12}L{0.36}@{}}
+    \begin{tabular}{@{}L{0.55}L{0.20}@{}}
         \toprule
-        Grandezza & Unità & Impiego \\
+        Grandezza & Unità \\
         \midrule
-        Irradianza globale (diretta più diffusa) & $\mathrm{W\,m^{-2}}$ & Previsore, soglie, detector \\
-        Irradianza diretta & $\mathrm{W\,m^{-2}}$ & Previsore \\
-        Irradianza diffusa & $\mathrm{W\,m^{-2}}$ & Previsore \\
-        Irradianza riflessa (nulla) & $\mathrm{W\,m^{-2}}$ & -- \\
-        Altezza del sole & gradi & -- \\
-        Temperatura dell'aria a due metri & $^\circ$C & Previsore, soglie, detector \\
-        Velocità del vento a dieci metri & $\mathrm{m\,s^{-1}}$ & Previsore, soglie, detector \\
-        Potenza prodotta (teorica) & W & Target del previsore, soglie \\
+        Irradianza globale (diretta più diffusa) & $\mathrm{W\,m^{-2}}$ \\
+        Irradianza diretta & $\mathrm{W\,m^{-2}}$ \\
+        Irradianza diffusa & $\mathrm{W\,m^{-2}}$ \\
+        Irradianza riflessa (nulla) & $\mathrm{W\,m^{-2}}$ \\
+        Altezza del sole & gradi \\
+        Temperatura dell'aria a due metri & $^\circ$C \\
+        Velocità del vento a dieci metri & $\mathrm{m\,s^{-1}}$ \\
+        Potenza prodotta (teorica) & W \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-Queste sono le sole grandezze disponibili, e sono quelle che determinano la produzione fotovoltaica. Un'anomalia rilevata su questi dati non può essere ricondotta a una condizione meteorologica più generale: per rilevare anomalie di tipo diverso e descriverne l'origine il lavoro è passato ai campi ERA5 descritti nelle sezioni precedenti. I metodi applicati ai dati PVGIS sono descritti nell'Appendice~\ref{app:pvgis}.
+Queste sono le sole grandezze disponibili, e sono quelle che determinano la produzione fotovoltaica. Un'anomalia rilevata su questi dati non può essere ricondotta a una condizione meteorologica più generale: per rilevare anomalie di tipo diverso e descriverne l'origine il lavoro è passato ai campi ERA5 descritti nelle sezioni precedenti. Su questi dati il lavoro preliminare ha sviluppato un previsore della produzione e i primi detector, che la tesi non riporta.
