@@ -8,7 +8,7 @@
 % viene dai file della run good-sweep-2, con soglie e climatologie stimate sugli
 % anni di validazione; nessun riferimento esterno (E-OBS, CAPE, raffiche).
 
-Il capitolo riporta e discute i risultati del detector sui campi ERA5, nella configurazione scelta dalla ricerca dei parametri. In assenza di etichette, il comportamento del detector è studiato in cinque passi. Il primo riguarda la scelta della configurazione e la convergenza della ricerca. Il secondo esamina le componenti dello score, del generatore e del discriminatore, e il loro legame nello spazio e nel tempo, per stabilire quale parte dello score usare. Il terzo confronta le segnalazioni del detector con quelle di metodi più semplici, statistici o basati su modelli poco profondi. Il quarto raggruppa le segnalazioni in eventi e li descrive per tipo e dimensione. L'ultimo esamina casi specifici.
+Il capitolo riporta e discute i risultati del detector sui campi ERA5, nella configurazione scelta dalla ricerca dei parametri. In assenza di etichette, il comportamento del detector è studiato in cinque passi. Il primo riguarda la scelta della configurazione e la convergenza della ricerca. Il secondo esamina le componenti dello score, del generatore e del discriminatore, e il loro legame nello spazio e nel tempo, per stabilire quale parte dello score usare. Il terzo confronta le segnalazioni del detector con quelle di metodi più semplici, statistici o basati su modelli poco profondi. Il quarto raggruppa le segnalazioni in eventi e li descrive per tipo e dimensione. L'ultimo esamina casi specifici. Una sezione finale verifica quanto i risultati dipendano dalla soglia.
 
 \section{Ricerca dei parametri}
 \label{sec:ris-ricerca}
@@ -85,7 +85,7 @@ La correlazione spaziale dice se i due score segnalano gli stessi luoghi nello s
     \label{fig:ris-g-d-temporale}
 \end{figure}
 
-\paragraph{Effetto della normalizzazione climatologica.} La normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}) cambia poco le correlazioni: dopo la normalizzazione quella di Spearman fra i due score vale $-0.23$, e ciascuno score conserva quasi lo stesso ordine di prima. Cambia invece dove cadono le segnalazioni di G (Figura~\ref{fig:ris-g-luogo}). Un valore è segnalato quando supera la soglia del proprio score, il 95-esimo percentile dello stesso score sugli anni di validazione (Sezione~\ref{sec:exp-protocollo}); sul test i due score segnalano circa il 5.6\% dei valori, un po' più del 5\%, perché negli anni di test l'errore del generatore è in media un po' più alto. Senza normalizzazione G segnala soprattutto a sud e in estate, dove il suo errore è alto per natura: la quota va dall'1.9\% fra 50$^\circ$ e 60$^\circ$N in febbraio al 16.3\% fra 20$^\circ$ e 30$^\circ$N in agosto. Con la normalizzazione resta fra il 3.6\% e il 7.6\% in ogni fascia e in ogni mese. Con la soglia al 99-esimo percentile la normalizzazione riduce ancora molto le differenze, da un intervallo fra lo 0.2\% e il 5.1\% a uno fra lo 0.6\% e il 2.5\%, ma resta un eccesso di segnalazioni a sud: la normalizzazione allinea media e deviazione standard dell'errore di ogni cella, non la frequenza dei suoi valori più estremi. È l'effetto atteso dalla Sezione~\ref{sec:normalizzazione-climatologica-score}: la normalizzazione toglie la differenza di prevedibilità fra luoghi e stagioni.
+\paragraph{Effetto della normalizzazione climatologica.} La normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}) cambia poco le correlazioni: dopo la normalizzazione quella di Spearman fra i due score vale $-0.23$, e ciascuno score conserva quasi lo stesso ordine di prima. Cambia invece dove cadono le segnalazioni di G (Figura~\ref{fig:ris-g-luogo}). Un valore è segnalato quando supera la soglia del proprio score, il 95-esimo percentile dello stesso score sugli anni di validazione (Sezione~\ref{sec:exp-protocollo}); sul test i due score segnalano circa il 5.6\% dei valori, un po' più del 5\%, perché negli anni di test l'errore del generatore è in media un po' più alto. Senza normalizzazione G segnala soprattutto a sud e in estate, dove il suo errore è alto per natura: la quota va dall'1.9\% fra 50$^\circ$ e 60$^\circ$N in febbraio al 16.3\% fra 20$^\circ$ e 30$^\circ$N in agosto. Con la normalizzazione resta fra il 3.6\% e il 7.6\% in ogni fascia e in ogni mese. Con una soglia più alta l'effetto è solo parziale (Sezione~\ref{sec:ris-soglia}). È l'effetto atteso dalla Sezione~\ref{sec:normalizzazione-climatologica-score}: la normalizzazione toglie la differenza di prevedibilità fra luoghi e stagioni.
 
 \begin{figure}[htbp]
     \centering
@@ -139,7 +139,7 @@ Le due sezioni precedenti mostrano che D ordina le osservazioni in senso opposto
     \label{fig:ris-d-termini-zone}
 \end{figure}
 
-\paragraph{Il discriminatore nelle tre zone.} La Figura~\ref{fig:ris-d-termini-zone} riporta il risultato. G senza normalizzazione ha un percentile mediano di 97 nel nucleo, di 88 nel contorno e di 39 lontano dagli eventi. Questi valori servono da riferimento e non sono un risultato: nel nucleo G è alto per costruzione, e nel contorno lo è in parte perché lo score di una cella è l'errore medio sulla sua patch $3\times3$, che contiene celle del nucleo. In parte vale lo stesso per $D_{\mathrm{generato}}$, che legge la stessa patch: è alto nel nucleo e nel contorno, con mediane di 78 e 73. $D_{\mathrm{reale}}$ fa il contrario, e questo non è un effetto della definizione delle zone: nel nucleo ha una mediana di 16, cioè il discriminatore giudica le osservazioni segnalate da G più reali del consueto; nel contorno e lontano torna intorno a 50. Nella componente D i due effetti si sommano e la mediana nel nucleo scende a 10: lo score del discriminatore pone i valori segnalati da G fra i più normali del test. Con la soglia al 99-esimo percentile il comportamento è lo stesso e più marcato: nel nucleo $D_{\mathrm{reale}}$ e la componente D scendono entrambi al percentile 2.
+\paragraph{Il discriminatore nelle tre zone.} La Figura~\ref{fig:ris-d-termini-zone} riporta il risultato. G senza normalizzazione ha un percentile mediano di 97 nel nucleo, di 88 nel contorno e di 39 lontano dagli eventi. Questi valori servono da riferimento e non sono un risultato: nel nucleo G è alto per costruzione, e nel contorno lo è in parte perché lo score di una cella è l'errore medio sulla sua patch $3\times3$, che contiene celle del nucleo. In parte vale lo stesso per $D_{\mathrm{generato}}$, che legge la stessa patch: è alto nel nucleo e nel contorno, con mediane di 78 e 73. $D_{\mathrm{reale}}$ fa il contrario, e questo non è un effetto della definizione delle zone: nel nucleo ha una mediana di 16, cioè il discriminatore giudica le osservazioni segnalate da G più reali del consueto; nel contorno e lontano torna intorno a 50. Nella componente D i due effetti si sommano e la mediana nel nucleo scende a 10: lo score del discriminatore pone i valori segnalati da G fra i più normali del test. Con una soglia più alta il comportamento è lo stesso e più marcato (Sezione~\ref{sec:ris-soglia}).
 
 \paragraph{Il giudizio sull'osservazione nel nucleo.} Il comportamento di $D_{\mathrm{reale}}$ nel nucleo non è uniforme: una minoranza dei valori segnalati da G è giudicata generata, ma la maggior parte è giudicata più reale del consueto. Il giudizio dipende dalla dimensione e dal tipo dell'evento, dove il tipo è la variabile d'ingresso più lontana dal proprio normale stagionale nel nucleo. È più basso negli eventi più grandi e in quelli di copertura nuvolosa, velocità verticale, radiazione solare e altezza dello strato limite; è più vicino al consueto negli eventi di pressione al livello del mare, umidità del suolo e velocità di attrito.
 
@@ -248,6 +248,46 @@ Le due sezioni precedenti mostrano che D ordina le osservazioni in senso opposto
 % contorno segnalato dal solo modello, in una zona non anomala. Prima in generale,
 % poi per tipi di evento diversi.
 \provv{Sezione da scrivere con la run finale.}
+
+\section{Sensibilità alla soglia}
+\label{sec:ris-soglia}
+
+Tutti i risultati precedenti usano la soglia del 95-esimo percentile degli score di validazione, che sul test segnala circa il 5\% dei valori. È una scelta convenzionale, non ottimizzata. Questa sezione ripete le analisi con il 99-esimo percentile, stimato anch'esso sugli anni di validazione, per verificare quanto le conclusioni dipendano dalla soglia (Tabella~\ref{tab:ris-soglia}).
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Le analisi delle sezioni precedenti con la soglia al 95-esimo e al 99-esimo percentile degli score di validazione, sugli anni di test. Lo scarto relativo è lo scarto medio delle quote per fascia di latitudine e mese dalla loro media, diviso per la media.}
+    \label{tab:ris-soglia}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.22}L{0.40}rr@{}}
+        \toprule
+        Analisi & Misura & 95-esimo & 99-esimo \\
+        \midrule
+        Quota per luogo (Sez.~\ref{sec:ris-correlazione-temporale}) & G, intervallo fra fasce e mesi & 1.9--16.3\% & 0.2--5.1\% \\
+         & G con climatologia, intervallo & 3.6--7.6\% & 0.6--2.5\% \\
+         & scarto relativo, G $\rightarrow$ G con climatologia & 0.47 $\rightarrow$ 0.11 & 0.77 $\rightarrow$ 0.32 \\
+        \addlinespace
+        Zone degli eventi (Sez.~\ref{sec:ris-g-d}) & eventi di G con climatologia & 754692 & 296199 \\
+         & $D_{\mathrm{reale}}$ nel nucleo, percentile mediano & 16 & 2 \\
+         & $D_{\mathrm{reale}}$ nel contorno, percentile mediano & 54 & 13 \\
+         & D nel nucleo, percentile mediano & 10 & 2 \\
+        \addlinespace
+        Confronti (Sez.~\ref{sec:ris-confronti}) & \provv{da completare} & & \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\paragraph{La normalizzazione climatologica nella coda.} Con la soglia più alta la normalizzazione riduce ancora molto le differenze fra luoghi e stagioni, ma non le annulla: resta un eccesso di segnalazioni a sud, dove la quota media è circa il doppio di quella a nord. La normalizzazione allinea media e deviazione standard dell'errore di ogni cella, non la frequenza dei suoi valori più estremi; con il 5\% questa differenza si vede appena, con l'1\% sì.
+
+\paragraph{Il comportamento del discriminatore.} Con la soglia più alta gli eventi sono meno della metà, e il comportamento del discriminatore è lo stesso e più marcato. Nel nucleo $D_{\mathrm{reale}}$ e la componente D scendono al percentile 2, e anche il contorno, che con la soglia più alta è a sua volta fra i valori più alti di G, diventa basso per $D_{\mathrm{reale}}$. Il gruppo più piccolo per tipo e dimensione contiene ancora 78 eventi.
+
+\paragraph{Confronti con metodi semplici.} \provv{Da scrivere con i risultati della Sezione~\ref{sec:ris-confronti}.}
+
+\paragraph{Sintesi.} Le conclusioni sul discriminatore non dipendono dalla soglia, e con una soglia più alta diventano più nette. L'effetto della normalizzazione climatologica dipende invece dalla soglia: è quasi completo con il 5\%, solo parziale con l'1\%.
+% Numeri: per la quota per luogo i commenti della Sezione 6.3, per le zone quelli della
+% Sezione 6.4 (log luogo_g_*_1pc.log e zone_g_dterms_1pc.log, 28 ottobre 2026).
+% Rapporto fra le quote medie a sud e a nord con G+clim all'1%: 1.74 / 0.82 = 2.1.
 
 \section{Limiti dei risultati}
 \label{sec:ris-limiti}
