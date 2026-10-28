@@ -26,17 +26,18 @@ Il capitolo riporta e discute i risultati del detector sui campi ERA5, nella con
 \section{Correlazione spaziale degli score}
 \label{sec:ris-correlazione-spaziale}
 
-% Score del generatore, del discriminatore e combinato. A istante fissato: mappa
-% dei tre score. Lungo tutto il test: per ogni istante la correlazione spaziale
-% fra le coppie di score (G--D, G--combinato, D--combinato) sulle celle, e il
-% grafico di come cambia nel tempo.
+% Score del generatore e del discriminatore, prima e dopo la normalizzazione
+% climatologica (G, D, G+clim, D+clim; il combinato non è considerato). A istante
+% fissato: mappa dei quattro score. Lungo tutto il test: per ogni istante la
+% correlazione spaziale (Pearson e Spearman) fra le sei coppie sulle celle, e il
+% grafico di come cambia nel tempo. Script: check_era5_score_correlation.py.
 \provv{Sezione da scrivere con la run finale.}
 
 \section{Correlazione temporale degli score}
 \label{sec:ris-correlazione-temporale}
 
-% Per ogni cella, la correlazione nel tempo fra le coppie di score sul test:
-% mappe delle correlazioni.
+% Per ogni cella, la correlazione nel tempo fra le sei coppie di score sul test:
+% mappe delle correlazioni. Stesso script della sezione precedente.
 \provv{Sezione da scrivere con la run finale.}
 
 \section{Perché il generatore rileva e il discriminatore no}
@@ -52,16 +53,30 @@ Il capitolo riporta e discute i risultati del detector sui campi ERA5, nella con
 \section{Confronto con metodi semplici e modelli poco profondi}
 \label{sec:ris-confronti}
 
-% Rilevatori senza modello della Sezione sec:exp-baseline (distanza dal normale,
-% variazione in tre ore, il maggiore dei due) e modelli poco profondi da provare
-% (da scegliere). Confronto a parità di segnalazioni.
+% Confronto a parità di segnalazioni (ognuno il proprio 5% più alto): quota delle
+% segnalazioni condivise, indice di Jaccard, segnalazioni esclusive, voto a
+% maggioranza (compare_era5_detectors.py). Rilevatori, tutti esistenti e applicati
+% così come sono, senza riferimenti esterni:
+% - solo il punto: distanza dal normale; sette metodi statistici di TSB-AD (PCA,
+%   KMeans, CBLOF, MCD, HBOS, COPOD, Isolation Forest; score_era5_shallow.py);
+% - il tempo: variazione in tre ore; Shekhar et al. 2001 con vicinato temporale;
+% - lo spazio: Shekhar et al. 2001 con vicinato spaziale; Chen et al. 2008
+%   multivariato (score_era5_spatial_outliers.py);
+% - spazio e tempo: Shekhar et al. 2001 con vicinato spazio-temporale; STGAN.
+% KNN, LOF e OCSVM esclusi per il costo su ~600 milioni di punti. I metodi
+% spazio-temporali pubblicati (scan statistic, ST-DBSCAN, ...) non si applicano
+% così come sono a campi continui multivariati su griglia.
 \provv{Sezione da scrivere con la run finale.}
 
 \section{Eventi per tipo e dimensione}
 \label{sec:ris-eventi}
 
-% Ipercubo degli score (tempo, latitudine, longitudine) separato per tipo di
-% evento e per dimensione dell'evento (numero di celle).
+% Eventi dello score scelto nell'ipercubo tempo x latitudine x longitudine,
+% divisi per dimensione (1, 2-4, 5-19, >19 valori) e per tipo (la variabile
+% d'ingresso più lontana dal normale stagionale sul nucleo). Per ogni score:
+% percentile mediano e quota segnalata nel nucleo, nel contorno (le 8 celle
+% attorno) e lontano dagli eventi (check_era5_event_zones.py). Nessun
+% riferimento esterno.
 \provv{Sezione da scrivere con la run finale.}
 
 \section{Casi specifici}

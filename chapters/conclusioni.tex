@@ -14,24 +14,20 @@
 % sostenute dal Capitolo dei risultati; non introdurre numeri nuovi. Da
 % scrivere con la run scelta dalla ricerca dei parametri. Punti già sostenuti
 % dai risultati provvisori: il detector è complementare ai rilevatori senza
-% modello; ciò che segnala da solo è confermato dalle stazioni in misura
-% debole ma reale, quanto ciò che segnalano da soli i rilevatori senza modello;
+% modello;
 % vede i cambiamenti rapidi prima degli altri rilevatori, di un passo; è più
-% debole sul freddo insolito; lo score di ricostruzione è confermato più dello
-% score combinato dell'articolo.
+% debole sul freddo insolito. (Note dei risultati provvisori, da rivedere.)
 
 \section{Limiti dello studio}
 
 % Bozza del 16 ottobre 2026, dalla parte ERA5 dei Capitoli 3--6. Nessun numero
 % nuovo.
 
-\paragraph{Assenza di una verità di riferimento.} I campi ERA5 non contengono etichette di anomalia, e l'accuratezza del rilevamento non è quindi misurata. I risultati descrivono quanto le segnalazioni del detector coincidono con quelle di rilevatori che non usano un modello, e quanto spesso cadono in giorni in cui le stazioni misurano valori insoliti. Una conferma più frequente della media indica che le segnalazioni riguardano condizioni davvero insolite, non che il detector le trovi tutte.
+\paragraph{Assenza di una verità di riferimento.} I campi ERA5 non contengono etichette di anomalia, e l'accuratezza del rilevamento non è quindi misurata. I risultati descrivono come si comportano le componenti dello score e quanto le segnalazioni del detector coincidono con quelle di rilevatori più semplici; non dicono quante condizioni insolite il detector trovi né quante delle sue segnalazioni lo siano davvero.
 
 \paragraph{Una sola esecuzione per configurazione.} Ogni configurazione è stata addestrata una sola volta, con un solo seme. Non è noto quanto concorderebbero due esecuzioni identiche con semi diversi, e le differenze fra configurazioni non possono essere attribuite con certezza alla sola scelta confrontata.
 
-\paragraph{Conferma da dati indipendenti.} Le osservazioni di stazione coprono la sola terraferma europea, con meno stazioni nel sud e nell'est del dominio, e sono aggregate per giorno, mentre il detector lavora ogni tre ore. Per la pressione non è verificato che le misure delle stazioni siano escluse dall'assimilazione di ERA5.
-
-\paragraph{Score e dispersione.} La dispersione dello score dipende dal dropout delle due reti e non è calibrata come misura di incertezza. Le ablazioni sui pesi delle variabili sono svolte sullo score della singola cella, che le stazioni confermano meno dello score sulla patch, e su un modello addestrato con una sola delle varianti di pesi.
+\paragraph{Score e dispersione.} La dispersione dello score dipende dal dropout delle due reti e non è calibrata come misura di incertezza.
 
 \paragraph{Validazione breve e clima che cambia.} Soglie e normalizzazione climatologica sono stimate su cinque anni di validazione e applicate a un periodo di test di ventuno anni. Con la deriva del clima, la quota di osservazioni segnalate negli anni più lontani può scostarsi da quella prevista. La ricostruzione degli eventi, inoltre, unifica a posteriori le identità che si fondono, e non descrive un utilizzo in tempo reale.
 

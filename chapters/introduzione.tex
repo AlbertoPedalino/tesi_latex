@@ -36,7 +36,7 @@ L'obiettivo della tesi è rilevare condizioni meteorologiche anomale in campi pr
     \item L'adattamento di STGAN a campi meteorologici privi di topologia fisica, con un generatore sul campo intero che rappresenta l'intorno di una cella con una convoluzione su griglia, e la definizione dell'obiettivo come rilevamento di condizioni nuove rispetto al periodo di training.
     \item Uno score Monte Carlo, con il dropout nel generatore e nel discriminatore, e la ricostruzione di eventi geografici a partire dagli score.
     \item Un protocollo di addestramento e di scelta della configurazione che non usa etichette né anni di test: una validazione da cui le condizioni insolite sono escluse con un criterio indipendente dal modello, e una misura della distanza fra campi osservati e ricostruiti.
-    \item Una valutazione senza etichette: il confronto con rilevatori che non usano un modello, a parità di segnalazioni, e con le osservazioni di stazione di E-OBS~\cite{cornes2018eobs}, che non derivano da ERA5.
+    \item Una valutazione senza etichette: lo studio delle componenti dello score nello spazio e nel tempo, e il confronto, a parità di segnalazioni, con rilevatori che non usano un modello e con modelli poco profondi.
 \end{itemize}
 
 \section{Organizzazione del documento}
