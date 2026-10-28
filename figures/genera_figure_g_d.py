@@ -3,7 +3,7 @@ together, and the two outputs of D that make its score.
 
 Run from the thesis folder. First, once, gather the small data from the files downloaded from the server
 (outputs/analisi_good2/ of the code repository: the folders correlazioni_g_d and correlazioni_g_dterms written by
-scripts/check_era5_score_correlation.py, zone_g_dterms.csv by scripts/check_era5_event_zones.py, and
+scripts/check_era5_score_correlation.py, zone_g_dterms_soglia_val.csv by scripts/check_era5_event_zones.py, and
 mappe_istanti.npz with G, D and D(real) at three timestamps of the scored test run):
     python figures/genera_figure_g_d.py --prepare <folder with the downloaded files>
 which writes figures/dati/era5_g_d.npz. Then:
@@ -60,7 +60,7 @@ def prepare(folder):
         grid = json.loads(str(maps["grid"]))
         times = [str(value) for value in maps["times"]]
         chosen = [times.index(value) for value in TIMES]
-        zones = pd.read_csv(folder / "zone_g_dterms.csv")
+        zones = pd.read_csv(folder / "zone_g_dterms_soglia_val.csv")
         everything = zones[(zones["type"] == "all") & (zones["size"] == "all")].iloc[0]
         far = zones[zones["type"].str.startswith("far")].iloc[0]
         names = ("G", "Dreale", "Dricostruito", "D")

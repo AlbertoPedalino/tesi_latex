@@ -67,12 +67,12 @@ La correlazione temporale è calcolata in ogni cella sugli istanti: vale 1 se ne
 
 La normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}) cambia poco questi risultati. Dopo la normalizzazione la correlazione di Spearman fra i due score vale in media $-0.23$ nello spazio e ha mediana $-0.23$ nel tempo; ciascuno score conserva quasi lo stesso ordine che aveva prima, con una correlazione di Spearman fra lo score prima e dopo la normalizzazione di 0.92 per G e di 0.95 per D, in media nello spazio.
 
-La normalizzazione cambia invece dove cadono le segnalazioni di G. Nella Figura~\ref{fig:ris-g-luogo} sono segnalati i valori nel 5\% più alto di ciascuno score sugli anni di test: qui interessa dove cadono le segnalazioni, non quante sono, e la soglia è quindi il percentile dello score stesso su quegli anni. Se il luogo e la stagione non contassero, ogni fascia di latitudine conterrebbe il 5\% di valori segnalati in ogni mese. Senza normalizzazione, G segnala fra l'1.5\% dei valori, fra 50$^\circ$ e 60$^\circ$N in febbraio, e il 14.5\%, fra 20$^\circ$ e 30$^\circ$N in agosto: le segnalazioni si concentrano a sud e in estate, dove l'errore del generatore è alto per natura. Con la normalizzazione la quota resta fra il 3.2\% e il 6.9\%, e lo scarto medio dal 5\% scende da 2.4 a 0.6 punti. È l'effetto atteso dalla Sezione~\ref{sec:normalizzazione-climatologica-score}: la normalizzazione toglie la differenza di prevedibilità fra luoghi e stagioni.
+La normalizzazione cambia invece dove cadono le segnalazioni di G. Nella Figura~\ref{fig:ris-g-luogo} un valore è segnalato quando supera la soglia del proprio score, il 95-esimo percentile dello stesso score sugli anni di validazione (Sezione~\ref{sec:exp-protocollo}). Sul test i due score segnalano in media il 5.7\% e il 5.6\% dei valori, più del 5\%: negli anni di test l'errore del generatore è in media un po' più alto che negli anni di validazione. Se il luogo e la stagione non contassero, ogni fascia di latitudine conterrebbe in ogni mese circa la stessa quota di valori segnalati. Senza normalizzazione, G segnala fra l'1.9\% dei valori, fra 50$^\circ$ e 60$^\circ$N in febbraio, e il 16.3\%, fra 20$^\circ$ e 30$^\circ$N in agosto: le segnalazioni si concentrano a sud e in estate, dove l'errore del generatore è alto per natura. Con la normalizzazione la quota resta fra il 3.6\% e il 7.6\%, e lo scarto medio dalla quota media scende da 2.7 a 0.6 punti. È l'effetto atteso dalla Sezione~\ref{sec:normalizzazione-climatologica-score}: la normalizzazione toglie la differenza di prevedibilità fra luoghi e stagioni.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_g_luogo}
-    \caption{Quota dei valori nel 5\% più alto dello score, per fascia di latitudine e mese, sugli anni di test: G senza e con la normalizzazione climatologica. La soglia è il 95-esimo percentile di ciascuno score sugli stessi anni. Il bianco corrisponde al 5\%, la quota attesa se il luogo e la stagione non contassero.}
+    \caption{Quota dei valori segnalati, per fascia di latitudine e mese, sugli anni di test: G senza e con la normalizzazione climatologica. La soglia di ciascuno score è il suo 95-esimo percentile sugli anni di validazione. Il bianco corrisponde al 5\%.}
     \label{fig:ris-g-luogo}
 \end{figure}
 % Numeri: correlazioni come nella sezione precedente (coppie con G+clim e D+clim,
@@ -80,9 +80,11 @@ La normalizzazione cambia invece dove cadono le segnalazioni di G. Nella Figura~
 % climatologia giorno +-15 x ora dalla run di validazione
 % outputs/stgan_good_sweep_2_validation). Mappa temporale: temporal_correlation.npz.
 % Quote per luogo: scripts/check_era5_score_by_place.py, log
-% outputs/good2v/luogo_g_grezzo_soglia_test.log (soglia del test 0.003997, impostata
-% sostituendo score_limit perché stgan_good_sweep_2_scored ha threshold_reference
-% sulla validazione) e outputs/good2v/luogo_g_clim_giorno.log; dati in
+% soglie della validazione (threshold_reference): G, output incollato in chat il 28
+% ottobre 2026 (stgan_good_sweep_2_scored -> stgan_good_sweep_2_validation; il tee
+% era fallito); G+clim, outputs/good2v/luogo_g_clim_giorno_soglia_val.log
+% (test_generator_clim_day -> good2v/val_gen_clim_day, impostato con
+% set_era5_threshold_reference.py il 28 ottobre 2026); dati in
 % figures/dati/era5_g_luogo.json, figura figures/genera_figura_g_luogo.py.
 
 \section{Perché il generatore rileva e il discriminatore no}
@@ -99,7 +101,7 @@ I due termini si comportano in modo diverso rispetto a G (Figura~\ref{fig:ris-d-
     \label{fig:ris-d-termini-temporale}
 \end{figure}
 
-Le correlazioni riguardano tutti i valori. Per vedere che cosa fa il discriminatore proprio dove G segnala un'anomalia, gli score sono letti attorno agli eventi di G. Gli eventi sono i valori nel 5\% più alto di G con la normalizzazione climatologica, raggruppati nell'ipercubo di tempo, latitudine e longitudine: due valori fanno parte dello stesso evento se in un istante le loro celle si toccano, anche in diagonale, o se sono la stessa cella in due istanti consecutivi. Sugli anni di test risultano 703689 eventi, per un totale di 32.2 milioni di valori. In ogni istante le celle sono divise in tre zone: il \emph{nucleo}, le celle di un evento; il \emph{contorno}, le otto celle attorno a una cella del nucleo, che corrispondono alla patch $3\times3$ letta dal discriminatore, escluse quelle del nucleo; e la zona \emph{lontana}, le celle a più di tre celle da ogni nucleo. Le celle intermedie non sono considerate. Per ogni score si riporta il percentile mediano dei suoi valori in ciascuna zona, rispetto a tutti i valori dello stesso score sul test: in una zona senza legame con l'evento sarebbe vicino a 50.
+Le correlazioni riguardano tutti i valori. Per vedere che cosa fa il discriminatore proprio dove G segnala un'anomalia, gli score sono letti attorno agli eventi di G. Gli eventi sono i valori di G con la normalizzazione climatologica sopra la sua soglia, fissata sulla validazione, raggruppati nell'ipercubo di tempo, latitudine e longitudine: due valori fanno parte dello stesso evento se in un istante le loro celle si toccano, anche in diagonale, o se sono la stessa cella in due istanti consecutivi. Sugli anni di test risultano 754692 eventi, per un totale di 36.7 milioni di valori. In ogni istante le celle sono divise in tre zone: il \emph{nucleo}, le celle di un evento; il \emph{contorno}, le otto celle attorno a una cella del nucleo, che corrispondono alla patch $3\times3$ letta dal discriminatore, escluse quelle del nucleo; e la zona \emph{lontana}, le celle a più di tre celle da ogni nucleo. Le celle intermedie non sono considerate. Per ogni score si riporta il percentile mediano dei suoi valori in ciascuna zona, rispetto a tutti i valori dello stesso score sul test: in una zona senza legame con l'evento sarebbe vicino a 50.
 
 \begin{figure}[htbp]
     \centering
@@ -108,9 +110,9 @@ Le correlazioni riguardano tutti i valori. Per vedere che cosa fa il discriminat
     \label{fig:ris-d-termini-zone}
 \end{figure}
 
-La Figura~\ref{fig:ris-d-termini-zone} riporta il risultato. G senza normalizzazione ha un percentile mediano di 97 nel nucleo, di 90 nel contorno e di 40 lontano dagli eventi: i valori segnalati dopo la normalizzazione sono fra i più alti di G anche prima, e l'errore del generatore è alto già sulle celle vicine. $D_{\mathrm{generato}}$ è alto nel nucleo e nel contorno, con mediane di 79 e 74. $D_{\mathrm{reale}}$ fa il contrario: nel nucleo ha una mediana di 14, cioè il discriminatore giudica le osservazioni anomale più reali del consueto; nel contorno torna a 52, lontano è a 50. Nella componente D i due effetti si sommano e la mediana nel nucleo scende a 9: lo score del discriminatore pone le anomalie di G fra le osservazioni più normali del test. Lontano dagli eventi tutti gli score sono fra 40 e 54.
+La Figura~\ref{fig:ris-d-termini-zone} riporta il risultato. G senza normalizzazione ha un percentile mediano di 97 nel nucleo, di 88 nel contorno e di 39 lontano dagli eventi: i valori segnalati dopo la normalizzazione sono fra i più alti di G anche prima, e l'errore del generatore è alto già sulle celle vicine. $D_{\mathrm{generato}}$ è alto nel nucleo e nel contorno, con mediane di 78 e 73. $D_{\mathrm{reale}}$ fa il contrario: nel nucleo ha una mediana di 16, cioè il discriminatore giudica le osservazioni anomale più reali del consueto; nel contorno torna a 54, lontano è a 50. Nella componente D i due effetti si sommano e la mediana nel nucleo scende a 10: lo score del discriminatore pone le anomalie di G fra le osservazioni più normali del test. Lontano dagli eventi tutti gli score sono fra 39 e 54.
 
-Il comportamento di $D_{\mathrm{reale}}$ nel nucleo non è uniforme. Il 14\% dei valori del nucleo supera la soglia di $D_{\mathrm{reale}}$ fissata sulla validazione, contro il 3.7\% lontano dagli eventi: una minoranza delle osservazioni anomale è giudicata generata, ma la maggior parte è giudicata più reale del consueto. La mediana scende con la dimensione dell'evento, da 30 negli eventi di un solo valore a 12--14 in quelli da cinque valori in su. Dipende anche dal tipo di evento, cioè dalla variabile d'ingresso più lontana dal proprio normale stagionale nel nucleo: è più bassa negli eventi di copertura nuvolosa (fra 3 e 6, secondo la dimensione), di velocità verticale (fra 5 e 13) e di radiazione solare e altezza dello strato limite, più alta negli eventi di pressione al livello del mare, di umidità del suolo e di velocità di attrito (fra 36 e 61). Gli eventi di velocità verticale e di precipitazione contengono da soli il 59\% dei valori del nucleo.
+Il comportamento di $D_{\mathrm{reale}}$ nel nucleo non è uniforme. Il 14\% dei valori del nucleo supera la soglia di $D_{\mathrm{reale}}$ fissata sulla validazione, contro il 3.5\% lontano dagli eventi: una minoranza delle osservazioni anomale è giudicata generata, ma la maggior parte è giudicata più reale del consueto. La mediana scende con la dimensione dell'evento, da 33 negli eventi di un solo valore a 14--16 in quelli da cinque valori in su. Dipende anche dal tipo di evento, cioè dalla variabile d'ingresso più lontana dal proprio normale stagionale nel nucleo: è più bassa negli eventi di copertura nuvolosa (fra 3 e 7, secondo la dimensione), di velocità verticale (fra 6 e 16) e di radiazione solare e altezza dello strato limite, più alta negli eventi di pressione al livello del mare, di umidità del suolo e di velocità di attrito (fra 38 e 60). Gli eventi di velocità verticale e di precipitazione contengono da soli il 60\% dei valori del nucleo.
 
 La Figura~\ref{fig:ris-d-termini-mappa} mostra i termini nell'istante con la media di G più alta del test. Sulla fascia del Nord Africa in cui G è alto, e su un'area più ampia attorno, $D_{\mathrm{reale}}$ è vicino a zero e $D_{\mathrm{generato}}$ è al massimo: il discriminatore giudica reale l'osservazione e generata la ricostruzione, e la loro differenza porta D ai valori più bassi del dominio.
 
@@ -126,11 +128,11 @@ In sintesi, il discriminatore distingue bene le ricostruzioni dalle osservazioni
 % (check_era5_score_correlation.py con @real e @generated; nei file D(generato) si
 % chiama Dricostruito), mediane nelle celle da temporal_correlation.npz, rilette il
 % 28 ottobre 2026. Zone: scripts/check_era5_event_zones.py --events G+clim
-% (outputs/good2v/test_generator_clim_day, soglia: 5% dello score stesso sul test,
-% la cartella non ha threshold_reference), --scores G, Dreale, Dricostruito, D
-% (outputs/stgan_good_sweep_2_scored, soglia della validazione per le quote
-% segnalate), --far 3; csv outputs/analisi_good2/zone_g_dterms.csv, log
-% zone_g_dterms.log. Tipi e dimensioni dalle righe del csv.
+% (outputs/good2v/test_generator_clim_day, soglia della validazione da
+% good2v/val_gen_clim_day), --scores G, Dreale, Dricostruito, D
+% (outputs/stgan_good_sweep_2_scored, soglia della validazione), --far 3; csv
+% outputs/analisi_good2/zone_g_dterms_soglia_val.csv, log zone_g_dterms_soglia_val.log
+% (28 ottobre 2026; la prima versione, con la soglia del test, è zone_g_dterms.csv). Tipi e dimensioni dalle righe del csv.
 
 \section{Confronto con metodi semplici e modelli poco profondi}
 \label{sec:ris-confronti}

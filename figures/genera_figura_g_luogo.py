@@ -1,10 +1,10 @@
 """Generate the figure of the climatology of the score: where and when the generator's score (G) flags, without
 and with the climatology of the score.
 
-Share of the values in the highest 5% of the score, by latitude band and calendar month, on the test years
+Share of the flagged values of the score, by latitude band and calendar month, on the test years
 2005-2025 of good-sweep-2 (figures/dati/era5_g_luogo.json, from scripts/check_era5_score_by_place.py of the code
-repository). The threshold is the 5% of the score itself over the same years: the figure reads where the flags
-fall, not how many they are. If place and season did not matter, every cell would read 5%.
+repository). The threshold of each score is its 95th percentile over the validation years, as everywhere in
+the thesis; on the test both scores flag a little more than 5% on average.
 
 Run from the thesis folder:
     python figures/genera_figura_g_luogo.py
@@ -57,7 +57,7 @@ def main():
         axis.tick_params(length=0)
         axis.set_title(title, fontsize=9, loc="left", color=TEXT)
     bar = figure.colorbar(mesh, ax=axes, shrink=0.9, ticks=[0, top, 10, 15])
-    bar.set_label(f"valori nel {top}% più alto (%)")
+    bar.set_label("valori segnalati (%)")
     bar.outline.set_edgecolor(MUTED)
     figure.savefig(HERE / "era5_g_luogo.pdf")
     print(f"written {HERE / 'era5_g_luogo.pdf'}")
