@@ -26,29 +26,111 @@ Il capitolo riporta e discute i risultati del detector sui campi ERA5, nella con
 \section{Correlazione spaziale degli score}
 \label{sec:ris-correlazione-spaziale}
 
-% Score del generatore e del discriminatore, prima e dopo la normalizzazione
-% climatologica (G, D, G+clim, D+clim; il combinato non è considerato). A istante
-% fissato: mappa dei quattro score. Lungo tutto il test: per ogni istante la
-% correlazione spaziale (Pearson e Spearman) fra le sei coppie sulle celle, e il
-% grafico di come cambia nel tempo. Script: check_era5_score_correlation.py.
-\provv{Sezione da scrivere con la run finale.}
+Questa sezione e le due seguenti riguardano gli anni di test 2005--2025 della configurazione scelta: 61360 istanti su 10611 celle. Con G si indica la componente del generatore $\bar{s}_{G,tn}$, con D la componente del discriminatore $\bar{s}_{D,tn}$, entrambe medie sui 20 campioni (Sezione~\ref{sec:score-dropout-montecarlo}). Per entrambe un valore più alto indica un'osservazione più insolita. Due score sono confrontati con due correlazioni: quella di Pearson, calcolata sui valori, e quella di Spearman, calcolata sui ranghi, che pochi valori molto alti non bastano a decidere.
+
+La correlazione spaziale è calcolata in ogni istante sulle celle: vale 1 se i due score ordinano i luoghi allo stesso modo, $-1$ se li ordinano in modo opposto. Fra G e D la correlazione di Spearman vale in media $-0.24$ ed è negativa nel 99.98\% degli istanti; quella di Pearson vale in media $-0.51$ (Figura~\ref{fig:ris-g-d-spaziale}). Nello stesso istante, quindi, le celle in cui il generatore sbaglia di più sono in genere quelle che il discriminatore giudica più vicine al reale. Il legame è più forte d'estate, con una media di $-0.28$ fra giugno e agosto contro $-0.21$ fra novembre e gennaio, e nelle ore centrali del giorno, con $-0.29$ alle 12~UTC contro $-0.20$ alle 18, alle 21 e alle 3~UTC. Solo in otto giornate, tutte fra la fine di novembre 2019 e l'inizio di gennaio 2020, la media giornaliera della correlazione di Pearson è positiva, con un massimo di 0.21 il 27 dicembre 2019.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_g_d_correlazione_spaziale}
+    \caption{Correlazione spaziale fra G e D in ogni istante degli anni di test, calcolata sulle 10611 celle: media giornaliera (linea sottile) e media mobile su 30 giorni (linea spessa), con Spearman e con Pearson.}
+    \label{fig:ris-g-d-spaziale}
+\end{figure}
+
+La Figura~\ref{fig:ris-g-d-mappe} mostra i due score in due istanti: l'8 agosto 2014 alle 3~UTC, l'istante in cui la correlazione di Spearman è uguale alla sua mediana sul test ($-0.24$), e il 30 agosto 2024 alle 12~UTC, l'istante in cui la media di G sulle celle è la più alta del test. Nel secondo, G è alto su una fascia stretta del Nord Africa orientale; nella stessa zona, su un'area più ampia, D assume i valori più bassi del dominio.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_g_d_mappe}
+    \caption{Score di G e di D in due istanti degli anni di test: in alto un istante con la correlazione spaziale di Spearman uguale alla mediana del test, in basso l'istante con la media di G più alta. Ogni mappa ha una propria scala, dal primo al 99-esimo percentile dei suoi valori. Linee di costa da Natural Earth.}
+    \label{fig:ris-g-d-mappe}
+\end{figure}
+% Numeri: scripts/check_era5_score_correlation.py sul server, run good-sweep-2
+% (outputs/stgan_good_sweep_2_scored @generator e @discriminator), cartella
+% outputs/analisi_good2/correlazioni_g_d (spatial_correlation.csv), riletti il 28
+% ottobre 2026 dai file scaricati. Istanti delle mappe: mappe_istanti.npz.
+% Figure: figures/genera_figure_g_d.py. Su D si vede una cornice lungo il bordo del
+% dominio: le patch delle celle di bordo escono dal reticolo e sono riempite con
+% zeri (Sezione 4.1.2); da riportare nei Limiti.
 
 \section{Correlazione temporale degli score}
 \label{sec:ris-correlazione-temporale}
 
-% Per ogni cella, la correlazione nel tempo fra le sei coppie di score sul test:
-% mappe delle correlazioni. Stesso script della sezione precedente.
-\provv{Sezione da scrivere con la run finale.}
+La correlazione temporale è calcolata in ogni cella sugli istanti: vale 1 se nella cella i due score salgono e scendono insieme. Fra G e D la correlazione di Spearman è negativa in tutte le celle, con mediana $-0.25$ e valori fra $-0.40$ e $-0.07$; quella di Pearson ha mediana $-0.51$ (Figura~\ref{fig:ris-g-d-temporale}). Il legame è quindi lo stesso nello spazio e nel tempo: quando in una cella il generatore sbaglia di più, il discriminatore giudica l'osservazione più vicina al reale. La mappa non è uniforme: il legame è più forte nel sud del dominio e più debole su parte dell'Europa centrale e lungo il bordo del dominio.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_g_d_correlazione_temporale}
+    \caption{Correlazione temporale di Spearman fra G e D in ogni cella, sugli istanti degli anni di test. Linee di costa da Natural Earth.}
+    \label{fig:ris-g-d-temporale}
+\end{figure}
+
+La normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}) cambia poco questi risultati. Dopo la normalizzazione la correlazione di Spearman fra i due score vale in media $-0.23$ nello spazio e ha mediana $-0.23$ nel tempo; ciascuno score conserva quasi lo stesso ordine che aveva prima, con una correlazione di Spearman fra lo score prima e dopo la normalizzazione di 0.92 per G e di 0.95 per D, in media nello spazio.
+
+La normalizzazione cambia invece dove cadono le segnalazioni di G. Nella Figura~\ref{fig:ris-g-luogo} sono segnalati i valori nel 5\% più alto di ciascuno score sugli anni di test: qui interessa dove cadono le segnalazioni, non quante sono, e la soglia è quindi il percentile dello score stesso su quegli anni. Se il luogo e la stagione non contassero, ogni fascia di latitudine conterrebbe il 5\% di valori segnalati in ogni mese. Senza normalizzazione, G segnala fra l'1.5\% dei valori, fra 50$^\circ$ e 60$^\circ$N in febbraio, e il 14.5\%, fra 20$^\circ$ e 30$^\circ$N in agosto: le segnalazioni si concentrano a sud e in estate, dove l'errore del generatore è alto per natura. Con la normalizzazione la quota resta fra il 3.2\% e il 6.9\%, e lo scarto medio dal 5\% scende da 2.4 a 0.6 punti. È l'effetto atteso dalla Sezione~\ref{sec:normalizzazione-climatologica-score}: la normalizzazione toglie la differenza di prevedibilità fra luoghi e stagioni.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_g_luogo}
+    \caption{Quota dei valori nel 5\% più alto dello score, per fascia di latitudine e mese, sugli anni di test: G senza e con la normalizzazione climatologica. La soglia è il 95-esimo percentile di ciascuno score sugli stessi anni. Il bianco corrisponde al 5\%, la quota attesa se il luogo e la stagione non contassero.}
+    \label{fig:ris-g-luogo}
+\end{figure}
+% Numeri: correlazioni come nella sezione precedente (coppie con G+clim e D+clim,
+% outputs/good2v/test_generator_clim_day e test_discriminator_clim_day,
+% climatologia giorno +-15 x ora dalla run di validazione
+% outputs/stgan_good_sweep_2_validation). Mappa temporale: temporal_correlation.npz.
+% Quote per luogo: scripts/check_era5_score_by_place.py, log
+% outputs/good2v/luogo_g_grezzo_soglia_test.log (soglia del test 0.003997, impostata
+% sostituendo score_limit perché stgan_good_sweep_2_scored ha threshold_reference
+% sulla validazione) e outputs/good2v/luogo_g_clim_giorno.log; dati in
+% figures/dati/era5_g_luogo.json, figura figures/genera_figura_g_luogo.py.
 
 \section{Perché il generatore rileva e il discriminatore no}
 \label{sec:ris-g-d}
 
-% Spiegare, sulla base delle due sezioni precedenti, perché lo score del
-% generatore è informativo e quello del discriminatore no (uscita vicina a 0.5,
-% score combinato dominato dalla componente del discriminatore). Contesto dalla
-% letteratura: in AnoGAN il solo termine del discriminatore ha AUC 0.74 contro
-% 0.88 della ricostruzione (Capitolo 2).
-\provv{Sezione da scrivere con la run finale.}
+Le due sezioni precedenti mostrano che D ordina le osservazioni in senso opposto a G. Per capire da dove viene questo legame, la componente del discriminatore va scomposta nei suoi due termini: $D_{\mathrm{reale}}$, il giudizio sull'osservazione, e $D_{\mathrm{generato}}$, il giudizio sulla ricostruzione del generatore, con $\bar{s}_D=D_{\mathrm{reale}}-D_{\mathrm{generato}}$. Un valore vicino a 1 indica che il discriminatore giudica il campo generato; entrambi i termini sono medie sui 20 campioni.
+
+I due termini si comportano in modo diverso rispetto a G (Figura~\ref{fig:ris-d-termini-temporale}). $D_{\mathrm{generato}}$ cresce con G: la correlazione temporale di Spearman ha mediana 0.26 ed è positiva nel 99.5\% delle celle. Dove il generatore sbaglia, il discriminatore riconosce quindi la ricostruzione come generata. $D_{\mathrm{reale}}$ invece non segue G nell'ordine, con una mediana di Spearman di 0.02, ma la correlazione di Pearson ha mediana $-0.40$ ed è negativa in tutte le celle: i valori più alti di G cadono insieme ai valori più bassi di $D_{\mathrm{reale}}$. I due termini sono legati fra loro, con una mediana di Spearman di 0.57: il discriminatore tende a dare giudizi simili all'osservazione e alla ricostruzione della stessa cella. La correlazione negativa fra G e D nasce quindi da entrambi i termini, perché D sottrae il termine che cresce con G a quello che, negli istanti in cui G è più alto, scende.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_d_termini_correlazione_temporale}
+    \caption{Correlazione temporale di Spearman fra G e ciascuno dei due termini di D in ogni cella, sugli anni di test: a sinistra con il giudizio sull'osservazione, $D_{\mathrm{reale}}$, a destra con il giudizio sulla ricostruzione, $D_{\mathrm{generato}}$. Linee di costa da Natural Earth.}
+    \label{fig:ris-d-termini-temporale}
+\end{figure}
+
+Le correlazioni riguardano tutti i valori. Per vedere che cosa fa il discriminatore proprio dove G segnala un'anomalia, gli score sono letti attorno agli eventi di G. Gli eventi sono i valori nel 5\% più alto di G con la normalizzazione climatologica, raggruppati nell'ipercubo di tempo, latitudine e longitudine: due valori fanno parte dello stesso evento se in un istante le loro celle si toccano, anche in diagonale, o se sono la stessa cella in due istanti consecutivi. Sugli anni di test risultano 703689 eventi, per un totale di 32.2 milioni di valori. In ogni istante le celle sono divise in tre zone: il \emph{nucleo}, le celle di un evento; il \emph{contorno}, le otto celle attorno a una cella del nucleo, che corrispondono alla patch $3\times3$ letta dal discriminatore, escluse quelle del nucleo; e la zona \emph{lontana}, le celle a più di tre celle da ogni nucleo. Le celle intermedie non sono considerate. Per ogni score si riporta il percentile mediano dei suoi valori in ciascuna zona, rispetto a tutti i valori dello stesso score sul test: in una zona senza legame con l'evento sarebbe vicino a 50.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_d_termini_zone}
+    \caption{Percentile mediano di G senza normalizzazione, dei due termini di D e della componente D nel nucleo degli eventi di G con la normalizzazione climatologica, nel loro contorno e lontano da essi, sugli anni di test. Il percentile è calcolato rispetto a tutti i valori dello stesso score; la linea tratteggiata indica 50, il valore atteso senza legame con gli eventi.}
+    \label{fig:ris-d-termini-zone}
+\end{figure}
+
+La Figura~\ref{fig:ris-d-termini-zone} riporta il risultato. G senza normalizzazione ha un percentile mediano di 97 nel nucleo, di 90 nel contorno e di 40 lontano dagli eventi: i valori segnalati dopo la normalizzazione sono fra i più alti di G anche prima, e l'errore del generatore è alto già sulle celle vicine. $D_{\mathrm{generato}}$ è alto nel nucleo e nel contorno, con mediane di 79 e 74. $D_{\mathrm{reale}}$ fa il contrario: nel nucleo ha una mediana di 14, cioè il discriminatore giudica le osservazioni anomale più reali del consueto; nel contorno torna a 52, lontano è a 50. Nella componente D i due effetti si sommano e la mediana nel nucleo scende a 9: lo score del discriminatore pone le anomalie di G fra le osservazioni più normali del test. Lontano dagli eventi tutti gli score sono fra 40 e 54.
+
+Il comportamento di $D_{\mathrm{reale}}$ nel nucleo non è uniforme. Il 14\% dei valori del nucleo supera la soglia di $D_{\mathrm{reale}}$ fissata sulla validazione, contro il 3.7\% lontano dagli eventi: una minoranza delle osservazioni anomale è giudicata generata, ma la maggior parte è giudicata più reale del consueto. La mediana scende con la dimensione dell'evento, da 30 negli eventi di un solo valore a 12--14 in quelli da cinque valori in su. Dipende anche dal tipo di evento, cioè dalla variabile d'ingresso più lontana dal proprio normale stagionale nel nucleo: è più bassa negli eventi di copertura nuvolosa (fra 3 e 6, secondo la dimensione), di velocità verticale (fra 5 e 13) e di radiazione solare e altezza dello strato limite, più alta negli eventi di pressione al livello del mare, di umidità del suolo e di velocità di attrito (fra 36 e 61). Gli eventi di velocità verticale e di precipitazione contengono da soli il 59\% dei valori del nucleo.
+
+La Figura~\ref{fig:ris-d-termini-mappa} mostra i termini nell'istante con la media di G più alta del test. Sulla fascia del Nord Africa in cui G è alto, e su un'area più ampia attorno, $D_{\mathrm{reale}}$ è vicino a zero e $D_{\mathrm{generato}}$ è al massimo: il discriminatore giudica reale l'osservazione e generata la ricostruzione, e la loro differenza porta D ai valori più bassi del dominio.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_d_termini_mappa}
+    \caption{Score di G, giudizio del discriminatore sull'osservazione ($D_{\mathrm{reale}}$) e sulla ricostruzione ($D_{\mathrm{generato}}$) e componente D, il 30 agosto 2024 alle 12~UTC, l'istante con la media di G più alta degli anni di test. Ogni mappa ha una propria scala, dal primo al 99-esimo percentile dei suoi valori. Linee di costa da Natural Earth.}
+    \label{fig:ris-d-termini-mappa}
+\end{figure}
+
+In sintesi, il discriminatore distingue bene le ricostruzioni dalle osservazioni proprio dove il generatore sbaglia, ma non ordina le osservazioni come insolite: nel nucleo delle anomalie di G le giudica più reali del consueto. La componente dell'articolo, che sottrae il giudizio sulla ricostruzione a quello sull'osservazione, va quindi nella direzione opposta a G proprio dove G segnala. Una possibile spiegazione, non verificata in questo lavoro, è che il discriminatore abbia imparato a riconoscere le ricostruzioni dal loro aspetto più liscio rispetto ai campi osservati: un campo osservato con strutture nette, come spesso accade nelle condizioni insolite, apparirebbe allora molto reale. Anche in letteratura il termine del discriminatore, preso da solo, rileva meno di quello di ricostruzione: in AnoGAN l'area sotto la curva ROC è 0.74 contro 0.88 (Sezione~\ref{sec:rw-anomalie-origini}), su immagini e con un discriminatore usato in modo diverso. Per questi motivi gli eventi e i confronti delle sezioni seguenti usano lo score di ricostruzione, cioè G con la normalizzazione climatologica.
+% Numeri: correlazioni dei termini in outputs/analisi_good2/correlazioni_g_dterms
+% (check_era5_score_correlation.py con @real e @generated; nei file D(generato) si
+% chiama Dricostruito), mediane nelle celle da temporal_correlation.npz, rilette il
+% 28 ottobre 2026. Zone: scripts/check_era5_event_zones.py --events G+clim
+% (outputs/good2v/test_generator_clim_day, soglia: 5% dello score stesso sul test,
+% la cartella non ha threshold_reference), --scores G, Dreale, Dricostruito, D
+% (outputs/stgan_good_sweep_2_scored, soglia della validazione per le quote
+% segnalate), --far 3; csv outputs/analisi_good2/zone_g_dterms.csv, log
+% zone_g_dterms.log. Tipi e dimensioni dalle righe del csv.
 
 \section{Confronto con metodi semplici e modelli poco profondi}
 \label{sec:ris-confronti}
