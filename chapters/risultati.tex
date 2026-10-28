@@ -49,14 +49,24 @@ La Figura~\ref{fig:ris-g-d-mappe} mostra i due score in due istanti: l'8 agosto 
 % (outputs/stgan_good_sweep_2_scored @generator e @discriminator), cartella
 % outputs/analisi_good2/correlazioni_g_d (spatial_correlation.csv), riletti il 28
 % ottobre 2026 dai file scaricati. Istanti delle mappe: mappe_istanti.npz.
-% Figure: figures/genera_figure_g_d.py. Su D si vede una cornice lungo il bordo del
-% dominio: le patch delle celle di bordo escono dal reticolo e sono riempite con
-% zeri (Sezione 4.1.2); da riportare nei Limiti.
+% Figure: figures/genera_figure_g_d.py.
+% Bordo (controllo del 28 ottobre 2026, per anello di distanza dal bordo 0,1,2,3,4,5
+% e interno >=8, un istante ogni 97 del test): media di G 0.00173, 0.00171, 0.00171,
+% 0.00166, 0.00165, 0.00164 | 0.00164; D(reale) 0.5039, 0.5088, 0.5084, 0.5080,
+% 0.5080, 0.5084 | 0.5086; D(generato) 0.5188, 0.5228, 0.5204, 0.5221, 0.5218,
+% 0.5219 | 0.5217. Mediana della correlazione temporale di Spearman G-D per anello
+% (temporal_correlation.npz) -0.252, -0.259, -0.191, -0.236, -0.226 | -0.252 (>=5),
+% su tutti e quattro i lati; G-D(generato) 0.10, 0.23, 0.18, 0.21, 0.21 | 0.28.
+% Nell'anello 0 i due termini di D cambiano anche perché la patch esce dal reticolo
+% (celle azzerate e mascherate), ma nella correlazione G-D i due cambiamenti si
+% compensano. Le ricostruzioni vicino al bordo non sono salvate: il meccanismo del
+% minimo di D(generato) a distanza 2 non è verificato in dettaglio. Da riprendere
+% nei Limiti.
 
 \section{Correlazione temporale degli score}
 \label{sec:ris-correlazione-temporale}
 
-La correlazione temporale è calcolata in ogni cella sugli istanti: vale 1 se nella cella i due score salgono e scendono insieme. Fra G e D la correlazione di Spearman è negativa in tutte le celle, con mediana $-0.25$ e valori fra $-0.40$ e $-0.07$; quella di Pearson ha mediana $-0.51$ (Figura~\ref{fig:ris-g-d-temporale}). Il legame è quindi lo stesso nello spazio e nel tempo: quando in una cella il generatore sbaglia di più, il discriminatore giudica l'osservazione più vicina al reale. La mappa non è uniforme: il legame è più forte nel sud del dominio e più debole su parte dell'Europa centrale e lungo il bordo del dominio.
+La correlazione temporale è calcolata in ogni cella sugli istanti: vale 1 se nella cella i due score salgono e scendono insieme. Fra G e D la correlazione di Spearman è negativa in tutte le celle, con mediana $-0.25$ e valori fra $-0.40$ e $-0.07$; quella di Pearson ha mediana $-0.51$ (Figura~\ref{fig:ris-g-d-temporale}). Il legame è quindi lo stesso nello spazio e nel tempo: quando in una cella il generatore sbaglia di più, il discriminatore giudica l'osservazione più vicina al reale. La mappa non è uniforme: il legame è più forte nel sud del dominio e più debole su parte dell'Europa centrale. Si vede inoltre una cornice a due celle dal bordo, dove la correlazione di Spearman ha mediana $-0.19$. È un effetto del modello e non del tempo. Vicino al bordo le convoluzioni del generatore completano il campo con zeri, e il suo errore nelle prime tre celle è più alto del 4--5\% rispetto all'interno. Il discriminatore legge questa fascia attraverso le patch, e il suo giudizio sulle ricostruzioni ha un piccolo minimo proprio a due celle dal bordo. L'effetto non cambia le mediane: lontano dal bordo, a più di quattro celle, la correlazione di Spearman ha la stessa mediana, $-0.25$.
 
 \begin{figure}[htbp]
     \centering
