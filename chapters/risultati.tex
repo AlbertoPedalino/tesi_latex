@@ -85,7 +85,7 @@ La correlazione spaziale dice se i due score segnalano gli stessi luoghi nello s
     \label{fig:ris-g-d-temporale}
 \end{figure}
 
-\paragraph{Effetto della normalizzazione climatologica.} La normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}) cambia poco le correlazioni: dopo la normalizzazione quella di Spearman fra i due score vale $-0.23$, e ciascuno score conserva quasi lo stesso ordine di prima. Cambia invece dove cadono le segnalazioni di G (Figura~\ref{fig:ris-g-luogo}). Un valore è segnalato quando supera la soglia del proprio score, il 95-esimo percentile dello stesso score sugli anni di validazione (Sezione~\ref{sec:exp-protocollo}); sul test i due score segnalano circa il 5.6\% dei valori, un po' più del 5\%, perché negli anni di test l'errore del generatore è in media un po' più alto. Senza normalizzazione G segnala soprattutto a sud e in estate, dove il suo errore è alto per natura: la quota va dall'1.9\% fra 50$^\circ$ e 60$^\circ$N in febbraio al 16.3\% fra 20$^\circ$ e 30$^\circ$N in agosto. Con la normalizzazione resta fra il 3.6\% e il 7.6\% in ogni fascia e in ogni mese. È l'effetto atteso dalla Sezione~\ref{sec:normalizzazione-climatologica-score}: la normalizzazione toglie la differenza di prevedibilità fra luoghi e stagioni.
+\paragraph{Effetto della normalizzazione climatologica.} La normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}) cambia poco le correlazioni: dopo la normalizzazione quella di Spearman fra i due score vale $-0.23$, e ciascuno score conserva quasi lo stesso ordine di prima. Cambia invece dove cadono le segnalazioni di G (Figura~\ref{fig:ris-g-luogo}). Un valore è segnalato quando supera la soglia del proprio score, il 95-esimo percentile dello stesso score sugli anni di validazione (Sezione~\ref{sec:exp-protocollo}); sul test i due score segnalano circa il 5.6\% dei valori, un po' più del 5\%, perché negli anni di test l'errore del generatore è in media un po' più alto. Senza normalizzazione G segnala soprattutto a sud e in estate, dove il suo errore è alto per natura: la quota va dall'1.9\% fra 50$^\circ$ e 60$^\circ$N in febbraio al 16.3\% fra 20$^\circ$ e 30$^\circ$N in agosto. Con la normalizzazione resta fra il 3.6\% e il 7.6\% in ogni fascia e in ogni mese. Con la soglia al 99-esimo percentile la normalizzazione riduce ancora molto le differenze, da un intervallo fra lo 0.2\% e il 5.1\% a uno fra lo 0.6\% e il 2.5\%, ma resta un eccesso di segnalazioni a sud: la normalizzazione allinea media e deviazione standard dell'errore di ogni cella, non la frequenza dei suoi valori più estremi. È l'effetto atteso dalla Sezione~\ref{sec:normalizzazione-climatologica-score}: la normalizzazione toglie la differenza di prevedibilità fra luoghi e stagioni.
 
 \begin{figure}[htbp]
     \centering
@@ -110,6 +110,11 @@ La correlazione spaziale dice se i due score segnalano gli stessi luoghi nello s
 % figures/dati/era5_g_luogo.json, figura figures/genera_figura_g_luogo.py.
 % Quota media segnalata: G 5.7%, G+clim 5.6%; scarto medio dalla quota media 2.7
 % punti senza normalizzazione, 0.6 con.
+% Soglia al 99-esimo percentile della validazione (28 ottobre 2026, log
+% outputs/good2v/luogo_g_grezzo_1pc.log e luogo_g_clim_1pc.log): G fra 0.2% e 5.1%
+% (rapporto 25.5), media 1.21%, medie per fascia N->S 0.29/0.52/1.43/2.61; G+clim fra
+% 0.6% e 2.5% (rapporto 4.2), media 1.15%, medie per fascia 0.82/0.85/1.20/1.74; scarto
+% medio relativo alla quota media 0.77 contro 0.32 (al 5%: 0.47 contro 0.11).
 
 \section{Il comportamento del discriminatore}
 \label{sec:ris-g-d}
