@@ -1,0 +1,53 @@
+\chapter{Lavoro preliminare sui dati PVGIS}
+\label{app:pvgis}
+
+Il lavoro è partito, nell'ambito della previsione della produzione fotovoltaica, dalle serie orarie PVGIS descritte nella Sezione~\ref{sec:dati-pvgis}. Su questi dati sono stati esplorati un previsore probabilistico della produzione, con diversi metodi per associare un intervallo alla previsione, un primo criterio per individuare condizioni insolite basato su soglie climatologiche e due detector appresi, MTGFlow e STGAN. Questa appendice ne descrive i metodi; il corpo della tesi riguarda soltanto il detector applicato ai campi ERA5.
+
+\section{Previsore probabilistico della produzione}
+\label{app:pvgis-previsore}
+
+Il previsore stima la produzione dell'ora successiva in ogni località. Combina un encoder temporale, una LSTM bidirezionale con pooling ad attenzione, con uno strato di attenzione su grafo~\cite{velickovic2018gat} fra località vicine, su un grafo geografico con pesi decrescenti con la distanza. Per associare un intervallo alla previsione sono stati provati il dropout Monte Carlo~\cite{gal2016dropout} e il Deep Ensemble~\cite{lakshminarayanan2017ensembles}, descritti nella Sezione~\ref{sec:rw-sde}, e due varianti costruite sugli schemi di SDE-Net~\cite{kong2020sdenet} e di SDE U-Net~\cite{monaco2025sdeunet}, descritti di seguito; la variante basata su SDE-Net è stata provata anche con previsione diretta su più orizzonti.
+
+\section{Equazioni differenziali stocastiche neurali}
+\label{app:pvgis-sde}
+
+Dropout Monte Carlo e Deep Ensemble ottengono la dispersione ripetendo il passaggio in avanti con pesi diversi. Una linea successiva la ottiene rendendo stocastica la dinamica interna della rete. Una rete residua aggiorna lo stato sommando a esso una trasformazione dello stato stesso, $x_{t+1}=x_t+f(x_t,t)$. Interpretando l'aggiornamento come un passo di integrazione, la trasformazione complessiva può essere descritta da un'equazione differenziale ordinaria, $\mathrm{d}x/\mathrm{d}t=f(x,t)$, in cui $f$ è una rete neurale e l'uscita è calcolata da un risolutore numerico~\cite{chen2018neuralode}. Un modello di questo tipo è deterministico. Aggiungendo un termine di moto browniano si ottiene un'equazione differenziale stocastica,
+\begin{equation}
+\mathrm{d}x_t=f(x_t,t)\,\mathrm{d}t+g(x_t,t)\,\mathrm{d}W_t,
+\end{equation}
+in cui $f$ è il drift e $g$ la diffusione, che regola l'ampiezza della componente casuale~\cite{kong2020sdenet}.
+
+In pratica l'equazione è integrata a passi discreti con lo schema di Euler--Maruyama. Dividendo l'intervallo $[0,T]$ in $N$ passi di ampiezza $\Delta t=T/N$, l'aggiornamento è
+\begin{equation}
+    x_{k+1}=x_k+f(x_k,t_k)\,\Delta t+g(x_k,t_k)\sqrt{\Delta t}\,Z_k,
+    \qquad Z_k\sim\mathcal{N}(0,1):
+    \label{eq:euler-maruyama}
+\end{equation}
+a ogni passo lo stato avanza del drift moltiplicato per l'ampiezza del passo e di un termine gaussiano scalato dalla diffusione e dalla radice dell'ampiezza del passo. Ripetendo l'integrazione con estrazioni diverse di $Z_k$ si ottengono traiettorie diverse dallo stesso ingresso, tanto più disperse quanto maggiore è la diffusione. Il tempo di integrazione è una variabile interna del modello e non coincide con l'orizzonte fisico della previsione.
+
+\paragraph{SDE-Net.}
+Kong et al.~\cite{kong2020sdenet} interpretano le trasformazioni di una rete profonda come l'evoluzione dello stato di un sistema dinamico stocastico. Il modello comprende una rete di drift, che adatta la funzione predittiva, e una rete di diffusione, che scala un termine browniano e rappresenta l'incertezza epistemica. La diffusione è addestrata ad assumere valori bassi sui dati di training e alti su dati fuori distribuzione, ottenuti aggiungendo rumore gaussiano agli ingressi. L'equazione è integrata con lo schema dell'equazione~\eqref{eq:euler-maruyama} a passo fisso, con parametri condivisi fra i passi e diffusione calcolata sul solo stato iniziale, cioè con $g(x_0;\theta_g)$ al posto di $g(x_k,t_k)$. L'uscita della rete di diffusione è una sigmoide moltiplicata per un valore massimo, fissato come iperparametro. Dopo l'addestramento si campionano più traiettorie per lo stesso ingresso: l'incertezza aleatoria è la varianza predittiva media sulle traiettorie, quella epistemica la varianza dello stato finale fra le traiettorie. Il metodo separa così le due incertezze con un unico modello, senza distribuzioni a priori sui pesi e senza addestrare un insieme di reti. La valutazione riguarda il riconoscimento di dati fuori distribuzione, di errori di classificazione e di esempi avversari e l'active learning, su immagini e su un problema di regressione tabellare. Il lavoro non considera serie temporali né dati con struttura spaziale: gli esempi sono indipendenti, e il fuori distribuzione è definito da un dataset diverso o da ingressi perturbati, non da condizioni rare ma ricorrenti nello stesso dominio.
+
+Nel previsore della produzione lo schema drift--diffusione di SDE-Net è stato applicato con l'addestramento alternato delle due reti e la forma gaussiana dell'obiettivo di regressione. Il blocco stocastico è stato collocato sullo stato latente di un insieme di località collegate da un grafo.
+
+\paragraph{SDE U-Net.}
+Monaco et al.~\cite{monaco2025sdeunet} adattano SDE-Net a un'architettura U-Net per il post-processing di previsioni numeriche di precipitazione, con mappe di precipitazione cumulata giornaliera sull'Italia nord-occidentale. Poiché i blocchi dell'encoder hanno dimensioni diverse, il numero di passi di integrazione è allineato al numero di blocchi: a ciascun blocco è associato un blocco di diffusione, funzione dell'ingresso iniziale, il cui segnale è sommato alla rispettiva skip connection. La loss di regressione è una MSE e la diffusione è addestrata, come in SDE-Net, a distinguere ingressi originali e ingressi perturbati con rumore gaussiano. Il disegno sperimentale usa per addestramento e validazione soltanto eventi non intensi e valuta il modello sia su eventi non intensi sia su eventi intensi, confrontando più architetture probabilistiche in termini di equilibrio fra ampiezza e affidabilità degli intervalli. Il lavoro opera su campi regolari elaborati da un encoder--decoder convoluzionale e su mappe giornaliere: non tratta insiemi irregolari di località, serie temporali per sito o più orizzonti di previsione.
+
+Nel previsore della produzione ne sono stati ripresi l'allineamento fra passi stocastici e stadi dell'encoder, trasferito agli stadi del previsore, e il protocollo che esclude dal training gli eventi intensi e li mantiene nel test.
+
+\section{Soglie climatologiche}
+\label{app:pvgis-soglie}
+
+Come primo criterio per individuare condizioni insolite, un'osservazione è segnalata quando esce dalla banda fra i quantili 0.025 e 0.975 della distribuzione della stessa località e della stessa ora negli anni precedenti, entro quindici giorni di calendario. Le soglie segnalano i valori estremi di ciascuna variabile presa da sola; sono servite a esaminare il previsore nelle condizioni insolite e ad addestrarlo sulle sole finestre normali, secondo il protocollo di SDE U-Net.
+
+\section{Detector appresi: MTGFlow e STGAN}
+\label{app:pvgis-detector}
+
+Per individuare anomalie diverse dai valori estremi di una variabile sono stati applicati due detector appresi. Di MTGFlow~\cite{zhou2023labelfree} è stata implementata la versione base, senza l'estensione a gruppi, applicata alle tre variabili meteorologiche di ogni località, trattate come entità, con la soglia interquartile dell'articolo. Poiché il metodo non rappresenta il contesto geografico, è addestrato un modello indipendente per località: gli score possono essere confrontati sulla mappa, ma il modello non apprende relazioni fra località. Per introdurre una componente spaziale il lavoro è passato a STGAN~\cite{deng2022stgan}.
+
+STGAN è stato applicato alle stesse serie, con irradianza globale, temperatura a due metri e velocità del vento a dieci metri, addestramento sugli anni 2005--2018 e test sul 2019. Accanto alla versione su grafo dell'articolo è stata provata una variante a griglia, perché anche le località PVGIS sono disposte su un reticolo regolare e le posizioni dei vicini sono quindi definite: la convoluzione su grafo è sostituita da una ConvGRU sulla patch $3\times3$ di ogni località. Nella variante a griglia con kernel di lato 3 il 75.5\% dell'errore di ricostruzione delle osservazioni segnalate è dovuto all'irradianza, il 15.8\% alla temperatura e l'8.6\% al vento. I dati PVGIS contengono soltanto le grandezze da cui dipende la produzione fotovoltaica, e un'osservazione segnalata non può essere ricondotta a una condizione meteorologica più generale. Per individuare condizioni insolite di tipo più generale il lavoro è passato ai campi ERA5 del Capitolo~\ref{chap:dati}.
+% Fonti: run_metadata.json delle run pvgis_stgan/paper_reference e
+% pvgis_stgan_cnn/convgru_* (10 ottobre 2026); ripartizione dell'errore e
+% accordo dai log di confronto. Testo spostato qui dalla Sezione "STGAN sui dati
+% PVGIS" del Capitolo 5 il 27 ottobre 2026 (indicazione del relatore: nel corpo
+% della tesi solo la GAN su ERA5).

@@ -1,187 +1,79 @@
 \chapter{Risultati e discussione}
 \label{chap:risultati}
-\label{sec:ris-era5}
 
-% Le fonti di ogni valore (file, run, data di lettura) e le note di lavoro sono
-% in chapters/risultati_fonti.tex, che non viene compilato. Prima di cambiare un
-% numero, controllare lì da dove viene.
-% Tutti i numeri in \provv vengono dalla run ..._wdaily_seasonal_trend_ep3 (tre
-% epoche, un seme, training 1980-2004 SENZA validazione: climatologia, soglie,
-% scale degli score semplici e confronti fra varianti calcolati sugli anni di
-% test). Sono segnaposto: il testo descrive il protocollo corretto (Sezione
-% sec:exp-protocollo) e i numeri vanno sostituiti con quelli della run scelta
-% dalla ricerca e delle run dell'ablazione, calcolati con quel protocollo.
-% Struttura sul modello della tesi di Stiven Gjinaj: paragrafo di apertura,
-% poche sezioni, titoletti nel testo. I casi studio, quando ci saranno, vanno
-% all'inizio del capitolo, come nella tesi di riferimento.
-% I risultati su PVGIS (previsori, intervalli, decisioni dei detector) sono nel
-% backup del 16 ottobre 2026; quelli di STGAN su PVGIS che motivano il passaggio
-% a ERA5 sono nella Sezione sec:exp-pvgis.
+% Struttura fissata con il relatore il 27 ottobre 2026. Il capitolo provvisorio
+% precedente, basato sulla conferma da E-OBS, è in
+% backup/2026-10-27_risultati_provvisori_eobs.tex (non compilato). Le fonti dei
+% numeri, quando ci saranno, vanno in chapters/risultati_fonti.tex.
+% Regola: ogni numero viene dai file della run finale scelta dalla ricerca dei
+% parametri; finché la run non è scelta, le sezioni restano vuote.
 
-Il capitolo segue il protocollo della Sezione~\ref{sec:exp-protocollo}. La prima sezione misura il contributo di ciascun componente del detector, aggiungendoli uno alla volta alla configurazione dell'articolo. La seconda riporta la ricerca dei parametri dell'addestramento avversario e la configurazione scelta. Le sezioni successive analizzano gli score di questa configurazione sugli anni di test 2005--2025: il confronto con i rilevatori senza modello, la conferma dalle osservazioni di stazione di E-OBS, l'anticipo, l'estensione delle perturbazioni e la dispersione Monte Carlo. Le ultime riguardano la scelta dello score e dei pesi delle variabili, fatta sugli anni di validazione, e i limiti dei risultati. Non esistono etichette di anomalia: tutte le misure sono indirette. Salvo dove indicato, lo score del detector è lo score di ricostruzione con la normalizzazione climatologica.
-
-\section{Contributo dei componenti}
-\label{sec:ris-componenti}
-% DA FARE: run dell'ablazione con il protocollo dello sweep (training 1980-1999,
-% validazione 2000-2004, test 2005-2025), stesse epoche per tutte, un seme.
-% Quattro varianti: articolo (min-max, senza pesi, D senza dropout); +
-% normalizzazione stagionale; + pesi delle variabili; + dropout nel
-% discriminatore con i parametri scelti dalla ricerca.
-
-Il contributo di ciascun componente è misurato aggiungendo i componenti uno alla volta, a partire dalla configurazione dell'articolo: normalizzazione min--max, nessun peso fra le variabili, discriminatore senza dropout. Le varianti sono la normalizzazione stagionale (Sezione~\ref{sec:ingresso-normalizzazione-era5}), i pesi delle variabili (Sezione~\ref{sec:pesi-variabili-ricostruzione}) e il dropout nel discriminatore (Sezione~\ref{sec:score-dropout-montecarlo}). Ogni variante è addestrata per \provv{un'epoca}, con la stessa suddivisione degli anni e gli stessi parametri dell'addestramento avversario: il confronto è a parità di addestramento. Per ogni variante sono riportate la distanza fra campi osservati e ricostruiti sulla validazione, la distribuzione delle segnalazioni fra latitudini e mesi e la conferma dalle stazioni E-OBS (Tabella~\ref{tab:ris-componenti}).
-
-\begin{table}[htbp]
-    \centering
-    \footnotesize
-    \caption{Contributo dei componenti, aggiunti uno alla volta alla configurazione dell'articolo. MMD: distanza fra campi osservati e ricostruiti sulla validazione. Quote: intervallo della quota segnalata fra fasce di latitudine e mesi, 5\% se luogo e stagione non contassero. E-OBS: rapporto ``solo detector / tutte'' nello stesso giorno. \notabozza{Da riempire con le run dell'ablazione.}}
-    \label{tab:ris-componenti}
-    \vspace{0.6em}
-    \begin{tabular}{@{}L{0.26}L{0.11}L{0.13}L{0.11}L{0.11}L{0.11}@{}}
-        \toprule
-        Configurazione & MMD & Quote & Pioggia forte & Pressione bassa & Caldo \\
-        \midrule
-        Articolo & -- & -- & -- & -- & -- \\
-        + normalizzazione stagionale & -- & -- & -- & -- & -- \\
-        + pesi delle variabili & -- & -- & -- & -- & -- \\
-        + dropout nel discriminatore & -- & -- & -- & -- & -- \\
-        \bottomrule
-    \end{tabular}
-\end{table}
+Il capitolo riporta e discute i risultati del detector sui campi ERA5, nella configurazione scelta dalla ricerca dei parametri. In assenza di etichette, il comportamento del detector è studiato in quattro passi. Il primo riguarda la scelta della configurazione e la convergenza della ricerca. Il secondo esamina le componenti dello score, del generatore e del discriminatore, e il loro legame nello spazio e nel tempo, per stabilire quale parte dello score usare. Il terzo confronta il detector con metodi più semplici, statistici o basati su modelli poco profondi. L'ultimo esamina casi specifici, prima in generale e poi per tipo di evento.
 
 \section{Ricerca dei parametri}
 \label{sec:ris-ricerca}
-% DA FARE: sweep W&B 913ez3rt. Figura: MMD per epoca di ogni esecuzione, con
-% la media mobile; tabella: parametri della configurazione scelta. Riportare
-% anche le esecuzioni interrotte e il motivo (per esempio una perdita non finita).
 
-La ricerca esplora i quattro parametri della Tabella~\ref{tab:configurazioni}. \notabozza{Da scrivere a ricerca conclusa: numero di esecuzioni, andamento della distanza fra campi osservati e ricostruiti per epoca, configurazione scelta e suo valore dell'obiettivo.}
+% Descrizione della ricerca in due fasi (controller bayesiano di W&B, poi
+% Optuna ripartito dalle stesse esecuzioni), con la figura dell'assestamento:
+% obiettivo di ogni prova e migliore fino a quel momento, e percorso delle
+% configurazioni nello spazio dei parametri. Figura da generare fra qualche giorno
+% dallo studio Optuna era5-gan (outputs/optuna/era5-gan.db sul server).
+% Ricordare: la PCA dei quattro parametri tiene il 38% della varianza sulla prima
+% componente, quanto darebbe il caso con 21 esecuzioni; mostrare i parametri
+% direttamente (scripts/plot_era5_sweep_pca.py) o concordare con il relatore.
+\provv{Sezione da scrivere quando la ricerca con Optuna si sarà assestata.}
 
-\section{Confronto con i rilevatori senza modello}
-\label{sec:ris-confronto}
+\section{Correlazione spaziale degli score}
+\label{sec:ris-correlazione-spaziale}
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics{era5_sovrapposizione}
-    \caption{Sovrapposizione fra le segnalazioni del detector e dei tre rilevatori senza modello, al 5\% e all'1\% delle osservazioni. Ogni casella riporta la quota delle segnalazioni del rilevatore della riga segnalate anche dal rilevatore della colonna. Anni 2005--2025, un istante ogni 29. \notabozza{Valori provvisori.}}
-    \label{fig:era5-sovrapposizione}
-\end{figure}
+% Score del generatore, del discriminatore e combinato. A istante fissato: mappa
+% dei tre score. Lungo tutto il test: per ogni istante la correlazione spaziale
+% fra le coppie di score (G--D, G--combinato, D--combinato) sulle celle, e il
+% grafico di come cambia nel tempo.
+\provv{Sezione da scrivere con la run finale.}
 
-\paragraph{Complementarità.} Il detector e i rilevatori senza modello segnalano in parte le stesse osservazioni (Figura~\ref{fig:era5-sovrapposizione}). Al 5\%, delle segnalazioni del detector il \provv{50}\% è segnalato anche dalla distanza dal normale, il \provv{52}\% dalla variazione in tre ore e il \provv{58}\% dal maggiore dei due; all'1\% le quote scendono a \provv{43}, \provv{44} e \provv{51}\%. I due rilevatori senza modello sono fra loro ancora meno simili: hanno in comune il \provv{34}\% delle segnalazioni al 5\% e il \provv{28}\% all'1\%. Misurano infatti due aspetti diversi del meteo, lo scostamento dal clima e il cambiamento rapido, e il detector condivide una parte delle segnalazioni con ciascuno. Sui cambiamenti più rapidi, l'1\% delle variazioni in tre ore, il detector segnala il \provv{75.6}\% dei valori, la distanza dal normale il \provv{53.1}\% e il maggiore dei due rilevatori il \provv{89.8}\%: il detector segue i cambiamenti rapidi più della distanza dal normale, meno del rilevatore costruito proprio su di essi.
+\section{Correlazione temporale degli score}
+\label{sec:ris-correlazione-temporale}
 
-\paragraph{Cosa segnala il solo detector.} Rispetto al maggiore dei due rilevatori senza modello, il detector segnala da solo il \provv{42}\% delle proprie osservazioni. Questi valori non sono meteo ordinario: nei due rilevatori senza modello si collocano, in mediana, all'\provv{88}° e al \provv{91}° percentile, appena sotto la loro soglia, mentre le osservazioni non segnalate da nessuno stanno intorno al \provv{47}°. Il \provv{37}\% è segnalato di nuovo dal detector tre ore dopo, nella stessa cella, contro il \provv{2}\% delle osservazioni non segnalate. Fra le osservazioni che il detector segnala senza la distanza dal normale, sono più spesso lontane dal normale stagionale, di oltre una deviazione standard, la velocità verticale, la precipitazione e la radiazione solare (\provv{49}, \provv{42} e \provv{25}\%, contro \provv{23}, \provv{16} e \provv{13}\% di tutte le osservazioni). Nel \provv{10.6}\% delle segnalazioni del solo detector la combinazione delle variabili è insolita senza che alcuna variabile lo sia da sola, contro l'\provv{1.4}\% di tutte le osservazioni. Il detector aggiunge quindi soprattutto situazioni in cui più variabili legate alla precipitazione e ai moti verticali si discostano insieme, in misura moderata.
+% Per ogni cella, la correlazione nel tempo fra le coppie di score sul test:
+% mappe delle correlazioni.
+\provv{Sezione da scrivere con la run finale.}
 
-\section{Conferma dalle stazioni}
-\label{sec:ris-eobs}
+\section{Perché il generatore rileva e il discriminatore no}
+\label{sec:ris-g-d}
 
-\begin{table}[htbp]
-    \centering
-    \scriptsize
-    \caption{Conferma dalle stazioni E-OBS. Rapporto $R$ fra la quota di coppie cella--giorno con un valore insolito nel gruppo indicato e quella di riferimento, nello stesso giorno della segnalazione; fra parentesi l'intervallo al 95\% ottenuto ricampionando gli anni. Il detector è confrontato con il maggiore dei due rilevatori senza modello; le soglie sono al 5\%.}
-    \label{tab:era5-eobs}
-    \vspace{0.6em}
-    \setlength{\tabcolsep}{2pt}
-    \begin{tabular}{@{}L{0.16}L{0.13}L{0.13}L{0.13}L{0.13}L{0.13}L{0.13}@{}}
-        \toprule
-        Gruppo / riferimento & Pioggia forte & Pressione bassa & Calo di pressione & Radiazione bassa & Caldo & Freddo \\
-        \midrule
-        Solo detector / tutte & \provv{1.17} (\provv{1.12}--\provv{1.21}) & \provv{1.34} (\provv{1.27}--\provv{1.40}) & \provv{1.16} (\provv{1.11}--\provv{1.22}) & \provv{1.04} (\provv{1.00}--\provv{1.07}) & \provv{1.53} (\provv{1.45}--\provv{1.60}) & \provv{0.82} (\provv{0.79}--\provv{0.86}) \\
-        Solo detector / anello & \provv{1.58} (\provv{1.55}--\provv{1.62}) & \provv{1.35} (\provv{1.32}--\provv{1.37}) & \provv{1.27} (\provv{1.25}--\provv{1.29}) & \provv{1.22} (\provv{1.20}--\provv{1.25}) & \provv{1.25} (\provv{1.22}--\provv{1.28}) & \provv{0.92} (\provv{0.90}--\provv{0.95}) \\
-        Solo detector / solo rilevatore & \provv{1.01} (\provv{0.98}--\provv{1.05}) & \provv{1.14} (\provv{1.09}--\provv{1.19}) & \provv{1.00} (\provv{0.97}--\provv{1.04}) & \provv{0.80} (\provv{0.76}--\provv{0.83}) & \provv{1.18} (\provv{1.11}--\provv{1.26}) & \provv{0.54} (\provv{0.50}--\provv{0.58}) \\
-        \addlinespace
-        Entrambi / tutte & \provv{3.61} (\provv{3.48}--\provv{3.74}) & \provv{3.04} (\provv{2.95}--\provv{3.12}) & \provv{2.46} (\provv{2.39}--\provv{2.53}) & \provv{2.25} (\provv{2.16}--\provv{2.34}) & \provv{1.70} (\provv{1.61}--\provv{1.78}) & \provv{1.07} (\provv{1.00}--\provv{1.14}) \\
-        \bottomrule
-    \end{tabular}
-\end{table}
+% Spiegare, sulla base delle due sezioni precedenti, perché lo score del
+% generatore è informativo e quello del discriminatore no (uscita vicina a 0.5,
+% score combinato dominato dalla componente del discriminatore). Contesto dalla
+% letteratura: in AnoGAN il solo termine del discriminatore ha AUC 0.74 contro
+% 0.88 della ricostruzione (Capitolo 2).
+\provv{Sezione da scrivere con la run finale.}
 
-\paragraph{Perturbazioni.} Le osservazioni di stazione confermano che le segnalazioni del solo detector cadono in giornate perturbate (Tabella~\ref{tab:era5-eobs}). Pioggia forte, pressione bassa e calo di pressione vi sono più frequenti della media, da \provv{1.16} a \provv{1.34} volte, con intervalli interamente sopra 1, e più frequenti che nelle celle immediatamente intorno, da \provv{1.27} a \provv{1.58} volte. Il segnale è debole rispetto a quello delle osservazioni segnalate anche dal rilevatore senza modello, da \provv{2.3} a \provv{3.6} volte la media, ed è dello stesso ordine di quello delle osservazioni segnalate dal solo rilevatore senza modello: le parti che ciascuno segnala da solo sono confermate in misura simile, con un leggero vantaggio del detector sulla pressione bassa e del rilevatore senza modello sulla radiazione bassa. Il giorno successivo il rapporto del solo detector sale a \provv{1.44} per la pioggia e a \provv{1.18} per la radiazione bassa; poiché il giorno di E-OBS non coincide sempre con il giorno UTC, questo aumento non basta a indicare un anticipo.
+\section{Confronto con metodi semplici e modelli poco profondi}
+\label{sec:ris-confronti}
 
-\paragraph{Temperatura.} Sul caldo insolito le segnalazioni del solo detector sono confermate \provv{1.53} volte la media, e più di quelle del solo rilevatore senza modello (\provv{1.18}). Sul freddo insolito il rapporto è invece sotto 1, \provv{0.82}: le segnalazioni del solo detector cadono nei giorni freddi meno spesso di un giorno qualsiasi, e anche le osservazioni segnalate insieme al rilevatore senza modello sono confermate appena più della media. Il caldo insolito è definito sull'intero periodo di test e si concentra negli anni più recenti, nei quali anche lo score è un poco più alto: questo può aumentare il rapporto sul caldo indipendentemente dal detector.
+% Rilevatori senza modello della Sezione sec:exp-baseline (distanza dal normale,
+% variazione in tre ore, il maggiore dei due) e modelli poco profondi da provare
+% (da scegliere). Confronto a parità di segnalazioni.
+\provv{Sezione da scrivere con la run finale.}
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics{era5_eobs}
-    \caption{Conferma dalle stazioni E-OBS per quattro indicatori di perturbazione, nello stesso giorno della segnalazione e nel successivo. Le barre riportano il rapporto $R$ con il suo intervallo al 95\%; la linea verticale corrisponde a $R=1$, una quota pari alla media. Scala logaritmica. \notabozza{Valori provvisori.}}
-    \label{fig:era5-eobs}
-\end{figure}
+\section{Eventi per tipo e dimensione}
+\label{sec:ris-eventi}
 
-\section{Anticipo}
-\label{sec:ris-anticipo}
+% Ipercubo degli score (tempo, latitudine, longitudine) separato per tipo di
+% evento e per dimensione dell'evento (numero di celle).
+\provv{Sezione da scrivere con la run finale.}
 
-All'inizio degli episodi dell'1\% dei cambiamenti più rapidi, il detector, al 5\%, segnala già la stessa cella nel \provv{50.1}\% dei casi, e da almeno sei ore nel \provv{19.8}\%. Nelle stesse condizioni la variazione in tre ore, alla stessa soglia del 5\%, segnala già il \provv{38.1}\% degli inizi e il maggiore dei due rilevatori senza modello il \provv{40.7}\%; negli istanti senza alcun inizio la quota è del \provv{3}\%. L'anticipo è in prevalenza di tre ore, un passo temporale, e il detector non segnala affatto il \provv{6.4}\% di questi episodi. Sugli scostamenti lenti dal clima il vantaggio non si ripete: all'inizio degli episodi più forti della distanza dal normale il detector è già attivo nel \provv{45.7}\% dei casi, contro il \provv{54.8}\% della stessa distanza dal normale alla soglia del 5\%. Si tratta di un anticipo rispetto agli altri rilevatori sugli stessi dati, non di una previsione.
+\section{Casi specifici}
+\label{sec:ris-casi}
 
-\section{Estensione delle perturbazioni}
-\label{sec:ris-estensione}
-
-Le celle che il detector segnala da solo sono per l'\provv{86}--\provv{94}\% contigue a una perturbazione segnalata dai rilevatori senza modello. Aggiungendo le segnalazioni del detector, l'area delle perturbazioni di almeno dieci celle cresce in mediana del \provv{30}--\provv{34}\%, e più di una su tre cresce di almeno la metà; usando al loro posto le segnalazioni del detector di un mese dopo, che conservano la quota e la struttura spaziale ma non il legame con il giorno, l'area mediana non cresce e solo il \provv{13}\% delle perturbazioni cresce di almeno la metà. All'1\% l'area complessiva cresce del \provv{40}--\provv{53}\% contro l'\provv{7}--\provv{10}\% del riferimento. Il detector estende quindi le perturbazioni già individuate più che segnalarne di nuove.
-
-\section{Incertezza Monte Carlo}
-\label{sec:ris-incertezza}
-
-La deviazione standard dei 20 campioni è più alta dove il detector segnala: in mediana circa \provv{0.31}--\provv{0.41} nelle unità dello score normalizzato, contro \provv{0.09} sulle osservazioni non segnalate da nessuno. Restano sopra la soglia anche abbassando lo score di una deviazione standard l'\provv{82}--\provv{86}\% delle segnalazioni condivise con un rilevatore senza modello e il \provv{67}--\provv{72}\% di quelle del solo detector. Le segnalazioni del solo detector sono più vicine alla soglia, in rapporto alla dispersione dei campioni, e quindi più spesso dipendenti dalle maschere di dropout estratte.
-% Nella run ep3 il discriminatore non ha dropout: la dispersione è quella del
-% solo generatore. Con la run scelta dalla ricerca va riportata anche la
-% dispersione dello score combinato, che comprende quella del discriminatore.
-
-\section{Scelta dello score e dei pesi delle variabili}
-\label{sec:ris-ablazioni}
-% I numeri di questa sezione sono segnaposto della run ep3, calcolati sugli
-% anni di test perché quella run non ha validazione. Vanno rifatti sulla run
-% scelta dalla ricerca, sugli anni di validazione 2000-2004 (E-OBS li copre).
-
-Le due scelte del metodo che si discostano di più dall'articolo, lo score e i pesi delle variabili, sono fatte sugli anni di validazione, confrontando ciascuna con le sue alternative sugli stessi controlli: la distribuzione delle segnalazioni fra fasce di latitudine e mesi, che dovrebbe restare vicina al 5\% ovunque, e la conferma dalle stazioni E-OBS, che copre anche gli anni di validazione. Tutte le alternative si calcolano dagli score della stessa esecuzione, senza un nuovo addestramento. Un'alternativa prevale su un indicatore E-OBS quando l'intervallo del suo rapporto ``solo detector / tutte'' sta sopra quelli delle altre senza sovrapporsi.
-
-\paragraph{Score combinato e score di ricostruzione.} La Tabella~\ref{tab:ris-score} confronta lo score di ricostruzione con lo score combinato dell'articolo, con e senza normalizzazione climatologica, sulla stessa esecuzione. Lo score combinato non richiede la climatologia per essere distribuito in modo uniforme fra luoghi e stagioni: senza di essa la quota segnalata resta fra il \provv{4.3}\% e il \provv{6.7}\%, mentre lo score di ricostruzione senza climatologia andava dall'\provv{1.5}\% al \provv{13.7}\%. Le segnalazioni condivise con il rilevatore senza modello sono confermate in misura simile dai tre score. La differenza è nella parte che il detector aggiunge da solo: con lo score combinato le segnalazioni del solo detector cadono nei giorni di pioggia forte, di pressione bassa o di caldo insolito meno spesso della media, con rapporti fra \provv{0.60} e \provv{0.97}, contro \provv{1.17}--\provv{1.53} dello score di ricostruzione. Lo score di ricostruzione prevale su quattro indicatori su sei e non è mai sotto le alternative; resta quindi lo score principale, e lo score combinato è riportato come riferimento dell'articolo. Il risultato è coerente con l'instabilità dello score combinato osservata nella configurazione di base (Sezione~\ref{sec:configurazione-base-era5}).
-
-\begin{table}[htbp]
-    \centering
-    \scriptsize
-    \caption{Score di ricostruzione e score combinato, sulla stessa esecuzione. Per gli indicatori E-OBS è riportato il rapporto ``solo detector / tutte'' nello stesso giorno, con l'intervallo al 95\%; in grassetto i valori il cui intervallo sta sopra quelli delle altre colonne. Quote: intervallo della quota segnalata fra fasce di latitudine e mesi, 5\% se luogo e stagione non contassero.}
-    \label{tab:ris-score}
-    \vspace{0.6em}
-    \begin{tabular}{@{}L{0.22}L{0.22}L{0.22}L{0.22}@{}}
-        \toprule
-        Controllo & Ricostruzione, con climatologia & Combinato & Combinato, con climatologia \\
-        \midrule
-        Pioggia forte & \textbf{\provv{1.17}} (\provv{1.12}--\provv{1.21}) & \provv{0.60} (\provv{0.58}--\provv{0.61}) & \provv{0.59} (\provv{0.58}--\provv{0.60}) \\
-        Pressione bassa & \textbf{\provv{1.34}} (\provv{1.27}--\provv{1.40}) & \provv{0.73} (\provv{0.71}--\provv{0.76}) & \provv{0.71} (\provv{0.69}--\provv{0.74}) \\
-        Calo di pressione & \textbf{\provv{1.16}} (\provv{1.11}--\provv{1.22}) & \provv{0.82} (\provv{0.80}--\provv{0.85}) & \provv{0.81} (\provv{0.78}--\provv{0.83}) \\
-        Radiazione bassa & \provv{1.04} (\provv{1.00}--\provv{1.07}) & \provv{1.00} (\provv{0.97}--\provv{1.02}) & \provv{0.96} (\provv{0.94}--\provv{0.99}) \\
-        Caldo & \textbf{\provv{1.53}} (\provv{1.45}--\provv{1.60}) & \provv{0.97} (\provv{0.94}--\provv{1.00}) & \provv{0.95} (\provv{0.92}--\provv{0.98}) \\
-        Freddo & \provv{0.82} (\provv{0.79}--\provv{0.86}) & \provv{0.87} (\provv{0.83}--\provv{0.90}) & \provv{0.89} (\provv{0.86}--\provv{0.92}) \\
-        \addlinespace
-        Quote per latitudine e mese & \provv{3.6}--\provv{5.8}\% & \provv{4.3}--\provv{6.7}\% & \provv{3.2}--\provv{5.9}\% \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\paragraph{Pesi delle variabili.} La Tabella~\ref{tab:ris-pesi} confronta tre modi di pesare le variabili nello score: i pesi della variazione su 24 ore della Sezione~\ref{sec:pesi-variabili-ricostruzione}, nessun peso, e pesi calcolati allo stesso modo sulla variazione in tre ore, il passo che il modello ricostruisce. Il confronto è svolto sullo score della singola cella, l'unico che si può ricalcolare dagli errori per variabile salvati, con la stessa normalizzazione climatologica per le tre varianti; il modello è lo stesso, addestrato con i pesi su 24 ore.
-
-\begin{table}[htbp]
-    \centering
-    \scriptsize
-    \caption{Pesi delle variabili nello score, sullo score della singola cella della stessa esecuzione. Stesse convenzioni della Tabella~\ref{tab:ris-score}. L'ultima riga indica la variabile con la quota maggiore dello score nell'1\% delle osservazioni con lo score più alto.}
-    \label{tab:ris-pesi}
-    \vspace{0.6em}
-    \begin{tabular}{@{}L{0.22}L{0.22}L{0.22}L{0.22}@{}}
-        \toprule
-        Controllo & Pesi su 24 ore & Nessun peso & Pesi su 3 ore \\
-        \midrule
-        Pioggia forte & \provv{0.83} (\provv{0.80}--\provv{0.85}) & \provv{0.64} (\provv{0.62}--\provv{0.66}) & \provv{0.87} (\provv{0.82}--\provv{0.92}) \\
-        Pressione bassa & \provv{1.02} (\provv{0.97}--\provv{1.07}) & \provv{1.03} (\provv{0.98}--\provv{1.09}) & \textbf{\provv{2.40}} (\provv{2.22}--\provv{2.61}) \\
-        Calo di pressione & \provv{0.91} (\provv{0.88}--\provv{0.94}) & \provv{0.86} (\provv{0.83}--\provv{0.90}) & \textbf{\provv{1.13}} (\provv{1.08}--\provv{1.19}) \\
-        Radiazione bassa & \provv{0.90} (\provv{0.87}--\provv{0.93}) & \provv{0.74} (\provv{0.71}--\provv{0.76}) & \provv{0.94} (\provv{0.88}--\provv{1.00}) \\
-        Caldo & \provv{1.20} (\provv{1.15}--\provv{1.25}) & \provv{1.46} (\provv{1.39}--\provv{1.52}) & \provv{1.50} (\provv{1.42}--\provv{1.59}) \\
-        Freddo & \provv{0.91} (\provv{0.89}--\provv{0.94}) & \provv{0.83} (\provv{0.80}--\provv{0.86}) & \textbf{\provv{1.06}} (\provv{0.97}--\provv{1.14}) \\
-        \addlinespace
-        Quote per latitudine e mese & \provv{3.4}--\provv{6.0}\% & \provv{2.9}--\provv{6.0}\% & \provv{3.4}--\provv{6.1}\% \\
-        Variabile più presente nell'1\% più alto & Precipitazione, \provv{28}\% & Precipitazione, \provv{41}\% & Umidità del suolo, \provv{32}\% \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-Le tre varianti distribuiscono le segnalazioni fra luoghi e stagioni in modo simile, con quote fra il \provv{2.9}\% e il \provv{6.1}\%. Senza pesi la precipitazione produce il \provv{41}\% dell'1\% più alto dello score; con i pesi su 24 ore la quota scende al \provv{28}\% e il resto si ripartisce fra più variabili. Rispetto all'assenza di pesi, i pesi su 24 ore hanno l'intervallo sopra su tre indicatori, pioggia forte, radiazione bassa e freddo, e sotto su uno, il caldo: i pesi spostano lo score dal caldo prolungato verso le perturbazioni. I pesi su tre ore prevalgono su tre indicatori, pressione bassa, calo di pressione e freddo, e non sono mai sotto le altre varianti. Il loro vantaggio riguarda però in buona parte la pressione, il cui peso è quasi cinque volte quello su 24 ore e la cui indipendenza da ERA5 non è verificata; con questi pesi, inoltre, l'umidità del suolo, una sola variabile lenta, produce un terzo dell'1\% più alto dello score, cioè lo squilibrio che i pesi dovrebbero evitare. Il detector usa quindi i pesi su 24 ore. Il confronto ha due limiti: lo score della singola cella conferma le segnalazioni meno dello score sulla patch, per esempio \provv{0.83} contro \provv{1.17} per la pioggia con gli stessi pesi, e il modello è addestrato con i pesi su 24 ore, che possono quindi risultare favoriti.
+% Comportamento dello score in tre situazioni: dentro un'anomalia estesa, sul
+% contorno segnalato dal solo modello, in una zona non anomala. Prima in generale,
+% poi per tipi di evento diversi.
+\provv{Sezione da scrivere con la run finale.}
 
 \section{Limiti dei risultati}
 \label{sec:ris-limiti}
 
-I risultati vengono da una sola esecuzione per configurazione, con un solo seme. La conferma da E-OBS riguarda la sola terraferma europea, dove le stazioni sono presenti, ed è aggregata per giorno; per la pressione l'indipendenza da ERA5 non è verificata.
+% Da scrivere alla fine, sui risultati effettivi.
+\provv{Sezione da scrivere alla fine.}

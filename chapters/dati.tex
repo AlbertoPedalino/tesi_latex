@@ -1,7 +1,7 @@
 \chapter{Dati e preprocessing}
 \label{chap:dati}
 
-Il capitolo descrive i campi meteorologici su cui il detector è addestrato e valutato: le variabili della rianalisi ERA5, il dominio e la cadenza temporale, la preparazione dei dati e la loro suddivisione in anni di addestramento, di validazione e di test. Le trasformazioni che dipendono dal modello, come la normalizzazione stagionale, sono descritte nel Capitolo~\ref{chap:metodologia}; le osservazioni di stazione usate per la valutazione sono descritte nel Capitolo~\ref{chap:esperimenti}.
+Il capitolo descrive i campi meteorologici su cui il detector è addestrato e valutato: le variabili della rianalisi ERA5, il dominio e la cadenza temporale, la preparazione dei dati e la loro suddivisione in anni di addestramento, di validazione e di test. L'ultima sezione descrive i dati PVGIS da cui il lavoro è partito. Le trasformazioni che dipendono dal modello, come la normalizzazione stagionale, sono descritte nel Capitolo~\ref{chap:metodologia}; le osservazioni di stazione usate per la valutazione sono descritte nel Capitolo~\ref{chap:esperimenti}.
 
 \section{Campi ERA5, dominio e celle valide}
 \label{sec:dati-era5}
@@ -45,7 +45,7 @@ Il reticolo contiene $81\times131=10611$ celle.
 \begin{figure}[htbp]
     \centering
     \includegraphics{dominio_era5}
-    \caption{Dominio dei campi ERA5: $81\times131$ celle di $0.5^\circ$, fra $20^\circ$ e $60^\circ$ di latitudine nord e fra $15^\circ$ di longitudine ovest e $50^\circ$ di longitudine est. Il rettangolo indica il Piemonte, la regione dei dati del lavoro preliminare della Sezione~\ref{sec:rw-pvgis}. Linee di costa da Natural Earth.}
+    \caption{Dominio dei campi ERA5: $81\times131$ celle di $0.5^\circ$, fra $20^\circ$ e $60^\circ$ di latitudine nord e fra $15^\circ$ di longitudine ovest e $50^\circ$ di longitudine est. Il rettangolo indica il Piemonte, la regione dei dati PVGIS della Sezione~\ref{sec:dati-pvgis}. Linee di costa da Natural Earth.}
     \label{fig:dominio-era5}
 \end{figure}
 % Confini del dominio riletti il 21 ottobre 2026 nei dati preparati usati da
@@ -135,3 +135,53 @@ Tre proprietà dei campi motivano altrettante scelte del Capitolo~\ref{chap:meto
 % codice); quote del detector da figures/dati/era5_pesi_good2.json (pesi salvati
 % nei metadati di good-sweep-2, stimati su 720 istanti). Figure generate da
 % figures/genera_figure_dati.py.
+
+\section{I dati PVGIS del lavoro preliminare}
+\label{sec:dati-pvgis}
+% Verificato sul file del server (10 ottobre 2026):
+% /data/SentinelPV/pvgis_data/data/pvgis_summed_irradiance/piedmont_pvgis_2019.nc,
+% del 24 marzo 2026, 8 variabili float32, attributi source = PVGIS SARAH3,
+% summation_formula = Gb(i)+Gd(i)+Gr(i), tilt = 0, azimuth = 0. Controllo su tutti
+% i 19 file 2005--2023 (stessa data): 1149 località, 8760 ore (8784 nei
+% bisestili), tilt 0, azimuth 0, irradianza globale massima fra 1060 e 1108 W/m2,
+% circa 51-52% di zeri (notte), nessun valore mancante, riflessa 0, globale =
+% diretta + diffusa esattamente, produzione massima fra 847 e 928 W, temperatura
+% fra -33.2 e 40.7 gradi. Nella stessa cartella c'è grid_5km.xlsx, la definizione
+% del reticolo. Il nome solar_irradiance_poa usato nel codice per l'irradianza
+% globale è storico: i dati sono sul piano orizzontale. Testo ripreso dal Capitolo
+% 3 del backup del 16 ottobre 2026; i dettagli sul previsore sono nell'appendice.
+
+Il lavoro è partito, nell'ambito della previsione della produzione fotovoltaica, da serie orarie ottenute dal Photovoltaic Geographical Information System~\cite{huld2012pvgis} con la banca dati di radiazione SARAH3, provenienti dal progetto SentinelPV del Politecnico di Torino. Coprono 1149 località del Piemonte, comprese fra $44.08^\circ$ e $46.47^\circ$ di latitudine nord e fra $6.66^\circ$ e $9.20^\circ$ di longitudine est. Nella proiezione UTM del fuso 32 le località occupano 1149 delle $41\times54$ posizioni di un reticolo regolare con passo di 5~km: quelle che ricadono nel territorio regionale (Figura~\ref{fig:localita-pvgis}), cioè il rettangolo della Figura~\ref{fig:dominio-era5}. Sono disponibili gli anni dal 2005 al 2023, con 8760 ore per anno (8784 negli anni bisestili) e senza valori mancanti; i valori sono riferiti al minuto 10 di ciascuna ora, in tempo universale.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics{localita_pvgis}
+    \caption{Le 1149 località dei dati PVGIS. Ogni punto è una posizione del reticolo con passo di 5~km per la quale sono disponibili le serie orarie.}
+    \label{fig:localita-pvgis}
+\end{figure}
+
+Per ogni località e ogni istante sono disponibili l'irradianza globale con le sue componenti diretta, diffusa e riflessa, l'altezza del sole, la temperatura dell'aria a due metri, la velocità del vento a dieci metri e la potenza prodotta (Tabella~\ref{tab:variabili-pvgis}). L'irradianza è riferita al piano orizzontale: l'inclinazione indicata nei dati è nulla, la componente riflessa risulta nulla e l'irradianza globale coincide con la somma delle componenti diretta e diffusa. Circa la metà dei valori di irradianza è nulla, perché notturna. La potenza è una produzione teorica calcolata da PVGIS, non la misura di un impianto reale.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Grandezze dei dati PVGIS, con l'unità e l'impiego nei metodi dell'Appendice~\ref{app:pvgis}: il previsore della produzione, le soglie climatologiche e i detector MTGFlow e STGAN.}
+    \label{tab:variabili-pvgis}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.40}L{0.12}L{0.36}@{}}
+        \toprule
+        Grandezza & Unità & Impiego \\
+        \midrule
+        Irradianza globale (diretta più diffusa) & $\mathrm{W\,m^{-2}}$ & Previsore, soglie, detector \\
+        Irradianza diretta & $\mathrm{W\,m^{-2}}$ & Previsore \\
+        Irradianza diffusa & $\mathrm{W\,m^{-2}}$ & Previsore \\
+        Irradianza riflessa (nulla) & $\mathrm{W\,m^{-2}}$ & -- \\
+        Altezza del sole & gradi & -- \\
+        Temperatura dell'aria a due metri & $^\circ$C & Previsore, soglie, detector \\
+        Velocità del vento a dieci metri & $\mathrm{m\,s^{-1}}$ & Previsore, soglie, detector \\
+        Potenza prodotta (teorica) & W & Target del previsore, soglie \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Queste sono le sole grandezze disponibili, e sono quelle che determinano la produzione fotovoltaica. Un'anomalia rilevata su questi dati non può essere ricondotta a una condizione meteorologica più generale: per rilevare anomalie di tipo diverso e descriverne l'origine il lavoro è passato ai campi ERA5 descritti nelle sezioni precedenti. I metodi applicati ai dati PVGIS sono descritti nell'Appendice~\ref{app:pvgis}.
