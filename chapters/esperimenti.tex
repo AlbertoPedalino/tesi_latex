@@ -1,7 +1,7 @@
 \chapter{Esperimenti}
 \label{chap:esperimenti}
 
-Il capitolo descrive come il detector del Capitolo~\ref{chap:metodologia} è addestrato e valutato sui campi ERA5: la configurazione di addestramento e la ricerca dei parametri, il protocollo di valutazione, le metriche e i rilevatori senza modello con cui il detector è confrontato. I risultati sono nel Capitolo~\ref{chap:risultati}.
+Il capitolo descrive come il detector del Capitolo~\ref{chap:metodologia} è addestrato e valutato sui campi ERA5: la configurazione di addestramento e la ricerca dei parametri, e il protocollo di valutazione. I risultati sono nel Capitolo~\ref{chap:risultati}.
 
 \section{Configurazioni di addestramento}
 \label{sec:exp-configurazioni}
@@ -56,26 +56,6 @@ I modelli sono implementati in PyTorch~\cite{paszke2019pytorch}. I dati sono let
 \section{Protocollo di valutazione}
 \label{sec:exp-protocollo}
 
-Gli score della configurazione scelta sono calcolati sugli anni di validazione 2000--2004 e di test 2005--2025, su tutti gli istanti e tutte le 10611 celle, con i 20 campioni Monte Carlo della Sezione~\ref{sec:score-dropout-montecarlo}; in entrambi i periodi le finestre di ingresso contengono la storia reale. Dalla stessa esecuzione sono ricavati lo score combinato e lo score di ricostruzione. Il protocollo separa ciò che si stima da ciò che si valuta. Le quantità che descrivono il comportamento abituale degli score, cioè la climatologia, gli estremi dello score combinato, le scale e la climatologia dei rilevatori senza modello, le soglie e i limiti delle classi di fiducia, sono stimate sugli anni di validazione e restano fisse per il test. Le soglie sono il 95-esimo e il 99-esimo percentile degli score di validazione; sul test segnalano una quota che può scostarsi dal 5\% e dall'1\%, ed è riportata nei risultati. Non esistono etichette di anomalia: il detector è confrontato con i rilevatori senza modello della Sezione~\ref{sec:exp-baseline}, con soglie fissate allo stesso modo.
+Gli score della configurazione scelta sono calcolati sugli anni di validazione 2000--2004 e di test 2005--2025, su tutti gli istanti e tutte le 10611 celle, con i 20 campioni Monte Carlo della Sezione~\ref{sec:score-dropout-montecarlo}; in entrambi i periodi le finestre di ingresso contengono la storia reale. Dalla stessa esecuzione sono ricavati lo score combinato e lo score di ricostruzione. Il protocollo separa ciò che si stima da ciò che si valuta. Le quantità che descrivono il comportamento abituale degli score, cioè la climatologia, gli estremi dello score combinato, le soglie e i limiti delle classi di fiducia, sono stimate sugli anni di validazione e restano fisse per il test. Le soglie sono il 95-esimo e il 99-esimo percentile degli score di validazione; sul test segnalano una quota che può scostarsi dal 5\% e dall'1\%, ed è riportata nei risultati. Non esistono etichette di anomalia: il comportamento degli score e il loro confronto con altri rilevatori sono descritti nel Capitolo~\ref{chap:risultati}.
 
-\paragraph{Componenti dello score.} Lo score dell'articolo combina l'errore di ricostruzione del generatore e il giudizio del discriminatore (Sezione~\ref{sec:score-dropout-montecarlo}). Quale delle due componenti usare non è fissato in anticipo con un riferimento esterno: le due componenti, prima e dopo la normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}), sono calcolate dalla stessa esecuzione, e il loro comportamento nello spazio e nel tempo è studiato nel Capitolo~\ref{chap:risultati}. I rilevatori di confronto non intervengono nell'addestramento né nella scelta degli iperparametri, fatta sulla validazione con la distanza fra campi osservati e ricostruiti (Sezioni~\ref{sec:monitoraggio-senza-etichette} e~\ref{sec:exp-configurazioni}).
-
-\section{Metriche}
-\label{sec:exp-metriche}
-
-L'accordo fra due rilevatori che segnalano gli insiemi di osservazioni $A$ e $B$ è misurato dall'indice di Jaccard,
-\begin{equation}
-J(A,B)=\frac{|A\cap B|}{|A\cup B|},
-\end{equation}
-che vale 1 quando gli insiemi coincidono e 0 quando sono disgiunti. Quando i rilevatori segnalano la stessa quota di osservazioni è riportata anche la quota delle segnalazioni di $A$ che anche $B$ segnala, $|A\cap B|/|A|$, che a parità di segnalazioni coincide con $|A\cap B|/|B|$. Nessuna delle due è una misura di accuratezza: due rilevatori possono concordare ed entrambi sbagliare.
-
-\section{Rilevatori di confronto senza modello}
-\label{sec:exp-baseline}
-
-Il detector è confrontato con tre rilevatori che non usano un modello appreso. Rappresentano i due modi più semplici di dire che il tempo di una cella è insolito, e servono a stabilire che cosa il detector aggiunge a ciò che si ottiene senza addestramento. Sono calcolati sugli stessi dati standardizzati della Sezione~\ref{sec:ingresso-normalizzazione-era5}.
-
-La \emph{distanza dal normale} è l'errore che si commetterebbe rispondendo, in ogni cella, con il valore normale per quel giorno e quell'ora: misura lo scostamento dal clima, e coglie per esempio il caldo o il freddo prolungati. La \emph{variazione in tre ore} è l'errore che si commetterebbe rispondendo con il valore dell'istante precedente: misura il cambiamento rapido, e coglie per esempio il passaggio di un fronte. Il terzo rilevatore prende, cella per cella, il maggiore dei due. In entrambi gli errori ogni variabile è divisa per il proprio errore medio, così che le quindici variabili contino allo stesso modo, e ai tre score è applicata la stessa forma di normalizzazione climatologica dello score di ricostruzione (Sezione~\ref{sec:normalizzazione-climatologica-score}). Per trattarli come il detector, errori medi e climatologia sono stimati sugli stessi anni di validazione, esclusi i valori segnati come insoliti, e restano fissi per il test; le soglie sono fissate allo stesso modo, al 95-esimo e al 99-esimo percentile degli score di validazione. I confronti sono quindi a parità di criterio.
-
-% Codice: rebalance_era5_stgan_scores.py --scale mean --scale-run-dir (validazione)
-% --normal-masks-dir; climatology --reference validation. Run in outputs/good2v
-% (val_* e test_*).
+\paragraph{Componenti dello score.} Lo score dell'articolo combina l'errore di ricostruzione del generatore e il giudizio del discriminatore (Sezione~\ref{sec:score-dropout-montecarlo}). Quale delle due componenti usare non è fissato in anticipo con un riferimento esterno: le due componenti, prima e dopo la normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}), sono calcolate dalla stessa esecuzione, e il loro comportamento nello spazio e nel tempo è studiato nel Capitolo~\ref{chap:risultati}. Gli anni di test non intervengono nell'addestramento né nella scelta degli iperparametri, fatta sulla validazione con la distanza fra campi osservati e ricostruiti (Sezioni~\ref{sec:monitoraggio-senza-etichette} e~\ref{sec:exp-configurazioni}).
