@@ -11,7 +11,7 @@ I campi meteorologici delle rianalisi, come ERA5~\cite{hersbach2020era5}, descri
 
 Tre caratteristiche dei dati rendono il problema difficile e guidano le scelte dei capitoli successivi.
 
-La prima è l'assenza di etichette. Non esiste un elenco di osservazioni meteorologiche anomale con cui addestrare un classificatore o misurare direttamente l'accuratezza di un detector. Il rilevamento deve essere non supervisionato e la sua valutazione deve ricorrere a strumenti indiretti.
+La prima è l'assenza di etichette. Non esiste un elenco completo di osservazioni meteorologiche anomale con cui addestrare un classificatore o misurare direttamente l'accuratezza di un detector. Il rilevamento deve essere unsupervised e la sua valutazione deve ricorrere a strumenti indiretti.
 
 La seconda è che i dati di training non sono garantiti privi di anomalie. Molti detector apprendono il comportamento normale da un insieme che si assume pulito; con dati meteorologici non etichettati questa ipotesi non è verificabile. Ne segue una scelta di obiettivo: rilevare le condizioni nuove rispetto al periodo di training, trattando come già osservate quelle che il modello ha incontrato durante l'addestramento.
 
@@ -31,7 +31,7 @@ Il detector parte da STGAN~\cite{deng2022stgan}, una rete avversaria proposta pe
 
 \section{Obiettivi e contributi della tesi}
 
-L'obiettivo della tesi è rilevare condizioni meteorologiche anomale in campi privi di etichette e dotati di struttura spaziale, e verificare, con dati indipendenti, che le condizioni segnalate siano davvero insolite. La tesi non propone un nuovo algoritmo di rilevamento: adatta e combina componenti esistenti. I contributi sono i seguenti.
+L'obiettivo della tesi è rilevare condizioni meteorologiche anomale in campi privi di etichette e dotati di struttura spaziale, e studiare, senza riferimenti esterni, come si comportano le parti dello score e quale usare. La tesi non propone un nuovo algoritmo di rilevamento: adatta e combina componenti esistenti. I contributi sono i seguenti.
 \begin{itemize}
     \item L'adattamento di STGAN a campi meteorologici privi di topologia fisica, con un generatore sul campo intero che rappresenta l'intorno di una cella con una convoluzione su griglia, e la definizione dell'obiettivo come rilevamento di condizioni nuove rispetto al periodo di training.
     \item Uno score Monte Carlo, con il dropout nel generatore e nel discriminatore, e la ricostruzione di eventi geografici a partire dagli score.
@@ -41,4 +41,4 @@ L'obiettivo della tesi è rilevare condizioni meteorologiche anomale in campi pr
 
 \section{Organizzazione del documento}
 
-Il Capitolo~\ref{chap:stato-arte} presenta i fondamenti teorici e i lavori su cui la tesi è costruita, per temi e in ordine cronologico all'interno di ciascun tema; si chiude con il modo in cui la tesi adatta STGAN e con la sua posizione rispetto ai lavori esaminati. Il Capitolo~\ref{chap:dati} descrive i campi ERA5 e la loro preparazione, e i dati PVGIS da cui il lavoro è partito. Il Capitolo~\ref{chap:metodologia} presenta il detector nella forma finale. Il Capitolo~\ref{chap:esperimenti} descrive come il detector è addestrato e valutato: la configurazione e la ricerca dei parametri, e il protocollo di valutazione. Il Capitolo~\ref{chap:risultati} riporta e discute i risultati, comprese le ablazioni sullo score e sui pesi delle variabili. Il Capitolo~\ref{chap:conclusioni} riassume il lavoro, ne indica i limiti e gli sviluppi futuri. L'Appendice~\ref{app:pvgis} descrive il lavoro preliminare sui dati PVGIS: il previsore probabilistico della produzione, i metodi per associargli un intervallo e i primi detector.
+Il Capitolo~\ref{chap:stato-arte} presenta i fondamenti teorici e i lavori su cui la tesi è costruita, per temi e in ordine cronologico all'interno di ciascun tema; si chiude con il modo in cui la tesi adatta STGAN e con la sua posizione rispetto ai lavori esaminati. Il Capitolo~\ref{chap:dati} descrive i campi ERA5 e la loro preparazione, e i dati PVGIS da cui il lavoro è partito. Il Capitolo~\ref{chap:metodologia} presenta il detector nella forma finale. Il Capitolo~\ref{chap:esperimenti} descrive come il detector è addestrato e valutato: la configurazione e la ricerca dei parametri, e il protocollo di valutazione. Il Capitolo~\ref{chap:risultati} riporta e discute i risultati. Il Capitolo~\ref{chap:conclusioni} riassume il lavoro, ne indica i limiti e gli sviluppi futuri. L'Appendice~\ref{app:pvgis} descrive il lavoro preliminare sui dati PVGIS: il previsore probabilistico della produzione, i metodi per associargli un intervallo e i primi detector.

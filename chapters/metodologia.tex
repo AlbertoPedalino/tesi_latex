@@ -140,7 +140,7 @@ w_f=\frac{\bar{m}}{m_f},
 \qquad
 \bar{m}=\frac{1}{F}\sum_{f=1}^{F}m_f,
 \end{equation}
-con $F=15$. La differenza a 24 ore confronta istanti alla stessa ora del giorno e non contiene quindi il ciclo giornaliero. Il fattore $\bar{m}$ lascia invariata la loss per un errore proporzionale a $m_f$. Il peso non misura la difficoltà del modello su una variabile: è una misura di quanto la variabile cambia, fissata prima dell'addestramento e senza usare il modello. Nella configurazione scelta vanno da 0.40 per l'umidità specifica a 7.14 per l'umidità del primo strato del suolo, che cambia lentamente. I pesi moltiplicano l'errore quadratico di ciascuna variabile nel termine di ricostruzione della loss del generatore e nell'errore di ricostruzione da cui sono calcolati gli score. La scelta della distanza di 24 ore, confrontata con 3 ore e con l'assenza di pesi, è discussa nel Capitolo~\ref{chap:risultati}.
+con $F=15$. La differenza a 24 ore confronta istanti alla stessa ora del giorno e non contiene quindi il ciclo giornaliero. Il fattore $\bar{m}$ lascia invariata la loss per un errore proporzionale a $m_f$. Il peso non misura la difficoltà del modello su una variabile: è una misura di quanto la variabile cambia, fissata prima dell'addestramento e senza usare il modello. Nella configurazione scelta vanno da 0.40 per l'umidità specifica a 7.14 per l'umidità del primo strato del suolo, che cambia lentamente. I pesi moltiplicano l'errore quadratico di ciascuna variabile nel termine di ricostruzione della loss del generatore e nell'errore di ricostruzione da cui sono calcolati gli score.
 
 \section{Dropout Monte Carlo nelle due reti e score}
 \label{sec:score-dropout-montecarlo}
@@ -219,11 +219,10 @@ Lo scopo è rendere confrontabili celle e stagioni in cui l'errore di ricostruzi
 % excluded (validazione, lasciando fuori l'anno) in physiq_pv/era5/seasonality.py;
 % comando climatology --reference validation --reference-run-dir --normal-masks-dir
 % --period day --window-days 15 (commit 2e65045c, ramo CNN).
-% ATTENZIONE (24 ottobre 2026): i risultati esistenti (outputs/good2v, val_* e
-% test_*) sono calcolati con la climatologia per mese x ora, non con quella qui
-% descritta; vale anche per i rilevatori senza modello, normalizzati allo stesso
-% modo. Nel Capitolo 6 i numeri che ne dipendono vanno marcati \provv e rifatti
-% con --period day prima della consegna (solo le analisi riportate nella tesi).
+% Dal 28 ottobre 2026 il Capitolo 6 usa la climatologia qui descritta (giorno +-15):
+% outputs/good2v/val_gen_clim_day (validazione, un anno fuori) e
+% test_generator_clim_day (test, dalla validazione); i rilevatori di confronto con
+% scripts/run_era5_comparisons.sh. Le vecchie cartelle *_clim per mese non entrano.
 % Prova sulla validazione 2000-2004 (outputs/good2v/val_gen_clim_day, log
 % analisi_good2/luogo_mese_vs_giorno_val.log): quote per latitudine x mese al 5%
 % fra 4.0 e 6.3% per mese, fra 3.6 e 6.3% per giorno, differenza media fra le
@@ -231,8 +230,8 @@ Lo scopo è rendere confrontabili celle e stagioni in cui l'errore di ricostruzi
 % Score di validazione con la storia reale: scripts/score_era5_stgan_run.py
 % --period validation (outputs/stgan_good_sweep_2_validation). Con la climatologia
 % stimata dagli errori a storia ripulita le quote per luogo erano disuguali
-% (1.5-12.5%), con la storia reale piatte (3.3-6.7%): numeri da riportare nei
-% Risultati, non qui.
+% (1.5-12.5%), con la storia reale piatte (3.3-6.7%), sulla validazione e con la
+% climatologia per mese. Nella Sezione 6.3 la verifica è rifatta sul test.
 
 \section{Validazione senza etichette}
 \label{sec:monitoraggio-senza-etichette}
