@@ -171,7 +171,7 @@ Un valore, cioè una coppia istante--cella, è segnato come insolito con due dis
 % 5.3%). Pesi delle due distanze: quelli dello sweep attuale (variazione su 24
 % ore), indicazione dell'autore del 16 ottobre 2026.
 
-I valori segnati non entrano nelle misure calcolate sulla validazione, e nelle finestre di ingresso degli istanti di validazione sono sostituiti dal normale stagionale, cioè dal valore standardizzato nullo. In questo modo né il bersaglio né la storia recente da cui il modello parte contengono le condizioni insolite.
+I valori segnati non entrano nella misura con cui si confrontano le configurazioni, negli estremi dello score combinato e nella climatologia degli score, e nelle finestre di ingresso degli istanti di validazione sono sostituiti dal normale stagionale, cioè dal valore standardizzato nullo. In questo modo né il bersaglio né la storia recente da cui il modello parte contengono le condizioni insolite.
 
 \section{Componenti dello score e dropout Monte Carlo}
 \label{sec:score-dropout-montecarlo}
@@ -295,4 +295,4 @@ Vengono registrate media e varianza della stima sui sottoinsiemi e la media dell
 
 Al termine di ogni epoca un sottoinsieme fisso della validazione, 32 istanti equispaziati con tutte le celle, viene elaborato con un passaggio deterministico, a dropout spento. Vengono registrate due quantità: la differenza assoluta media fra le attivazioni del penultimo strato del discriminatore sull'osservazione e sulla ricostruzione, e la variazione dello score fra epoche consecutive sulle stesse celle. Queste quantità e la MMD non entrano in una loss, in un aggiornamento dei pesi o negli score; sono calcolate senza gradiente e ripristinando gli stati dei generatori di numeri casuali, così da non alterare la traiettoria dell'addestramento.
 
-Dopo l'ultima epoca, su tutti i valori validi e non segnati della validazione, viene calcolata la componente di ricostruzione media sulle estrazioni Monte Carlo, riassunta da media, deviazione standard, mediana e 95° percentile. Le stesse estrazioni danno gli estremi delle due componenti usati dallo score combinato.
+Dopo l'ultima epoca, su tutti i valori validi e non segnati della validazione, viene calcolata la componente di ricostruzione media sulle estrazioni Monte Carlo, riassunta da media, deviazione standard, mediana e 95-esimo percentile. Le stesse estrazioni danno gli estremi delle due componenti usati dallo score combinato.
