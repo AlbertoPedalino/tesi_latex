@@ -160,12 +160,16 @@ def spatial_figure(data):
 def maps_figure(data, coastline):
     """G and D at the typical timestamp (the median spatial correlation); the other one is in era5_d_termini_mappa."""
     row = 0
-    figure, axes = plt.subplots(1, 2, figsize=size(0.42), constrained_layout=True)
+    # Colour bars below the maps, so that the two maps take the whole width.
+    figure, axes = plt.subplots(1, 2, figsize=size(0.56), constrained_layout=True)
     for column, (key, label) in enumerate((("G", "G (alto = più insolito)"), ("D", "D (alto = più insolito)"))):
         values = data[key][row]
         low, high = np.nanpercentile(values, (1, 99))
         mesh = draw_map(axes[column], data, values, coastline, left=column == 0, cmap="viridis", vmin=low, vmax=high)
-        colour_bar(figure, mesh, axes[column], label)
+        bar = figure.colorbar(mesh, ax=axes[column], orientation="horizontal", shrink=0.9, pad=0.02, aspect=30)
+        bar.set_label(label, fontsize=TICKS)
+        bar.ax.tick_params(labelsize=TICKS)
+        bar.ax.locator_params(nbins=5)
     figure.savefig(HERE / "era5_g_d_mappe.pdf", dpi=300)
     plt.close(figure)
 
