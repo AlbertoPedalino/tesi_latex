@@ -158,7 +158,7 @@ Le alternative principali richiedono di cambiare l'addestramento. Lakshminarayan
 \section{Da STGAN al detector della tesi}
 \label{sec:rw-da-stgan}
 
-STGAN è nato per il traffico: il grafo deriva da una rete fisica, lo score è un valore unico per osservazione e la valutazione misura il richiamo su incidenti documentati (Sezione~\ref{sec:rw-stgan}). La tesi ne riprende l'architettura a tre rami e gli obiettivi avversari, e lo adatta lungo cinque assi a campi meteorologici privi di etichette.
+STGAN è nato per il traffico: il grafo deriva da una rete fisica, lo score è un valore unico per osservazione e la valutazione misura il richiamo su incidenti documentati (Sezione~\ref{sec:rw-stgan}). La tesi ne riprende l'architettura a tre rami e gli obiettivi avversari, e lo adatta lungo quattro assi a campi meteorologici privi di etichette.
 
 \paragraph{Griglia e campo intero.} Nell'articolo il contesto spaziale è un grafo, e in assenza di una rete fisica le sue adiacenze andrebbero scelte con un criterio di vicinanza. Sul reticolo regolare dei campi della tesi, invece, le posizioni relative dei vicini sono definite. La convoluzione su grafo del modulo recente è quindi sostituita da una ConvGRU (Sezione~\ref{sec:rw-spazio}), e il ramo LSTM del trend è conservato. Il generatore elabora in una sola passata il reticolo completo di un istante, mentre il discriminatore continua a giudicare l'intorno di ogni cella, una patch al posto del sottografo dell'articolo (Sezione~\ref{sec:stgan-convgru}).
 
@@ -170,7 +170,6 @@ Lo score è continuo e non coincide con la decisione: sono considerate anomale s
 
 \paragraph{Validazione senza etichette.} L'articolo valuta il detector su eventi documentati, che per i campi meteorologici non sono disponibili in modo sistematico. La tesi introduce quindi anni di validazione, da cui i valori insoliti sono esclusi con un criterio che non dipende dal modello (Sezione~\ref{sec:maschere-validazione}). L'idea è analoga al protocollo di Monaco et al.~\cite{monaco2025sdeunet}, che nella correzione delle previsioni di precipitazione escludono gli eventi intensi dall'addestramento e li mantengono nel test. Sulla validazione sono confrontate le configurazioni e fissate soglie e climatologia degli score, prima di valutare gli anni di test.
 
-\paragraph{Eventi geografici.} Gli score delle celle sono aggregati in eventi geografici, gruppi di celle adiacenti collegati da un istante al successivo, che possono separarsi e fondersi (Sezione~\ref{sec:eventi-geografici}). Il passaggio è assente nell'articolo, che si ferma allo score della singola osservazione.
 
 \section{Posizionamento del lavoro}
 \label{sec:posizionamento}

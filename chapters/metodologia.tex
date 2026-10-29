@@ -1,14 +1,14 @@
 \chapter{Metodologia}
 \label{chap:metodologia}
 
-Il capitolo descrive il detector nella forma usata sui campi ERA5. La Sezione~\ref{sec:formulazione} formula il problema: che cosa entra nel detector, che cosa ne esce e quando un valore è segnalato. Seguono l'architettura del generatore e del discriminatore con gli obiettivi dell'addestramento avversario (Sezione~\ref{sec:stgan}), l'ingresso del modello (Sezione~\ref{sec:ingresso-normalizzazione-era5}), i pesi delle variabili nell'errore di ricostruzione, i valori insoliti tenuti fuori dalle misure sulla validazione, le componenti dello score con il dropout Monte Carlo, la normalizzazione climatologica dello score, la misura con cui si confrontano le configurazioni e infine la ricostruzione di eventi geografici a partire dagli score.
+Il capitolo descrive il detector nella forma usata sui campi ERA5. La Sezione~\ref{sec:formulazione} formula il problema: che cosa entra nel detector, che cosa ne esce e quando un valore è segnalato. Seguono l'architettura del generatore e del discriminatore con gli obiettivi dell'addestramento avversario (Sezione~\ref{sec:stgan}), l'ingresso del modello (Sezione~\ref{sec:ingresso-normalizzazione-era5}), i pesi delle variabili nell'errore di ricostruzione, i valori insoliti tenuti fuori dalle misure sulla validazione, le componenti dello score con il dropout Monte Carlo, la normalizzazione climatologica dello score e la misura con cui si confrontano le configurazioni. Il capitolo si ferma allo score: ciò che se ne ricava, come il raggruppamento delle segnalazioni in eventi, è descritto nel Capitolo~\ref{chap:risultati}.
 
 La Figura~\ref{fig:catena-detector} riporta l'ordine in cui questi passaggi agiscono su un istante, e per ogni quantità stimata gli anni su cui è stimata: normalizzazione stagionale e pesi sugli anni di addestramento, prima di addestrare il modello; climatologia e soglia sugli anni di validazione, dopo l'addestramento. Il discriminatore non compare nella catena: serve all'addestramento del generatore e allo score combinato.
 
 \begin{figure}[htbp]
     \centering
     \input{figures/schema_catena_detector}
-    \caption{Ordine dei passaggi del detector su un istante, dai campi ERA5 agli eventi geografici. In corsivo, gli anni su cui è stimata ciascuna quantità: le scale della normalizzazione stagionale e i pesi sugli anni di addestramento, la climatologia dello score e la soglia sugli anni di validazione.}
+    \caption{Ordine dei passaggi del detector su un istante, dai campi ERA5 alla segnalazione. In corsivo, gli anni su cui è stimata ciascuna quantità: le scale della normalizzazione stagionale e i pesi sugli anni di addestramento, la climatologia dello score e la soglia sugli anni di validazione.}
     \label{fig:catena-detector}
 \end{figure}
 
@@ -209,7 +209,7 @@ La componente di ricostruzione, media sulle estrazioni,
 \qquad
 \bar{\hat{x}}=\frac{1}{J}\sum_{j=1}^{J}\hat{x}^{(j)}.
 \end{equation}
-La componente cresce quindi sia quando la ricostruzione si allontana dall'osservazione, sia quando le estrazioni non sono concordi fra loro.
+La componente cresce quindi sia quando la ricostruzione si allontana dall'osservazione, sia quando le estrazioni non sono concordi fra loro. Dalle stesse estrazioni si ricava anche la deviazione standard dello score, che misura quanto lo score dipende dalle maschere di dropout; non è una probabilità di anomalia né una stima calibrata dell'incertezza.
 
 \subsection{Score combinato e score di ricostruzione}
 
@@ -225,19 +225,6 @@ L'articolo indica che le due componenti sono normalizzate prima della somma, sen
 
 Lo \emph{score di ricostruzione} $\zeta_{tn}$ è la sola componente $\bar{s}_{G,tn}$, espressa rispetto alla propria climatologia (Sezione~\ref{sec:normalizzazione-climatologica-score}). Quale dei due score usare è studiato nel Capitolo~\ref{chap:risultati}, dal comportamento delle due componenti nello spazio e nel tempo.
 
-\subsection{Dispersione}
-
-La dispersione associata a ciascuno score è la deviazione standard di popolazione delle sue estrazioni; per lo score combinato,
-\begin{equation}
-u_{tn}=\sqrt{\frac{1}{J}\sum_{j=1}^{J}\left(a^{(j)}_{tn}-\bar{a}_{tn}\right)^{2}},
-\end{equation}
-nelle stesse unità dello score, e analogamente per la componente di ricostruzione. Misura quanto lo score cambia con le maschere di dropout delle due reti e non è una probabilità di anomalia; la sua calibrazione come misura di incertezza non è verificata dal metodo. Una segnalazione che resta sopra la soglia anche con lo score diminuito di $u_{tn}$ non dipende dalle maschere estratte.
-
-\subsection{Classi di fiducia}
-\label{sec:classi-fiducia}
-
-La dispersione delle estrazioni del generatore cresce con l'errore di ricostruzione: un'osservazione ricostruita male ha in genere anche estrazioni più discordi. Per ricavarne un'informazione che l'errore non contiene già, la deviazione standard delle estrazioni del generatore di una segnalazione è confrontata con quella delle segnalazioni che hanno un errore simile. Sugli anni di validazione le segnalazioni sono divise in venti fasce di uguale numerosità secondo la componente di ricostruzione media $\bar{s}_{G,tn}$; in ogni fascia i quintili della deviazione standard delle estrazioni del generatore definiscono cinque classi. La classe 1 raccoglie le segnalazioni le cui estrazioni sono le più concordi per il loro errore, la classe 5 quelle con le estrazioni più discordi. I limiti delle fasce e dei quintili restano fissi per il test. La classe accompagna ogni segnalazione come indicazione di fiducia: non entra nello score né nella soglia, e non decide se un'osservazione è segnalata.
-
 \section{Normalizzazione climatologica degli score}
 \label{sec:normalizzazione-climatologica-score}
 
@@ -245,7 +232,7 @@ Una trasformazione successiva al calcolo degli score esprime ogni score rispetto
 \begin{equation}
 \zeta_{tn}=\frac{s_{tn}-\mu^{s}_{nog}}{\sigma^{s}_{nog}},
 \end{equation}
-dove $s_{tn}$ è lo score da trasformare, la componente di ricostruzione $\bar{s}_{G,tn}$ o lo score combinato $\bar{a}_{tn}$. Media e deviazione standard sono calcolate con la stessa ricetta della normalizzazione stagionale della Sezione~\ref{sec:ingresso-normalizzazione-era5}: sugli score della stessa cella e della stessa ora nei quindici giorni che precedono $g$ e nei quindici che lo seguono, con una finestra che scavalca la fine dell'anno, e con la deviazione standard calcolata attorno alla media lisciata di ciascun giorno. Lo score è uno per cella e non ha la dimensione delle variabili: media e deviazione standard sono due tensori di forma $[8,366,N]$. Sono stimate negli anni di validazione, esclusi i valori segnati come insoliti (Sezione~\ref{sec:maschere-validazione}), e restano fisse per il test. Non possono essere stimate sugli anni di addestramento, perché su quegli anni il modello ha già visto i dati e il suo errore è più basso di quello su anni nuovi. Quando lo score trasformato serve sugli anni di validazione stessi, per le scelte e per fissare le soglie, media e deviazione standard di un anno $y$ sono calcolate sugli altri quattro anni di validazione, $\mu^{s,(-y)}_{nog}$ e $\sigma^{s,(-y)}_{nog}$: nessun valore entra nella propria climatologia. I gruppi con meno di trenta valori di riferimento o con varianza nulla non ricevono uno score. La dispersione viene divisa per la stessa deviazione standard.
+dove $s_{tn}$ è lo score da trasformare, la componente di ricostruzione $\bar{s}_{G,tn}$ o lo score combinato $\bar{a}_{tn}$. Media e deviazione standard sono calcolate con la stessa ricetta della normalizzazione stagionale della Sezione~\ref{sec:ingresso-normalizzazione-era5}: sugli score della stessa cella e della stessa ora nei quindici giorni che precedono $g$ e nei quindici che lo seguono, con una finestra che scavalca la fine dell'anno, e con la deviazione standard calcolata attorno alla media lisciata di ciascun giorno. Lo score è uno per cella e non ha la dimensione delle variabili: media e deviazione standard sono due tensori di forma $[8,366,N]$. Sono stimate negli anni di validazione, esclusi i valori segnati come insoliti (Sezione~\ref{sec:maschere-validazione}), e restano fisse per il test. Non possono essere stimate sugli anni di addestramento, perché su quegli anni il modello ha già visto i dati e il suo errore è più basso di quello su anni nuovi. Quando lo score trasformato serve sugli anni di validazione stessi, per le scelte e per fissare le soglie, media e deviazione standard di un anno $y$ sono calcolate sugli altri quattro anni di validazione, $\mu^{s,(-y)}_{nog}$ e $\sigma^{s,(-y)}_{nog}$: nessun valore entra nella propria climatologia. I gruppi con meno di trenta valori di riferimento o con varianza nulla non ricevono uno score.
 
 Gli score di validazione da cui sono stimate queste quantità sono calcolati con la storia reale degli istanti di validazione, come quelli del test. La sostituzione dei valori insoliti nella storia (Sezione~\ref{sec:maschere-validazione}) serve alla misura con cui si confrontano le configurazioni durante l'addestramento e al passaggio di validazione che chiude l'addestramento, da cui vengono gli estremi dello score combinato; non entra nella climatologia. Una climatologia stimata su errori calcolati da una storia ripulita descriverebbe un errore più basso di quello che il modello commette sul test, dove la storia contiene le condizioni insolite.
 
@@ -309,36 +296,3 @@ Vengono registrate media e varianza della stima sui sottoinsiemi e la media dell
 Al termine di ogni epoca un sottoinsieme fisso della validazione, 32 istanti equispaziati con tutte le celle, viene elaborato con un passaggio deterministico, a dropout spento. Vengono registrate due quantità: la differenza assoluta media fra le attivazioni del penultimo strato del discriminatore sull'osservazione e sulla ricostruzione, e la variazione dello score fra epoche consecutive sulle stesse celle. Queste quantità e la MMD non entrano in una loss, in un aggiornamento dei pesi o negli score; sono calcolate senza gradiente e ripristinando gli stati dei generatori di numeri casuali, così da non alterare la traiettoria dell'addestramento.
 
 Dopo l'ultima epoca, su tutti i valori validi e non segnati della validazione, viene calcolata la componente di ricostruzione media sulle estrazioni Monte Carlo, riassunta da media, deviazione standard, mediana e 95° percentile. Le stesse estrazioni danno gli estremi delle due componenti usati dallo score combinato.
-
-\section{Eventi geografici}
-\label{sec:eventi-geografici}
-
-Gli score di un istante formano un campo sulla griglia. Gli eventi geografici sono ricavati da questi campi in una fase distinta, successiva al calcolo degli score e senza un nuovo aggiornamento dei pesi del detector. La Figura~\ref{fig:schema-eventi} riassume i passaggi.
-
-\begin{figure}[htbp]
-    \centering
-    \input{figures/schema_eventi}
-    \caption{Dagli score agli eventi geografici, su un esempio illustrativo. Gli score di un istante sono riportati sulla griglia; le celle sopra soglia formano una maschera, da cui apertura e chiusura rimuovono le celle isolate e le sporgenze; le celle rimaste sono riunite in cluster, gruppi di celle adiacenti. I cluster di istanti consecutivi sono poi collegati: un evento è un insieme di cluster collegati, e resta unico anche quando un cluster si separa in due o due cluster si fondono.}
-    \label{fig:schema-eventi}
-\end{figure}
-
-\subsection{Soglia, morfologia e cluster spaziali}
-
-Gli score, uno per istante e cella, vengono ricollocati sulla griglia $N_y\times N_x$ di ciascun istante. La selezione iniziale può utilizzare una soglia assoluta oppure un percentile degli score finiti, globale in modo predefinito o distinto per istante. Una cella è selezionata soltanto se lo score è strettamente maggiore della soglia.
-
-Per ogni istante, la maschera binaria viene sottoposta ad apertura e chiusura, rispettando le celle valide. La configurazione predefinita usa un elemento strutturante quadrato $3\times3$ e un'iterazione per operazione. Le componenti connesse, cioè i cluster, sono individuate con otto vicini e possono essere filtrate per numero minimo di celle. Le operazioni morfologiche possono rimuovere o aggiungere celle rispetto alla selezione iniziale: i cluster risultanti non coincidono necessariamente con l'insieme degli score sopra soglia. Le aree dei cluster sono ottenute sommando le aree sferiche delle celle e i centroidi sono pesati con tali aree.
-
-\subsection{Collegamento temporale, separazioni e fusioni}
-
-I cluster di istanti consecutivi vengono collegati secondo sovrapposizione, sovrapposizione dopo dilatazione, distanza dei centroidi oppure unione dei criteri. Indicando con $\mathcal{A}$ e $\mathcal{B}$ gli insiemi di celle di due cluster, il rapporto di sovrapposizione è
-\begin{equation}
-\rho(\mathcal{A},\mathcal{B})=\frac{|\mathcal{A}\cap \mathcal{B}|}{\min(|\mathcal{A}|,|\mathcal{B}|)}.
-\end{equation}
-Non si tratta dell'intersezione sull'unione. Nel criterio dilatato, $\mathcal{A}$ è sostituito dal supporto ottenuto dopo dilatazione, anche nel denominatore. La configurazione predefinita usa una dilatazione di una cella e una soglia di sovrapposizione pari a 0.1.
-
-L'identità di un evento corrisponde a una componente connessa del grafo temporale dei cluster. Il collegamento non è vincolato a essere uno a uno: una separazione mantiene i rami nello stesso evento, mentre una fusione unifica retrospettivamente le identità precedenti. Un salto nella cadenza temporale interrompe i collegamenti. La durata riportata comprende l'intervallo rappresentato dall'ultimo istante,
-\begin{equation}
-d_{\mathrm{evento}}=t_{\mathrm{fine}}-t_{\mathrm{inizio}}+\Delta t,
-\qquad \Delta t=3\,\mathrm{h}.
-\end{equation}
-La dispersione dello score viene riportata per cluster e per evento, come media e massimo sulle celle; non partecipa alla soglia, alla morfologia o ai collegamenti. L'unificazione retrospettiva degli eventi definisce un'analisi successiva al periodo osservato, non un sistema di allerta in tempo reale.

@@ -1,5 +1,5 @@
 % Ordine in cui i passaggi del detector agiscono su un istante, dai campi ERA5
-% agli eventi geografici. Per ogni quantità stimata è indicato su quali anni.
+% alla segnalazione. Per ogni quantità stimata è indicato su quali anni.
 % Figura originale della tesi.
 \begin{tikzpicture}[font=\footnotesize,
         fase/.style={draw=black!70,rounded corners=2pt,fill=black!4,align=center,
@@ -10,16 +10,14 @@
     \node[fase] (stagionale) at (3.45,0) {\textbf{Normalizzazione}\\\textbf{stagionale}\\[2pt]\scriptsize cella, ora,\\giorno $\pm15$\\\emph{addestramento}};
     \node[fase] (generatore) at (6.9,0) {\textbf{Generatore}\\[2pt]\scriptsize campo stimato\\20 estrazioni Monte Carlo};
     \node[fase] (errore) at (10.35,0) {\textbf{Errore pesato}\\[2pt]\scriptsize pesi $w_f$ per variabile,\\media sulla patch $3\times3$\\\emph{addestramento}};
-    % Seconda riga, da destra a sinistra: dallo score agli eventi.
+    % Seconda riga, da destra a sinistra: dallo score alla soglia.
     \node[fase] (score) at (10.35,-2.6) {\textbf{Score di}\\\textbf{ricostruzione}\\[2pt]\scriptsize media sulle estrazioni};
     \node[fase] (climatologia) at (6.9,-2.6) {\textbf{Climatologia}\\\textbf{dello score}\\[2pt]\scriptsize cella, ora,\\giorno $\pm15$\\\emph{validazione}};
     \node[fase] (soglia) at (3.45,-2.6) {\textbf{Soglia}\\[2pt]\scriptsize 95-esimo\\percentile\\\emph{validazione}};
-    \node[fase] (eventi) at (0,-2.6) {\textbf{Eventi}\\\textbf{geografici}\\[2pt]\scriptsize cluster collegati\\nel tempo};
     \draw[freccia] (era5) -- (stagionale);
     \draw[freccia] (stagionale) -- (generatore);
     \draw[freccia] (generatore) -- (errore);
     \draw[freccia] (errore) -- (score);
     \draw[freccia] (score) -- (climatologia);
     \draw[freccia] (climatologia) -- (soglia);
-    \draw[freccia] (soglia) -- (eventi);
 \end{tikzpicture}
