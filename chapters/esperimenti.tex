@@ -29,7 +29,7 @@ La configurazione del detector è fissata, a eccezione di quattro iperparametri 
         Dropout & 0.2, nel generatore e nel discriminatore & \ref{sec:score-dropout-montecarlo} \\
         Estrazioni Monte Carlo negli score & 20 & \ref{sec:score-dropout-montecarlo} \\
         Ottimizzatore & Adam, $\beta_1=0.9$, $\beta_2=0.999$, tasso costante & \ref{sec:stgan} \\
-        Epoche & 6 & -- \\
+        Epoche & 6, come nel codice degli autori di STGAN & -- \\
         Precisione & BF16, pesi in FP32 & -- \\
         \addlinespace
         Tasso di apprendimento del generatore & da $10^{-4}$ a $3\cdot10^{-3}$, logaritmica; scelto $4.93\cdot10^{-4}$ & \ref{sec:stgan} \\
@@ -40,7 +40,7 @@ La configurazione del detector è fissata, a eccezione di quattro iperparametri 
     \end{tabular}
 \end{table}
 
-\paragraph{Obiettivo.} L'obiettivo della ricerca è la distanza MMD fra campi osservati e ricostruiti nello spazio delle componenti principali (Sezione~\ref{sec:monitoraggio-senza-etichette}), mediata sulle ultime cinque epoche, da minimizzare. Ogni esecuzione è addestrata e misurata sulla validazione, senza calcolare score sul test. Ogni configurazione è addestrata una sola volta, con lo stesso seme per tutte le esecuzioni. Le esecuzioni interrotte perché una loss è diventata non finita non hanno un obiettivo e sono escluse dalla scelta.
+\paragraph{Obiettivo.} L'obiettivo della ricerca è la distanza MMD fra campi osservati e ricostruiti nello spazio delle componenti principali (Sezione~\ref{sec:monitoraggio-senza-etichette}), mediata sulle ultime cinque epoche, da minimizzare: la prima epoca è esclusa perché, all'inizio dell'addestramento, è poco indicativa della configurazione. Ogni esecuzione è addestrata e misurata sulla validazione, senza calcolare score sul test. Ogni configurazione è addestrata una sola volta, con lo stesso seme per tutte le esecuzioni. Le esecuzioni interrotte perché una loss è diventata non finita non hanno un obiettivo e sono escluse dalla scelta.
 
 \paragraph{Due fasi.} La ricerca si è svolta in due fasi. La prima ha usato il controllore bayesiano di Weights \& Biases, che stima con un processo gaussiano l'obiettivo in funzione degli iperparametri. Il suo modello usa però una sola scala di lunghezza per tutti gli iperparametri e non stima il rumore dell'obiettivo; nelle esecuzioni di questo lavoro, su un obiettivo rumoroso, il suo adattamento si fermava al limite dell'intervallo e le proposte erano di fatto casuali. La seconda fase usa la libreria Optuna, con un processo gaussiano che stima una scala per ogni iperparametro e il rumore dell'obiettivo, e riparte dalle esecuzioni della prima fase con lo stesso seme. La ricerca si ferma quando un numero fissato di prove consecutive non abbassa il miglior obiettivo di almeno una soglia prefissata, oppure dopo un numero massimo di prove. È scelta la configurazione con l'obiettivo più basso fra le esecuzioni completate. Le esecuzioni, il loro andamento e la configurazione scelta sono riportati nella Sezione~\ref{sec:ris-ricerca}.
 
