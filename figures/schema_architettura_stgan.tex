@@ -17,7 +17,7 @@
     \node[ingresso] (gr) at (0,1.6) {Finestra recente\\\scriptsize $R=16$ campi};
     \node[ingresso] (gt) at (0,0) {Trend per cella\\\scriptsize 56 passi};
     \node[ingresso] (gc) at (0,-1.6) {Calendario\\\scriptsize 4 valori per cella};
-    \node[modulo] (gconv) at (3.3,1.6) {ConvGRU\\\scriptsize 2 strati, 32 canali};
+    \node[modulo] (gconv) at (3.3,1.6) {ConvGRU\\\scriptsize 2 strati, 32 canali,\\maschera $M$};
     \node[modulo] (glstm) at (3.3,0) {LSTM\\\scriptsize 2 strati, 64};
     \node[modulo] (glin) at (3.3,-1.6) {Lineare e ReLU\\\scriptsize 64};
     \node[unione,minimum height=4.3cm] (gcat) at (6.6,0) {};
@@ -48,4 +48,7 @@
         \draw[freccia] (dcat) -- (dhid);
         \draw[freccia] (dhid) -- node[drop] {dropout} (dout);
     \end{scope}
+    % The estimated field reaches the current patch of the discriminator, without the dropout of G.
+    \draw[freccia,dashed] (gout.south) -- ++(0,-2.75) -| (-1.62,-6.45) -- (dc.west);
+    \node[font=\scriptsize,above] at (5.5,-2.75) {campo stimato, senza dropout};
 \end{tikzpicture}
