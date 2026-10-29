@@ -32,10 +32,10 @@ La configurazione del detector è fissata, a eccezione di quattro iperparametri 
         Epoche & 6, come nel codice degli autori di STGAN & -- \\
         Precisione & BF16, pesi in FP32 & -- \\
         \addlinespace
-        Tasso di apprendimento del generatore & da $10^{-4}$ a $3\cdot10^{-3}$, logaritmica; scelto $4.93\cdot10^{-4}$ & \ref{sec:stgan} \\
-        Rapporto fra i tassi del discriminatore e del generatore & da 0.25 a 4, logaritmica; scelto 0.951 & \ref{sec:stgan} \\
-        Peso di ricostruzione $\lambda_G$ & da 50 a 2000, logaritmica; scelto 176.6 & \ref{sec:stgan} \\
-        Aggiornamenti per batch, $n_D{:}n_G$ & 1:1, 2:1 oppure 1:2; scelto 1:1 & \ref{sec:stgan} \\
+        Tasso di apprendimento del generatore & da $10^{-4}$ a $3\cdot10^{-3}$, logaritmica; scelto \provv{$4.93\cdot10^{-4}$} & \ref{sec:stgan} \\
+        Rapporto fra i tassi del discriminatore e del generatore & da 0.25 a 4, logaritmica; scelto \provv{0.951} & \ref{sec:stgan} \\
+        Peso di ricostruzione $\lambda_G$ & da 50 a 2000, logaritmica; scelto \provv{176.6} & \ref{sec:stgan} \\
+        Aggiornamenti per batch, $n_D{:}n_G$ & 1:1, 2:1 oppure 1:2; scelto \provv{1:1} & \ref{sec:stgan} \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -57,8 +57,9 @@ La configurazione del detector è fissata, a eccezione di quattro iperparametri 
 % Run scelta finora: good-sweep-2 (W&B 5qlj2lwg, progetto physiq_pv), MMD media
 % 0.004446, scelta il 19 ottobre 2026 fra le 5 esecuzioni completate allora; al 29
 % ottobre la migliore è serene-sweep-14 (0.00327): la scelta finale va rivista
-% quando Optuna si ferma. Pesi: model_epoch_6.pt. Ultima epoca come nel codice
-% degli autori: tester.py carica G_<epoch>.pth con epoch=6 (main.py), letto il 21
+% quando Optuna si ferma; i quattro valori scelti della Tabella 5.1 sono marcati
+% \provv e vanno sostituiti con quelli della run migliore. Pesi: model_epoch_6.pt.
+% Ultima epoca come nel codice degli autori: tester.py carica G_<epoch>.pth con epoch=6 (main.py), letto il 21
 % ottobre 2026. Optuna e W&B non sono citati: aggiungere i riferimenti solo dopo averli
 % letti.
 
