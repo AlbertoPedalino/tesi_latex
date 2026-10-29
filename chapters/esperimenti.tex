@@ -1,61 +1,80 @@
 \chapter{Esperimenti}
 \label{chap:esperimenti}
 
-Il capitolo descrive come il detector del Capitolo~\ref{chap:metodologia} è addestrato e valutato sui campi ERA5: la configurazione di addestramento e la ricerca dei parametri, e il protocollo di valutazione. I risultati sono nel Capitolo~\ref{chap:risultati}.
+Il capitolo descrive come il detector del Capitolo~\ref{chap:metodologia} è addestrato e valutato sui campi ERA5. La Sezione~\ref{sec:exp-configurazioni} riporta la configurazione fissata e la ricerca dei quattro iperparametri che regolano l'equilibrio fra generatore e discriminatore; la Sezione~\ref{sec:exp-protocollo} descrive il protocollo di valutazione: che cosa si stima sugli anni di validazione e che cosa si valuta sul test. I risultati, compresi quelli della ricerca, sono nel Capitolo~\ref{chap:risultati}.
 
-\section{Configurazioni di addestramento}
+\section{Configurazione e ricerca degli iperparametri}
 \label{sec:exp-configurazioni}
 
-La configurazione del detector è fissata, a eccezione dei quattro parametri che regolano l'equilibrio fra generatore e discriminatore, scelti con una ricerca bayesiana. La Tabella~\ref{tab:configurazioni} riporta gli uni e gli altri.
+La configurazione del detector è fissata, a eccezione di quattro iperparametri che regolano l'equilibrio fra generatore e discriminatore, scelti con una ricerca bayesiana. La Tabella~\ref{tab:configurazioni} riporta gli uni e gli altri, con la sezione del Capitolo~\ref{chap:metodologia} che li descrive.
 
-\begin{table}[htbp]
+\begin{table}[t]
     \centering
     \footnotesize
-    \caption{Configurazione del detector su ERA5. Nella parte superiore i valori fissati, nella parte inferiore i parametri della ricerca, con l'intervallo esplorato e il valore della configurazione scelta; la distribuzione logaritmica rende equidistanti, per esempio, i rapporti 0.5 e 2.}
+    \caption{Configurazione del detector su ERA5. Nella parte superiore i valori fissati, nella parte inferiore gli iperparametri della ricerca, con l'intervallo esplorato e il valore della configurazione scelta. Nella distribuzione logaritmica, per esempio, i rapporti 0.5 e 2 sono equidistanti da 1.}
     \label{tab:configurazioni}
     \vspace{0.6em}
-    \begin{tabular}{@{}L{0.44}L{0.48}@{}}
+    \begin{tabular}{@{}L{0.36}L{0.48}L{0.09}@{}}
         \toprule
-        Elemento & Valore \\
+        Elemento & Valore & Sezione \\
         \midrule
-        Anni di addestramento, validazione, test & 1980--1999, 2000--2004, 2005--2025 \\
-        Unità del campione e batch & Campo intero, un istante per batch \\
-        Generatore & ConvGRU, due strati da 32 canali, kernel $3\times3$ \\
-        Finestra recente e trend & 16 e 56 passi, cioè 48 e 168 ore \\
-        Codifica temporale & Ciclica, per cella \\
-        Normalizzazione & Stagionale, con retta per tre variabili, poi min--max \\
-        Pesi delle variabili & Inversi della variazione su 24 ore \\
-        Dropout & 0.2, nel generatore e nel discriminatore \\
-        Estrazioni Monte Carlo negli score & 20 \\
-        Epoche & 6 \\
-        Precisione & BF16 \\
+        Anni di addestramento, validazione, test & 1980--1999, 2000--2004, 2005--2025 & \ref{sec:dati-split} \\
+        Unità del campione e batch & Campo intero, un istante per batch & \ref{sec:stgan-convgru} \\
+        Generatore & ConvGRU a due strati da 32 canali, kernel $3\times3$; LSTM del trend a due strati da 64 & \ref{sec:stgan-convgru} \\
+        Discriminatore & Patch $3\times3$; ConvGRU a due strati da 32 canali; strato nascosto da 64 & \ref{sec:stgan} \\
+        Finestra recente e trend & 16 e 56 passi, cioè 48 e 168 ore & \ref{sec:ingresso-normalizzazione-era5} \\
+        Codifica temporale & Ora solare locale e posizione nell'anno, per cella & \ref{sec:ingresso-normalizzazione-era5} \\
+        Normalizzazione dell'ingresso & Rispetto al normale di cella, giorno e ora; retta nel tempo tolta a tre variabili; poi min--max & \ref{sec:ingresso-normalizzazione-era5} \\
+        Pesi delle variabili & Inversi della variazione quadratica media su 24 ore & \ref{sec:pesi-variabili-ricostruzione} \\
+        Dropout & 0.2, nel generatore e nel discriminatore & \ref{sec:score-dropout-montecarlo} \\
+        Estrazioni Monte Carlo negli score & 20 & \ref{sec:score-dropout-montecarlo} \\
+        Ottimizzatore & Adam, $\beta_1=0.9$, $\beta_2=0.999$, tasso costante & \ref{sec:stgan} \\
+        Epoche & 6 & -- \\
+        Precisione & BF16, pesi in FP32 & -- \\
         \addlinespace
-        Tasso di apprendimento del generatore & da $10^{-4}$ a $3\cdot10^{-3}$, logaritmica; scelto $4.93\cdot10^{-4}$ \\
-        Rapporto fra i tassi del discriminatore e del generatore & da 0.25 a 4, logaritmica; scelto 0.951 \\
-        Peso di ricostruzione $\lambda_G$ & da 50 a 2000, logaritmica; scelto 176.6 \\
-        Aggiornamenti per batch, $n_D{:}n_G$ & 1:1, 2:1 oppure 1:2; scelto 1:1 \\
+        Tasso di apprendimento del generatore & da $10^{-4}$ a $3\cdot10^{-3}$, logaritmica; scelto $4.93\cdot10^{-4}$ & \ref{sec:stgan} \\
+        Rapporto fra i tassi del discriminatore e del generatore & da 0.25 a 4, logaritmica; scelto 0.951 & \ref{sec:stgan} \\
+        Peso di ricostruzione $\lambda_G$ & da 50 a 2000, logaritmica; scelto 176.6 & \ref{sec:stgan} \\
+        Aggiornamenti per batch, $n_D{:}n_G$ & 1:1, 2:1 oppure 1:2; scelto 1:1 & \ref{sec:stgan} \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-L'obiettivo della ricerca è la media delle ultime cinque epoche della distanza fra campi osservati e ricostruiti della Sezione~\ref{sec:monitoraggio-senza-etichette}, da minimizzare. Ogni esecuzione della ricerca è addestrata e misurata sulla validazione, senza calcolare gli score sul test. La ricerca non ha un numero di esecuzioni fissato: le esecuzioni si succedono finché la ricerca non viene fermata. È scelta la configurazione con l'obiettivo più basso fra le esecuzioni completate al momento della scelta. Alcune esecuzioni si sono interrotte prima della fine perché una loss è diventata non finita: il controllo che le ferma interviene prima che vengano salvati score, e queste esecuzioni, prive di un obiettivo completo, non entrano nella scelta. Del modello scelto si usano i pesi dell'ultima epoca, come nel codice degli autori, che salva i pesi a ogni epoca e valuta quelli dell'ultima~\cite{deng2022stgan}; nessuna epoca è scelta in base al risultato. Gli score di test e di validazione della configurazione scelta sono calcolati in seguito, a partire da quei pesi. Un'epoca comprende 58384 aggiornamenti per rete, cioè gli istanti di addestramento meno i 56 di contesto del trend, e dura circa 2.4 ore.
+\paragraph{Obiettivo.} L'obiettivo della ricerca è la distanza MMD fra campi osservati e ricostruiti nello spazio delle componenti principali (Sezione~\ref{sec:monitoraggio-senza-etichette}), mediata sulle ultime cinque epoche, da minimizzare. Ogni esecuzione è addestrata e misurata sulla validazione, senza calcolare score sul test. Ogni configurazione è addestrata una sola volta, con lo stesso seme per tutte le esecuzioni. Le esecuzioni interrotte perché una loss è diventata non finita non hanno un obiettivo e sono escluse dalla scelta.
 
-I modelli sono implementati in PyTorch~\cite{paszke2019pytorch}. I dati sono letti con xarray~\cite{hoyer2017xarray} dai file mensili in formato NetCDF~\cite{rew1990netcdf}; le tabelle di score sono elaborate con pandas~\cite{mckinney2010pandas}; le componenti connesse degli eventi del Capitolo~\ref{chap:risultati} usano SciPy~\cite{virtanen2020scipy}. Tutti i modelli sono addestrati su una scheda NVIDIA RTX PRO 6000 Blackwell.
-% Ricerca: sweep W&B 913ez3rt, creato il 16 ottobre 2026 da
+\paragraph{Due fasi.} La ricerca si è svolta in due fasi. La prima ha usato il controllore bayesiano di Weights \& Biases, che stima con un processo gaussiano l'obiettivo in funzione degli iperparametri. Il suo modello usa però una sola scala di lunghezza per tutti gli iperparametri e non stima il rumore dell'obiettivo; nelle esecuzioni di questo lavoro, su un obiettivo rumoroso, il suo adattamento si fermava al limite dell'intervallo e le proposte erano di fatto casuali. La seconda fase usa la libreria Optuna, con un processo gaussiano che stima una scala per ogni iperparametro e il rumore dell'obiettivo, e riparte dalle esecuzioni della prima fase con lo stesso seme. La ricerca si ferma quando un numero fissato di prove consecutive non abbassa il miglior obiettivo di almeno una soglia prefissata, oppure dopo un numero massimo di prove. È scelta la configurazione con l'obiettivo più basso fra le esecuzioni completate. Le esecuzioni, il loro andamento e la configurazione scelta sono riportati nella Sezione~\ref{sec:ris-ricerca}.
+
+\paragraph{Pesi e calcolo.} Del modello scelto si usano i pesi dell'ultima epoca, come nel codice degli autori, che salva i pesi a ogni epoca e valuta quelli dell'ultima~\cite{deng2022stgan}: nessuna epoca è scelta in base al risultato. Un'epoca comprende 58384 aggiornamenti per rete, cioè gli istanti di addestramento meno i 56 di contesto del trend, e dura circa 2.4 ore, quindi un'esecuzione completa circa 14 ore e mezza. I modelli sono implementati in PyTorch~\cite{paszke2019pytorch}. I dati sono letti con xarray~\cite{hoyer2017xarray} dai file mensili in formato NetCDF~\cite{rew1990netcdf}; le tabelle di score sono elaborate con pandas~\cite{mckinney2010pandas}; il Capitolo~\ref{chap:risultati} usa anche SciPy~\cite{virtanen2020scipy}. Tutti i modelli sono addestrati su una scheda NVIDIA RTX PRO 6000 Blackwell.
+% Ricerca, prima fase: sweep W&B 913ez3rt, creato il 16 ottobre 2026 da
 % sweeps/stgan_era5_normal_validation.yaml (sostituisce hk81wr16, senza dropout
-% nel discriminatore). Durata di un'epoca: 7.1 minuti ogni 2919 batch nel log
-% dell'agente. Scheda grafica: stesso server della tesi di Stiven Gjinaj.
-% Run scelta: good-sweep-2 (W&B 5qlj2lwg, progetto physiq_pv), MMD media 0.004446,
-% scelta il 19 ottobre 2026 fra le 5 esecuzioni completate; valori dei parametri
-% dalla pagina W&B della run. Pesi: model_epoch_6.pt. Ultima epoca come nel codice
+% nel discriminatore). Seconda fase: scripts/optuna_era5_stgan.py, studio era5-gan
+% (outputs/optuna/era5-gan.db), GPSampler con deterministic_objective=False, 21
+% esecuzioni dello sweep importate. Arresto al 29 ottobre 2026: --patience 4,
+% --max-new 10, --min-improvement 0.0004 (rumore stimato dal processo 0.00045);
+% l'autore pensa di rilanciare con pazienza 8 e massimo 20. Durata di un'epoca:
+% 7.1 minuti ogni 2919 batch nel log dell'agente. Scheda grafica: stesso server
+% della tesi di Stiven Gjinaj.
+% Run scelta finora: good-sweep-2 (W&B 5qlj2lwg, progetto physiq_pv), MMD media
+% 0.004446, scelta il 19 ottobre 2026 fra le 5 esecuzioni completate allora; al 29
+% ottobre la migliore è serene-sweep-14 (0.00327): la scelta finale va rivista
+% quando Optuna si ferma. Pesi: model_epoch_6.pt. Ultima epoca come nel codice
 % degli autori: tester.py carica G_<epoch>.pth con epoch=6 (main.py), letto il 21
-% ottobre 2026. Lo sweep non ha run_cap: 8 esecuzioni al 21 ottobre.
-% ATTENZIONE: i numeri provvisori dei Risultati vengono ancora dalla run
-% ..._wdaily_seasonal_trend_ep3. Da sostituire con quelli di good-sweep-2.
+% ottobre 2026. Optuna e W&B non sono citati: aggiungere i riferimenti solo dopo averli
+% letti.
 
 \section{Protocollo di valutazione}
 \label{sec:exp-protocollo}
 
-Gli score della configurazione scelta sono calcolati sugli anni di validazione 2000--2004 e di test 2005--2025, su tutti gli istanti e tutte le 10611 celle, con le 20 estrazioni Monte Carlo della Sezione~\ref{sec:score-dropout-montecarlo}; in entrambi i periodi le finestre di ingresso contengono la storia reale. Dalla stessa esecuzione sono ricavati lo score combinato e lo score di ricostruzione. Il protocollo separa ciò che si stima da ciò che si valuta. Le quantità che descrivono il comportamento abituale degli score, cioè la climatologia, gli estremi dello score combinato e le soglie, sono stimate sugli anni di validazione e restano fisse per il test. La soglia è il 95-esimo percentile degli score di validazione; sul test segnala una quota che può scostarsi dal 5\%, ed è riportata nei risultati. Le analisi principali sono ripetute con il 99-esimo percentile, per verificare quanto le conclusioni dipendano dalla soglia (Sezione~\ref{sec:ris-soglia}). Non esistono etichette di anomalia: il comportamento degli score e il loro confronto con altri rilevatori sono descritti nel Capitolo~\ref{chap:risultati}.
+\paragraph{Che cosa si calcola.} Gli score della configurazione scelta sono calcolati sugli anni di validazione 2000--2004 e di test 2005--2025, su tutti gli istanti e tutte le celle: $14616\times10611$ coppie istante--cella sulla validazione e $61360\times10611$ sul test, ciascuna con le 20 estrazioni Monte Carlo della Sezione~\ref{sec:score-dropout-montecarlo}. In entrambi i periodi le finestre di ingresso contengono la storia reale, compresi i valori insoliti, e i primi istanti prendono il contesto dal periodo precedente (Sezione~\ref{sec:dati-split}).
 
-\paragraph{Componenti dello score.} Lo score dell'articolo combina l'errore di ricostruzione del generatore e il giudizio del discriminatore (Sezione~\ref{sec:score-dropout-montecarlo}). Quale delle due componenti usare non è fissato in anticipo con un riferimento esterno: le due componenti, prima e dopo la normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}), sono calcolate dalla stessa esecuzione, e il loro comportamento nello spazio e nel tempo è studiato nel Capitolo~\ref{chap:risultati}. Gli anni di test non intervengono nell'addestramento né nella scelta degli iperparametri, fatta sulla validazione con la distanza fra campi osservati e ricostruiti (Sezioni~\ref{sec:monitoraggio-senza-etichette} e~\ref{sec:exp-configurazioni}).
+\paragraph{Che cosa si stima sulla validazione.} Le quantità che descrivono il comportamento abituale degli score sono stimate sugli anni di validazione e restano fisse per il test: la climatologia degli score (Sezione~\ref{sec:normalizzazione-climatologica-score}) e la soglia. La soglia di uno score è il 95-esimo percentile dello stesso score sugli anni di validazione,
+\begin{equation}
+\tau=Q_{0.95}\bigl\{\zeta_{tn}\,:\,t\in\text{validazione},\;n=1,\dots,N\bigr\},
+\label{eq:soglia}
+\end{equation}
+calcolato su tutti i valori, una soglia per ciascuno score confrontato. Sul test segnala una quota che può scostarsi dal 5\%, ed è riportata nei risultati. Le analisi principali sono ripetute con il 99-esimo percentile, per verificare quanto le conclusioni dipendano dalla soglia (Sezione~\ref{sec:ris-soglia}). Gli estremi con cui le due componenti dello score combinato sono riportate su una scala comune vengono invece dal passaggio di validazione che chiude l'addestramento, con la storia in cui i valori insoliti sono sostituiti dal normale (Sezioni~\ref{sec:maschere-validazione} e~\ref{sec:score-dropout-montecarlo}).
+% La soglia è letta su un istante ogni dieci della validazione (THRESHOLD_STRIDE
+% in scripts/check_era5_dust_lead.py), da tutte le celle, senza escludere i valori
+% segnati come insoliti.
+
+\paragraph{Score usato e termini di confronto.} Lo score del detector è lo score di ricostruzione $\zeta$ dell'equazione~\eqref{eq:score-finale}. Dalla stessa esecuzione sono calcolati anche la componente del discriminatore e lo score combinato dell'articolo: la scelta di $\zeta$ è motivata nel Capitolo~\ref{chap:risultati} dal comportamento delle due componenti nello spazio e nel tempo (Sezioni~\ref{sec:ris-correlazione-spaziale}--\ref{sec:ris-g-d}). Non esistono etichette di anomalia: gli anni di test non intervengono né nell'addestramento né nella scelta della configurazione, e il comportamento degli score e il loro confronto con altri metodi sono descritti nel Capitolo~\ref{chap:risultati}.
