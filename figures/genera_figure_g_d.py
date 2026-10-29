@@ -2,9 +2,10 @@
 together, and the two outputs of D that make its score.
 
 Run from the thesis folder. First, once, gather the small data from the files downloaded from the server
-(outputs/analisi_good2/ of the code repository: the folders correlazioni_g_d and correlazioni_g_dterms written by
-scripts/check_era5_score_correlation.py, zone_g_dterms_soglia_val.csv by scripts/check_era5_event_zones.py, and
-mappe_istanti.npz with G, D and D(real) at three timestamps of the scored test run):
+(the output folder of scripts/run_era5_score_behaviour.sh in the code repository: the folders correlazioni_g_d
+and correlazioni_g_dterms written by scripts/check_era5_score_correlation.py, zone_g_dterms_5pc.csv by
+scripts/check_era5_event_zones.py, and mappe_istanti.npz with G, D and D(real) at two timestamps of the scored run,
+first the typical one, then the one with the highest mean G):
     python figures/genera_figure_g_d.py --prepare <folder with the downloaded files>
 which writes figures/dati/era5_g_d.npz. Then:
     python figures/genera_figure_g_d.py [--coastline <ne_50m_coastline.geojson>]
@@ -13,7 +14,7 @@ era5_d_termini_correlazione_temporale.pdf, era5_d_termini_zone.pdf, era5_zone_sc
 zones) and era5_d_termini_mappa.pdf. The coastline,
 from Natural Earth (public domain), is optional and not kept in the repository.
 
-Run: good-sweep-2, test years 2005-2025. D's score is D(real) - D(generated), D's outputs on the observed and on the
+Run: good-sweep-2, validation years 2000-2004. D's score is D(real) - D(generated), D's outputs on the observed and on the
 reconstructed patch (1 = judged generated); D(generated) is read as D(real) minus D's score.
 """
 import argparse
@@ -35,7 +36,6 @@ BLUE, ORANGE, AQUA, YELLOW = "#2a78d6", "#eb6834", "#1baf7a", "#eda100"
 TEXT, MUTED, GRID = "#0b0b0b", "#52514e", "#e2e1dc"
 COAST = "#3d3c39"
 ROLLING_DAYS = 30
-TIMES = ("2014-08-08 03:00:00", "2024-08-30 12:00:00")  # a typical timestamp; the highest mean G of the test
 LIMIT = 0.5  # temporal correlations drawn on [-LIMIT, LIMIT]
 
 plt.rcParams.update({
@@ -59,19 +59,21 @@ def prepare(folder):
             np.load(folder / "correlazioni_g_dterms" / "temporal_correlation.npz") as terms, \
             np.load(folder / "mappe_istanti.npz") as maps:
         grid = json.loads(str(maps["grid"]))
-        times = [str(value) for value in maps["times"]]
-        chosen = [times.index(value) for value in TIMES]
-        zones = pd.read_csv(folder / "zone_g_dterms_soglia_val.csv")
+        chosen = [0, 1]  # the typical timestamp, then the one with the highest mean G
+        times = np.array([str(value) for value in maps["times"]])[chosen]
+        zones = pd.read_csv(folder / "zone_g_dterms_5pc.csv")
         everything = zones[(zones["type"] == "all") & (zones["size"] == "all")].iloc[0]
         far = zones[zones["type"].str.startswith("far")].iloc[0]
         names = ("G", "Dreale", "Dricostruito", "D")
-        zone_table = np.array([[everything[f"{name} core percentile"], everything[f"{name} edge percentile"],
-                                far[f"{name} core percentile"]] for name in names])
+        written = {"G": "G", "Dreale": "D_reale", "Dricostruito": "D_generato", "D": "D"}  # names in the files
+        zone_table = np.array([[everything[f"{written[name]} core percentile"],
+                                everything[f"{written[name]} edge percentile"],
+                                far[f"{written[name]} core percentile"]] for name in names])
         np.savez_compressed(
             DATA, days=daily.index.values.astype("datetime64[D]"), spearman=daily["G - D spearman"].to_numpy(),
             pearson=daily["G - D pearson"].to_numpy(), temporal_g_d=main["G_-_D_spearman"],
-            temporal_g_real=terms["G_-_Dreale_spearman"], temporal_g_generated=terms["G_-_Dricostruito_spearman"],
-            times=np.array(TIMES), G=maps["G"][chosen], D=maps["D"][chosen], Dreale=maps["Dreale"][chosen],
+            temporal_g_real=terms["G_-_D_reale_spearman"], temporal_g_generated=terms["G_-_D_generato_spearman"],
+            times=times, G=maps["G"][chosen], D=maps["D"][chosen], Dreale=maps["Dreale"][chosen],
             rows=np.asarray(grid["rows"]), cols=np.asarray(grid["cols"]), latitudes=np.asarray(grid["latitudes"]),
             longitudes=np.asarray(grid["longitudes"]), zones=zone_table, zone_scores=np.array(names),
             events=int(everything["events"]))
@@ -258,7 +260,7 @@ def zones_scheme_figure():
 
 
 def terms_map_figure(data, coastline):
-    row = 1  # the highest mean G of the test
+    row = 1  # the highest mean G of the period
     fields = (("G", "G (alto = più insolito)", data["G"][row]),
               ("Dreale", f"{REAL} (1 = giudicato generato)", data["Dreale"][row]),
               ("Dricostruito", f"{GENERATED} (1 = giudicato generato)", data["Dreale"][row] - data["D"][row]),

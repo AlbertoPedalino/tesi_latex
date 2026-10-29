@@ -1,10 +1,10 @@
 """Generate the figure of the climatology of the score: where and when the generator's score (G) flags, without
 and with the climatology of the score.
 
-Share of the flagged values of the score, by latitude band and calendar month, on the test years
-2005-2025 of good-sweep-2 (figures/dati/era5_g_luogo.json, from scripts/check_era5_score_by_place.py of the code
+Share of the flagged values of the score, by latitude band and calendar month, on the validation years
+2000-2004 of good-sweep-2 (figures/dati/era5_g_luogo.json, from scripts/check_era5_score_by_place.py of the code
 repository). The threshold of each score is its 95th percentile over the validation years, as everywhere in
-the thesis; on the test both scores flag a little more than 5% on average.
+the thesis, so that both scores flag 5% on average.
 
 Run from the thesis folder:
     python figures/genera_figura_g_luogo.py
