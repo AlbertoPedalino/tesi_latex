@@ -1,12 +1,12 @@
 \chapter{Dati e preprocessing}
 \label{chap:dati}
 
-Il capitolo descrive i campi meteorologici su cui il detector è addestrato e valutato: le variabili della rianalisi ERA5, il dominio e la cadenza temporale, la preparazione dei dati e la loro suddivisione in anni di addestramento, di validazione e di test. L'ultima sezione descrive i dati PVGIS da cui il lavoro è partito. Le trasformazioni che dipendono dal modello, come la normalizzazione stagionale, sono descritte nel Capitolo~\ref{chap:metodologia}.
+Il capitolo descrive i campi meteorologici su cui il detector è addestrato e valutato: le variabili della rianalisi ERA5, il dominio e la cadenza temporale, la preparazione dei dati e la loro suddivisione in anni di addestramento, di validazione e di test. L'ultima sezione descrive i dati PVGIS da cui il lavoro è partito: serie orarie di poche località, con irradianza, temperatura e vento soltanto, che non permettono di risalire alla condizione meteorologica che le ha prodotte, e per questo il lavoro è passato ai campi ERA5. Le trasformazioni che dipendono dal modello, come la normalizzazione stagionale, sono descritte nel Capitolo~\ref{chap:metodologia}.
 
-\section{Campi ERA5, dominio e celle valide}
+\section{Campi ERA5 e dominio}
 \label{sec:dati-era5}
 
-I dati della rianalisi ERA5~\cite{hersbach2020era5} provengono da due prodotti distinti: variabili a livello singolo e variabili su livelli di pressione, di cui è usato soltanto il livello di 850 hPa. Le variabili sono quindici. Le dieci variabili a livello singolo sono temperatura a due metri, componenti orizzontali del vento a dieci metri, pressione al livello medio del mare, precipitazione totale, copertura nuvolosa totale, radiazione solare discendente alla superficie, umidità volumetrica del primo strato del suolo, velocità d'attrito e altezza dello strato limite. Le altre cinque sono le componenti orizzontali del vento, la velocità verticale, la temperatura e l'umidità specifica a 850 hPa. La Tabella~\ref{tab:variabili-era5} le elenca con le unità di ERA5, che non vengono convertite.
+I dati della rianalisi ERA5~\cite{hersbach2020era5} provengono da due prodotti distinti: variabili a livello singolo e variabili su livelli di pressione, di cui è usato soltanto il livello di 850 hPa. Le variabili sono quindici, scelte per descrivere le perturbazioni seguendo le variabili usate comunemente in climatologia. Si possono raggruppare per ruolo: la temperatura, a due metri e a 850~hPa, e l'umidità specifica a 850~hPa descrivono lo stato termodinamico; la pressione al livello del mare, il vento a dieci metri e a 850~hPa e la velocità verticale descrivono la circolazione; la copertura nuvolosa, la radiazione solare alla superficie e la precipitazione descrivono nubi e fenomeni associati; l'umidità del primo strato del suolo, la velocità d'attrito e l'altezza dello strato limite descrivono la superficie e lo strato più basso dell'atmosfera. La Tabella~\ref{tab:variabili-era5} le elenca con le unità di ERA5, che non vengono convertite.
 
 \begin{table}[htbp]
     \centering
@@ -14,7 +14,7 @@ I dati della rianalisi ERA5~\cite{hersbach2020era5} provengono da due prodotti d
     \caption{Le quindici variabili ERA5, con la sigla e l'unità del dataset. Precipitazione e radiazione sono accumuli di un'ora; le altre variabili sono istantanee.}
     \label{tab:variabili-era5}
     \vspace{0.6em}
-    \begin{tabular}{@{}L{0.46}L{0.10}L{0.16}L{0.14}@{}}
+    \begin{tabular}{@{}L{0.52}L{0.09}L{0.14}L{0.14}@{}}
         \toprule
         Variabile & Sigla & Livello & Unità \\
         \midrule
@@ -38,14 +38,14 @@ I dati della rianalisi ERA5~\cite{hersbach2020era5} provengono da due prodotti d
     \end{tabular}
 \end{table}
 
-I dati coprono gli anni dal 1980 al 2025. Sono selezionati gli istanti UTC 00, 03, 06, 09, 12, 15, 18 e 21, su una griglia di $0.5^\circ\times0.5^\circ$ nell'area compresa fra $20^\circ$ e $60^\circ$ di latitudine nord e fra $15^\circ$ di longitudine ovest e $50^\circ$ di longitudine est (Figura~\ref{fig:dominio-era5}). Il dominio comprende l'Europa, il Mediterraneo e parte dell'Africa settentrionale e del Medio Oriente. Il campionamento ogni tre ore è una selezione di tempi validi, non un'aggregazione temporale: precipitazione e radiazione conservano gli accumuli di un'ora associati ai tempi selezionati, senza somme triorarie o conversioni locali delle unità.
+I dati coprono gli anni dal 1980 al 2025. Sono selezionati gli istanti UTC 00, 03, 06, 09, 12, 15, 18 e 21, su una griglia di $0.5^\circ\times0.5^\circ$ nell'area compresa fra $20^\circ$ e $60^\circ$ di latitudine nord e fra $15^\circ$ di longitudine ovest e $50^\circ$ di longitudine est (Figura~\ref{fig:dominio-era5}). Il dominio comprende l'Europa, il Mediterraneo e parte dell'Africa settentrionale e del Medio Oriente. La griglia di $0.5^\circ$ e la cadenza di tre ore sono più rade di quelle originali di ERA5, di $0.25^\circ$ e di un'ora: sono scelte per contenere la memoria occupata e i tempi di calcolo. Il campionamento ogni tre ore è una selezione di tempi validi, non un'aggregazione temporale: precipitazione e radiazione conservano gli accumuli di un'ora associati ai tempi selezionati, senza somme triorarie o conversioni locali delle unità.
 
-Il reticolo contiene $81\times131=10611$ celle.
+Il reticolo contiene $81\times131=10611$ celle. Nel seguito i dati sono indicati come un tensore $X\in\mathbb{R}^{T\times N\times F}$, con $T$ istanti, $N=10611$ celle e $F=15$ variabili.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics{dominio_era5}
-    \caption{Dominio dei campi ERA5: $81\times131$ celle di $0.5^\circ$, fra $20^\circ$ e $60^\circ$ di latitudine nord e fra $15^\circ$ di longitudine ovest e $50^\circ$ di longitudine est. Il rettangolo indica il Piemonte, la regione dei dati PVGIS della Sezione~\ref{sec:dati-pvgis}. Linee di costa da Natural Earth.}
+    \caption{Dominio dei campi ERA5: $81\times131$ celle di $0.5^\circ$, fra $20^\circ$ e $60^\circ$ di latitudine nord e fra $15^\circ$ di longitudine ovest e $50^\circ$ di longitudine est. Il rettangolo indica l'area delle località PVGIS della Sezione~\ref{sec:dati-pvgis}, in Piemonte. Linee di costa da Natural Earth.}
     \label{fig:dominio-era5}
 \end{figure}
 % Confini del dominio riletti il 21 ottobre 2026 nei dati preparati usati da
@@ -55,7 +55,7 @@ Il reticolo contiene $81\times131=10611$ celle.
 % dominio, scala 1:50m) non è nel repository. Il rettangolo è l'area delle
 % località PVGIS: se la figura viene rigenerata, si può togliere.
 
-Sono conservate le celle per le quali tutte le variabili sono definite nel primo istante di addestramento, e si verifica che questo insieme rimanga identico nel resto del periodo; se cambia, la preparazione si interrompe. La selezione non utilizza il test e non viene applicata imputazione. Il criterio è la completezza delle variabili, non una classificazione terra--mare: nei dati usati nessuna cella è esclusa.
+Sono conservate le celle per le quali tutte le variabili sono definite nel primo istante dei dati, e si verifica che questo insieme rimanga identico in tutto il periodo; se cambia, la preparazione si interrompe, e non viene applicata imputazione. Il criterio è la completezza delle variabili, non una classificazione terra--mare: nei dati usati tutte le variabili, anche l'umidità del suolo, sono definite su tutte le celle, mare compreso, e nessuna cella è esclusa.
 
 \section{Acquisizione e preparazione dei dati}
 \label{sec:dati-pipeline}
@@ -71,9 +71,9 @@ I dati comprendono 134416 istanti, 10611 celle e 15 variabili: circa $2.1\times1
 
 \paragraph{Scarico.} I campi sono richiesti al Climate Data Store di Copernicus attraverso la sua interfaccia di programmazione, con una richiesta per mese e per prodotto: 552 mesi e 1104 richieste. Ogni richiesta fissa le variabili, gli otto istanti del giorno, la griglia di $0.5^\circ$, il dominio e, per il secondo prodotto, il livello di 850~hPa. Il passaggio alla griglia di $0.5^\circ$ è svolto dal servizio; i file ricevuti, in formato NetCDF~\cite{rew1990netcdf}, non vengono riscritti. Prima dello scarico i nomi delle variabili sono confrontati con quelli accettati dal servizio. Fino a otto richieste sono eseguite in parallelo, e una richiesta respinta per un limite temporaneo del servizio viene ripetuta dopo un'attesa crescente.
 
-\paragraph{Verifica.} Un mese è conservato solo se supera tutti i controlli. Gli istanti devono essere esattamente quelli richiesti, senza mancanti né duplicati; latitudini e longitudini devono essere quelle del dominio, con passo di $0.5^\circ$; il livello di pressione deve essere soltanto 850~hPa. Devono essere presenti tutte le variabili, senza valori infiniti e, tranne per l'umidità del suolo, che può mancare sul mare, senza campi interamente mancanti in un istante. Per ogni mese è salvata una ricevuta con la richiesta e l'impronta SHA-256 di ciascun file. Quando lo scarico viene ripreso, i mesi con ricevuta e impronta corrette sono saltati e gli altri sono scaricati di nuovo.
+\paragraph{Verifica.} Un mese è conservato solo se supera tutti i controlli. Gli istanti devono essere esattamente quelli richiesti, senza mancanti né duplicati; latitudini e longitudini devono essere quelle del dominio, con passo di $0.5^\circ$; il livello di pressione deve essere soltanto 850~hPa. Devono essere presenti tutte le variabili, senza valori infiniti e senza campi interamente mancanti in un istante; il controllo tollera campi mancanti per la sola umidità del suolo, una grandezza di terra, ma nei file usati non se ne sono presentati. Per ogni mese è salvata una \emph{ricevuta}, un piccolo file con la richiesta e l'impronta SHA-256 di ciascun file scaricato, che permette di riconoscere i mesi già scaricati e integri. Quando lo scarico viene ripreso, i mesi con ricevuta e impronta corrette sono saltati e gli altri sono scaricati di nuovo.
 
-\paragraph{Preparazione.} Un secondo programma controlla prima che tutti i mesi del periodo siano presenti, poi legge i file mese per mese, a blocchi di 32 istanti. Ripete i controlli su istanti, griglia e livello di pressione, allinea i due prodotti sugli stessi istanti e sulle stesse coordinate, e ordina le latitudini da nord a sud e le longitudini da ovest a est. Ogni blocco diventa un array di forma $[\text{istanti},N,15]$ in precisione singola, senza conversioni di unità né imputazione, ed è scritto direttamente nella sua posizione in file in formato \texttt{.npy} di NumPy~\cite{harris2020numpy}. Un file di metadati registra la griglia, le variabili, gli anni e il numero di celle escluse.
+\paragraph{Preparazione.} La preparazione, svolta da un programma distinto da quello di scarico, controlla prima che tutti i mesi del periodo siano presenti, poi legge i file mese per mese, a blocchi di 32 istanti. Ripete i controlli su istanti, griglia e livello di pressione, allinea i due prodotti sugli stessi istanti e sulle stesse coordinate, e ordina le latitudini da nord a sud e le longitudini da ovest a est. Ogni blocco diventa la parte corrispondente del tensore $X$, in precisione singola, senza conversioni di unità né imputazione, ed è scritto direttamente nella sua posizione in file in formato \texttt{.npy} di NumPy~\cite{harris2020numpy}. Un file di metadati registra la griglia, le variabili, gli anni e il numero di celle escluse.
 
 \paragraph{Lettura.} I file sono aperti in mappatura di memoria: durante l'addestramento e il calcolo degli score si leggono dal disco soltanto gli istanti e le celle di ciascuna finestra. La suddivisione negli anni della Sezione~\ref{sec:dati-split} è applicata alla lettura.
 % Fonti (22 ottobre 2026): scripts/download_era5.py e physiq_pv/era5/data.py
@@ -84,50 +84,53 @@ I dati comprendono 134416 istanti, 10611 celle e 15 variabili: circa $2.1\times1
 \section{Anni di addestramento, di validazione e di test}
 \label{sec:dati-split}
 
-I dati preparati hanno forma $[T,N,15]$, con $N=10611$ celle, e sono divisi in tre periodi consecutivi. Gli anni 1980--1999 sono usati per l'addestramento, gli anni 2000--2004 per la validazione e gli anni 2005--2025 per il test: rispettivamente 58440, 14616 e 61360 istanti. Le quantità stimate dai dati per l'ingresso e la loss del modello, cioè la normalizzazione stagionale, la tendenza rimossa, gli estremi del min--max e i pesi delle variabili del Capitolo~\ref{chap:metodologia}, sono calcolate sui soli anni di addestramento.
+Il tensore $X$ è diviso in tre periodi consecutivi. Gli anni 1980--1999 sono usati per l'addestramento, gli anni 2000--2004 per la validazione e gli anni 2005--2025 per il test: rispettivamente 58440, 14616 e 61360 istanti, cioè il 43\%, l'11\% e il 46\% del totale. La divisione è cronologica: il modello non vede mai anni successivi a quelli su cui è valutato. Il test comincia nel 2005, il primo anno dei dati PVGIS della Sezione~\ref{sec:dati-pvgis}. Tutte le quantità che il Capitolo~\ref{chap:metodologia} stima dai dati per l'ingresso e la loss del modello sono calcolate sui soli anni di addestramento.
 
-La validazione serve a confrontare le configurazioni e a fissare, prima di valutare il test, tutte le quantità che descrivono il comportamento abituale degli score. Queste quantità sono la climatologia degli score, gli estremi con cui le due componenti dello score combinato sono riportate sulla stessa scala, le soglie e i limiti delle classi di fiducia (Capitolo~\ref{chap:esperimenti}). Sulla validazione è fatta anche la scelta dello score. Gli anni di test non entrano in alcuna scelta: ricevono senza modificarle le quantità stimate sugli anni di addestramento e su quelli di validazione. L'articolo di STGAN~\cite{deng2022stgan} separa i dati in training e test senza un insieme di validazione: la validazione è un'aggiunta di questo lavoro, necessaria perché in assenza di etichette la scelta della configurazione deve basarsi su una misura calcolata fuori dal test.
+La validazione serve a confrontare le configurazioni e a fissare, prima di valutare il test, tutte le quantità che descrivono il comportamento abituale degli score. Queste quantità, fra cui le soglie, sono elencate nel Capitolo~\ref{chap:esperimenti}. Gli anni di test non entrano in alcuna scelta: ricevono senza modificarle le quantità stimate sugli anni di addestramento e su quelli di validazione. L'articolo di STGAN~\cite{deng2022stgan} separa i dati in training e test senza un insieme di validazione: la validazione è un'aggiunta di questo lavoro, necessaria perché in assenza di etichette la scelta della configurazione deve basarsi su una misura calcolata fuori dal test.
 
-I primi istanti di ciascun periodo usano come contesto la coda del periodo precedente: le finestre di ingresso dei primi istanti di validazione contengono gli ultimi istanti di addestramento, e lo stesso vale fra validazione e test. Il contesto non rientra fra gli istanti valutati.
+Il modello legge, per ogni istante, fino a 56 istanti precedenti, cioè sette giorni. I primi istanti di ciascun periodo usano quindi come contesto la coda del periodo precedente: le finestre di ingresso dei primi istanti di validazione contengono gli ultimi istanti di addestramento, e lo stesso vale fra validazione e test. Il contesto non rientra fra gli istanti valutati.
 % Conteggi dal calendario, a otto istanti al giorno: 1980-1999 sono 7305 giorni
 % (cinque bisestili), 2000-2004 sono 1827 giorni, 2005-2025 sono 7670 giorni.
 % 61360 istanti di test e 10611 celle anche dalle dimensioni degli score di una
 % run completa. Il numero di aggiornamenti per epoca dello sweep (58384) è
 % 58440 meno i 56 istanti di contesto del trend.
-% ATTENZIONE: i risultati provvisori del Capitolo 6 vengono ancora dalla run
-% ..._wdaily_seasonal_trend_ep3 (suddivisione precedente). La run della tesi è
-% good-sweep-2 (sweep 913ez3rt, W&B 5qlj2lwg), con la suddivisione qui descritta:
-% i risultati vanno riscritti con i suoi numeri (outputs/good2v, analisi_good2).
+% La run della tesi è good-sweep-2 (sweep 913ez3rt, W&B 5qlj2lwg), con la suddivisione
+% qui descritta.
 
 \section{Caratteristiche dei campi}
 \label{sec:dati-caratteristiche}
 
-Tre proprietà dei campi motivano altrettante scelte del Capitolo~\ref{chap:metodologia}. Sono misurate sugli anni di addestramento, senza alcun modello.
+Tre proprietà dei campi motivano altrettante scelte del Capitolo~\ref{chap:metodologia}. Sono misurate sugli anni di addestramento, senza il detector; solo il confronto della Figura~\ref{fig:era5-variazione} anticipa i pesi del Capitolo~\ref{chap:metodologia}.
 
-\paragraph{Cicli diversi da luogo a luogo.} La temperatura a due metri e la copertura nuvolosa hanno un ciclo stagionale e uno giornaliero, con livello e ampiezza diversi da una cella all'altra (Figura~\ref{fig:era5-cicli}). La media mensile della temperatura va da 1 a 17~°C in una cella dell'Europa settentrionale, da 2 a 24~°C nella Pianura Padana e da 11 a 32~°C nel Sahara; la copertura nuvolosa media sta fra 0.60 e 0.78 nella prima cella e fra 0.04 e 0.29 nell'ultima. Lo stesso valore è quindi abituale in un luogo e in una stagione e insolito in altri. Per questo i valori in ingresso sono riferiti al normale della propria cella, del giorno e dell'ora (Sezione~\ref{sec:ingresso-normalizzazione-era5}), e gli score alla climatologia della propria cella (Sezione~\ref{sec:normalizzazione-climatologica-score}).
+\paragraph{Cicli diversi da luogo a luogo.} La temperatura a due metri e la copertura nuvolosa hanno un ciclo stagionale e uno giornaliero, con livello e ampiezza diversi da una cella all'altra (Figura~\ref{fig:era5-cicli}). La media mensile della temperatura va da 1 a 17~°C in una cella dell'Europa settentrionale, da 2 a 24~°C nella Pianura Padana e da 11 a 32~°C nel Sahara; la copertura nuvolosa media sta fra 0.60 e 0.78 nella prima cella e fra 0.04 e 0.29 nell'ultima. Lo stesso valore è quindi abituale in un luogo e in una stagione e insolito in altri. Per questo i valori in ingresso sono riferiti al normale climatologico della propria cella, del giorno e dell'ora (Sezione~\ref{sec:ingresso-normalizzazione-era5}), e gli score alla climatologia della propria cella (Sezione~\ref{sec:normalizzazione-climatologica-score}).
 
 \begin{figure}[htbp]
     \centering
     \includegraphics{era5_cicli}
-    \caption{Ciclo stagionale e giornaliero della temperatura a due metri e della copertura nuvolosa in tre celle: Europa settentrionale ($55^\circ$N, $10^\circ$E), Pianura Padana ($45^\circ$N, $9^\circ$E) e Sahara ($25^\circ$N, $10^\circ$E). A sinistra la media per mese, con una deviazione standard; a destra la media per ora UTC in gennaio e in luglio. Anni 1980--1999.}
+    \caption{Ciclo stagionale e giornaliero della temperatura a due metri e della copertura nuvolosa in tre celle: Europa settentrionale ($55^\circ$N, $10^\circ$E), Pianura Padana ($45^\circ$N, $9^\circ$E) e Sahara ($25^\circ$N, $10^\circ$E). A sinistra la media per mese, con le linee punteggiate a una deviazione standard dei valori triorari del mese; a destra la media per ora UTC in gennaio e in luglio. La temperatura è in gradi Celsius (in kelvin nei dati). Lo stesso mese ha livelli e variabilità diversi da una cella all'altra. Anni 1980--1999.}
     \label{fig:era5-cicli}
 \end{figure}
 
-\paragraph{Variazioni di grandezza diversa.} Con il min--max dell'articolo, che riporta ogni variabile fra il minimo e il massimo degli anni di addestramento, la copertura nuvolosa produce l'84.1\% della variazione quadratica media su 24 ore delle quindici variabili, e nessuna delle altre supera il 3.3\% (Figura~\ref{fig:era5-variazione}). La copertura nuvolosa passa spesso da sereno a coperto nel corso di un giorno e attraversa quasi tutto il proprio intervallo; la temperatura cambia di pochi gradi, in un intervallo che comprende tutte le celle e tutte le stagioni. Un errore di ricostruzione che somma le variabili con lo stesso peso sarebbe quindi in gran parte un errore sulla copertura nuvolosa. Dopo la normalizzazione stagionale e il min--max del detector le quote vanno dallo 0.9\% dell'umidità del suolo al 16.6\% dell'umidità specifica, e la copertura nuvolosa ha il 6.7\%, la quota di una variabile media: la normalizzazione stagionale rende confrontabili anche le variabili fra loro. Le differenze che restano sono corrette dai pesi della Sezione~\ref{sec:pesi-variabili-ricostruzione}.
+\paragraph{Variazioni di grandezza diversa.} Per una variabile $f$, la variazione quadratica media su 24 ore è
+\begin{equation}
+    m_f=\frac{1}{TN}\sum_{t,n}\bigl(\tilde{x}_{t,n,f}-\tilde{x}_{t-8,n,f}\bigr)^2,
+    \label{eq:variazione-24h}
+\end{equation}
+dove $\tilde{x}$ è il valore dopo la trasformazione considerata e $t-8$ l'istante di 24 ore prima; la quota di $f$ è $m_f/\sum_{f'}m_{f'}$. Le 24 ore confrontano istanti alla stessa ora e non contengono quindi il ciclo giornaliero. La quota dice quanto ciascuna variabile pesa in un errore di ricostruzione che somma le variabili con lo stesso peso. Con il min--max di STGAN, che riporta ogni variabile fra il minimo e il massimo degli anni di addestramento, la copertura nuvolosa produce l'84.1\% della variazione quadratica media su 24 ore delle quindici variabili, e nessuna delle altre supera il 3.3\% (Figura~\ref{fig:era5-variazione}). La copertura nuvolosa passa spesso da sereno a coperto nel corso di un giorno e attraversa quasi tutto il proprio intervallo; la temperatura cambia di pochi gradi, in un intervallo che comprende tutte le celle e tutte le stagioni. Un errore di ricostruzione che somma le variabili con lo stesso peso sarebbe quindi in gran parte un errore sulla copertura nuvolosa. Dopo la normalizzazione stagionale e il min--max del detector le quote vanno dallo 0.9\% dell'umidità del suolo al 16.6\% dell'umidità specifica, e la copertura nuvolosa ha il 6.7\%, la quota di una variabile media: la normalizzazione stagionale rende confrontabili anche le variabili fra loro. Le differenze che restano sono corrette dai pesi della Sezione~\ref{sec:pesi-variabili-ricostruzione}.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics{era5_variazione_24h}
-    \caption{Quota di ciascuna variabile nella variazione quadratica media su 24 ore, dopo il min--max dell'articolo e dopo la normalizzazione stagionale e il min--max del detector. Anni 1980--1999; la seconda quota è ricavata dai pesi della Sezione~\ref{sec:pesi-variabili-ricostruzione}. La linea tratteggiata indica la quota uguale per tutte le variabili, un quindicesimo.}
+    \includegraphics[width=\textwidth]{era5_variazione_24h}
+    \caption{Quota di ciascuna variabile nella variazione quadratica media su 24 ore (equazione~\eqref{eq:variazione-24h}), dopo il min--max di STGAN e dopo la normalizzazione stagionale e il min--max del detector, in scala logaritmica. Anni 1980--1999; la seconda quota è ricavata dai pesi della Sezione~\ref{sec:pesi-variabili-ricostruzione}, che sono proporzionali all'inverso di $m_f$. La linea tratteggiata indica la quota uguale per tutte le variabili, un quindicesimo. Con il min--max di STGAN la copertura nuvolosa domina; dopo la normalizzazione stagionale le quote sono dello stesso ordine.}
     \label{fig:era5-variazione}
 \end{figure}
 
-\paragraph{Legame spaziale a corto raggio.} Le anomalie di due celle, cioè gli scostamenti dalla media della propria cella, del mese e dell'ora, sono tanto meno correlate quanto più le celle sono lontane (Figura~\ref{fig:era5-correlazione}). La correlazione mediana scende sotto 0.5 oltre circa 1300~km per la pressione al livello del mare e 900~km per la temperatura a due metri, ma già oltre 200~km per la copertura nuvolosa e 100~km per la precipitazione. Le variabili legate alle perturbazioni dipendono quindi dalle celle vicine, entro poche celle di $0.5^\circ$: è il contesto che il detector rappresenta con la ConvGRU del generatore e con la patch del discriminatore (Sezione~\ref{sec:stgan}).
+\paragraph{Legame spaziale a corto raggio.} Gli scarti dalla media climatologica di due celle, cioè le differenze fra il valore e la media della propria cella, del mese e dell'ora, sono tanto meno correlati quanto più le celle sono lontane (Figura~\ref{fig:era5-correlazione}). Qui la media è per mese, una stima più semplice di quella per giorno usata nel Capitolo~\ref{chap:metodologia}. Sono confrontate due variabili di grande scala, pressione e temperatura, e due legate alle perturbazioni, copertura nuvolosa e precipitazione; la distanza è misurata lungo la superficie terrestre. La correlazione mediana scende sotto 0.5 oltre circa 1300~km per la pressione al livello del mare e 900~km per la temperatura a due metri, ma già oltre 200~km per la copertura nuvolosa e 100~km per la precipitazione. Le variabili legate alle perturbazioni dipendono quindi dalle celle vicine, entro poche celle di $0.5^\circ$: è il contesto che il detector rappresenta con la ConvGRU del generatore e con la patch del discriminatore (Sezione~\ref{sec:stgan}). Una cella misura circa 55~km in latitudine: la patch $3\times3$ del discriminatore copre le celle entro circa 55~km, e la ConvGRU allarga il raggio di alcune celle a ogni passo della finestra recente.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics{era5_correlazione_distanza}
-    \caption{Correlazione delle anomalie di due celle in funzione della loro distanza: mediana e quartili per fasce di 100~km, su 300 celle scelte a caso e un istante ogni nove degli anni 1980--1999. Il primo punto, entro 100~km, si basa su 36 coppie di celle.}
+    \caption{Correlazione degli scarti dalla media climatologica di due celle in funzione della loro distanza: mediana e quartili per fasce di 100~km, su 300 celle scelte a caso e un istante ogni nove degli anni 1980--1999 (un passo dispari, che legge tutte le ore del giorno). Il primo punto, entro 100~km, si basa su 36 coppie di celle. Precipitazione e copertura nuvolosa perdono la correlazione entro poche celle.}
     \label{fig:era5-correlazione}
 \end{figure}
 % Numeri da figure_dati.log e figures/dati/era5_dati.json (22 ottobre 2026,
@@ -135,6 +138,18 @@ Tre proprietà dei campi motivano altrettante scelte del Capitolo~\ref{chap:meto
 % codice); quote del detector da figures/dati/era5_pesi_good2.json (pesi salvati
 % nei metadati di good-sweep-2, stimati su 720 istanti). Figure generate da
 % figures/genera_figure_dati.py.
+
+\section{Qualità e limiti dei dati}
+\label{sec:dati-limiti}
+
+ERA5 è una rianalisi: i campi sono stime di un modello vincolato dalle osservazioni disponibili, non misure dirette (Sezione~\ref{sec:rw-meteo}). I dati usati sono completi, senza istanti o celle mancanti, e non è applicata imputazione. Due loro proprietà vanno però tenute presenti nella lettura dei risultati.
+
+\paragraph{Variabili lontane da una distribuzione gaussiana.} La precipitazione è nulla nella maggior parte degli istanti e assume di rado valori molto alti; la copertura nuvolosa è limitata fra 0 e 1. Il Capitolo~\ref{chap:metodologia} tratta la precipitazione con una radice quarta prima della standardizzazione (Sezione~\ref{sec:ingresso-normalizzazione-era5}).
+
+\paragraph{Cambiamenti dopo gli anni di addestramento.} Riferite al normale climatologico degli anni 1980--1999, le medie annuali delle variabili sull'intero dominio non restano costanti negli anni successivi. Per l'umidità specifica a 850~hPa la media resta fra $-0.13$ e $+0.06$ deviazioni standard negli anni di addestramento e sale a $+0.17$ negli ultimi cinque anni: è una deriva reale, che la normalizzazione del Capitolo~\ref{chap:metodologia} non toglie. Per la precipitazione totale la media passa da circa 0 a valori fra $+0.09$ e $+0.26$ dal 2000 in poi; nei dati grezzi non c'è alcun salto, e lo spostamento è un effetto della standardizzazione di una variabile molto asimmetrica fuori dagli anni su cui è stimata, non un cambiamento del clima. In entrambi i casi gli anni di test si allontanano da quelli di addestramento, e un detector unsupervised può segnalare in parte questa distanza invece di condizioni insolite di un singolo istante (Sezione~\ref{sec:ris-climatologia}).
+% Numeri dai commenti della Sezione 4.2.3 (deriva_clima_1999.log e
+% gradino_precipitazione.log, 21 ottobre 2026, scripts/check_era5_climate_drift.py e
+% scripts/check_era5_precipitation_step.py del repository del codice).
 
 \section{I dati PVGIS del lavoro preliminare}
 \label{sec:dati-pvgis}

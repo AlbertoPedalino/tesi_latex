@@ -74,7 +74,7 @@ def cycles_figure(data):
     """Monthly mean with one standard deviation, and mean by time of day in January and July."""
     part = data["cycles"]
     units = {"2m_temperature": ("Temperatura (°C)", lambda v: np.asarray(v) - 273.15, (-np.inf, np.inf)),
-             "total_cloud_cover": ("Nuvolosità (0–1)", np.asarray, (0.0, 1.0))}
+             "total_cloud_cover": ("Copertura\nnuvolosa (0–1)", np.asarray, (0.0, 1.0))}
     figure, axes = plt.subplots(2, 2, figsize=(11.8 / 2.54, 8.4 / 2.54), sharex="col",
                                 gridspec_kw={"width_ratios": [1.5, 1]})
     for row, feature in enumerate(part["features"]):
@@ -85,8 +85,10 @@ def cycles_figure(data):
             std = np.asarray(series["monthly_std"])
             months = np.arange(1, 13)
             axes[row, 0].plot(months, mean, color=color, linewidth=1.5, label=cell)
-            axes[row, 0].fill_between(months, np.maximum(mean - std, lowest), np.minimum(mean + std, highest),
-                                      color=color, alpha=0.15, linewidth=0)
+            # One standard deviation of the 3-hourly values of the month as thin dotted lines: shaded bands of the
+            # three cells overlap and hide each other.
+            for bound in (np.maximum(mean - std, lowest), np.minimum(mean + std, highest)):
+                axes[row, 0].plot(months, bound, color=color, linewidth=0.7, linestyle=":")
             for month, style in (("1", "--"), ("7", "-")):
                 axes[row, 1].plot(part["hours"], convert(series["hourly_mean"][month]), style, color=color,
                                   linewidth=1.2)
@@ -105,6 +107,7 @@ def cycles_figure(data):
     figure.legend(handles, labels, loc="lower center", ncol=5, bbox_to_anchor=(0.5, -0.06), fontsize=7.5,
                   columnspacing=1.0, handlelength=1.6)
     figure.tight_layout(rect=(0, 0.04, 1, 1))
+    figure.align_ylabels(axes[:, 0])
     save(figure, "era5_cicli.pdf")
 
 
@@ -118,18 +121,22 @@ def change_figure(data, weights):
     detector = 100 * inverse / inverse.sum()
     order = np.argsort(article)
     rows = np.arange(len(order))
-    figure, axis = plt.subplots(figsize=(9.6 / 2.54, 8.0 / 2.54))
-    axis.barh(rows + 0.19, article[order], height=0.36, color=ORANGE, label="articolo: min–max")
+    figure, axis = plt.subplots(figsize=(9.0 / 2.54, 8.0 / 2.54))
+    axis.barh(rows + 0.19, article[order], height=0.36, color=ORANGE, label="min–max di STGAN")
     axis.barh(rows - 0.19, detector[order], height=0.36, color=BLUE,
-              label="detector: normalizzazione stagionale e min–max")
+              label="normalizzazione stagionale e min–max del detector")
     axis.set_yticks(rows, [NAMES.get(features[i], features[i]) for i in order])
+    # A logarithmic axis: on a linear one the cloud cover (84%) hides every other bar.
+    axis.set_xscale("log")
+    axis.set_xlim(0.02, 150)
+    axis.set_xticks([0.1, 1, 10, 100], ["0.1", "1", "10", "100"])
     axis.axvline(100 / len(features), color=MUTED, linestyle="--", linewidth=0.8)
-    axis.text(100 / len(features) + 1, -0.85, "quote uguali", color=MUTED, fontsize=8, va="center")
+    axis.text(100 / len(features) * 1.08, -0.85, "quote uguali", color=MUTED, fontsize=8, va="center")
     axis.set_ylim(-1.2, len(features) - 0.2)
     top = order[-1]
-    axis.text(article[top] + 1, top_row := len(order) - 1 + 0.19, f"{article[top]:.1f}%", color=TEXT, fontsize=8,
+    axis.text(article[top] * 1.08, top_row := len(order) - 1 + 0.19, f"{article[top]:.1f}%", color=TEXT, fontsize=8,
               va="center", ha="left")
-    axis.text(detector[top] + 1, top_row - 0.38, f"{detector[top]:.1f}%", color=TEXT, fontsize=8, va="center")
+    axis.text(detector[top] * 1.08, top_row - 0.38, f"{detector[top]:.1f}%", color=TEXT, fontsize=8, va="center")
     axis.set_xlabel("Quota della variazione quadratica media su 24 ore (%)")
     axis.spines[["top", "right"]].set_visible(False)
     axis.grid(axis="x", color=GRID, linewidth=0.5)
@@ -157,7 +164,7 @@ def correlation_figure(data):
     axis.set_xlim(0, edges[-1])
     axis.set_ylim(-0.1, 1.0)
     axis.set_xlabel("Distanza fra le celle (km)")
-    axis.set_ylabel("Correlazione delle anomalie")
+    axis.set_ylabel("Correlazione degli scarti\ndalla media climatologica")
     tidy(axis)
     axis.legend(fontsize=8, loc="upper right")
     save(figure, "era5_correlazione_distanza.pdf")
