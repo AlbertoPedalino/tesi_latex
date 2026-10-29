@@ -102,7 +102,7 @@ La correlazione spaziale dice se i due score segnalano gli stessi luoghi nello s
 
 \paragraph{Il legame è lo stesso in ogni cella.} La correlazione temporale è calcolata in ogni cella sugli istanti: vale 1 se nella cella i due score salgono e scendono insieme. Fra G e D la correlazione di Spearman è negativa in tutte le celle, con mediana $-0.24$, e quella di Pearson ha mediana $-0.50$ (Figura~\ref{fig:ris-g-d-temporale}). Il legame è quindi lo stesso nello spazio e nel tempo: quando in una cella il generatore sbaglia di più, D scende. È più forte nel sud del dominio, con una mediana di $-0.27$ fra 20$^\circ$ e 30$^\circ$N, e più debole a nord, con $-0.19$ fra 50$^\circ$ e 60$^\circ$N.
 
-\paragraph{La cornice vicino al bordo è un effetto del modello.} Nella mappa si vede una cornice a due celle dal bordo, dove la mediana della correlazione è $-0.19$, contro $-0.24$ nelle celle a più di quattro celle dal bordo. Vicino al bordo le convoluzioni del generatore completano il campo con zeri, e il suo errore nelle prime tre celle è più alto \provv{del 4--5\%} rispetto all'interno; il discriminatore legge questa fascia attraverso le patch, e il suo giudizio sulle ricostruzioni ha un piccolo minimo proprio a due celle dal bordo. Le mediane riportate non cambiano.
+\paragraph{La cornice vicino al bordo è un effetto del modello.} Nella mappa si vede una cornice a due celle dal bordo, dove la mediana della correlazione è $-0.19$, contro $-0.24$ nelle celle a più di quattro celle dal bordo. Vicino al bordo le convoluzioni del generatore completano il campo con zeri, e il suo errore nelle prime tre celle è più alto del 3--4\% rispetto all'interno; il discriminatore legge questa fascia attraverso le patch, e il suo giudizio sulle ricostruzioni ha un piccolo minimo proprio a due celle dal bordo. Le mediane riportate non cambiano.
 
 \begin{figure}[htbp]
     \centering
@@ -131,8 +131,11 @@ La normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica
 % anni di validazione, un anno fuori, esclusi i valori segnati. Spearman temporale
 % G-D fra -0.40 e -0.07 nelle celle, mediana per fascia S->N -0.273, -0.264, -0.225,
 % -0.186; cornice: mediana -0.185 a due celle dal bordo, -0.243 a più di quattro.
-% Errore di G +4-5% nelle prime tre celle: misurato sul test, da rifare sulla
-% validazione (provvisorio). Dopo la normalizzazione: Spearman G+clim-D+clim media
+% Bordo sulla validazione (29 ottobre 2026, un istante ogni 97, per anello di distanza
+% dal bordo 0..5 e interno >=8): G 0.00158, 0.00157, 0.00158, 0.00153, 0.00152, 0.00151
+% | 0.00152 (+3.3-3.9% nelle prime tre celle); D(reale) 0.5042, 0.5086, 0.5084, 0.5081,
+% 0.5079, 0.5082 | 0.5092; D(generato) 0.5179, 0.5209, 0.5187, 0.5200, 0.5197, 0.5199 |
+% 0.5204 (minimo locale a distanza 2; l'anello 0 ha la patch che esce dal reticolo). Dopo la normalizzazione: Spearman G+clim-D+clim media
 % -0.220 nello spazio, mediana -0.224 nel tempo; G-G+clim 0.909, D-D+clim 0.944
 % (media nello spazio).
 % Quote per luogo: scripts/check_era5_score_by_place.py, log
