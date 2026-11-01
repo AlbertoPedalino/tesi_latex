@@ -411,25 +411,119 @@ vale 1 quando i due insiemi coincidono e 0 quando sono disgiunti. Due rilevatori
 \section{Eventi per tipo e dimensione}
 \label{sec:ris-eventi}
 
-% Materiale tolto dal 6.4 il 29 ottobre 2026 (D_reale nel nucleo per tipo e dimensione
-% dell'evento), da riprendere qui con i numeri dei commenti del 6.4:
-% Il comportamento di $D_{\mathrm{reale}}$ nel nucleo non è uniforme: una minoranza dei valori segnalati da G è giudicata generata, ma la maggior parte è giudicata più reale del consueto. Il giudizio dipende dalla dimensione e dal tipo dell'evento, dove il tipo è la variabile d'ingresso più lontana dal proprio normale stagionale nel nucleo. È più basso negli eventi più grandi e in quelli di copertura nuvolosa, velocità verticale, radiazione solare e altezza dello strato limite; è più vicino al consueto negli eventi di pressione al livello del mare, umidità del suolo e velocità di attrito.
+Questa sezione e la seguente mostrano come si comporta G con la normalizzazione, senza confrontarlo con altri metodi. Le segnalazioni sono raggruppate negli eventi della Sezione~\ref{sec:ris-g-d}: sugli anni di test sono 754692 eventi, con 36.7 milioni di valori. Un evento indica dove G segnala, non che lì sia accaduto un fenomeno meteorologico preciso, che senza un riferimento esterno non si può stabilire.
 
-% Eventi dello score scelto nell'ipercubo tempo x latitudine x longitudine,
-% divisi per dimensione (1, 2-4, 5-19, >19 valori) e per tipo (la variabile
-% d'ingresso più lontana dal normale stagionale sul nucleo). Per ogni score:
-% percentile mediano e quota segnalata nel nucleo, nel contorno (le 8 celle
-% attorno) e lontano dagli eventi (check_era5_event_zones.py). Nessun
-% riferimento esterno.
-\provv{Sezione da scrivere con la run finale.}
+\paragraph{Pochi eventi enormi contengono quasi tutti i valori.} La dimensione di un evento è il numero dei suoi valori, cioè delle coppie di cella e istante. Il 90\% degli eventi ha meno di 20 valori, e insieme contengono solo il 7\% dei valori segnalati; lo 0.5\% degli eventi, quelli con almeno 1000 valori, ne contiene il 76\% (Figura~\ref{fig:ris-eventi-dimensione}).
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_eventi_dimensione}
+    \caption{Gli eventi di G sugli anni di test, per numero di valori: quota degli eventi (a sinistra) e quota dei valori segnalati che contengono (a destra). Gli eventi sono quasi tutti piccoli, ma quasi tutti i valori stanno in pochi eventi enormi.}
+    \label{fig:ris-eventi-dimensione}
+\end{figure}
+
+\paragraph{Gli eventi più grandi sono catene.} Due valori fanno parte dello stesso evento se si toccano, nello spazio o nel tempo. Con il 5\% dei valori segnalati, segnalazioni di situazioni diverse finiscono per toccarsi e formano catene: l'evento più grande di velocità verticale dura 97 giorni, e per più della metà degli istanti conta meno di 50 celle. Un evento enorme, quindi, non è un unico fenomeno, e la sua dimensione dice quanto si estende la catena. La Sezione~\ref{sec:ris-casi} ne mostra tre.
+
+\paragraph{Il tipo di evento.} Il tipo di un evento è la variabile d'ingresso più lontana dal proprio normale stagionale, in media sul nucleo: dice quale variabile si scosta di più, non quale fenomeno sia avvenuto, e le variabili con valori molto estremi, come la precipitazione, possono risultare più spesso le più lontane. La velocità verticale e la precipitazione raccolgono da sole il 60\% dei valori segnalati (Figura~\ref{fig:ris-eventi-tipo}).
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_eventi_tipo}
+    \caption{Valori segnalati da G sugli anni di test, per tipo di evento e numero di valori dell'evento (k = migliaia, M = milioni). Più il colore è scuro, più i valori sono numerosi; la scala è logaritmica. ``In quota'' indica il livello di 850~hPa; le caselle vuote non contengono eventi. La velocità verticale e la precipitazione dominano a tutte le dimensioni.}
+    \label{fig:ris-eventi-tipo}
+\end{figure}
+
+\paragraph{Allontanandosi da dove G segnala, le variabili tornano nella norma.} Il comportamento nelle tre zone della Figura~\ref{fig:ris-zone-schema} è riassunto dal percentile mediano: 100 è il valore più alto dello score, 50 un valore tipico (Figura~\ref{fig:ris-eventi-zone}). G è alto nel nucleo per costruzione, perché il nucleo è fatto dei suoi valori più alti, e resta alto nel contorno, dove lo score legge la stessa patch. Il dato che non dipende da questa costruzione è la distanza dal normale, che non usa il modello e legge una sola cella: ha un percentile mediano di 92 nel nucleo, di 79 nel contorno e di 43 nella zona lontana. Dove G segnala le variabili sono quindi lontane da ciò che è abituale per quel luogo e quel periodo, e allontanandosi di poche celle tornano nella norma.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_eventi_zone}
+    \caption{Percentile mediano di G con la normalizzazione e della distanza dal normale nelle tre zone attorno agli eventi di G, sugli anni di test. La linea tratteggiata indica il valore tipico, 50. Dove G segnala le variabili sono lontane dal normale; nella zona lontana sono su valori tipici.}
+    \label{fig:ris-eventi-zone}
+\end{figure}
+
+\paragraph{Insolito, ma non sempre estremo.} Nel nucleo solo il 42\% dei valori supera la soglia della distanza dal normale, contro il 16\% nel contorno e il 2\% nella zona lontana. Il restante 58\% è lontano dal normale senza esserlo in modo estremo: G segnala anche valori che, presi uno per uno, non sono fra i più lontani dal clima. In parte è atteso, perché i due score misurano cose diverse.
+
+\paragraph{Più l'evento è grande, più le variabili sono lontane dal normale.} La Figura~\ref{fig:ris-eventi-normale} riporta la distanza dal normale nel nucleo, per tipo e dimensione. Nell'insieme il percentile mediano va da 81--82 negli eventi con meno di 20 valori a 95 in quelli con più di 9999. Gli eventi piccoli sono quindi quelli meno estremi, soprattutto quando il tipo è la copertura nuvolosa o l'umidità specifica, con 73 negli eventi di un solo valore. L'umidità del suolo fa eccezione: è fra 96 e 98 a tutte le dimensioni.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_eventi_normale}
+    \caption{Percentile mediano della distanza dal normale nel nucleo degli eventi di G, sugli anni di test, per tipo e numero di valori dell'evento: la prima riga riguarda tutti i tipi. Più il colore è scuro, più le variabili sono lontane dal normale. Le caselle con un trattino contengono meno di 20 eventi e non sono riportate. Il valore cresce con la dimensione dell'evento.}
+    \label{fig:ris-eventi-normale}
+\end{figure}
+% Numeri (1 novembre 2026, test 2005-2025, good-sweep-2): scripts/check_era5_event_zones.py
+% --events e --scores G+clim=outputs/good2v/test_generator_clim_day, G, normale=
+% outputs/confronti_good2/climatology/test/normal, uscite outputs/casi_good2_g/zone_5pc.csv,
+% copiato in figures/dati/era5_eventi_zone.csv. Figure: figures/genera_figure_eventi.py.
+% Meno di 20 valori: 681451 eventi (90.3%), 2617983 valori (7.1%). Almeno 1000 valori: 3862
+% eventi (0.51%), 27886092 valori (76.1%). Velocità verticale 12725267 e precipitazione
+% 9253228 valori su 36656037 (59.9%). Zone (tutti): G+clim 97|90|40, G 97|88|39, normale
+% 92|79|43, normale oltre la propria soglia 42.3|16.1|2.0%. Normale nel nucleo per dimensione:
+% 82, 81, 81, 84, 88, 92, 95. Velocità verticale, catena: 775 istanti, 55% con meno di 50 celle.
 
 \section{Casi specifici}
 \label{sec:ris-casi}
 
-% Comportamento dello score in tre situazioni: dentro un'anomalia estesa, sul
-% contorno segnalato dal solo modello, in una zona non anomala. Prima in generale,
-% poi per tipi di evento diversi.
-\provv{Sezione da scrivere con la run finale.}
+I casi sono scelti con una regola fissata prima di esaminarli, così che nessuno sia preso per il suo aspetto: i tipi sono i tre con più valori negli eventi di almeno 20 valori, cioè velocità verticale, precipitazione e pressione al livello del mare; per ciascuno il caso è l'evento più grande, letto nell'istante in cui conta più celle. Non sono quindi i casi più importanti né i più tipici, ma mostrano che cosa c'è dentro gli eventi più grandi.
+
+\paragraph{Come leggere le figure.} Le Figure~\ref{fig:ris-caso-velocita}--\ref{fig:ris-caso-pressione} hanno la stessa struttura. In alto a sinistra c'è la variabile del tipo, come distanza dal suo normale: bianco vuol dire normale, rosso sopra il normale, blu sotto. In alto a destra c'è G in percentile, con la stessa scala in tutti i casi: il giallo è oltre la soglia. La linea nera nelle due mappe racchiude il nucleo dell'evento in quell'istante; tutto il resto è contorno o zona senza segnalazioni. In basso a sinistra si segue nel tempo la cella del nucleo con G più alto, da tre giorni prima a tre giorni dopo, confrontando G con la distanza dal normale di tutte le variabili: la linea tratteggiata è la soglia di G, le bande azzurre sono gli istanti in cui la cella fa parte dell'evento. In basso a destra c'è il numero di celle dell'evento in ogni istante, cioè la catena; la linea verticale segna l'istante delle mappe. La Tabella~\ref{tab:ris-casi} riassume le tre zone.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{I tre casi nell'istante delle mappe, con le celle del nucleo. Le colonne G e Distanza riportano il percentile mediano di G con la normalizzazione e della distanza dal normale nel nucleo, nel contorno e nella zona lontana, in quest'ordine. ``Oltre soglia'' è la quota dei valori del nucleo oltre la soglia della distanza dal normale.}
+    \label{tab:ris-casi}
+    \vspace{0.6em}
+    \begin{tabular}{@{}lrrrrr@{}}
+        \toprule
+        Tipo & Celle & G & Distanza & Oltre soglia & Catena (giorni) \\
+        \midrule
+        Velocità verticale & 1355 & 97, 92, 42 & 96, 91, 39 & 67\% & 97 \\
+        Precipitazione & 1971 & 97, 92, 67 & 97, 92, 77 & 67\% & 36 \\
+        Pressione & 2306 & 97, 92, 40 & 93, 86, 43 & 44\% & 16 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\paragraph{Velocità verticale.} Il 5 febbraio 2020 il nucleo copre un'area estesa fra l'Europa centrale e il Mediterraneo orientale (Figura~\ref{fig:ris-caso-velocita}), dove la velocità verticale alterna bande molto sopra e molto sotto il normale. Nella cella seguita, G e la distanza dal normale salgono e scendono insieme: restano vicini ai valori più alti per circa tre giorni, poi G scende rapidamente mentre la distanza dal normale torna solo a valori intermedi. La catena mostra che non si tratta di un unico fenomeno: dura 97 giorni con più picchi, separati da periodi con poche celle.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_caso_00}
+    \caption{Velocità verticale, 5 febbraio 2020 alle 06~UTC. In alto: la variabile come distanza dal normale e G in percentile, con il nucleo racchiuso dalla linea nera. In basso: una cella del nucleo nel tempo e il numero di celle dell'evento dal 13 novembre 2019 al 18 febbraio 2020. Linee di costa da Natural Earth.}
+    \label{fig:ris-caso-velocita}
+\end{figure}
+
+\paragraph{Precipitazione.} Il 1\textsuperscript{o} marzo 2005 il nucleo segue bande di precipitazione dal Nord Africa occidentale al Mediterraneo orientale, con un'altra area a nord-est (Figura~\ref{fig:ris-caso-precipitazione}). La cella seguita, nel Sahara, mostra il segnale più netto dei tre casi: per poche ore la precipitazione è quasi 19 volte la sua variabilità abituale sopra il normale, e G e la distanza dal normale salgono insieme ai valori più alti. In questo istante anche la zona lontana è meno tipica del solito, con percentili di 67 e 77: la zona senza segnalazioni non è necessariamente calma. Nella maggior parte del nucleo (63\% delle celle), inoltre, la precipitazione è vicina al normale, con una distanza inferiore a 1: il tipo descrive l'evento nel suo insieme, non ogni cella.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_caso_01}
+    \caption{Precipitazione, 1\textsuperscript{o} marzo 2005 alle 00~UTC. In alto: la variabile come distanza dal normale e G in percentile, con il nucleo racchiuso dalla linea nera. In basso: una cella del nucleo nel tempo e il numero di celle dell'evento dal 7 febbraio al 14 marzo 2005. Linee di costa da Natural Earth.}
+    \label{fig:ris-caso-precipitazione}
+\end{figure}
+
+\paragraph{Pressione.} Il 28 marzo 2024 la pressione è molto sotto il normale sull'Europa occidentale, e il nucleo copre quell'area (Figura~\ref{fig:ris-caso-pressione}). Il nucleo prosegue però verso sud fino al Nord Africa, dove la pressione è vicina al normale. Lì si trova anche la cella con G più alto, in cui la pressione è quasi esattamente normale, mentre la distanza dal normale di tutte le variabili è al percentile 99: G e la distanza segnalano quella cella, ma per altre variabili. Anche qui, quindi, il tipo non descrive ogni cella. È il caso con la quota più bassa di valori oltre la soglia della distanza dal normale, il 44\%.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_caso_02}
+    \caption{Pressione al livello del mare, 28 marzo 2024 alle 06~UTC. In alto: la variabile come distanza dal normale e G in percentile, con il nucleo racchiuso dalla linea nera. In basso: una cella del nucleo nel tempo e il numero di celle dell'evento dal 20 marzo al 5 aprile 2024. Linee di costa da Natural Earth.}
+    \label{fig:ris-caso-pressione}
+\end{figure}
+
+\paragraph{Sintesi.} Nei tre casi G segue la distanza dal normale: nelle celle seguite i due salgono e scendono insieme, e nelle mappe il nucleo comprende le aree in cui la variabile del tipo è più lontana dal normale. I casi mostrano anche i limiti della lettura per eventi: gli eventi più grandi sono catene e non singoli fenomeni, il tipo non descrive ogni cella, e la zona senza segnalazioni non è sempre calma. Sono esempi scelti con una regola, non una prova che le segnalazioni corrispondano a fenomeni reali, che senza un riferimento esterno non si può dare.
+% Numeri (1 novembre 2026): scripts/check_era5_event_cases.py, uscite outputs/casi_good2_g
+% (cases.csv, case_NN.npz), copiate in figures/dati/era5_caso_NN.npz; mediane per zona in
+% figures/dati/era5_casi_zone.json. La regola è nel docstring dello script ed è stata fissata
+% prima di leggere i risultati; la seconda specie di casi, gli eventi con la quota più alta di
+% valori segnalati solo da G, è stata tolta per mostrare il solo G (decisione dell'autore).
+% Correlazione di Pearson fra i percentili di G e del normale nella cella seguita: 0.94, 0.86, 0.82.
+% Distanza dal normale della variabile, nella cella all'istante: -3.9, 18.9, -0.07. Nucleo con
+% |distanza| < 1: 32%, 63%, 29%; > 2: 37%, 22%, 60%. Velocità verticale: la cella resta
+% nell'evento per 23 istanti su 49 di finestra.
+\provv{I tre tipi vanno riletti sulla run finale: la regola può sceglierne altri.}
 
 \section{Sensibilità alla soglia}
 \label{sec:ris-soglia}
@@ -467,6 +561,8 @@ Tutti i risultati precedenti usano la soglia del 95-esimo percentile degli score
 \paragraph{La normalizzazione climatologica nella coda.} Con la soglia più alta la normalizzazione riduce ancora molto le differenze fra luoghi e stagioni, ma non le annulla: resta un eccesso di segnalazioni a sud, dove la quota media è circa il doppio di quella a nord. La normalizzazione allinea media e deviazione standard dell'errore di ogni cella, non la frequenza dei suoi valori più estremi; con il 5\% questa differenza si vede appena, con l'1\% sì.
 
 \paragraph{Il comportamento del discriminatore.} Con la soglia più alta gli eventi sono meno della metà, e il comportamento del discriminatore è lo stesso e più marcato. Nel nucleo $D_{\mathrm{reale}}$ e D scendono al percentile 2. Anche nel contorno $D_{\mathrm{reale}}$ diventa basso: con la soglia più alta gli eventi sono più estremi, e anche le celle attorno sono fra i valori più alti di G.
+
+\paragraph{Eventi e catene.} Con la soglia più alta le catene si accorciano ma restano: gli eventi più grandi di ciascun tipo durano fra 8 e 23 giorni, contro 16--97 giorni con il 5\%, e gli eventi con almeno 20 valori contengono ancora l'86\% dei valori segnalati. Cambia anche il terzo tipo scelto dalla regola dei casi, la copertura nuvolosa al posto della pressione: la regola dipende dalla soglia.
 
 \paragraph{Confronti con metodi semplici.} Con la soglia più alta il quadro resta lo stesso, con un accordo più basso. La variazione in tre ore e MCD restano i rilevatori più vicini a G, con il 47\% delle sue segnalazioni condivise; il metodo più lontano resta HBOS, che scende dal 40.5\% al 25.5\%. La quota del solo G sale al 25.3\%, e quella della variazione in tre ore al 38.2\%. I valori segnalati da almeno cinque rilevatori su nove sono lo 0.72\%: il calo è in gran parte automatico, perché ogni rilevatore segnala circa cinque volte meno. L'accordo resta molto sopra il caso: con l'1\% due rilevatori indipendenti condividerebbero circa l'1\% delle segnalazioni, mentre G ne condivide il 47\% con la variazione in tre ore.
 
