@@ -2,13 +2,13 @@
 the specific cases. Made for a reader who is not an expert of the domain: one message for every figure.
 
 Run from the thesis folder. First, once, gather the data from the folder downloaded from the server
-(outputs/casi_good2_g, written by scripts/check_era5_event_zones.py and check_era5_event_cases.py of the code
-repository):
+(outputs/casi_good2_g, written by scripts/check_era5_event_zones.py, check_era5_event_profile.py and
+check_era5_event_cases.py of the code repository):
     python figures/genera_figure_eventi.py --prepare <folder with the downloaded files>
-which writes figures/dati/era5_eventi_zone.csv and era5_caso_NN.npz. Then:
+which writes figures/dati/era5_eventi_zone.csv, era5_eventi_profilo.csv and era5_caso_NN.npz. Then:
     python figures/genera_figure_eventi.py --coastline <ne_50m_coastline.geojson>
-which writes figures/era5_eventi_dimensione.pdf, era5_eventi_tipo.pdf, era5_eventi_zone.pdf,
-era5_eventi_zone_tipi.pdf (from figures/dati/era5_eventi_zone_tipi.csv, the `_types.csv` of the zones), era5_caso_NN.pdf, and figures/dati/era5_casi_zone.json with the medians of every case.
+which writes figures/era5_eventi_dimensione.pdf, era5_eventi_tipo.pdf, era5_eventi_mappa_zone.pdf,
+era5_eventi_profilo.pdf, era5_eventi_profilo_tipi.pdf, era5_caso_NN.pdf, and figures/dati/era5_casi_zone.json with the medians of every case.
 The coastline, from Natural Earth (public domain), is not kept in the repository.
 
 Run: good-sweep-2, test years 2005-2025, threshold from the validation years.
@@ -25,12 +25,14 @@ import matplotlib.dates as dates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.colors import LinearSegmentedColormap, LogNorm
+from matplotlib.colors import LinearSegmentedColormap, ListedColormap, LogNorm
+from scipy import ndimage
 
 from genera_figure_g_d import BLUE, GRID, MUTED, ORANGE, TEXT, TICKS, coastline_of, draw_map, size
 
 HERE = pathlib.Path(__file__).parent
 ZONES = HERE / "dati" / "era5_eventi_zone.csv"
+PROFILE = HERE / "dati" / "era5_eventi_profilo.csv"
 SIZES = ("1", "2-4", "5-19", "20-99", "100-999", "1000-9999", ">9999")
 SIZE_LABELS = ("1", "2–4", "5–19", "20–99", "100–999", "1000–\n9999", "oltre\n9999")
 TYPES = {"vertical_velocity": "Velocità verticale", "total_precipitation": "Precipitazione",
@@ -43,12 +45,14 @@ TYPES = {"vertical_velocity": "Velocità verticale", "total_precipitation": "Pre
          "10m_u_component_of_wind": "Vento est-ovest al suolo"}
 RAMP = LinearSegmentedColormap.from_list("blu", ("#eef4fc", "#9ec5f4", "#3987e5", "#184f95", "#0d366b"))
 SCORE, NORMAL = "G+clim", "normale"
-CORE, EDGE = "core", "edge"
+CORE = "core"
+MIN_VALUES = 1000  # a position of a type with fewer values is not drawn
 
 
 def prepare(folder):
     folder = pathlib.Path(folder)
     shutil.copyfile(folder / "zone_5pc.csv", ZONES)
+    shutil.copyfile(folder / "profilo_5pc.csv", PROFILE)
     for path in sorted(folder.glob("case_*.npz")):
         shutil.copyfile(path, HERE / "dati" / f"era5_caso_{path.stem[-2:]}.npz")
     print(f"written {ZONES}")
@@ -56,8 +60,7 @@ def prepare(folder):
 
 def read_zones():
     zones = pd.read_csv(ZONES, dtype={"size": str})
-    far = zones[zones["type"].str.startswith("far")].iloc[0]
-    return zones[~zones["type"].str.startswith("far")].set_index(["type", "size"]), far
+    return zones[~zones["type"].str.startswith("far")].set_index(["type", "size"])
 
 
 def compact(value):
@@ -132,58 +135,85 @@ def types_figure(zones):
     plt.close(figure)
 
 
-def zones_figure(zones, far):
-    """Where G flags the variables are far from normal; moving away they go back to normal."""
-    everything = zones.loc[("all", "all")]
-    labels = ("Nucleo\n(celle segnalate da G)", "Contorno\n(le 8 celle attorno)", "Zona lontana\n(oltre 3 celle)")
-    series = (("G con normalizzazione", SCORE, BLUE, (0.12, 5), "left"), ("Distanza dal normale", NORMAL, ORANGE, (0.12, -8), "left"))
-    figure, axis = plt.subplots(figsize=size(0.5), constrained_layout=True)
-    axis.axhline(50, color=MUTED, linewidth=0.8, linestyle="--")
-    axis.text(-0.33, 50, "valore tipico", fontsize=TICKS, color=MUTED, va="bottom", ha="left")
-    for name, key, colour, _, _ in series:
-        points = [everything[f"{key} {CORE} percentile"], everything[f"{key} {EDGE} percentile"], far[f"{key} {CORE} percentile"]]
-        axis.plot(range(3), points, color=colour, linewidth=2, marker="o", markersize=6, markeredgecolor="white", label=name)
-        above = key == SCORE
-        for x, y in enumerate(points):
-            # At the far zone the second line is the higher one.
-            high = above if x < 2 else not above
-            axis.annotate(f"{y:.0f}", (x, y), xytext=(0, 7 if high else -13), textcoords="offset points", ha="center",
-                          fontsize=TICKS, color=TEXT)
-    axis.legend(frameon=False, fontsize=TICKS, loc="lower left")
-    axis.set_xlim(-0.35, 2.45)
-    axis.set_ylim(0, 108)
-    axis.set_yticks([0, 25, 50, 75, 100])
-    axis.set_xticks(range(3), labels)
-    axis.set_ylabel("percentile mediano", fontsize=TICKS)
+def zones_map_figure(data, coastline):
+    """What the three zones are, on a map: G at one instant, and its zones. The zones are those of all the events."""
+    grid = {key: data[key] for key in ("rows", "cols", "latitudes", "longitudes")}
+    level = percentile(data[f"score_{SCORE}"], data[f"quantiles_{SCORE}"])
+    core = np.zeros((len(data["latitudes"]), len(data["longitudes"])), dtype=bool)
+    core[data["rows"], data["cols"]] = data[f"score_{SCORE}"] > data[f"limit_{SCORE}"]
+    edge = ndimage.binary_dilation(core, structure=np.ones((3, 3), dtype=bool)) & ~core
+    zone = np.where(data["far"], 0, 1)
+    zone[edge[data["rows"], data["cols"]]] = 2
+    zone[core[data["rows"], data["cols"]]] = 3
+    figure, axes = plt.subplots(1, 2, figsize=size(0.56), constrained_layout=True)
+    mesh = draw_map(axes[0], grid, level, coastline, cmap="viridis", vmin=0, vmax=100)
+    bar = figure.colorbar(mesh, ax=axes[0], orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, ticks=[0, 25, 50, 75, 95])
+    bar.set_label("G, percentile (95 circa = soglia)", fontsize=TICKS)
+    bar.ax.tick_params(labelsize=TICKS)
+    axes[0].set_title("G", fontsize=9, loc="left", color=TEXT)
+    colours = ["#f4f3ef", "#cfcdc6", ORANGE, BLUE]
+    mesh = draw_map(axes[1], grid, zone, coastline, left=False, cmap=ListedColormap(colours), vmin=-0.5, vmax=3.5)
+    bar = figure.colorbar(mesh, ax=axes[1], orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, ticks=range(4))
+    bar.set_ticklabels(("lontana", "intermedia", "contorno", "nucleo"), fontsize=7)
+    bar.ax.tick_params(length=0)
+    axes[1].set_title("Le zone", fontsize=9, loc="left", color=TEXT)
+    figure.savefig(HERE / "era5_eventi_mappa_zone.pdf", dpi=300)
+    plt.close(figure)
+
+
+def position_axis(axis):
+    """The horizontal axis of a profile: cells from the border of the event, inside on the left, outside on the right."""
+    axis.axvline(0, color=TEXT, linewidth=0.8)
+    axis.set_xlim(-8.3, 8.3)
+    axis.set_xticks([-8, -6, -4, -2, 2, 4, 6, 8], ["8 o più", "6", "4", "2", "2", "4", "6", "8 o più"])
+    axis.set_xlabel("celle dal bordo dell'evento:  dentro  |  fuori", fontsize=TICKS)
     axis.tick_params(labelsize=TICKS, length=0)
     axis.grid(axis="y", color=GRID, linewidth=0.6)
     axis.set_axisbelow(True)
     clean(axis, "top", "right", "left")
-    figure.savefig(HERE / "era5_eventi_zone.pdf")
+
+
+def profile_figure():
+    """G falls gradually across its own events, and is back to typical values about six cells out."""
+    table = pd.read_csv(PROFILE)
+    table = table[table["type"] == "all"].sort_values("position")
+    figure, axis = plt.subplots(figsize=size(0.5), constrained_layout=True)
+    axis.axhline(50, color=MUTED, linewidth=0.8, linestyle="--")
+    axis.text(-8.2, 50, "valore tipico", fontsize=TICKS, color=MUTED, va="bottom")
+    axis.axhline(95, color=MUTED, linewidth=0.8, linestyle=":")
+    axis.text(8.2, 96, "soglia di G", fontsize=TICKS, color=MUTED, va="bottom", ha="right")
+    axis.plot(table["position"], table[f"{SCORE} percentile"], color=BLUE, linewidth=2, marker="o", markersize=5, markeredgecolor="white")
+    axis.plot(table["position"], table[f"{NORMAL} percentile"], color=ORANGE, linewidth=2, marker="o", markersize=5, markeredgecolor="white")
+    axis.annotate("G con normalizzazione", (3, 69), xytext=(10, 12), textcoords="offset points", fontsize=TICKS, color=TEXT)
+    axis.text(-0.4, 70, "distanza dal normale", fontsize=TICKS, color=TEXT, ha="right")
+    axis.set_ylim(0, 106)
+    axis.set_yticks([0, 25, 50, 75, 100])
+    axis.set_ylabel("percentile mediano", fontsize=TICKS)
+    position_axis(axis)
+    figure.savefig(HERE / "era5_eventi_profilo.pdf")
     plt.close(figure)
 
 
-def types_zones_figure():
-    """For some types the variable is back near its normal one cell from the core, for others it is not."""
-    table = pd.read_csv(HERE / "dati" / "era5_eventi_zone_tipi.csv").set_index("type")
-    table = table.loc[(table["edge distance"] / table["core distance"]).sort_values().index]
-    place = np.arange(len(table))[::-1]
-    figure, axis = plt.subplots(figsize=size(0.62), constrained_layout=True)
-    axis.hlines(place, table[["core distance", "edge distance", "far distance"]].min(axis=1),
-                table[["core distance", "edge distance", "far distance"]].max(axis=1), color=GRID, linewidth=1.5, zorder=1)
-    for column, label, colour in (("far distance", "Zona lontana", MUTED), ("edge distance", "Contorno", ORANGE),
-                                  ("core distance", "Nucleo", BLUE)):
-        axis.scatter(table[column], place, s=34, color=colour, edgecolor="white", linewidth=0.8, zorder=2, label=label)
-    handles, labels = axis.get_legend_handles_labels()
-    axis.legend(handles[::-1], labels[::-1], frameon=False, fontsize=TICKS, ncol=3, loc="lower center", bbox_to_anchor=(0.5, 1.0))
-    axis.set_yticks(place, [TYPES[name] for name in table.index])
-    axis.set_xlim(0, 2.8)
-    axis.set_xlabel("distanza della variabile dal normale (0 = normale)", fontsize=TICKS)
-    axis.tick_params(labelsize=TICKS, length=0)
-    axis.grid(axis="x", color=GRID, linewidth=0.6)
-    axis.set_axisbelow(True)
-    clean(axis, "top", "right", "left")
-    figure.savefig(HERE / "era5_eventi_zone_tipi.pdf")
+def profile_types_figure():
+    """One cell out of the core some variables are back to normal, others are not: the variable of each type."""
+    table = pd.read_csv(PROFILE)
+    table = table[(table["type"] != "all") & (table["values"] >= MIN_VALUES)]
+    chosen = {"total_precipitation": (BLUE, 3.6, 0.42, -12), "vertical_velocity": ("#1baf7a", 1.6, 0.86, 7),
+              "mean_sea_level_pressure": (ORANGE, 3.7, 1.82, 7)}
+    figure, axis = plt.subplots(figsize=size(0.56), constrained_layout=True)
+    for name, group in table.groupby("type"):
+        group = group.sort_values("position")
+        if name not in chosen:
+            axis.plot(group["position"], group["variable distance"], color="#c8c6bf", linewidth=0.9, zorder=1)
+    for name, (colour, x, y, shift) in chosen.items():
+        group = table[table["type"] == name].sort_values("position")
+        axis.plot(group["position"], group["variable distance"], color=colour, linewidth=2, zorder=2)
+        axis.annotate(TYPES[name], (x, y), xytext=(0, shift), textcoords="offset points", fontsize=TICKS, color=TEXT, zorder=3)
+    axis.annotate("altri tipi", (6.2, 1.62), fontsize=TICKS, color=MUTED)
+    axis.set_ylim(0, None)
+    axis.set_ylabel("distanza dal normale (0 = normale)", fontsize=TICKS)
+    position_axis(axis)
+    figure.savefig(HERE / "era5_eventi_profilo_tipi.pdf")
     plt.close(figure)
 
 
@@ -269,17 +299,20 @@ def main():
     args = parser.parse_args()
     if args.prepare is not None:
         prepare(args.prepare)
-    zones, far = read_zones()
+    zones = read_zones()
     sizes_figure(zones)
     types_figure(zones)
-    zones_figure(zones, far)
-    types_zones_figure()
+    profile_figure()
+    profile_types_figure()
     medians = {}
     for path in sorted((HERE / "dati").glob("era5_caso_*.npz")):
         with np.load(path) as data:
             number = int(path.stem[-2:])
             arrays = {key: data[key] for key in data.files}
-            case_figure(number, arrays, coastline_of(args.coastline, arrays))
+            coastline = coastline_of(args.coastline, arrays)
+            case_figure(number, arrays, coastline)
+            if number == 0:
+                zones_map_figure(arrays, coastline)
             medians[json.loads(str(arrays["case"]))["type"]] = {"record": json.loads(str(arrays["case"])), **case_medians(arrays)}
     (HERE / "dati" / "era5_casi_zone.json").write_text(json.dumps(medians, indent=1), encoding="utf-8")
     print(json.dumps({name: {zone: value[zone] for zone in ("core", "edge", "far")} for name, value in medians.items()}, indent=1))

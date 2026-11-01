@@ -433,34 +433,46 @@ Questa sezione e la seguente mostrano come si comporta G con la normalizzazione,
     \label{fig:ris-eventi-tipo}
 \end{figure}
 
-\paragraph{Allontanandosi da dove G segnala, le variabili tornano nella norma.} Il comportamento nelle tre zone della Figura~\ref{fig:ris-zone-schema} è riassunto dal percentile mediano: 100 è il valore più alto dello score, 50 un valore tipico (Figura~\ref{fig:ris-eventi-zone}). G è alto nel nucleo per costruzione, perché il nucleo è fatto dei suoi valori più alti, e resta alto nel contorno, dove lo score legge la stessa patch. Il dato che non dipende da questa costruzione è la distanza dal normale, che non usa il modello e legge una sola cella: ha un percentile mediano di 92 nel nucleo, di 79 nel contorno e di 43 nella zona lontana. Dove G segnala le variabili sono quindi lontane da ciò che è abituale per quel luogo e quel periodo, e allontanandosi di poche celle tornano nella norma.
+\paragraph{Le zone su una mappa.} La domanda di questa sezione è se G distingue da solo il centro di ciò che segnala, il contorno e ciò che non segnala. La Figura~\ref{fig:ris-eventi-mappa-zone} mostra le zone della Sezione~\ref{sec:ris-g-d} in un istante: G è più alto nel nucleo, sfuma nel contorno e nella zona lontana è basso.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=\textwidth]{era5_eventi_zone}
-    \caption{Percentile mediano di G con la normalizzazione e della distanza dal normale nelle tre zone attorno agli eventi di G, sugli anni di test. La linea tratteggiata indica il valore tipico, 50. Dove G segnala le variabili sono lontane dal normale; nella zona lontana sono su valori tipici.}
-    \label{fig:ris-eventi-zone}
+    \includegraphics[width=\textwidth]{era5_eventi_mappa_zone}
+    \caption{G con la normalizzazione (a sinistra) e le sue zone (a destra) il 5 febbraio 2020 alle 06~UTC. Il nucleo è fatto delle celle sopra la soglia, il contorno delle otto celle attorno, la zona lontana delle celle a più di tre celle da ogni nucleo; le celle intermedie stanno fra le ultime due. Linee di costa da Natural Earth.}
+    \label{fig:ris-eventi-mappa-zone}
 \end{figure}
+
+\paragraph{G cala in modo graduale.} Una mappa è un solo esempio. La Figura~\ref{fig:ris-eventi-profilo} riassume tutti gli anni di test: per ogni cella si conta a quante celle sta dal bordo dell'evento più vicino, verso l'interno o verso l'esterno, e si legge il percentile mediano dello score, dove 100 è il valore più alto e 50 un valore tipico. Che le celle segnalate stiano sopra la soglia e le altre sotto è vero per costruzione; il risultato è la forma della curva. Una cella dentro il bordo G vale 96, una cella fuori 90, due celle fuori 80, tre celle fuori 69, e torna a un valore tipico dopo circa sei celle, cioè tre gradi. G quindi separa centro, contorno ed esterno, ma senza un confine netto: la soglia taglia una curva continua. Parte della gradualità vicino al bordo dipende dalla patch $3\times3$ su cui lo score è mediato. Il nucleo, inoltre, è sottile: il 65\% dei valori segnalati sta sul suo bordo, a una sola cella dall'esterno.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_eventi_profilo}
+    \caption{Profilo attraverso gli eventi di G, sugli anni di test: percentile mediano di G con la normalizzazione e della distanza dal normale, secondo le celle di distanza dal bordo dell'evento più vicino. Il taglio alla soglia è per costruzione. G cala in modo graduale e torna a un valore tipico dopo circa sei celle.}
+    \label{fig:ris-eventi-profilo}
+\end{figure}
+
+\paragraph{Anche le variabili seguono il profilo.} La distanza dal normale non usa il modello, legge una sola cella e non è un riferimento per giudicare G: descrive com'erano i dati dove G segnala. Ha lo stesso andamento: 99 al centro, 89 una cella dentro il bordo, 79 una cella fuori, 50 dopo sei celle. La crescita verso il centro non dipende dalla soglia: la variabile del tipo dista dal normale 1.7 volte la sua variabilità abituale sul bordo del nucleo e 3.2 volte al centro. Che le due grandezze salgano insieme mostra che le segnalazioni non cadono a caso, non che siano giuste.
 
 \paragraph{Insolito, ma non sempre estremo.} Nel nucleo solo il 42\% dei valori supera la soglia della distanza dal normale, contro il 16\% nel contorno e il 2\% nella zona lontana. Il restante 58\% è lontano dal normale senza esserlo in modo estremo: G segnala anche valori che, presi uno per uno, non sono fra i più lontani dal clima. In parte è atteso, perché i due score misurano cose diverse. Nell'insieme, inoltre, il percentile mediano nel nucleo va da 81--82 negli eventi con meno di 20 valori a 95 in quelli con più di 9999: gli eventi piccoli sono i meno estremi.
 
-\paragraph{Per tipo di evento, G si comporta allo stesso modo, le variabili no.} Il percentile mediano di G è fra 96 e 98 nel nucleo e fra 89 e 91 nel contorno, per tutti i tipi. Cambia invece quanto la variabile del tipo resta lontana dal normale (Figura~\ref{fig:ris-eventi-zone-tipi}): qui la distanza è misurata in multipli della variabilità abituale di quella variabile, per quel luogo e periodo. Nel nucleo è alta per tutti i tipi, fra 1.5 e 2.6, in parte per costruzione, perché il tipo è proprio la variabile più lontana dal normale. Nella zona lontana è bassa per tutti, fra 0.1 e 0.7. La differenza è nel contorno, a una sola cella dal nucleo. Per precipitazione, radiazione solare, copertura nuvolosa e velocità verticale la distanza scende subito: per la precipitazione da 1.68 a 0.62. Per le altre undici variabili resta quasi uguale: per la temperatura al suolo da 2.33 a 2.12, per la pressione da 2.18 a 1.98.
+\paragraph{Per tipo di evento, G è simile, le variabili no.} Vicino al bordo G è quasi uguale per tutti i tipi: una cella fuori vale fra 89 e 91. Più lontano si separa di poco: a sei celle va da 44 per la radiazione solare a 60 per la pressione. Le differenze grandi riguardano invece la variabile del tipo (Figura~\ref{fig:ris-eventi-profilo-tipi}). Per precipitazione, copertura nuvolosa e radiazione solare torna vicina al normale entro due celle dal bordo: la precipitazione passa da 1.33 sul bordo del nucleo a 0.62 e 0.48 nelle due celle fuori. La velocità verticale scende un po' più lentamente. Per pressione e temperatura resta lontana a lungo: a sette celle fuori la pressione è ancora a 1.38, la temperatura al suolo a 1.33. I venti e l'umidità specifica stanno in mezzo.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=\textwidth]{era5_eventi_zone_tipi}
-    \caption{Per ogni tipo di evento, distanza mediana dal normale della variabile che dà il nome al tipo, nel nucleo, nel contorno e nella zona lontana, sugli anni di test: 0 è il valore normale, 1 uno scostamento pari alla variabilità abituale. I tipi sono ordinati da quello in cui la distanza scende di più fra nucleo e contorno. ``In quota'' indica il livello di 850~hPa. Nei primi quattro tipi il contorno è già vicino al normale; negli altri resta lontano quasi quanto il nucleo.}
-    \label{fig:ris-eventi-zone-tipi}
+    \includegraphics[width=\textwidth]{era5_eventi_profilo_tipi}
+    \caption{Per ogni tipo di evento, distanza mediana dal normale della variabile che dà il nome al tipo, secondo le celle di distanza dal bordo dell'evento, sugli anni di test: 0 è il valore normale, 1 uno scostamento pari alla variabilità abituale. Sono evidenziati i tre tipi dei casi della Sezione~\ref{sec:ris-casi}; non sono tracciate le posizioni con meno di 1000 valori. Precipitazione e velocità verticale tornano presto vicine al normale, la pressione resta lontana anche a molte celle.}
+    \label{fig:ris-eventi-profilo-tipi}
 \end{figure}
 
 Il risultato è coerente con il modo in cui queste variabili cambiano nello spazio, anche se la verifica non lo dimostra: precipitazione e nuvole possono cambiare da una cella all'altra, mentre temperatura e pressione variano su aree più ampie. Nel primo gruppo il nucleo di G racchiude lo scostamento. Nel secondo lo scostamento continua oltre il nucleo: G ne segnala solo una parte, e le celle attorno, pur lontane dal normale, restano sotto la sua soglia.
-% Per tipo (1 novembre 2026): check_era5_event_zones.py --scores G+clim, normale, uscite
-% outputs/casi_good2_g/zone_tipi_5pc.csv e _types.csv, copiato in
-% figures/dati/era5_eventi_zone_tipi.csv. Rapporto contorno/nucleo: precipitazione 0.37,
-% radiazione 0.49, nuvole 0.49, velocità verticale 0.64; gli altri da 0.81 a 0.95. Valori oltre
-% 2 volte la variabilità abituale: nucleo 39-64%, contorno 20-57%, lontano 0.5-4.0%. Distanza
-% dal normale di tutte le variabili nel contorno, percentile mediano per tipo: 69 (radiazione)
-% - 93 (umidità del suolo). La zona lontana è letta su un istante ogni 10.
+% Profilo (1 novembre 2026): scripts/check_era5_event_profile.py, uscita
+% outputs/casi_good2_g/profilo_5pc.csv, copiata in figures/dati/era5_eventi_profilo.csv. Una cella
+% fuori appartiene all'evento della cella segnalata più vicina. Posizione -8..-1, 1..8 (tutti):
+% G+clim 100, 100, 100, 99, 99, 99, 99, 96 | 90, 80, 69, 62, 56, 51, 47, 34; normale 99, 99, 99,
+% 99, 98, 97, 96, 89 | 79, 69, 63, 58, 54, 50, 47, 39; variabile del tipo 3.22, 3.03, 2.82, 2.68,
+% 2.48, 2.33, 2.12, 1.72 | 1.33, 0.98, 0.78, 0.73, 0.68, 0.62, 0.58, 0.52. Valori sul bordo
+% interno 23999647 su 36656037 (65.5%). Zone (zone_5pc.csv): G+clim 97|90|40, G 97|88|39, normale
+% 92|79|43, normale oltre la propria soglia 42.3|16.1|2.0%.
 % Numeri (1 novembre 2026, test 2005-2025, good-sweep-2): scripts/check_era5_event_zones.py
 % --events e --scores G+clim=outputs/good2v/test_generator_clim_day, G, normale=
 % outputs/confronti_good2/climatology/test/normal, uscite outputs/casi_good2_g/zone_5pc.csv,
