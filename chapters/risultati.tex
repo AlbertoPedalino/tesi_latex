@@ -443,6 +443,24 @@ Questa sezione e la seguente mostrano come si comporta G con la normalizzazione,
 \end{figure}
 
 \paragraph{Insolito, ma non sempre estremo.} Nel nucleo solo il 42\% dei valori supera la soglia della distanza dal normale, contro il 16\% nel contorno e il 2\% nella zona lontana. Il restante 58\% è lontano dal normale senza esserlo in modo estremo: G segnala anche valori che, presi uno per uno, non sono fra i più lontani dal clima. In parte è atteso, perché i due score misurano cose diverse. Nell'insieme, inoltre, il percentile mediano nel nucleo va da 81--82 negli eventi con meno di 20 valori a 95 in quelli con più di 9999: gli eventi piccoli sono i meno estremi.
+
+\paragraph{Per tipo di evento, G si comporta allo stesso modo, le variabili no.} Il percentile mediano di G è fra 96 e 98 nel nucleo e fra 89 e 91 nel contorno, per tutti i tipi. Cambia invece quanto la variabile del tipo resta lontana dal normale (Figura~\ref{fig:ris-eventi-zone-tipi}): qui la distanza è misurata in multipli della variabilità abituale di quella variabile, per quel luogo e periodo. Nel nucleo è alta per tutti i tipi, fra 1.5 e 2.6, in parte per costruzione, perché il tipo è proprio la variabile più lontana dal normale. Nella zona lontana è bassa per tutti, fra 0.1 e 0.7. La differenza è nel contorno, a una sola cella dal nucleo. Per precipitazione, radiazione solare, copertura nuvolosa e velocità verticale la distanza scende subito: per la precipitazione da 1.68 a 0.62. Per le altre undici variabili resta quasi uguale: per la temperatura al suolo da 2.33 a 2.12, per la pressione da 2.18 a 1.98.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_eventi_zone_tipi}
+    \caption{Per ogni tipo di evento, distanza mediana dal normale della variabile che dà il nome al tipo, nel nucleo, nel contorno e nella zona lontana, sugli anni di test: 0 è il valore normale, 1 uno scostamento pari alla variabilità abituale. I tipi sono ordinati da quello in cui la distanza scende di più fra nucleo e contorno. ``In quota'' indica il livello di 850~hPa. Nei primi quattro tipi il contorno è già vicino al normale; negli altri resta lontano quasi quanto il nucleo.}
+    \label{fig:ris-eventi-zone-tipi}
+\end{figure}
+
+Il risultato è coerente con il modo in cui queste variabili cambiano nello spazio, anche se la verifica non lo dimostra: precipitazione e nuvole possono cambiare da una cella all'altra, mentre temperatura e pressione variano su aree più ampie. Nel primo gruppo il nucleo di G racchiude lo scostamento. Nel secondo lo scostamento continua oltre il nucleo: G ne segnala solo una parte, e le celle attorno, pur lontane dal normale, restano sotto la sua soglia.
+% Per tipo (1 novembre 2026): check_era5_event_zones.py --scores G+clim, normale, uscite
+% outputs/casi_good2_g/zone_tipi_5pc.csv e _types.csv, copiato in
+% figures/dati/era5_eventi_zone_tipi.csv. Rapporto contorno/nucleo: precipitazione 0.37,
+% radiazione 0.49, nuvole 0.49, velocità verticale 0.64; gli altri da 0.81 a 0.95. Valori oltre
+% 2 volte la variabilità abituale: nucleo 39-64%, contorno 20-57%, lontano 0.5-4.0%. Distanza
+% dal normale di tutte le variabili nel contorno, percentile mediano per tipo: 69 (radiazione)
+% - 93 (umidità del suolo). La zona lontana è letta su un istante ogni 10.
 % Numeri (1 novembre 2026, test 2005-2025, good-sweep-2): scripts/check_era5_event_zones.py
 % --events e --scores G+clim=outputs/good2v/test_generator_clim_day, G, normale=
 % outputs/confronti_good2/climatology/test/normal, uscite outputs/casi_good2_g/zone_5pc.csv,

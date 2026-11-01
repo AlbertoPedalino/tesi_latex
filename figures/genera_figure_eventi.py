@@ -8,7 +8,7 @@ repository):
 which writes figures/dati/era5_eventi_zone.csv and era5_caso_NN.npz. Then:
     python figures/genera_figure_eventi.py --coastline <ne_50m_coastline.geojson>
 which writes figures/era5_eventi_dimensione.pdf, era5_eventi_tipo.pdf, era5_eventi_zone.pdf,
-era5_caso_NN.pdf, and figures/dati/era5_casi_zone.json with the medians of every case.
+era5_eventi_zone_tipi.pdf (from figures/dati/era5_eventi_zone_tipi.csv, the `_types.csv` of the zones), era5_caso_NN.pdf, and figures/dati/era5_casi_zone.json with the medians of every case.
 The coastline, from Natural Earth (public domain), is not kept in the repository.
 
 Run: good-sweep-2, test years 2005-2025, threshold from the validation years.
@@ -163,6 +163,30 @@ def zones_figure(zones, far):
     plt.close(figure)
 
 
+def types_zones_figure():
+    """For some types the variable is back near its normal one cell from the core, for others it is not."""
+    table = pd.read_csv(HERE / "dati" / "era5_eventi_zone_tipi.csv").set_index("type")
+    table = table.loc[(table["edge distance"] / table["core distance"]).sort_values().index]
+    place = np.arange(len(table))[::-1]
+    figure, axis = plt.subplots(figsize=size(0.62), constrained_layout=True)
+    axis.hlines(place, table[["core distance", "edge distance", "far distance"]].min(axis=1),
+                table[["core distance", "edge distance", "far distance"]].max(axis=1), color=GRID, linewidth=1.5, zorder=1)
+    for column, label, colour in (("far distance", "Zona lontana", MUTED), ("edge distance", "Contorno", ORANGE),
+                                  ("core distance", "Nucleo", BLUE)):
+        axis.scatter(table[column], place, s=34, color=colour, edgecolor="white", linewidth=0.8, zorder=2, label=label)
+    handles, labels = axis.get_legend_handles_labels()
+    axis.legend(handles[::-1], labels[::-1], frameon=False, fontsize=TICKS, ncol=3, loc="lower center", bbox_to_anchor=(0.5, 1.0))
+    axis.set_yticks(place, [TYPES[name] for name in table.index])
+    axis.set_xlim(0, 2.8)
+    axis.set_xlabel("distanza della variabile dal normale (0 = normale)", fontsize=TICKS)
+    axis.tick_params(labelsize=TICKS, length=0)
+    axis.grid(axis="x", color=GRID, linewidth=0.6)
+    axis.set_axisbelow(True)
+    clean(axis, "top", "right", "left")
+    figure.savefig(HERE / "era5_eventi_zone_tipi.pdf")
+    plt.close(figure)
+
+
 def percentile(values, quantiles):
     return np.interp(values, quantiles, np.linspace(0, 100, len(quantiles)))
 
@@ -249,6 +273,7 @@ def main():
     sizes_figure(zones)
     types_figure(zones)
     zones_figure(zones, far)
+    types_zones_figure()
     medians = {}
     for path in sorted((HERE / "dati").glob("era5_caso_*.npz")):
         with np.load(path) as data:
