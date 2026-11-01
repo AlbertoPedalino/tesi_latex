@@ -298,47 +298,102 @@ Le sezioni precedenti mostrano che D ordina le osservazioni in senso opposto a G
 % umidità del suolo 38-49, velocità di attrito 40-53. Velocità verticale e
 % precipitazione: 60% dei valori del nucleo.
 
-\section{Confronto con metodi semplici e modelli poco profondi}
+\section{Confronto con metodi semplici}
 \label{sec:ris-confronti}
 
-% Confronto a parità di segnalazioni (ognuno il proprio 5% più alto): quota delle
-% segnalazioni condivise, indice di Jaccard, segnalazioni esclusive, voto a
-% maggioranza (compare_era5_detectors.py). Rilevatori, tutti esistenti e applicati
-% così come sono, senza riferimenti esterni:
-% - solo il punto: distanza dal normale; sette metodi statistici di TSB-AD (PCA,
-%   KMeans, CBLOF, MCD, HBOS, COPOD, Isolation Forest; score_era5_shallow.py);
-% - il tempo: variazione in tre ore; Shekhar et al. 2001 con vicinato temporale;
-% - lo spazio: Shekhar et al. 2001 con vicinato spaziale; Chen et al. 2008
-%   multivariato (score_era5_spatial_outliers.py);
-% - spazio e tempo: Shekhar et al. 2001 con vicinato spazio-temporale; STGAN.
-% KNN, LOF e OCSVM esclusi per il costo su ~600 milioni di punti. I metodi
-% spazio-temporali pubblicati (scan statistic, ST-DBSCAN, ...) non si applicano
-% così come sono a campi continui multivariati su griglia.
-% Testo tolto dal Capitolo 5 il 28 ottobre 2026 (Metriche e Rilevatori senza modello),
-% da riscrivere qui. SUPERATO su tre punti dallo script scripts/run_era5_comparisons.sh
-% (28 ottobre 2026): (1) le due variazioni non sono ribilanciate per variabile, tutti i
-% rilevatori usano i pesi della run; (2) non c'è il terzo rilevatore 'il maggiore dei
-% due'; (3) solo la soglia al 95-esimo percentile, dalla validazione.
-% \section{Metriche}
-% \label{sec:exp-metriche}
-%
-% L'accordo fra due rilevatori che segnalano gli insiemi di osservazioni $A$ e $B$ è misurato dall'indice di Jaccard,
-% \begin{equation}
-% J(A,B)=\frac{|A\cap B|}{|A\cup B|},
-% \end{equation}
-% che vale 1 quando gli insiemi coincidono e 0 quando sono disgiunti. Quando i rilevatori segnalano la stessa quota di osservazioni è riportata anche la quota delle segnalazioni di $A$ che anche $B$ segnala, $|A\cap B|/|A|$, che a parità di segnalazioni coincide con $|A\cap B|/|B|$. Nessuna delle due è una misura di accuratezza: due rilevatori possono concordare ed entrambi sbagliare.
-%
-% \section{Rilevatori di confronto senza modello}
-% \label{sec:exp-baseline}
-%
-% Il detector è confrontato con tre rilevatori che non usano un modello appreso. Rappresentano i due modi più semplici di dire che il tempo di una cella è insolito, e servono a stabilire che cosa il detector aggiunge a ciò che si ottiene senza addestramento. Sono calcolati sugli stessi dati standardizzati della Sezione~\ref{sec:ingresso-normalizzazione-era5}.
-%
-% La \emph{distanza dal normale} è l'errore che si commetterebbe rispondendo, in ogni cella, con il valore normale per quel giorno e quell'ora: misura lo scostamento dal clima, e coglie per esempio il caldo o il freddo prolungati. La \emph{variazione in tre ore} è l'errore che si commetterebbe rispondendo con il valore dell'istante precedente: misura il cambiamento rapido, e coglie per esempio il passaggio di un fronte. Il terzo rilevatore prende, cella per cella, il maggiore dei due. In entrambi gli errori ogni variabile è divisa per il proprio errore medio, così che le quindici variabili contino allo stesso modo, e ai tre score è applicata la stessa forma di normalizzazione climatologica dello score di ricostruzione (Sezione~\ref{sec:normalizzazione-climatologica-score}). Per trattarli come il detector, errori medi e climatologia sono stimati sugli stessi anni di validazione, esclusi i valori segnati come insoliti, e restano fissi per il test; le soglie sono fissate allo stesso modo, al 95-esimo e al 99-esimo percentile degli score di validazione. I confronti sono quindi a parità di criterio.
-%
-% % Codice: rebalance_era5_stgan_scores.py --scale mean --scale-run-dir (validazione)
-% % --normal-masks-dir; climatology --reference validation. Run in outputs/good2v
-% % (val_* e test_*).
-\provv{Sezione da scrivere con la run finale.}
+Le sezioni precedenti scelgono lo score del detector, G con la normalizzazione climatologica; questa ne confronta le segnalazioni con quelle di metodi più semplici. È un controllo di coerenza, come raccomandato da Wu e Keogh (Sezione~\ref{sec:rw-valutazione}), e non una misura di accuratezza: senza etichette l'accordo non dice quale rilevatore abbia ragione, e due rilevatori possono concordare ed entrambi sbagliare. Serve a vedere quali segnalazioni del detector si ottengono anche senza un modello profondo, e quali no.
+
+\paragraph{I metodi.} I rilevatori di confronto sono otto (Tabella~\ref{tab:ris-metodi-confronto}). Sei sono metodi statistici valutati in TSB-AD~\cite{liu2024elephant}, con i valori predefiniti della libreria PyOD: leggono una cella in un istante, cioè il vettore delle sue quindici variabili, senza le celle attorno né gli istanti prima. Ciascuno è stimato una sola volta, su 200000 vettori estratti da 2000 istanti a caso degli anni di addestramento. Gli altri due sono riferimenti senza modello. La \emph{distanza dal normale} è l'errore che si commetterebbe rispondendo, in ogni cella, con il valore normale per quel giorno e quell'ora: misura lo scostamento dal clima. La \emph{variazione in tre ore} è l'errore che si commetterebbe rispondendo con il valore dell'istante precedente: misura il cambiamento rapido. Nei due errori le variabili hanno gli stessi pesi dell'errore di ricostruzione (Sezione~\ref{sec:pesi-variabili-ricostruzione}). Nessuno degli otto legge le celle vicine, quindi G è l'unico dei rilevatori che usa lo spazio.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{I rilevatori confrontati e ciò che leggono di ogni valore. Le descrizioni dei metodi statistici seguono TSB-AD. Per COPOD le distribuzioni di riferimento sono stimate solo sul campione di addestramento, così che lo score di un valore non dipenda dagli altri valori valutati con esso.}
+    \label{tab:ris-metodi-confronto}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.22}L{0.14}L{0.56}@{}}
+        \toprule
+        Rilevatore & Legge & Score \\
+        \midrule
+        Distanza dal normale & il punto & errore della risposta ``valore normale per quel giorno e quell'ora'' \\
+        PCA & il punto & distanza dal centro lungo le componenti principali, ciascuna divisa per la quota di varianza che spiega \\
+        CBLOF & il punto & distanza dal centro del proprio gruppo (8 gruppi), o del gruppo grande più vicino se il proprio è piccolo \\
+        MCD & il punto & distanza di Mahalanobis, con media e covarianza del sottoinsieme di dati con il determinante minimo \\
+        HBOS & il punto & somma sulle variabili del logaritmo dell'inverso dell'altezza dell'istogramma (10 intervalli) \\
+        COPOD & il punto & probabilità di coda di ogni variabile, dalle distribuzioni empiriche \\
+        Isolation Forest & il punto & brevità del percorso che isola il valore in 100 alberi casuali, di 256 valori ciascuno \\
+        \addlinespace
+        Variazione in tre ore & il tempo & errore della risposta ``valore di tre ore prima'' \\
+        \addlinespace
+        G con normalizzazione & spazio e tempo & errore del generatore (Sezione~\ref{sec:score-dropout-montecarlo}) \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\paragraph{Il confronto.} Ogni rilevatore è trattato come il detector: il suo score è espresso rispetto alla propria climatologia per cella, giorno dell'anno e ora (Sezione~\ref{sec:normalizzazione-climatologica-score}), e la sua soglia è il 95-esimo percentile dello stesso score sugli anni di validazione. Il confronto non serve a scegliere lo score, e riguarda gli anni di test 2005--2025: 651 milioni di valori, con ogni rilevatore che ne segnala fra il 5.1\% e il 5.6\% (Tabella~\ref{tab:ris-confronti}). Se due rilevatori segnalano gli insiemi di valori $A$ e $B$, la quota delle segnalazioni di $A$ condivise con $B$ è $|A\cap B|/|A|$; l'indice di Jaccard,
+\begin{equation}
+J(A,B)=\frac{|A\cap B|}{|A\cup B|},
+\end{equation}
+vale 1 quando i due insiemi coincidono e 0 quando sono disgiunti. Due rilevatori indipendenti condividerebbero circa il 5\% delle segnalazioni.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Segnalazioni dei rilevatori sugli anni di test, con la soglia di ciascuno al 95-esimo percentile del proprio score sulla validazione. ``Segnalati'': quota dei valori che il rilevatore segnala. ``Maggioranza'': quota delle sue segnalazioni condivise da almeno 5 rilevatori su 9, compreso esso. ``Da solo'': quota delle sue segnalazioni che nessun altro segnala. ``Di G'': quota delle segnalazioni di G che il rilevatore segnala anche, l'ordine della tabella. ``Jaccard'': indice di Jaccard con G.}
+    \label{tab:ris-confronti}
+    \vspace{0.6em}
+    \begin{tabular}{@{}lrrrrr@{}}
+        \toprule
+        Rilevatore & Segnalati & Maggioranza & Da solo & Di G & Jaccard \\
+        \midrule
+        Variazione in tre ore & 5.48\% & 36.0\% & 32.0\% & 54.2\% & 37.9\% \\
+        MCD & 5.43\% & 63.0\% & 7.9\% & 53.7\% & 37.6\% \\
+        PCA & 5.31\% & 76.8\% & 0.6\% & 50.7\% & 35.3\% \\
+        Isolation Forest & 5.17\% & 71.3\% & 4.1\% & 45.5\% & 31.1\% \\
+        CBLOF & 5.41\% & 62.9\% & 7.8\% & 45.1\% & 29.9\% \\
+        COPOD & 5.16\% & 68.3\% & 6.9\% & 44.8\% & 30.5\% \\
+        Distanza dal normale & 5.62\% & 60.1\% & 14.0\% & 42.3\% & 26.8\% \\
+        HBOS & 5.14\% & 65.0\% & 9.5\% & 40.5\% & 26.9\% \\
+        \addlinespace
+        G con normalizzazione & 5.63\% & 50.1\% & 16.4\% & -- & -- \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\paragraph{I metodi che leggono il punto concordano fra loro.} La Figura~\ref{fig:ris-confronti-jaccard} riporta l'indice di Jaccard di ogni coppia. I sei metodi statistici e la distanza dal normale formano un gruppo, con valori fra il 35\% e il 63\%: leggono lo stesso vettore, e tutti misurano quanto è lontano da ciò che è abituale. La variazione in tre ore resta da parte, con valori fra il 17\% e il 26\%: segnala soprattutto altri valori.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{era5_confronti_jaccard}
+    \caption{Indice di Jaccard delle segnalazioni di ogni coppia di rilevatori sugli anni di test, in percentuale, con la soglia di ciascuno al 95-esimo percentile del proprio score sulla validazione. I metodi che leggono il punto formano un gruppo, la variazione in tre ore resta da parte, e G si sovrappone a entrambi.}
+    \label{fig:ris-confronti-jaccard}
+\end{figure}
+
+\paragraph{G si sovrappone a entrambi.} Il 54\% delle segnalazioni di G è segnalato anche dalla variazione in tre ore, e fra il 40\% e il 54\% da ciascuno dei metodi che leggono il punto, contro il 5\% atteso fra rilevatori indipendenti. Il rilevatore più vicino alla variazione in tre ore è G, con un indice di Jaccard del 38\%; fra gli altri il più vicino è MCD, con il 26\%. Il risultato è coerente con la definizione di G: il generatore risponde a partire dagli istanti precedenti, quindi il suo errore può crescere sia quando un valore si allontana dal consueto sia quando cambia in fretta. L'accordo da solo non dimostra però questo meccanismo. Nessun singolo metodo semplice riproduce le segnalazioni di G: il più vicino ne condivide poco più della metà.
+
+\paragraph{Il voto a maggioranza.} L'85.4\% dei valori non è segnalato da nessun rilevatore, e il 4.25\% è segnalato da almeno cinque su nove. Fra le segnalazioni di G il 50.1\% è condiviso dalla maggioranza. Il voto va però letto tenendo conto della composizione dell'insieme: sette rilevatori su nove leggono il punto, quindi la maggioranza coincide in buona parte con il loro accordo. Il 76.8\% di PCA e il 36.0\% della variazione in tre ore dicono quanto ciascuno è vicino a quel gruppo, non quale sia migliore.
+
+\paragraph{Le segnalazioni del solo G.} Il 16.4\% delle segnalazioni di G non è segnalato da nessun altro rilevatore, circa lo 0.9\% di tutti i valori; l'83.6\% è quindi segnalato anche da almeno un altro. La quota esclusiva di G è intermedia: è il 32.0\% per la variazione in tre ore, il 14.0\% per la distanza dal normale, meno del 10\% per i metodi statistici. Una quota esclusiva non è di per sé un pregio: può indicare ciò che solo il generatore coglie, per esempio perché legge le celle vicine, oppure un suo errore. Il confronto non permette di distinguere i due casi; le Sezioni~\ref{sec:ris-eventi} e~\ref{sec:ris-casi} guardano dove cadono queste segnalazioni.
+
+\paragraph{La stabilità dei metodi statistici.} I metodi statistici dipendono dal campione su cui sono stimati. Per verificarlo sono stati stimati di nuovo con un campione cinque volte più grande, un milione di vettori da 10000 istanti, e con lo stesso numero di vettori estratti con un altro seme; le segnalazioni delle tre versioni sono confrontate sugli anni di validazione. Per PCA, MCD e COPOD coincidono: l'indice di Jaccard è fra il 98\% e il 99\%. Per CBLOF è fra il 69\% e l'86\%, per Isolation Forest fra il 70\% e il 72\%, per HBOS fra il 54\% e il 58\%. In questi tre casi il campione più grande non avvicina le segnalazioni più di un altro seme: la variabilità è propria del metodo, non della dimensione del campione. I valori di questi tre metodi vanno quindi letti con questo limite: il 27\% fra G e HBOS va confrontato con il 54--58\% di HBOS con sé stesso, non con il 100\%. Il risultato principale non ne dipende, perché la variazione in tre ore non dipende da un campione, e MCD e PCA sono stabili.
+
+\paragraph{Sintesi.} I metodi che leggono il punto segnalano in larga parte gli stessi valori, la variazione in tre ore ne segnala altri, e G si sovrappone a entrambi senza coincidere con nessuno. Oltre otto segnalazioni di G su dieci sono segnalate anche da almeno un metodo più semplice. Questo sostiene la coerenza del detector, ma non ne misura l'accuratezza.
+% Numeri (29 ottobre 2026, test 2005-2025, good-sweep-2): scripts/run_era5_comparisons.sh
+% con SPATIAL='' e COMPARED='pca cblof mcd hbos copod iforest normal change_3h', uscite in
+% outputs/confronti_good2, log logs/comparison_5pc.log e comparison_1pc.log (9 rilevatori,
+% 651090960 valori, maggioranza 5 di 9). Figura: figures/genera_figura_confronti.py, dati
+% figures/dati/era5_confronti.json. Valori segnalati da 0,...,9 rilevatori: 85.40, 5.40,
+% 2.59, 1.29, 1.07, 0.92, 0.82, 0.83, 0.82, 0.86; almeno 5: 4.25%. Solo G: 5.63 x 0.164 =
+% 0.92% dei valori. Jaccard fra i sette che leggono il punto: minimo 34.7 (MCD-HBOS),
+% massimo 63.1 (PCA-Isolation Forest); variazione con quei sette: 16.5-26.4.
+% Stabilità: scripts/check_era5_shallow_sample.sh (29 ottobre 2026, validazione, base /
+% grande / seme1, Jaccard al 5%): PCA 98.8/98.3/99.0, MCD 99.0/98.1/98.3, COPOD
+% 99.2/98.7/98.9, CBLOF 71.2/86.2/68.5, Isolation Forest 72.4/69.6/69.8, HBOS
+% 54.1/58.1/56.9 (base-grande, base-seme1, grande-seme1). All'1%: PCA 98.2-98.8; CBLOF
+% 71-89, Isolation Forest 61-64, HBOS 50-54. Da ricalcolare sulla run finale: MODEL in
+% run_era5_comparisons.sh.
+% Fonti: le descrizioni dei metodi statistici sono quelle di Liu e Paparrizos (TSB-AD,
+% appendice sui metodi); i lavori originali non sono citati perché non letti.
 
 \section{Eventi per tipo e dimensione}
 \label{sec:ris-eventi}
@@ -387,7 +442,11 @@ Tutti i risultati precedenti usano la soglia del 95-esimo percentile degli score
          & $D_{\mathrm{reale}}$ nel contorno, percentile mediano & 54 & 13 \\
          & D nel nucleo, percentile mediano & 10 & 2 \\
         \addlinespace
-        Confronti (Sez.~\ref{sec:ris-confronti}) & \provv{da completare} & & \\
+        Confronti (Sez.~\ref{sec:ris-confronti}) & segnalazioni di G condivise con la variazione in tre ore & 54.2\% & 47.5\% \\
+         & condivise con MCD & 53.7\% & 47.4\% \\
+         & condivise con HBOS & 40.5\% & 25.5\% \\
+         & segnalazioni del solo G & 16.4\% & 25.3\% \\
+         & valori segnalati da almeno 5 rilevatori su 9 & 4.25\% & 0.72\% \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -396,9 +455,9 @@ Tutti i risultati precedenti usano la soglia del 95-esimo percentile degli score
 
 \paragraph{Il comportamento del discriminatore.} Con la soglia più alta gli eventi sono meno della metà, e il comportamento del discriminatore è lo stesso e più marcato. Nel nucleo $D_{\mathrm{reale}}$ e D scendono al percentile 2. Anche nel contorno $D_{\mathrm{reale}}$ diventa basso: con la soglia più alta gli eventi sono più estremi, e anche le celle attorno sono fra i valori più alti di G. Il gruppo più piccolo per tipo e dimensione, la temperatura a 850~hPa negli eventi con più di 19 valori, contiene 21 eventi.
 
-\paragraph{Confronti con metodi semplici.} \provv{Da scrivere con i risultati della Sezione~\ref{sec:ris-confronti}.}
+\paragraph{Confronti con metodi semplici.} Con la soglia più alta il quadro resta lo stesso, con un accordo più basso. La variazione in tre ore e MCD restano i rilevatori più vicini a G, con il 47\% delle sue segnalazioni condivise; il metodo più lontano resta HBOS, che scende dal 40.5\% al 25.5\%. La quota del solo G sale al 25.3\%, e quella della variazione in tre ore al 38.2\%. Fra i rilevatori è più difficile concordare sui valori più estremi: quelli segnalati da almeno cinque su nove sono lo 0.72\% dei valori.
 
-\paragraph{Sintesi.} Le conclusioni sul discriminatore non dipendono dalla soglia, e con una soglia più alta diventano più nette. L'effetto della normalizzazione climatologica dipende invece dalla soglia: è quasi completo con il 5\%, solo parziale con l'1\%.
+\paragraph{Sintesi.} Le conclusioni sul discriminatore non dipendono dalla soglia, e con una soglia più alta diventano più nette. Lo stesso vale per il confronto con i metodi semplici, a parte una quota esclusiva di G più alta. L'effetto della normalizzazione climatologica dipende invece dalla soglia: è quasi completo con il 5\%, solo parziale con l'1\%.
 % Numeri: per la quota per luogo i commenti della Sezione 6.4, per le zone quelli della
 % Sezione 6.5 (validazione, outputs/comportamento_good2, 29 ottobre 2026).
 % Rapporto fra le quote medie a sud e a nord con G+clim all'1%: 1.40 / 0.74 = 1.9
