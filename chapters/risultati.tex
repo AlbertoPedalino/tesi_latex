@@ -442,16 +442,7 @@ Questa sezione e la seguente mostrano come si comporta G con la normalizzazione,
     \label{fig:ris-eventi-zone}
 \end{figure}
 
-\paragraph{Insolito, ma non sempre estremo.} Nel nucleo solo il 42\% dei valori supera la soglia della distanza dal normale, contro il 16\% nel contorno e il 2\% nella zona lontana. Il restante 58\% è lontano dal normale senza esserlo in modo estremo: G segnala anche valori che, presi uno per uno, non sono fra i più lontani dal clima. In parte è atteso, perché i due score misurano cose diverse.
-
-\paragraph{Più l'evento è grande, più le variabili sono lontane dal normale.} La Figura~\ref{fig:ris-eventi-normale} riporta la distanza dal normale nel nucleo, per tipo e dimensione. Nell'insieme il percentile mediano va da 81--82 negli eventi con meno di 20 valori a 95 in quelli con più di 9999. Gli eventi piccoli sono quindi quelli meno estremi, soprattutto quando il tipo è la copertura nuvolosa o l'umidità specifica, con 73 negli eventi di un solo valore. L'umidità del suolo fa eccezione: è fra 96 e 98 a tutte le dimensioni.
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=\textwidth]{era5_eventi_normale}
-    \caption{Percentile mediano della distanza dal normale nel nucleo degli eventi di G, sugli anni di test, per tipo e numero di valori dell'evento: la prima riga riguarda tutti i tipi. Più il colore è scuro, più le variabili sono lontane dal normale. Le caselle con un trattino contengono meno di 20 eventi e non sono riportate. Il valore cresce con la dimensione dell'evento.}
-    \label{fig:ris-eventi-normale}
-\end{figure}
+\paragraph{Insolito, ma non sempre estremo.} Nel nucleo solo il 42\% dei valori supera la soglia della distanza dal normale, contro il 16\% nel contorno e il 2\% nella zona lontana. Il restante 58\% è lontano dal normale senza esserlo in modo estremo: G segnala anche valori che, presi uno per uno, non sono fra i più lontani dal clima. In parte è atteso, perché i due score misurano cose diverse. Nell'insieme, inoltre, il percentile mediano nel nucleo va da 81--82 negli eventi con meno di 20 valori a 95 in quelli con più di 9999: gli eventi piccoli sono i meno estremi.
 % Numeri (1 novembre 2026, test 2005-2025, good-sweep-2): scripts/check_era5_event_zones.py
 % --events e --scores G+clim=outputs/good2v/test_generator_clim_day, G, normale=
 % outputs/confronti_good2/climatology/test/normal, uscite outputs/casi_good2_g/zone_5pc.csv,

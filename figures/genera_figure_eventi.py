@@ -8,7 +8,7 @@ repository):
 which writes figures/dati/era5_eventi_zone.csv and era5_caso_NN.npz. Then:
     python figures/genera_figure_eventi.py --coastline <ne_50m_coastline.geojson>
 which writes figures/era5_eventi_dimensione.pdf, era5_eventi_tipo.pdf, era5_eventi_zone.pdf,
-era5_eventi_normale.pdf, era5_caso_NN.pdf, and figures/dati/era5_casi_zone.json with the medians of every case.
+era5_caso_NN.pdf, and figures/dati/era5_casi_zone.json with the medians of every case.
 The coastline, from Natural Earth (public domain), is not kept in the repository.
 
 Run: good-sweep-2, test years 2005-2025, threshold from the validation years.
@@ -25,7 +25,7 @@ import matplotlib.dates as dates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.colors import LinearSegmentedColormap, LogNorm, Normalize
+from matplotlib.colors import LinearSegmentedColormap, LogNorm
 
 from genera_figure_g_d import BLUE, GRID, MUTED, ORANGE, TEXT, TICKS, coastline_of, draw_map, size
 
@@ -42,7 +42,6 @@ TYPES = {"vertical_velocity": "Velocità verticale", "total_precipitation": "Pre
          "temperature": "Temperatura in quota", "10m_v_component_of_wind": "Vento nord-sud al suolo",
          "10m_u_component_of_wind": "Vento est-ovest al suolo"}
 RAMP = LinearSegmentedColormap.from_list("blu", ("#eef4fc", "#9ec5f4", "#3987e5", "#184f95", "#0d366b"))
-MIN_EVENTS = 20  # a group of events with fewer is not read
 SCORE, NORMAL = "G+clim", "normale"
 CORE, EDGE = "core", "edge"
 
@@ -164,26 +163,6 @@ def zones_figure(zones, far):
     plt.close(figure)
 
 
-def normal_figure(zones):
-    """How far the variables are from normal in the core: more in large events, and it depends on the type."""
-    order = ["all", *type_order(zones)]
-    table = np.full((len(order), len(SIZES)), np.nan)
-    for row, name in enumerate(order):
-        for column, band in enumerate(SIZES):
-            if (name, band) in zones.index and zones.loc[(name, band), "events"] >= MIN_EVENTS:
-                table[row, column] = zones.loc[(name, band), f"{NORMAL} {CORE} percentile"]
-    norm = Normalize(vmin=60, vmax=100)
-    figure, axis = plt.subplots(figsize=size(0.66), constrained_layout=True)
-    axis.imshow(table, cmap=RAMP, norm=norm, aspect="auto")
-    for (row, column), value in np.ndenumerate(table):
-        axis.text(column, row, f"{value:.0f}" if np.isfinite(value) else "–", ha="center", va="center", fontsize=7.5,
-                  color="white" if np.isfinite(value) and norm(value) > 0.55 else TEXT)
-    table_axes(axis, order)
-    axis.axhline(0.5, color="white", linewidth=3)
-    figure.savefig(HERE / "era5_eventi_normale.pdf")
-    plt.close(figure)
-
-
 def percentile(values, quantiles):
     return np.interp(values, quantiles, np.linspace(0, 100, len(quantiles)))
 
@@ -270,7 +249,6 @@ def main():
     sizes_figure(zones)
     types_figure(zones)
     zones_figure(zones, far)
-    normal_figure(zones)
     medians = {}
     for path in sorted((HERE / "dati").glob("era5_caso_*.npz")):
         with np.load(path) as data:
