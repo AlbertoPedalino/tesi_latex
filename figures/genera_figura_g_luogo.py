@@ -41,7 +41,7 @@ plt.rcParams.update({
 def main():
     data = json.loads(DATA.read_text(encoding="utf-8"))
     top = data["top_percent"]
-    panels = (("G", "G"), ("G_clim", "G con climatologia (giorno ±15 × ora)"))
+    panels = (("G", "G senza normalizzazione"), ("G_clim", "G con normalizzazione (giorno ±15 × ora)"))
     norm = TwoSlopeNorm(vmin=0, vcenter=top, vmax=15)
     width = WIDTH_CM / 2.54
     figure, axes = plt.subplots(2, 1, figsize=(width, 0.62 * width), constrained_layout=True)

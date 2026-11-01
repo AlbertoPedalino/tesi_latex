@@ -38,6 +38,7 @@ Alnegheimish et al.~\cite{alnegheimish2025m2ad} propongono M2AD, per serie multi
 CATCH e M2AD sono stati presi in esame come alternative a MTGFlow e non sono stati adottati, per due ragioni. Richiedono dati di addestramento privi di anomalie, una condizione che senza etichette non è verificabile sui dati meteorologici; e, come MTGFlow, non rappresentano relazioni fra luoghi geografici. Nessuno dei due è stato eseguito sui dati della tesi. Dei due criteri della sezione, quindi, il primo ha portato a MTGFlow, il secondo, che nessuno di questi metodi soddisfa, a STGAN, che offre il contesto spaziale al prezzo di presupporre dati di addestramento normali.
 
 \subsection{Reti generative avversarie per il rilevamento di anomalie}
+\label{sec:rw-gan}
 
 Una rete generativa avversaria~\cite{goodfellow2014gan} è formata da due reti, addestrate insieme con obiettivi opposti. Il generatore $G$ trasforma un rumore $z$, estratto da una distribuzione nota $p_z$, in un campione $G(z)$; i dati reali seguono la distribuzione $p_{\mathrm{data}}$ e il discriminatore $D$ restituisce la probabilità $D(x)$ che un campione $x$ provenga dai dati reali anziché dal generatore. Le due reti sono addestrate sulla stessa funzione, che il discriminatore massimizza e il generatore minimizza:
 \begin{equation}
