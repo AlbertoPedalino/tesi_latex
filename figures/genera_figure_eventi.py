@@ -165,7 +165,7 @@ def position_axis(axis):
     """The horizontal axis of a profile: cells from the border of the event, inside on the left, outside on the right."""
     axis.axvline(0, color=TEXT, linewidth=0.8)
     axis.set_xlim(-8.3, 8.3)
-    axis.set_xticks([-8, -6, -4, -2, 2, 4, 6, 8], ["8 o più", "6", "4", "2", "2", "4", "6", "8 o più"])
+    axis.set_xticks([-8, -6, -4, -2, -1, 1, 2, 4, 6, 8], ["8 o più", "6", "4", "2", "1", "1", "2", "4", "6", "8 o più"])
     axis.set_xlabel("celle dal bordo dell'evento:  dentro  |  fuori", fontsize=TICKS)
     axis.tick_params(labelsize=TICKS, length=0)
     axis.grid(axis="y", color=GRID, linewidth=0.6)
@@ -182,8 +182,10 @@ def profile_figure():
     axis.text(-8.2, 50, "valore tipico", fontsize=TICKS, color=MUTED, va="bottom")
     axis.axhline(95, color=MUTED, linewidth=0.8, linestyle=":")
     axis.text(8.2, 96, "soglia di G", fontsize=TICKS, color=MUTED, va="bottom", ha="right")
-    axis.plot(table["position"], table[f"{SCORE} percentile"], color=BLUE, linewidth=2, marker="o", markersize=5, markeredgecolor="white")
-    axis.plot(table["position"], table[f"{NORMAL} percentile"], color=ORANGE, linewidth=2, marker="o", markersize=5, markeredgecolor="white")
+    joined = table["position"].abs() < 8  # the last points gather all the cells beyond: not joined to the others
+    for key, colour in ((SCORE, BLUE), (NORMAL, ORANGE)):
+        axis.plot(table["position"][joined], table[f"{key} percentile"][joined], color=colour, linewidth=2, marker="o", markersize=5, markeredgecolor="white")
+        axis.plot(table["position"][~joined], table[f"{key} percentile"][~joined], color=colour, linewidth=0, marker="o", markersize=5, markeredgecolor="white")
     axis.annotate("G con normalizzazione", (3, 69), xytext=(10, 12), textcoords="offset points", fontsize=TICKS, color=TEXT)
     axis.text(-0.4, 70, "distanza dal normale", fontsize=TICKS, color=TEXT, ha="right")
     axis.set_ylim(0, 106)
@@ -198,20 +200,24 @@ def profile_types_figure():
     """One cell out of the core some variables are back to normal, others are not: the variable of each type."""
     table = pd.read_csv(PROFILE)
     table = table[(table["type"] != "all") & (table["values"] >= MIN_VALUES)]
-    chosen = {"total_precipitation": (BLUE, 3.6, 0.42, -12), "vertical_velocity": ("#1baf7a", 1.6, 0.86, 7),
+    chosen = {"total_precipitation": (BLUE, 3.6, 0.42, -12), "vertical_velocity": ("#1baf7a", 1.2, 1.0, 9),
               "mean_sea_level_pressure": (ORANGE, 3.7, 1.82, 7)}
     figure, axis = plt.subplots(figsize=size(0.56), constrained_layout=True)
     for name, group in table.groupby("type"):
         group = group.sort_values("position")
         if name not in chosen:
-            axis.plot(group["position"], group["variable distance"], color="#c8c6bf", linewidth=0.9, zorder=1)
+            joined = group["position"].abs() < 8
+            axis.plot(group["position"][joined], group["variable distance"][joined], color="#c8c6bf", linewidth=0.9, zorder=1)
+            axis.plot(group["position"][~joined], group["variable distance"][~joined], color="#c8c6bf", linewidth=0, marker="o", markersize=2.5, zorder=1)
     for name, (colour, x, y, shift) in chosen.items():
         group = table[table["type"] == name].sort_values("position")
-        axis.plot(group["position"], group["variable distance"], color=colour, linewidth=2, zorder=2)
+        joined = group["position"].abs() < 8
+        axis.plot(group["position"][joined], group["variable distance"][joined], color=colour, linewidth=2, zorder=2)
+        axis.plot(group["position"][~joined], group["variable distance"][~joined], color=colour, linewidth=0, marker="o", markersize=5, markeredgecolor="white", zorder=2)
         axis.annotate(TYPES[name], (x, y), xytext=(0, shift), textcoords="offset points", fontsize=TICKS, color=TEXT, zorder=3)
     axis.annotate("altri tipi", (6.2, 1.62), fontsize=TICKS, color=MUTED)
-    axis.set_ylim(0, None)
-    axis.set_ylabel("distanza dal normale (0 = normale)", fontsize=TICKS)
+    axis.set_ylim(0, 3.5)
+    axis.set_ylabel("scarto della variabile (0 = normale)", fontsize=TICKS)
     position_axis(axis)
     figure.savefig(HERE / "era5_eventi_profilo_tipi.pdf")
     plt.close(figure)
@@ -235,9 +241,9 @@ def case_figure(number, data, coastline):
     limit = 4
     mesh = draw_map(left, grid, data["input"], coastline, cmap="RdBu_r", vmin=-limit, vmax=limit)
     bar = figure.colorbar(mesh, ax=left, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, extend="both")
-    bar.set_label("distanza dal normale (0 = normale)", fontsize=TICKS)
+    bar.set_label("scarto (0 = normale, 1 = variabilità abituale)", fontsize=TICKS)
     bar.ax.tick_params(labelsize=TICKS)
-    left.set_title(TYPES[record["type"]], fontsize=9, loc="left", color=TEXT)
+    left.set_title(f"{TYPES[record['type']]}: scarto dal normale", fontsize=9, loc="left", color=TEXT)
     mesh = draw_map(right, grid, percentile(data[f"score_{SCORE}"], data[f"quantiles_{SCORE}"]), coastline, left=False,
                     cmap="viridis", vmin=0, vmax=100)
     bar = figure.colorbar(mesh, ax=right, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, ticks=[0, 25, 50, 75, 95])
@@ -252,7 +258,8 @@ def case_figure(number, data, coastline):
     flagged = data["series_core"]
     for start, stop in zip(np.nonzero(np.diff(np.r_[0, flagged.astype(int)]) == 1)[0],
                            np.nonzero(np.diff(np.r_[flagged.astype(int), 0]) == -1)[0]):
-        cell.axvspan(times[start], times[stop], color="#cde2fb", linewidth=0)
+        half = pd.Timedelta(hours=1.5)  # a band of one timestamp would have no width
+        cell.axvspan(times[start] - half, times[stop] + half, color="#cde2fb", linewidth=0)
     cell.axvline(moment, color=TEXT, linewidth=0.8)
     cell.axhline(95, color=MUTED, linewidth=0.8, linestyle="--")
     cell.plot(times, percentile(data[f"series_{SCORE}"], data[f"quantiles_{SCORE}"]), color=BLUE, linewidth=1.6, label="G")
