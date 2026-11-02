@@ -358,23 +358,23 @@ vale 1 quando i due insiemi coincidono e 0 quando sono disgiunti. Due rilevatori
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Segnalazioni dei rilevatori sugli anni di test, con la soglia di ciascuno al 95-esimo percentile del proprio score sulla validazione. ``Segnalati'': quota dei valori che il rilevatore segnala. ``Maggioranza'': quota delle sue segnalazioni condivise da almeno 5 rilevatori su 9, compreso esso. ``Da solo'': quota delle sue segnalazioni che nessun altro segnala. ``Di G'': quota delle segnalazioni di G segnalate anche dal rilevatore, che dà l'ordine della tabella. ``Jaccard'': indice di Jaccard con G.}
+    \caption{Segnalazioni dei rilevatori sugli anni di test, con la soglia di ciascuno al 95-esimo percentile del proprio score sulla validazione. ``Segnalati'': quota dei valori che il rilevatore segnala. ``Da solo'': quota delle sue segnalazioni che nessun altro segnala. ``Di G'': quota delle segnalazioni di G segnalate anche dal rilevatore, che dà l'ordine della tabella. ``Jaccard'': indice di Jaccard con G.}
     \label{tab:ris-confronti}
     \vspace{0.6em}
-    \begin{tabular}{@{}lrrrrr@{}}
+    \begin{tabular}{@{}lrrrr@{}}
         \toprule
-        Rilevatore & Segnalati & Maggioranza & Da solo & Di G & Jaccard \\
+        Rilevatore & Segnalati & Da solo & Di G & Jaccard \\
         \midrule
-        Variazione in tre ore & 5.48\% & 36.0\% & 32.0\% & 54.2\% & 37.9\% \\
-        MCD & 5.43\% & 63.0\% & 7.9\% & 53.7\% & 37.6\% \\
-        PCA & 5.31\% & 76.8\% & 0.6\% & 50.7\% & 35.3\% \\
-        Isolation Forest & 5.17\% & 71.3\% & 4.1\% & 45.5\% & 31.1\% \\
-        CBLOF & 5.41\% & 62.9\% & 7.8\% & 45.1\% & 29.9\% \\
-        COPOD & 5.16\% & 68.3\% & 6.9\% & 44.8\% & 30.5\% \\
-        Distanza dal normale & 5.62\% & 60.1\% & 14.0\% & 42.3\% & 26.8\% \\
-        HBOS & 5.14\% & 65.0\% & 9.5\% & 40.5\% & 26.9\% \\
+        Variazione in tre ore & 5.48\% & 32.0\% & 54.2\% & 37.9\% \\
+        MCD & 5.43\% & 7.9\% & 53.7\% & 37.6\% \\
+        PCA & 5.31\% & 0.6\% & 50.7\% & 35.3\% \\
+        Isolation Forest & 5.17\% & 4.1\% & 45.5\% & 31.1\% \\
+        CBLOF & 5.41\% & 7.8\% & 45.1\% & 29.9\% \\
+        COPOD & 5.16\% & 6.9\% & 44.8\% & 30.5\% \\
+        Distanza dal normale & 5.62\% & 14.0\% & 42.3\% & 26.8\% \\
+        HBOS & 5.14\% & 9.5\% & 40.5\% & 26.9\% \\
         \addlinespace
-        G con normalizzazione & 5.63\% & 50.1\% & 16.4\% & -- & -- \\
+        G con normalizzazione & 5.63\% & 16.4\% & -- & -- \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -390,7 +390,7 @@ vale 1 quando i due insiemi coincidono e 0 quando sono disgiunti. Due rilevatori
 
 \paragraph{G si sovrappone a entrambi.} Il 54\% delle segnalazioni di G è segnalato anche dalla variazione in tre ore, e fra il 40\% e il 54\% da ciascuno dei metodi che leggono il punto, contro il 5\% atteso fra rilevatori indipendenti. Il rilevatore più vicino alla variazione in tre ore è G, con un indice di Jaccard del 38\%; fra gli altri il più vicino è MCD, con il 26\%. Il risultato è coerente con la definizione di G: il generatore risponde a partire dagli istanti precedenti, quindi il suo errore può crescere sia quando un valore si allontana dal consueto sia quando cambia in fretta. L'accordo da solo non dimostra però questo meccanismo. Nessun singolo metodo semplice riproduce le segnalazioni di G: il più vicino ne condivide poco più della metà.
 
-\paragraph{Il voto a maggioranza.} L'85.4\% dei valori non è segnalato da nessun rilevatore, e il 4.25\% è segnalato da almeno cinque su nove. Fra le segnalazioni di G il 50.1\% è condiviso dalla maggioranza. Il voto va però letto tenendo conto della composizione dell'insieme: sette rilevatori su nove leggono il punto, quindi la maggioranza coincide in buona parte con il loro accordo. Il 76.8\% di PCA e il 36.0\% della variazione in tre ore dicono quanto ciascuno è vicino a quel gruppo, non quale sia migliore.
+\paragraph{Il voto a maggioranza.} Il 4.25\% dei valori è segnalato da almeno cinque rilevatori su nove, e il 50.1\% delle segnalazioni di G è condiviso da questa maggioranza. Sette rilevatori su nove leggono il punto, quindi il voto misura soprattutto quanto si è vicini a quel gruppo, non quale rilevatore sia migliore.
 
 \paragraph{Le segnalazioni del solo G.} Il 16.4\% delle segnalazioni di G non è segnalato da nessun altro rilevatore, circa lo 0.9\% di tutti i valori; l'83.6\% è quindi segnalato anche da almeno un altro, contro circa il 14\% atteso se G fosse indipendente da loro: tanti sono i valori segnalati da almeno uno degli altri otto. La quota esclusiva di G è intermedia: è il 32.0\% per la variazione in tre ore, il 14.0\% per la distanza dal normale, meno del 10\% per i modelli shallow. Una quota esclusiva non è di per sé un pregio: può indicare ciò che solo il generatore coglie, per esempio perché legge le celle vicine, oppure un suo errore. Il confronto non permette di distinguere i due casi.
 
