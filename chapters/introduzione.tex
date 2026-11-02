@@ -25,8 +25,8 @@ Il detector parte da STGAN~\cite{deng2022stgan}, una rete avversaria proposta pe
 \begin{enumerate}
     \item un generatore che opera sul campo intero con un'unità ricorrente convoluzionale, mentre il discriminatore resta locale;
     \item un ingresso riferito al clima di ogni cella, con una normalizzazione stagionale e pesi che misurano l'errore di ogni variabile in rapporto a quanto essa cambia abitualmente;
-    \item il dropout Monte Carlo nelle due reti, che associa a ogni score una misura di dispersione;
-    \item una validazione senza etichette su anni di tempo normale, con cui si scelgono i parametri dell'addestramento avversario senza usare gli anni di test.
+    \item uno score riferito alla climatologia di ogni cella e il dropout Monte Carlo nelle due reti, che associa a ogni score una misura di dispersione;
+    \item una validazione senza etichette su anni da cui sono tolti i valori più insoliti, con cui si scelgono i parametri dell'addestramento avversario senza usare gli anni di test.
 \end{enumerate}
 
 \section{Obiettivi e contributi della tesi}
