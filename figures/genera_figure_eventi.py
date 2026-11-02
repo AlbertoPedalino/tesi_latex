@@ -200,7 +200,7 @@ def profile_types_figure():
     """One cell out of the core some variables are back to normal, others are not: the variable of each type."""
     table = pd.read_csv(PROFILE)
     table = table[(table["type"] != "all") & (table["values"] >= MIN_VALUES)]
-    chosen = {"total_precipitation": (BLUE, 3.6, 0.42, -12), "vertical_velocity": ("#1baf7a", 1.2, 1.0, 9),
+    chosen = {"total_precipitation": (BLUE, 3.6, 0.42, -12), "vertical_velocity": ("#1baf7a", -7.6, 1.62, 0),
               "mean_sea_level_pressure": (ORANGE, 3.7, 1.82, 7)}
     figure, axis = plt.subplots(figsize=size(0.56), constrained_layout=True)
     for name, group in table.groupby("type"):
@@ -307,7 +307,7 @@ def dropout_types_figure():
     gap.tick_params(labelsize=7, length=0)
     gap.grid(axis="x", color=GRID, linewidth=0.6)
     gap.set_axisbelow(True)
-    gap.legend(frameon=False, fontsize=7.5, loc="lower right")
+    gap.legend(frameon=False, fontsize=7.5, ncol=2, loc="upper center", bbox_to_anchor=(0.5, -0.13))
     gap.set_title("A parità di errore", fontsize=9, loc="left", color=TEXT)
     clean(gap, "top", "right", "left")
     figure.savefig(HERE / "era5_dropout_tipi.pdf")
@@ -341,7 +341,7 @@ def dropout_maps_figure(coastline_path):
         with np.load(HERE / "dati" / f"era5_caso_{number}.npz") as case:
             picture = np.zeros((len(grid["latitudes"]), len(grid["longitudes"])))
             picture[grid["rows"], grid["cols"]] = case["core"]
-        axis.contour(grid["longitudes"], grid["latitudes"][::-1], picture[::-1], levels=[0.5], colors="white", linewidths=0.5)
+        axis.contour(grid["longitudes"], grid["latitudes"][::-1], picture[::-1], levels=[0.5], colors=ORANGE, linewidths=0.8)
         axis.set_title(title, fontsize=8, loc="left", color=TEXT)
         axes.append(axis)
     bar = figure.colorbar(mesh, ax=axes, orientation="horizontal", shrink=0.5, pad=0.02, aspect=40)
@@ -371,7 +371,7 @@ def case_figure(number, data, coastline):
     bar = figure.colorbar(mesh, ax=left, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, extend="both")
     bar.set_label("scarto (0 = normale, 1 = variabilità abituale)", fontsize=TICKS)
     bar.ax.tick_params(labelsize=TICKS)
-    left.set_title(f"{TYPES[record['type']]}: scarto dal normale", fontsize=9, loc="left", color=TEXT)
+    left.set_title(f"{TYPES[record['type']]}: scarto", fontsize=9, loc="left", color=TEXT)
     mesh = draw_map(right, grid, percentile(data[f"score_{SCORE}"], data[f"quantiles_{SCORE}"]), coastline, left=False,
                     cmap="viridis", vmin=0, vmax=100)
     bar = figure.colorbar(mesh, ax=right, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, ticks=[0, 25, 50, 75, 95])
