@@ -187,12 +187,12 @@ Per farlo, D va scomposta nei suoi due termini, $D_{\mathrm{reale}}$ e $D_{\math
 
 \paragraph{Quanto segnala D.} Solo il 10.5\% dei valori del nucleo supera la soglia di D: dove G segnala, D in genere non segnala. Questa minoranza non è però trascurabile: è più del doppio del 4.1\% della zona lontana. Anche il giudizio sull'osservazione non è uniforme: il 14\% dei valori del nucleo supera la soglia di $D_{\mathrm{reale}}$, contro il 3\% lontano dagli eventi. Con una soglia più alta il comportamento è lo stesso e più marcato (Sezione~\ref{sec:ris-soglia}).
 
-\paragraph{Un esempio: l'istante con G più alto.} La Figura~\ref{fig:ris-d-termini-mappa} mostra i termini il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta della validazione. Sulla fascia del Nord Africa in cui G è alto $D_{\mathrm{reale}}$ è vicino a zero e $D_{\mathrm{generato}}$ è al massimo: il discriminatore giudica reale l'osservazione e generata la ricostruzione, e la loro differenza porta D ai valori più bassi del dominio. $D_{\mathrm{reale}}$ è basso anche più a est, nella penisola arabica: lì G è intorno al 94-esimo percentile dell'istante, ma la scala della figura, dominata dai valori nordafricani, non lo mostra.
+\paragraph{Un esempio: l'istante con G più alto.} La Figura~\ref{fig:ris-d-termini-mappa} mostra i termini il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta della validazione. Sull'area principale del Nord Africa in cui G è alto $D_{\mathrm{reale}}$ è vicino a zero e $D_{\mathrm{generato}}$ è al massimo: il discriminatore giudica reale l'osservazione e generata la ricostruzione, e la loro differenza porta D ai valori più bassi del dominio. Su un'area più piccola più a sud-ovest, anch'essa con G alto, il giudizio è meno netto ($D_{\mathrm{reale}}$ ha una mediana di 0.37): è uno dei casi della minoranza descritta sopra. $D_{\mathrm{reale}}$ è basso anche più a est, nella penisola arabica: lì G è intorno al 94-esimo percentile dell'istante, ma la scala della figura, dominata dai valori nordafricani, non lo mostra.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_d_termini_mappa}
-    \caption{G, $D_{\mathrm{reale}}$, $D_{\mathrm{generato}}$ e D il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta degli anni di validazione. Ogni mappa ha una propria scala, dal primo al 99-esimo percentile dei suoi valori. Dove G è alto (in chiaro), $D_{\mathrm{reale}}$ è vicino a zero e $D_{\mathrm{generato}}$ è al massimo, e D è al minimo. Linee di costa da Natural Earth.}
+    \caption{G, $D_{\mathrm{reale}}$, $D_{\mathrm{generato}}$ e D il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta degli anni di validazione. Ogni mappa ha una propria scala, dal primo al 99-esimo percentile dei suoi valori. Sull'area principale in cui G è alto (in chiaro), $D_{\mathrm{reale}}$ è vicino a zero e $D_{\mathrm{generato}}$ è al massimo, e D è al minimo. Linee di costa da Natural Earth.}
     \label{fig:ris-d-termini-mappa}
 \end{figure}
 
@@ -269,6 +269,8 @@ Per farlo, D va scomposta nei suoi due termini, $D_{\mathrm{reale}}$ e $D_{\math
 % di valori nel nucleo; G 99|97|47, D(reale) 2|13|50, D(generato) 85|83|49, D 2|7|52;
 % D(reale) sopra la propria soglia all'1% nel 5.6% del nucleo contro lo 0.7% lontano;
 % gruppo più piccolo: temperatura a 850 hPa, eventi >19 valori, 21 eventi.
+% Mappa del 9/8/2003, celle nell'1% più alto di G dell'istante: 84 celle 27-31N 4-12.5E, D(reale) mediana 0.003;
+% 19 celle 23.5-25N 5-2W, mediana 0.368 (controllato il 2 novembre 2026, figures/dati/era5_g_d.npz).
 % Levigatezza: logs/levigatezza_d.log, levigatezza_d.csv (240 istanti, uno ogni 61,
 % pesi dell'epoca 6, modo eval): rugosità mediana osservato 0.00082, ricostruito
 % 0.00069, osservato lisciato 0.00021, ricostruito lisciato 0.00016; D medio 0.5114,
