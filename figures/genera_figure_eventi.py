@@ -36,7 +36,7 @@ PROFILE = HERE / "dati" / "era5_eventi_profilo.csv"
 SIZES = ("1", "2-4", "5-19", "20-99", "100-999", "1000-9999", ">9999")
 SIZE_LABELS = ("1", "2–4", "5–19", "20–99", "100–999", "1000–\n9999", "oltre\n9999")
 TYPES = {"vertical_velocity": "Velocità verticale", "total_precipitation": "Precipitazione",
-         "mean_sea_level_pressure": "Pressione al mare", "total_cloud_cover": "Copertura nuvolosa",
+         "mean_sea_level_pressure": "Pressione al livello del mare", "total_cloud_cover": "Copertura nuvolosa",
          "boundary_layer_height": "Strato limite", "specific_humidity": "Umidità specifica",
          "volumetric_soil_water_layer_1": "Umidità del suolo", "friction_velocity": "Velocità di attrito",
          "surface_solar_radiation_downwards": "Radiazione solare", "v_component_of_wind": "Vento nord-sud in quota",
@@ -285,7 +285,7 @@ def dropout_types_figure():
         group = positions[positions["type"] == name].sort_values("position")
         joined = group["position"].abs() < 8
         across.plot(group["position"][joined], 100 * group["ratio value"][joined], color=colour, linewidth=2, zorder=2)
-        across.annotate(TYPES[name], (x, y), xytext=(0, shift), textcoords="offset points", fontsize=7.5, color=TEXT, zorder=3)
+        across.annotate(TYPES[name].replace(" al livello del mare", ""), (x, y), xytext=(0, shift), textcoords="offset points", fontsize=7.5, color=TEXT, zorder=3)
     across.annotate("umidità del suolo", (-4.6, 12.9), fontsize=7.5, color=MUTED)
     across.annotate("radiazione solare", (-7.6, 5.6), fontsize=7.5, color=MUTED)
     position_axis(across)

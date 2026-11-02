@@ -24,6 +24,7 @@ import pathlib
 import matplotlib
 
 matplotlib.use("Agg")
+import matplotlib.dates as dates
 import matplotlib.patheffects as effects
 import matplotlib.pyplot as plt
 import numpy as np
@@ -149,6 +150,8 @@ def spatial_figure(data):
                   linewidth=1.4, label=label)
     axis.axhline(0, color=MUTED, linewidth=0.7)
     axis.set_xlim(days.min(), days.max())
+    axis.xaxis.set_major_locator(dates.YearLocator())
+    axis.xaxis.set_major_formatter(dates.DateFormatter("%Y"))
     axis.set_ylim(-1, 0.5)
     axis.set_ylabel("correlazione spaziale\nfra G e D")
     axis.tick_params(labelsize=TICKS)
@@ -242,7 +245,7 @@ def zones_scheme_figure():
     edge = ndimage.binary_dilation(core, square) & ~core
     near = ndimage.binary_dilation(core, square, iterations=3)
     zone = np.where(core, 0, np.where(edge, 1, np.where(near, 2, 3)))
-    colours = ("#184f95", "#5598e7", "#ffffff", "#e7eef8")
+    colours = (BLUE, ORANGE, "#cfcdc6", "#f4f3ef")  # as in the map of the zones
     figure, axis = plt.subplots(figsize=size(0.36), constrained_layout=True)
     axis.imshow(zone, cmap=ListedColormap(colours), vmin=-0.5, vmax=3.5)
     axis.set_xticks(np.arange(-0.5, side), minor=True)
@@ -255,7 +258,7 @@ def zones_scheme_figure():
               ("celle intermedie, escluse", colours[2]), ("lontano: oltre 3 celle da ogni nucleo", colours[3]))
     axis.legend(handles=[Patch(facecolor=colour, edgecolor=MUTED, linewidth=0.5, label=label) for label, colour in legend],
                 loc="center left", bbox_to_anchor=(1.02, 0.5), frameon=False, fontsize=8)
-    figure.savefig(HERE / "era5_zone_schema.pdf")
+    figure.savefig(HERE / "era5_zone_schema.pdf", bbox_inches="tight")
     plt.close(figure)
 
 

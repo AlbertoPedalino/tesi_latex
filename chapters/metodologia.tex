@@ -157,9 +157,9 @@ w_f=\frac{\bar{m}}{m_f},
 \qquad
 \bar{m}=\frac{1}{F}\sum_{f=1}^{F}m_f,
 \end{equation}
-con $F=15$. La differenza a 24 ore confronta istanti alla stessa ora del giorno e non contiene quindi il ciclo giornaliero. Il fattore $\bar{m}$ lascia invariata la loss per un errore proporzionale a $m_f$. Il peso non misura la difficoltà del modello su una variabile: è una misura di quanto la variabile cambia, fissata prima dell'addestramento e senza usare il modello. Nella configurazione scelta vanno da 0.40 per l'umidità specifica a 7.14 per l'umidità del primo strato del suolo, che cambia lentamente. I pesi moltiplicano l'errore quadratico di ciascuna variabile nel termine di ricostruzione della loss del generatore e nell'errore di ricostruzione da cui sono calcolati gli score.
+con $F=15$. La differenza a 24 ore confronta istanti alla stessa ora del giorno e non contiene quindi il ciclo giornaliero. Con il fattore $\bar{m}$, un errore quadratico pari a $m_f$ in ogni variabile dà la stessa loss con e senza pesi. Il peso non misura la difficoltà del modello su una variabile: è una misura di quanto la variabile cambia, fissata prima dell'addestramento e senza usare il modello. Nella configurazione scelta vanno da 0.40 per l'umidità specifica a 7.14 per l'umidità del primo strato del suolo, che cambia lentamente. I pesi moltiplicano l'errore quadratico di ciascuna variabile nel termine di ricostruzione della loss del generatore e nell'errore di ricostruzione da cui sono calcolati gli score.
 
-\paragraph{In sintesi.} Ogni valore entra nel modello riferito al normale climatologico della propria cella, giorno e ora, con la codifica dell'ora solare locale e del periodo dell'anno, e l'errore di ciascuna variabile pesa in proporzione inversa a quanto la variabile cambia abitualmente.
+\paragraph{In sintesi.} Ogni valore entra nel modello riferito al normale stagionale della propria cella, giorno e ora, con la codifica dell'ora solare locale e del periodo dell'anno, e l'errore di ciascuna variabile pesa in proporzione inversa a quanto la variabile cambia abitualmente.
 
 \section{Valori insoliti negli anni di validazione}
 \label{sec:maschere-validazione}
@@ -173,7 +173,7 @@ Un valore, cioè una coppia istante--cella, è detto \emph{insolito} in base a d
 % 5.3%). Pesi delle due distanze: quelli dello sweep attuale (variazione su 24
 % ore), indicazione dell'autore del 16 ottobre 2026.
 
-I valori insoliti non entrano nella misura con cui si confrontano le configurazioni, negli estremi dello score combinato e nella climatologia degli score, e nelle finestre di ingresso degli istanti di validazione sono sostituiti dal normale stagionale, cioè dal valore standardizzato nullo. In questo modo né il bersaglio né la storia recente da cui il modello parte contengono le condizioni insolite.
+I valori insoliti non entrano nella misura con cui si confrontano le configurazioni, negli estremi dello score combinato e nella climatologia degli score, e nelle finestre di ingresso degli istanti di validazione sono sostituiti dal normale stagionale, cioè dal valore standardizzato nullo. In questo modo né il bersaglio né la storia recente da cui il modello parte contengono le condizioni insolite. La sostituzione vale per la misura con cui si confrontano le configurazioni e per il passaggio che chiude l'addestramento; climatologia e soglia usano la storia reale (Sezioni~\ref{sec:normalizzazione-climatologica-score} e~\ref{sec:exp-protocollo}).
 
 \section{Componenti dello score e dropout Monte Carlo}
 \label{sec:score-dropout-montecarlo}
@@ -276,7 +276,7 @@ La misura usata per confrontare le configurazioni confronta osservazioni e ricos
 
 I campi di tempo normale sono scelti, non corretti. Sostituire i valori insoliti con il normale stagionale darebbe campi più lisci di qualunque campo osservato, e una distanza calcolata su di essi premierebbe un generatore che ricostruisce campi lisci. Un campo scelto può contenere ancora qualche valore insolito, entro la quota che lo fa rientrare fra i campi normali del suo mese. Per lo stesso motivo il valore da ricostruire, quando è insolito, non è sostituito ma escluso dalle misure: si sostituisce soltanto la storia da cui il modello parte.
 
-Su questo spazio viene definito un riferimento per la validazione. È formato da $S=5$ sottoinsiemi fissi e disgiunti di 512 campi normali degli anni di validazione, scelti con lo stesso criterio, dalle coordinate delle loro osservazioni nello spazio e da una banda $h$ pari alla distanza euclidea mediana fra tali coordinate. Anche questo riferimento è fissato prima delle esecuzioni. A ogni epoca, per ciascun sottoinsieme, si calcola la stima non distorta della Maximum Mean Discrepancy~\cite{gretton2012mmd}
+Su questo spazio viene definito un riferimento per la validazione. È formato da $S=5$ sottoinsiemi fissi e disgiunti di 512 campi normali degli anni di validazione, scelti con lo stesso criterio, dalle coordinate delle loro osservazioni nello spazio e da una banda $h$ pari alla distanza euclidea mediana fra tali coordinate. Anche questo riferimento è fissato prima delle esecuzioni. La Maximum Mean Discrepancy (MMD) misura quanto differiscono due insiemi di campioni: è vicina a zero quando seguono la stessa distribuzione. A ogni epoca, per ciascun sottoinsieme, si calcola la stima non distorta della MMD~\cite{gretton2012mmd}
 \begin{equation}
 \widehat{\mathrm{MMD}}^{2}=
 \frac{1}{n(n-1)}\sum_{i\neq i'}k(x_i,x_{i'})

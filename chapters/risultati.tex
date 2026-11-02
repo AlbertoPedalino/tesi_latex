@@ -39,8 +39,8 @@ Il discriminatore è addestrato a dare 1 al campo generato e 0 a quello osservat
         \toprule
         Grandezza & Che cosa misura & Valore alto \\
         \midrule
-        G & errore di ricostruzione del generatore, medio sulla patch $3\times3$ della cella & osservazione più insolita \\
-        G con normalizzazione & G rispetto a ciò che è abituale per quella cella, periodo dell'anno e ora (Sezione~\ref{sec:normalizzazione-climatologica-score}) & osservazione più insolita per quel luogo e periodo \\
+        G ($\bar{s}_G$) & errore di ricostruzione del generatore, medio sulla patch $3\times3$ della cella & osservazione più insolita \\
+        G con normalizzazione ($\zeta$) & G rispetto a ciò che è abituale per quella cella, periodo dell'anno e ora (Sezione~\ref{sec:normalizzazione-climatologica-score}) & osservazione più insolita per quel luogo e periodo \\
         $D_{\mathrm{reale}}$ & giudizio del discriminatore sull'osservazione, fra 0 e 1 & osservazione giudicata generata \\
         $D_{\mathrm{generato}}$ & giudizio del discriminatore sulla ricostruzione, fra 0 e 1 & ricostruzione giudicata generata \\
         D & $D_{\mathrm{reale}}-D_{\mathrm{generato}}$, la componente del discriminatore & osservazione più insolita \\
@@ -118,7 +118,7 @@ Il valore di G dipende anche da dove e quando è calcolato: dove l'errore è gra
 
 \paragraph{L'ordine degli score cambia poco.} Dopo la normalizzazione la correlazione di Spearman fra G e D vale in media $-0.22$ nello spazio e ha mediana $-0.22$ nel tempo, quasi come prima. Ciascuno score conserva quasi lo stesso ordine: la correlazione di Spearman fra lo score prima e dopo la normalizzazione è 0.91 per G e 0.94 per D, in media in ogni istante sulle celle.
 
-\paragraph{Le segnalazioni di G diventano quasi uniformi.} La normalizzazione cambia invece dove cadono le segnalazioni (Figura~\ref{fig:ris-g-luogo}). Un valore, nel capitolo, è una coppia di cella e istante; è segnalato quando supera la soglia del proprio score, il 95-esimo percentile dello stesso score sugli anni di validazione (Sezione~\ref{sec:exp-protocollo}): sugli stessi anni ciascuno score segnala quindi il 5\% dei valori. Senza normalizzazione G segnala soprattutto a sud e in estate, dove il suo errore è alto per natura: la quota va dall'1.3\% fra 50$^\circ$ e 60$^\circ$N in dicembre al 12.1\% fra 20$^\circ$ e 30$^\circ$N in agosto. Con la normalizzazione resta fra il 3.6\% e il 6.3\% in ogni fascia e in ogni mese. È l'effetto atteso dalla Sezione~\ref{sec:normalizzazione-climatologica-score}: la normalizzazione toglie la differenza di prevedibilità fra luoghi e stagioni. Con una soglia più alta l'effetto è solo parziale (Sezione~\ref{sec:ris-soglia}). Una quota uniforme è attesa per costruzione.
+\paragraph{Le segnalazioni di G diventano quasi uniformi.} La normalizzazione cambia invece dove cadono le segnalazioni (Figura~\ref{fig:ris-g-luogo}). Un valore, nel capitolo, è una coppia di cella e istante; è segnalato quando supera la soglia del proprio score, il 95-esimo percentile dello stesso score sugli anni di validazione (Sezione~\ref{sec:exp-protocollo}): sugli stessi anni ciascuno score segnala quindi il 5\% dei valori. Senza normalizzazione G segnala soprattutto a sud e in estate, dove il suo errore è alto per natura: la quota va dall'1.3\% fra 50$^\circ$ e 60$^\circ$N in dicembre al 12.1\% fra 20$^\circ$ e 30$^\circ$N in agosto. Con la normalizzazione resta fra il 3.6\% e il 6.3\% in ogni fascia e in ogni mese. È l'effetto atteso dalla Sezione~\ref{sec:normalizzazione-climatologica-score}: la normalizzazione toglie la differenza di prevedibilità fra luoghi e stagioni. Con una soglia più alta l'effetto è solo parziale (Sezione~\ref{sec:ris-soglia}).
 
 \begin{figure}[htbp]
     \centering
@@ -413,7 +413,7 @@ vale 1 quando i due insiemi coincidono e 0 quando sono disgiunti. Due rilevatori
 \section{Eventi per tipo e dimensione}
 \label{sec:ris-eventi}
 
-Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi gli eventi, quali variabili vi si scostano di più e come cala G attorno a ciò che segnala. Questa sezione e la seguente mostrano il solo G con la normalizzazione, senza confrontarlo con altri metodi. Le segnalazioni sono raggruppate negli eventi della Sezione~\ref{sec:ris-g-d}: sugli anni di test sono 754692 eventi, con 36.7 milioni di valori.
+Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi gli eventi, quali variabili vi si scostano di più e come cala G attorno a ciò che segnala. Questa sezione mostra il solo G con la normalizzazione, senza confrontarlo con altri metodi; la distanza dal normale descrive soltanto i dati. Le segnalazioni sono raggruppate negli eventi della Sezione~\ref{sec:ris-g-d}: sugli anni di test sono 754692 eventi, con 36.7 milioni di valori.
 
 \paragraph{Pochi eventi enormi contengono circa tre quarti dei valori.} La dimensione di un evento è il numero dei suoi valori. Il 90\% degli eventi ha meno di 20 valori, e insieme contengono solo il 7\% dei valori segnalati; lo 0.5\% degli eventi, quelli con almeno 1000 valori, ne contiene il 76\% (Figura~\ref{fig:ris-eventi-dimensione}).
 
@@ -492,7 +492,7 @@ Il risultato è coerente con il modo in cui queste variabili cambiano nello spaz
 
 Fin qui si è usata la media delle estrazioni di dropout; questa sezione guarda quanto differiscono fra loro. Lo score è la media di 20 estrazioni con maschere diverse, e la deviazione standard delle estrazioni ne misura la \emph{dispersione} (Sezione~\ref{sec:score-dropout-montecarlo}). Non è una probabilità di anomalia: senza etichette non si può stabilire se una segnalazione con estrazioni concordi sia più giusta di una con estrazioni discordi. Si può però vedere quanto le segnalazioni dipendono dalle maschere, e in quali situazioni le estrazioni si separano. Poiché la dispersione cresce con l'errore da cui nasce, con una correlazione di Spearman di 0.86, conviene leggerla in proporzione: il \emph{rapporto} è la dispersione dell'errore del generatore divisa per l'errore stesso, cioè G senza normalizzazione. La sezione riguarda gli anni di test.
 
-\paragraph{Le segnalazioni dipendono poco dalle maschere.} Il 78\% dei valori segnalati resta sopra la soglia togliendo allo score una deviazione standard, il 60\% togliendone due; dei valori non segnalati, solo l'1.6\% la supererebbe aggiungendone una. È una prova severa, perché la deviazione standard riguarda le singole estrazioni, mentre lo score ne è la media.
+\paragraph{Le segnalazioni dipendono poco dalle maschere.} Il 78\% dei valori segnalati resta sopra la soglia togliendo allo score, cioè a G con la normalizzazione, una deviazione standard delle estrazioni, misurata nella stessa scala; il 60\% togliendone due; dei valori non segnalati, solo l'1.6\% la supererebbe aggiungendone una. È una prova severa, perché la deviazione standard riguarda le singole estrazioni, mentre lo score ne è la media.
 
 \paragraph{Più l'errore è grande, più le estrazioni concordano in proporzione.} In valore assoluto la dispersione cresce con l'errore, ma il rapporto scende (Figura~\ref{fig:ris-dropout}, a sinistra): dal 10.8\% nella metà più bassa degli errori al 9.1\% fra il 95-esimo e il 99-esimo percentile, fino al 6.7\% nello 0.1\% più alto. I valori con l'errore più grande sono quindi quelli su cui, in proporzione, le maschere incidono meno.
 
