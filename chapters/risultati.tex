@@ -8,7 +8,7 @@
 % viene dai file della run good-sweep-2, con soglie e climatologie stimate sugli
 % anni di validazione; nessun riferimento esterno (E-OBS, CAPE, raffiche).
 
-Il capitolo riporta e discute i risultati del detector sui campi ERA5, nella configurazione scelta dalla ricerca degli iperparametri. In assenza di etichette, la domanda centrale è quale parte dello score di STGAN usare, e il comportamento del detector è studiato in più passi. La Sezione~\ref{sec:ris-ricerca} riguarda la scelta della configurazione. Le Sezioni~\ref{sec:ris-correlazione-spaziale}--\ref{sec:ris-g-d} esaminano le due componenti dello score, del generatore e del discriminatore, nello spazio e nel tempo, e la normalizzazione climatologica; da queste analisi e dal significato chiaro di G discende la scelta dello score, quello del generatore, normalizzato. La Sezione~\ref{sec:ris-confronti} confronta le segnalazioni del detector con quelle di metodi più semplici, la Sezione~\ref{sec:ris-eventi} le raggruppa in eventi per tipo e dimensione e studia come cala G attorno a ciò che segnala, la Sezione~\ref{sec:ris-casi} esamina casi specifici, e la Sezione~\ref{sec:ris-soglia} verifica quanto i risultati dipendano dalla soglia.
+Il capitolo riporta e discute i risultati del detector sui campi ERA5, nella configurazione scelta dalla ricerca degli iperparametri. In assenza di etichette, la domanda centrale è quale parte dello score di STGAN usare, e il comportamento del detector è studiato in più passi. La Sezione~\ref{sec:ris-ricerca} riguarda la scelta della configurazione. Le Sezioni~\ref{sec:ris-correlazione-spaziale}--\ref{sec:ris-g-d} esaminano le due componenti dello score, del generatore e del discriminatore, nello spazio e nel tempo, e la normalizzazione climatologica; da queste analisi e dal significato chiaro di G discende la scelta dello score, quello del generatore, normalizzato. La Sezione~\ref{sec:ris-confronti} confronta le segnalazioni del detector con quelle di metodi più semplici, la Sezione~\ref{sec:ris-eventi} le raggruppa in eventi per tipo e dimensione e studia come cala G attorno a ciò che segnala, la Sezione~\ref{sec:ris-dropout} esamina la dispersione del dropout, la Sezione~\ref{sec:ris-casi} esamina casi specifici, e la Sezione~\ref{sec:ris-soglia} verifica quanto i risultati dipendano dalla soglia.
 
 \section{Ricerca dei parametri}
 \label{sec:ris-ricerca}
@@ -486,6 +486,35 @@ Il risultato è coerente con il modo in cui queste variabili cambiano nello spaz
 % 9253228 valori su 36656037 (59.9%). Zone (tutti): G+clim 97|90|40, G 97|88|39, normale
 % 92|79|43, normale oltre la propria soglia 42.3|16.1|2.0%. Normale nel nucleo per dimensione:
 % 82, 81, 81, 84, 88, 92, 95. Velocità verticale, catena: 775 istanti, 55% con meno di 50 celle.
+
+\section{La dispersione del dropout}
+\label{sec:ris-dropout}
+
+Lo score è la media di 20 estrazioni con maschere di dropout diverse, e la deviazione standard delle estrazioni ne misura la \emph{dispersione} (Sezione~\ref{sec:score-dropout-montecarlo}). Non è una probabilità di anomalia: senza etichette non si può stabilire se una segnalazione con estrazioni concordi sia più giusta di una con estrazioni discordi. Si può però vedere quanto le segnalazioni dipendono dalle maschere, e in quali situazioni le estrazioni si separano. La sezione riguarda gli anni di test.
+
+\paragraph{Le segnalazioni dipendono poco dalle maschere.} Il 78\% dei valori segnalati resta sopra la soglia togliendo allo score una deviazione standard, il 60\% togliendone due; dei valori non segnalati, solo l'1.6\% la supererebbe aggiungendone una. È una prova severa, perché la deviazione standard riguarda le singole estrazioni, mentre lo score ne è la media.
+
+\paragraph{La dispersione segue G.} Attraverso gli eventi la dispersione ha quasi lo stesso profilo di G (Figura~\ref{fig:ris-dropout}, a sinistra): il percentile mediano è 94 sul bordo interno del nucleo, 85 una cella fuori e 50 dopo sei celle, contro 96, 90 e 51 di G. Nel nucleo, nel contorno e fuori, quindi, la dispersione non dice nulla di diverso da G: è alta dove G è alto.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_dropout}
+    \caption{La dispersione del dropout sugli anni di test. A sinistra: percentile mediano di G con la normalizzazione e della sua dispersione, secondo le celle di distanza dal bordo dell'evento; la linea tratteggiata indica il valore tipico, 50. A destra: i valori segnalati, divisi a parità di G in cinque classi uguali, da quella con le estrazioni più concordi a quella con le più discordi; per ogni classe, la quota oltre la soglia della distanza dal normale. La dispersione segue G; a parità di G, più è alta, più i dati sono lontani dal normale.}
+    \label{fig:ris-dropout}
+\end{figure}
+
+\paragraph{A parità di G, più dispersione vuol dire dati più lontani dal normale.} Per togliere l'effetto di G, i valori segnalati sono divisi prima in 20 fasce di G e poi, in ogni fascia, in cinque classi uguali per dispersione. Tutte le classi hanno quindi lo stesso G, con una mediana di 5.17, mentre la dispersione mediana va da 0.36 a 1.15 (Figura~\ref{fig:ris-dropout}, a destra). Passando dalle estrazioni più concordi alle più discordi, la quota oltre la soglia della distanza dal normale sale dal 25\% al 61\%, e la quota di valori in cui nessuna variabile si allontana dal normale più di due volte la variabilità abituale scende dal 13\% all'8\%. Il risultato è lo stesso con la dispersione calcolata prima della normalizzazione climatologica. Le estrazioni, dunque, si separano di più dove i dati sono più lontani dal normale. È coerente con l'idea che il modello sia meno stabile sui dati più diversi da quelli visti in addestramento, anche se la verifica non lo dimostra.
+
+\paragraph{Sintesi.} La dispersione non è un secondo score: segue G e dipende poco dalle maschere nella maggior parte delle segnalazioni. A parità di G aggiunge però un'informazione, cioè quanto i dati sono lontani dal normale. Questo non rende più o meno affidabile una segnalazione: la distanza dal normale descrive i dati, non è un riferimento per giudicarla.
+% Numeri (2 novembre 2026, test, good-sweep-2): scripts/check_era5_dropout_flags.py, uscita
+% outputs/casi_good2_g/dropout_5pc.log, in figures/dati/era5_dropout.json. Dispersione mediana dei
+% valori segnalati: 0.194 volte la soglia. Con la dispersione grezza: oltre soglia 19.6, 34.3, 44.8,
+% 52.8, 59.8%; nessuna variabile oltre 2: 16.5, 10.2, 7.9, 7.0, 7.7%.
+% Da non riprendere senza ricalcolo: le classi di ottobre (analisi_good2/fiducia_test.log: a
+% parità di errore grezzo, su 400 istanti, variabile con l'errore più grande oltre 1 nell'84% con
+% estrazioni concordi e nel 67% con discordi) vanno in senso opposto a questa misura sulla distanza
+% dal normale di tutte le variabili. La differenza non dipende dalla dispersione grezza o normalizzata,
+% che danno lo stesso segno; il motivo non è verificato.
 
 \section{Casi specifici}
 \label{sec:ris-casi}

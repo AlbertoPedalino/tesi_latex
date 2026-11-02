@@ -8,7 +8,7 @@ check_era5_event_cases.py of the code repository):
 which writes figures/dati/era5_eventi_zone.csv, era5_eventi_profilo.csv and era5_caso_NN.npz. Then:
     python figures/genera_figure_eventi.py --coastline <ne_50m_coastline.geojson>
 which writes figures/era5_eventi_dimensione.pdf, era5_eventi_tipo.pdf, era5_eventi_mappa_zone.pdf,
-era5_eventi_profilo.pdf, era5_eventi_profilo_tipi.pdf, era5_caso_NN.pdf, and figures/dati/era5_casi_zone.json with the medians of every case.
+era5_eventi_profilo.pdf, era5_eventi_profilo_tipi.pdf, era5_dropout.pdf, era5_caso_NN.pdf, and figures/dati/era5_casi_zone.json with the medians of every case.
 The coastline, from Natural Earth (public domain), is not kept in the repository.
 
 Run: good-sweep-2, test years 2005-2025, threshold from the validation years.
@@ -223,6 +223,41 @@ def profile_types_figure():
     plt.close(figure)
 
 
+def dropout_figure():
+    """The spread follows G across the events; at equal G, a larger spread goes with data farther from normal."""
+    data = json.loads((HERE / "dati" / "era5_dropout.json").read_text(encoding="utf-8"))
+    profile = pd.read_csv(PROFILE)
+    profile = profile[profile["type"] == "all"].sort_values("position")
+    figure, (across, classes) = plt.subplots(1, 2, figsize=size(0.46), constrained_layout=True, width_ratios=(1.45, 1))
+    across.axhline(50, color=MUTED, linewidth=0.8, linestyle="--")
+    position = np.array(data["positions"]["position"])
+    spread = np.array(data["positions"]["spread percentile"])
+    joined = np.abs(position) < 8
+    g = profile.set_index("position").loc[position, f"{SCORE} percentile"].to_numpy()
+    for values, colour, label in ((g, BLUE, "G"), (spread, ORANGE, "dispersione")):
+        across.plot(position[joined], values[joined], color=colour, linewidth=2, marker="o", markersize=4, markeredgecolor="white", label=label)
+        across.plot(position[~joined], values[~joined], color=colour, linewidth=0, marker="o", markersize=4, markeredgecolor="white")
+    across.legend(frameon=False, fontsize=TICKS, loc="lower left")
+    across.set_ylim(0, 106)
+    across.set_yticks([0, 25, 50, 75, 100])
+    across.set_ylabel("percentile mediano", fontsize=TICKS)
+    position_axis(across)
+    across.set_xticks([-8, -4, -1, 1, 4, 8], ["8 o più", "4", "1", "1", "4", "8 o più"])
+    across.set_title("Attraverso gli eventi", fontsize=9, loc="left", color=TEXT)
+    numbers = data["classes"]
+    classes.bar(numbers["class"], numbers["normal flagged %"], width=0.72, color=ORANGE)
+    for x, y in zip(numbers["class"], numbers["normal flagged %"]):
+        classes.text(x, y + 1.5, f"{y:.0f}%", ha="center", fontsize=TICKS, color=TEXT)
+    classes.set_ylim(0, 72)
+    classes.set_yticks([])
+    classes.set_xticks(numbers["class"], ["1\nconcordi", "2", "3", "4", "5\ndiscordi"])
+    classes.tick_params(labelsize=TICKS, length=0)
+    classes.set_title("Oltre la soglia del normale", fontsize=9, loc="left", color=TEXT)
+    clean(classes, "top", "right", "left")
+    figure.savefig(HERE / "era5_dropout.pdf")
+    plt.close(figure)
+
+
 def percentile(values, quantiles):
     return np.interp(values, quantiles, np.linspace(0, 100, len(quantiles)))
 
@@ -311,6 +346,7 @@ def main():
     types_figure(zones)
     profile_figure()
     profile_types_figure()
+    dropout_figure()
     medians = {}
     for path in sorted((HERE / "dati").glob("era5_caso_*.npz")):
         with np.load(path) as data:

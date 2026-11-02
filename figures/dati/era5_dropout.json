@@ -1,0 +1,23 @@
+{
+  "source": "outputs/casi_good2_g/dropout_5pc.log, scripts/check_era5_dropout_flags.py, test 2005-2025, good-sweep-2, 2 November 2026",
+  "solid": {"one spread lower %": 78.0, "two spreads lower %": 60.2, "not flagged, one spread higher %": 1.6, "median spread over threshold": 0.194},
+  "classes": {
+    "class": [1, 2, 3, 4, 5],
+    "median spread": [0.357, 0.507, 0.632, 0.783, 1.153],
+    "normal percentile": [85.981, 89.867, 92.425, 94.318, 96.672],
+    "normal flagged %": [25.386, 33.219, 41.566, 49.825, 61.295],
+    "largest value": [3.090, 3.052, 3.121, 3.204, 3.375],
+    "none beyond 2 %": [12.777, 10.806, 9.337, 8.279, 7.999]
+  },
+  "classes raw spread": {
+    "normal percentile": [83.751, 90.566, 93.261, 94.923, 96.676],
+    "normal flagged %": [19.594, 34.265, 44.761, 52.841, 59.829],
+    "largest value": [2.748, 2.992, 3.181, 3.376, 3.752],
+    "none beyond 2 %": [16.522, 10.154, 7.888, 6.962, 7.674]
+  },
+  "positions": {
+    "position": [-8, -7, -6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8],
+    "spread percentile": [100, 100, 99, 99, 99, 99, 97, 94, 85, 74, 64, 58, 53, 50, 47, 37],
+    "raw spread percentile": [99, 99, 99, 99, 99, 98, 97, 94, 86, 76, 66, 60, 55, 50, 47, 35]
+  }
+}
