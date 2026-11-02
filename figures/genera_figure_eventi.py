@@ -234,7 +234,7 @@ def dropout_figure():
         bands.text(x, 100 * y + 0.25, f"{100 * y:.1f}", ha="center", fontsize=6.5, color=TEXT)
     bands.set_ylim(0, 13)
     bands.set_yticks([])
-    bands.set_xticks(place, ["<50", "50-90", "90-95", "95-99", "99-\n99.9", ">99.9"])
+    bands.set_xticks(place, ["<50", "50-\n90", "90-\n95", "95-\n99", "99-\n99.9", ">99.9"])
     bands.tick_params(labelsize=6.5, length=0)
     bands.set_xlabel("percentile dell'errore", fontsize=TICKS)
     bands.set_title("Rapporto per errore (%)", fontsize=8.5, loc="left", color=TEXT)
