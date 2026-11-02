@@ -20,7 +20,7 @@ I dati sono una sequenza di campi $X_t$, uno per istante $t$, su un reticolo di 
 \section{Architettura e addestramento avversario}
 \label{sec:stgan}
 
-Il detector segue lo schema di STGAN~\cite{deng2022stgan} descritto nella Sezione~\ref{sec:rw-stgan}: un generatore stima il campo dell'istante successivo a partire dagli istanti precedenti, e un discriminatore giudica se il campo di un istante, insieme alla sua storia recente, è osservato o generato. Il bersaglio del generatore è meteorologico e comprende le quindici variabili della Tabella~\ref{tab:variabili-era5}. La griglia è definita direttamente in coordinate geografiche, con passo angolare di $0.5^\circ$, e la cadenza è di tre ore. La Figura~\ref{fig:architettura-stgan} riporta la struttura delle due reti, descritta nelle sottosezioni seguenti.
+Il detector segue lo schema di STGAN~\cite{deng2022stgan} descritto nella Sezione~\ref{sec:rw-stgan}: un generatore stima il campo dell'istante successivo a partire dagli istanti precedenti, e un discriminatore giudica se il campo di un istante, insieme alla sua storia recente, è osservato o generato. Il generatore stima le quindici variabili della Tabella~\ref{tab:variabili-era5}, su una griglia con passo di $0.5^\circ$ e con una cadenza di tre ore. La Figura~\ref{fig:architettura-stgan} riporta la struttura delle due reti, descritta nelle sottosezioni seguenti.
 
 \begin{figure}[htbp]
     \centering
@@ -41,7 +41,7 @@ Le celle del reticolo prive di dati sono azzerate dopo la normalizzazione, e una
 \begin{equation}
 H_s = M\odot\left[U_s\odot H_{s-1}+(1-U_s)\odot\widetilde{H}_s\right].
 \end{equation}
-Il mascheramento dello stato impedisce alle celle assenti di conservare attivazioni da propagare negli strati o nei passi successivi. Non viene applicata una rinormalizzazione del kernel in funzione delle celle osservate, come avverrebbe in una partial convolution. Su ERA5 nessuna cella del reticolo è priva di dati, ma la maschera resta necessaria per il discriminatore, le cui patch sul bordo del dominio sono incomplete. Lo stato ricorrente è inizializzato a zero per ogni finestra. Il modello ha due strati ConvGRU da 32 canali con kernel $3\times3$, e una LSTM del trend a due strati con stato nascosto di dimensione 64.
+Il mascheramento dello stato impedisce alle celle assenti di conservare attivazioni da propagare negli strati o nei passi successivi. Su ERA5 nessuna cella del reticolo è priva di dati, ma la maschera resta necessaria per il discriminatore, le cui patch sul bordo del dominio sono incomplete. Lo stato ricorrente è inizializzato a zero per ogni finestra. Il modello ha due strati ConvGRU da 32 canali con kernel $3\times3$, e una LSTM del trend a due strati con stato nascosto di dimensione 64.
 
 \subsection{Discriminatore locale}
 
