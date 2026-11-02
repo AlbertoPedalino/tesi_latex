@@ -299,3 +299,5 @@ Vengono registrate media e varianza della stima sui sottoinsiemi e la media dell
 Al termine di ogni epoca un sottoinsieme fisso della validazione, 32 istanti equispaziati con tutte le celle, viene elaborato con un passaggio deterministico, a dropout spento. Vengono registrate due quantità: la differenza assoluta media fra le attivazioni del penultimo strato del discriminatore sull'osservazione e sulla ricostruzione, e la variazione dello score fra epoche consecutive sulle stesse celle. Queste quantità e la MMD non entrano in una loss, in un aggiornamento dei pesi o negli score; sono calcolate senza gradiente e ripristinando gli stati dei generatori di numeri casuali, così da non alterare la traiettoria dell'addestramento.
 
 Dopo l'ultima epoca, su tutti i valori validi e non insoliti della validazione, viene calcolata la componente di ricostruzione media sulle estrazioni Monte Carlo, riassunta da media, deviazione standard, mediana e 95-esimo percentile. Le stesse estrazioni danno gli estremi delle due componenti usati dallo score combinato.
+
+Il Capitolo~\ref{chap:esperimenti} riporta i valori scelti e il protocollo con cui lo score è valutato.
