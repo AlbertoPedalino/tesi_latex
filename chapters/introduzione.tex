@@ -36,8 +36,10 @@ L'obiettivo della tesi è rilevare condizioni meteorologiche anomale in campi pr
     \item L'adattamento di STGAN a campi meteorologici privi di topologia fisica, con un generatore sul campo intero che rappresenta l'intorno di una cella con una convoluzione su griglia, e la definizione dell'obiettivo come rilevamento di condizioni nuove rispetto al periodo di training.
     \item Uno score Monte Carlo, con il dropout nel generatore e nel discriminatore.
     \item Un protocollo di addestramento e di scelta della configurazione che non usa etichette né anni di test: una validazione da cui le condizioni insolite sono escluse con un criterio indipendente dal modello, e una misura della distanza fra campi osservati e ricostruiti.
-    \item Una valutazione senza etichette: lo studio delle componenti dello score nello spazio e nel tempo, e il confronto, a parità di segnalazioni, con rilevatori che non usano un modello e con modelli poco profondi.
+    \item Una valutazione senza etichette: lo studio delle componenti dello score nello spazio e nel tempo, e il confronto, a parità di segnalazioni, con rilevatori che non usano un modello e con modelli shallow.
 \end{itemize}
+
+Il risultato principale è che l'errore del generatore e il giudizio del discriminatore non concordano: dove il primo segnala un valore insolito, il secondo in genere non lo segnala. Sommarli rende lo score difficile da interpretare: la tesi usa quindi il solo errore del generatore, il cui significato è chiaro.
 
 \section{Organizzazione del documento}
 
