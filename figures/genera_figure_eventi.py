@@ -8,7 +8,7 @@ check_era5_event_cases.py of the code repository):
 which writes figures/dati/era5_eventi_zone.csv, era5_eventi_profilo.csv and era5_caso_NN.npz. Then:
     python figures/genera_figure_eventi.py --coastline <ne_50m_coastline.geojson>
 which writes figures/era5_eventi_dimensione.pdf, era5_eventi_tipo.pdf, era5_eventi_mappa_zone.pdf,
-era5_eventi_profilo.pdf, era5_eventi_profilo_tipi.pdf, era5_dropout.pdf, era5_caso_NN.pdf, and figures/dati/era5_casi_zone.json with the medians of every case.
+era5_eventi_profilo.pdf, era5_eventi_profilo_tipi.pdf, era5_dropout.pdf, era5_dropout_tipi.pdf, era5_dropout_mappe.pdf, era5_caso_NN.pdf, and figures/dati/era5_casi_zone.json with the medians of every case.
 The coastline, from Natural Earth (public domain), is not kept in the repository.
 
 Run: good-sweep-2, test years 2005-2025, threshold from the validation years.
@@ -267,6 +267,90 @@ def dropout_figure():
     plt.close(figure)
 
 
+def dropout_types_figure():
+    """The dropout by type of event: the ratio across the events, and the classes at equal error."""
+    positions = pd.read_csv(HERE / "dati" / "era5_dropout_posizioni.csv")
+    positions = positions[(positions["type"] != "all") & (positions["values"] >= MIN_VALUES)]
+    classes = pd.read_csv(HERE / "dati" / "era5_dropout_classi.csv")
+    classes = classes[(classes["type"] != "all") & (classes["spread"] == "ratio") & (classes["bands"] == "raw error")]
+    chosen = {"total_precipitation": (BLUE, 3.4, 9.0, -11), "vertical_velocity": ("#1baf7a", -4.6, 8.2, -11),
+              "mean_sea_level_pressure": (ORANGE, 3.4, 10.5, 5)}
+    figure, (across, gap) = plt.subplots(1, 2, figsize=size(0.62), constrained_layout=True, width_ratios=(1.25, 1))
+    for name, group in positions.groupby("type"):
+        if name not in chosen:
+            group = group.sort_values("position")
+            joined = group["position"].abs() < 8
+            across.plot(group["position"][joined], 100 * group["ratio value"][joined], color="#c8c6bf", linewidth=0.9, zorder=1)
+    for name, (colour, x, y, shift) in chosen.items():
+        group = positions[positions["type"] == name].sort_values("position")
+        joined = group["position"].abs() < 8
+        across.plot(group["position"][joined], 100 * group["ratio value"][joined], color=colour, linewidth=2, zorder=2)
+        across.annotate(TYPES[name], (x, y), xytext=(0, shift), textcoords="offset points", fontsize=7.5, color=TEXT, zorder=3)
+    across.annotate("umidità del suolo", (-4.6, 12.9), fontsize=7.5, color=MUTED)
+    across.annotate("radiazione solare", (-7.6, 5.6), fontsize=7.5, color=MUTED)
+    position_axis(across)
+    across.set_xticks([-6, -4, -2, 2, 4, 6], ["6", "4", "2", "2", "4", "6"])
+    across.set_xlim(-8.3, 7.5)
+    across.set_xlabel("celle dal bordo: dentro | fuori", fontsize=TICKS)
+    across.set_ylabel("rapporto (%)", fontsize=TICKS)
+    across.set_title("Il rapporto attraverso gli eventi", fontsize=9, loc="left", color=TEXT)
+
+    table = classes.pivot(index="type", columns="class", values="normal flagged %")
+    table = table.loc[table[5].sort_values().index]
+    place = np.arange(len(table))
+    gap.hlines(place, table[1], table[5], color=GRID, linewidth=1.5, zorder=1)
+    gap.scatter(table[1], place, s=26, color=BLUE, edgecolor="white", linewidth=0.6, zorder=2, label="concordi")
+    gap.scatter(table[5], place, s=26, color=ORANGE, edgecolor="white", linewidth=0.6, zorder=2, label="discordi")
+    gap.set_yticks(place, [TYPES[name] for name in table.index], fontsize=7)
+    gap.set_xlim(0, 100)
+    gap.set_xlabel("oltre la soglia del normale (%)", fontsize=TICKS)
+    gap.tick_params(labelsize=7, length=0)
+    gap.grid(axis="x", color=GRID, linewidth=0.6)
+    gap.set_axisbelow(True)
+    gap.legend(frameon=False, fontsize=7.5, loc="lower right")
+    gap.set_title("A parità di errore", fontsize=9, loc="left", color=TEXT)
+    clean(gap, "top", "right", "left")
+    figure.savefig(HERE / "era5_dropout_tipi.pdf")
+    plt.close(figure)
+
+
+def dropout_maps_figure(coastline_path):
+    """The standard deviation of the draws cell by cell: its mean over the years, and at the instants of the cases."""
+    maps = dict(np.load(HERE / "dati" / "era5_dropout_mappe.npz"))
+    grid = {key: maps[key] for key in ("rows", "cols", "latitudes", "longitudes")}
+    coastline = coastline_of(coastline_path, grid)
+    figure = plt.figure(figsize=size(0.86), constrained_layout=True)
+    panels = figure.add_gridspec(2, 6, height_ratios=(1.25, 1))
+    for slot, key, title, label, scale in ((panels[0, :3], "mean grezza", "Deviazione standard, media", r"$\times 10^{-4}$", 1e4),
+                                           (panels[0, 3:], "mean ratio", "Rapporto, medio", "%", 100)):
+        axis = figure.add_subplot(slot)
+        values = maps[key] * scale
+        low, high = np.nanpercentile(values, (1, 99))
+        mesh = draw_map(axis, grid, values, coastline, left=slot == panels[0, :3], cmap="viridis", vmin=low, vmax=high)
+        axis.set_title(title, fontsize=9, loc="left", color=TEXT)
+        bar = figure.colorbar(mesh, ax=axis, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30)
+        bar.set_label(label, fontsize=TICKS)
+        bar.ax.tick_params(labelsize=TICKS)
+    cases = (("00", "2020-02-05 06:00:00", "Velocità verticale, 5/2/2020"), ("01", "2005-03-01 00:00:00", "Precipitazione, 1/3/2005"),
+             ("02", "2024-03-28 06:00:00", "Pressione, 28/3/2024"))
+    axes = []
+    high = max(np.nanpercentile(maps[f"instant {moment} grezza"], 99) for _, moment, _ in cases) * 1e4
+    for column, (number, moment, title) in enumerate(cases):
+        axis = figure.add_subplot(panels[1, 2 * column:2 * column + 2])
+        mesh = draw_map(axis, grid, maps[f"instant {moment} grezza"] * 1e4, coastline, left=column == 0, cmap="viridis", vmin=0, vmax=high)
+        with np.load(HERE / "dati" / f"era5_caso_{number}.npz") as case:
+            picture = np.zeros((len(grid["latitudes"]), len(grid["longitudes"])))
+            picture[grid["rows"], grid["cols"]] = case["core"]
+        axis.contour(grid["longitudes"], grid["latitudes"][::-1], picture[::-1], levels=[0.5], colors="white", linewidths=0.5)
+        axis.set_title(title, fontsize=8, loc="left", color=TEXT)
+        axes.append(axis)
+    bar = figure.colorbar(mesh, ax=axes, orientation="horizontal", shrink=0.5, pad=0.02, aspect=40)
+    bar.set_label(r"deviazione standard dell'errore, $\times 10^{-4}$", fontsize=TICKS)
+    bar.ax.tick_params(labelsize=TICKS)
+    figure.savefig(HERE / "era5_dropout_mappe.pdf", dpi=300)
+    plt.close(figure)
+
+
 def percentile(values, quantiles):
     return np.interp(values, quantiles, np.linspace(0, 100, len(quantiles)))
 
@@ -356,6 +440,8 @@ def main():
     profile_figure()
     profile_types_figure()
     dropout_figure()
+    dropout_types_figure()
+    dropout_maps_figure(args.coastline)
     medians = {}
     for path in sorted((HERE / "dati").glob("era5_caso_*.npz")):
         with np.load(path) as data:

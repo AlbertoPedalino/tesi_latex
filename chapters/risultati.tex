@@ -507,7 +507,27 @@ Lo score è la media di 20 estrazioni con maschere di dropout diverse, e la devi
 
 \paragraph{A parità di errore, più dispersione vuol dire dati più lontani dal normale.} Per confrontare valori con lo stesso errore, i valori segnalati sono divisi prima in 20 fasce di errore e poi, in ogni fascia, in cinque classi uguali per rapporto, che va da 0.05 a 0.15 (Figura~\ref{fig:ris-dropout}, a destra). Passando dalle estrazioni più concordi alle più discordi, la quota oltre la soglia della distanza dal normale sale dal 20\% al 62\%, e la quota di valori in cui nessuna variabile si allontana dal normale più di due volte la variabilità abituale scende dal 16\% all'8\%. Il risultato è quasi uguale dividendo a parità di G con la normalizzazione, dal 24\% al 61\%. Le estrazioni, dunque, si separano di più dove i dati sono più lontani dal normale; quelle più concordi cadono più spesso dove nessuna variabile della cella è lontana dal normale. È coerente con l'idea che il modello sia meno stabile sui dati più diversi da quelli visti in addestramento, anche se la verifica non lo dimostra.
 
-\paragraph{Sintesi.} La dispersione non è un secondo score: cresce con G e dipende poco dalle maschere nella maggior parte delle segnalazioni. In proporzione le estrazioni concordano di più dove l'errore è più grande; a parità di errore, concordano di meno dove i dati sono più lontani dal normale. Né l'una né l'altra misura rende una segnalazione più o meno affidabile: la distanza dal normale descrive i dati, non è un riferimento per giudicarla.
+Fra i valori sotto la soglia della distanza dal normale, circa la metà è segnalata anche dalla variazione in tre ore in tutte le classi (52, 54, 53, 52 e 48\%), contro circa il 5\% atteso per caso: G segnala spesso valori non estremi che cambiano in fretta, ma la dispersione non distingue questi casi.
+
+\paragraph{Per tipo di evento il quadro è simile.} Con gli stessi tipi della Sezione~\ref{sec:ris-eventi}, il rapporto ha quasi ovunque il minimo una o due celle dentro il bordo e sale verso l'esterno (Figura~\ref{fig:ris-dropout-tipi}, a sinistra). Per la velocità verticale va da 8.2\% due celle dentro a 9.0\% una cella fuori e 9.8\% a sette celle; per la precipitazione da 8.5\% a 9.2\% e 9.7\%; per la pressione da 9.1\% a 9.8\% e 10.4\%. Fanno eccezione la radiazione solare, con il minimo più basso (5.3\%), e l'umidità del suolo, con il rapporto più alto: 11.8\% due celle dentro e 13.1\% una cella fuori, poi scende allontanandosi. A parità di errore, in tutti i tipi le estrazioni più discordi hanno una quota più alta di valori oltre la soglia della distanza dal normale (Figura~\ref{fig:ris-dropout-tipi}, a destra): dal 16\% al 54\% per la velocità verticale, dal 22\% al 62\% per la precipitazione, dal 31\% al 74\% per la pressione. Il divario è massimo per l'umidità del suolo, dal 31\% al 94\%; per copertura nuvolosa e radiazione la quota sale ma smette di crescere nell'ultima classe.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_dropout_tipi}
+    \caption{Il dropout per tipo di evento, sugli anni di test. A sinistra: rapporto fra dispersione ed errore secondo le celle di distanza dal bordo, con evidenziati i tipi dei casi della Sezione~\ref{sec:ris-casi}; non sono tracciate le distanze con meno di 1000 valori né le celle a 8 o più dal bordo. A destra: a parità di errore, quota dei valori oltre la soglia della distanza dal normale nella classe con le estrazioni più concordi e in quella con le più discordi. ``In quota'' indica il livello di 850~hPa. Il minimo vicino al bordo e il divario fra le classi valgono per quasi tutti i tipi.}
+    \label{fig:ris-dropout-tipi}
+\end{figure}
+
+\paragraph{La dispersione cella per cella.} La Figura~\ref{fig:ris-dropout-mappe} mostra la deviazione standard delle estrazioni in ogni cella. In media sugli anni di test è più alta a sud, dove è più alto anche l'errore: $1.80\times10^{-4}$ fra 20$^\circ$ e 30$^\circ$N contro $1.47\times10^{-4}$ fra 50$^\circ$ e 60$^\circ$N. I valori più alti cadono in poche aree, per lo più in corrispondenza di rilievi come Alpi, Atlante, Caucaso e Zagros. Il rapporto varia poco e va un po' nel senso opposto, dal 10.2\% al 10.7\%. Lungo il bordo del dominio si vede una sottile cornice: sulla prima fila di celle la deviazione standard è circa il 20\% più alta che all'interno, un effetto del modello simile a quello della Sezione~\ref{sec:ris-correlazione-temporale}. Nei tre istanti dei casi la deviazione standard è più alta nel nucleo degli eventi, come ci si aspetta dal fatto che segue G.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_dropout_mappe}
+    \caption{La deviazione standard delle estrazioni di dropout cella per cella. In alto: la sua media sugli anni di test e il rapporto medio con l'errore. In basso: la deviazione standard nei tre istanti dei casi della Sezione~\ref{sec:ris-casi}, con la stessa scala e il nucleo dell'evento racchiuso dalla linea bianca. Linee di costa da Natural Earth.}
+    \label{fig:ris-dropout-mappe}
+\end{figure}
+
+\paragraph{Sintesi.} La dispersione non è un secondo score: cresce con G e dipende poco dalle maschere nella maggior parte delle segnalazioni. In proporzione le estrazioni concordano di più dove l'errore è più grande; a parità di errore, concordano di meno dove i dati sono più lontani dal normale. Il quadro è simile per quasi tutti i tipi di evento. Né l'una né l'altra misura rende una segnalazione più o meno affidabile: la distanza dal normale descrive i dati, non è un riferimento per giudicarla.
 % Numeri (2 novembre 2026, test, good-sweep-2): scripts/check_era5_dropout_spread.py (--score-component
 % generator, un istante ogni 9, rapporto delle medie per fascia: log dropout_rapporto_bande.log) e
 % scripts/check_era5_dropout_flags.py (dropout_rapporto_5pc.log); figures/dati/era5_dropout.json. Dispersione
@@ -517,6 +537,18 @@ Lo score è la media di 20 estrazioni con maschere di dropout diverse, e la devi
 % rapporto a parità di errore: oltre soglia 19.7, 32.8, 43.9, 53.2, 61.7%; nessuna variabile oltre 2: 15.5,
 % 10.4, 8.2, 7.2, 7.9%; a parità di G: 23.7, 32.8, 42.4, 51.3, 61.1%. Valori a 8 o più celle: 48537 su
 % 36656037.
+% Per tipo e mappe (2 novembre 2026, dropout_tipi_5pc*, in figures/dati/era5_dropout_*): rapporto per
+% posizione -2, 1, 7: velocità verticale 8.16, 9.04, 9.77; precipitazione 8.46, 9.19, 9.69; pressione
+% 9.12, 9.84, 10.37; radiazione -2 5.30; umidità del suolo 11.82, 13.13, 11.32. Oltre soglia, classi 1 e 5
+% a parità di errore: velocità verticale 16.2, 54.0; precipitazione 21.6, 62.2; pressione 30.7, 73.5;
+% suolo 30.6, 94.2; nuvole 29.5, 52.8 (classe 4), 45.7; radiazione 20.8, 42.2, 41.1. Variazione in tre
+% ore sotto la soglia del normale: 52.2, 53.9, 53.2, 51.7, 47.6 (criterio fissato prima sull'ipotesi che
+% le estrazioni concordi siano i casi di andamento insolito: discesa regolare di almeno 5 punti: non raggiunto).
+% Sopra il 97-esimo percentile della media (celle): 30.5-37.5N 45.5-50E 59; 37-42N 39.5-45E 56; 20-23.5N
+% 39.5-46E 42; 20-22N 14-19.5E 36; 42-44.5N 41-48E 33; 31-33.5N 8-4.5W 21; 46-47N 9.5-12E 14. La lettura come
+% rilievi è geografica, non misurata. Prima fila del dominio 1.96 contro 1.63 x 1e-4 all'interno (>= 8 celle).
+% Media per fascia di latitudine S->N: deviazione standard 1.80, 1.68, 1.60, 1.47 x 1e-4; rapporto 10.15,
+% 10.23, 10.54, 10.70%.
 % Da non riprendere senza ricalcolo: le classi di ottobre (analisi_good2/fiducia_test.log: a parità di
 % errore grezzo, su 400 istanti, variabile con l'errore più grande oltre 1 nell'84% con estrazioni concordi
 % e nel 67% con discordi) vanno in senso opposto. Non dipende da come è definita la dispersione, che
