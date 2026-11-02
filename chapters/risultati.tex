@@ -172,7 +172,7 @@ Per farlo, D va scomposta nei suoi due termini, $D_{\mathrm{reale}}$ e $D_{\math
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_zone_schema}
-    \caption{Le tre zone attorno a un evento, in un istante, su una porzione della griglia: il nucleo, il contorno, le celle intermedie escluse e la zona lontana. Ogni quadrato è una cella.}
+    \caption{Le tre zone attorno a un evento, in un istante, su una porzione della griglia: il nucleo, il contorno e la zona lontana; le celle intermedie non rientrano in nessuna. Ogni quadrato è una cella.}
     \label{fig:ris-zone-schema}
 \end{figure}
 
@@ -560,7 +560,7 @@ Fin qui si è usata la media delle estrazioni di dropout; questa sezione guarda 
 
 Le sezioni precedenti descrivono gli eventi in generale e per tipo; questa ne guarda da vicino tre. I casi sono scelti con una regola fissata prima di esaminarli, così che nessuno sia preso per il suo aspetto: i tipi sono i tre con più valori negli eventi di almeno 20 valori, cioè velocità verticale, precipitazione e pressione al livello del mare; per ciascuno il caso è l'evento più grande, letto nell'istante in cui conta più celle. Non sono quindi i casi più importanti né i più tipici, ma mostrano che cosa c'è dentro gli eventi più grandi.
 
-\paragraph{Come leggere le figure.} Le Figure~\ref{fig:ris-caso-velocita}--\ref{fig:ris-caso-pressione} hanno la stessa struttura. In alto a sinistra c'è lo scarto della variabile del tipo: bianco vuol dire normale, rosso sopra il normale, blu sotto. In alto a destra c'è G in percentile, con la stessa scala in tutti i casi: il giallo è oltre la soglia. Lo scarto è qui con il suo segno. La linea nera nelle due mappe racchiude il nucleo di questo evento in quell'istante; fuori possono esserci celle gialle di altri eventi. In basso a sinistra si segue nel tempo la cella del nucleo con G più alto, da tre giorni prima a tre giorni dopo, confrontando G con la distanza dal normale di tutte le variabili: la linea tratteggiata è la soglia di G, le bande azzurre sono gli istanti in cui la cella fa parte dell'evento. In basso a destra c'è il numero di celle dell'evento in ogni istante, cioè la catena; la linea verticale, anche a sinistra, segna l'istante delle mappe. La Tabella~\ref{tab:ris-casi} riassume le tre zone.
+\paragraph{Come leggere le figure.} Le Figure~\ref{fig:ris-caso-velocita}--\ref{fig:ris-caso-pressione} hanno la stessa struttura. In alto a sinistra c'è lo scarto della variabile del tipo: bianco vuol dire normale, rosso sopra il normale, blu sotto. In alto a destra c'è G con la normalizzazione in percentile, con la stessa scala in tutti i casi: il giallo è oltre la soglia. Lo scarto è qui con il suo segno. La linea nera nelle due mappe racchiude il nucleo di questo evento in quell'istante; fuori possono esserci celle gialle di altri eventi. In basso a sinistra si segue nel tempo la cella del nucleo con G più alto, da tre giorni prima a tre giorni dopo, confrontando G con la distanza dal normale di tutte le variabili: la linea tratteggiata è la soglia di G, le bande azzurre sono gli istanti in cui la cella fa parte dell'evento. In basso a destra c'è il numero di celle dell'evento in ogni istante, cioè la catena; la linea verticale, anche a sinistra, segna l'istante delle mappe. La Tabella~\ref{tab:ris-casi} riassume le tre zone.
 
 \begin{table}[htbp]
     \centering

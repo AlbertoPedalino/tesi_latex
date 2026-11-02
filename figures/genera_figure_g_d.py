@@ -211,7 +211,7 @@ def terms_temporal_figure(data, coastline):
 def zones_figure(data):
     figure, axis = plt.subplots(figsize=size(0.42), constrained_layout=True)
     labels = {"G": "G", "Dreale": REAL, "Dricostruito": GENERATED, "D": "D"}
-    zones = ("nucleo", "contorno", "lontano")
+    zones = ("nucleo", "contorno", "lontana")
     shades = ("#184f95", "#5598e7", "#b7d3f6")  # one hue, darker at the core
     positions = np.arange(len(data["zone_scores"]))
     width = 0.26
@@ -220,6 +220,7 @@ def zones_figure(data):
         bars = axis.bar(positions + (index - 1) * width, values, width - 0.03, color=shade, label=zone)
         axis.bar_label(bars, labels=[f"{value:.0f}" for value in values], fontsize=7, color=TEXT, padding=1)
     axis.axhline(50, color=MUTED, linewidth=0.7, linestyle=(0, (3, 2)))
+    axis.text(positions[-1] - 0.13, 51, "valore tipico", fontsize=7, color=MUTED, ha="center", va="bottom")
     axis.set_xticks(positions, [labels[str(name)] for name in data["zone_scores"]])
     axis.tick_params(labelsize=TICKS)
     axis.set_ylim(0, 108)
@@ -255,7 +256,7 @@ def zones_scheme_figure():
     for spine in axis.spines.values():
         spine.set_edgecolor(MUTED)
     legend = (("nucleo: le celle dell'evento", colours[0]), ("contorno: le celle che toccano il nucleo", colours[1]),
-              ("celle intermedie, escluse", colours[2]), ("lontano: oltre 3 celle da ogni nucleo", colours[3]))
+              ("celle intermedie, escluse", colours[2]), ("lontana: oltre 3 celle da ogni nucleo", colours[3]))
     axis.legend(handles=[Patch(facecolor=colour, edgecolor=MUTED, linewidth=0.5, label=label) for label, colour in legend],
                 loc="center left", bbox_to_anchor=(1.02, 0.5), frameon=False, fontsize=8)
     figure.savefig(HERE / "era5_zone_schema.pdf", bbox_inches="tight")

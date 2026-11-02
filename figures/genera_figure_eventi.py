@@ -22,10 +22,13 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.dates as dates
+import matplotlib.patheffects as effects
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap, ListedColormap, LogNorm
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 from scipy import ndimage
 
 from genera_figure_g_d import BLUE, GRID, MUTED, ORANGE, TEXT, TICKS, coastline_of, draw_map, size
@@ -47,6 +50,8 @@ RAMP = LinearSegmentedColormap.from_list("blu", ("#eef4fc", "#9ec5f4", "#3987e5"
 SCORE, NORMAL = "G+clim", "normale"
 CORE = "core"
 MIN_VALUES = 1000  # a position of a type with fewer values is not drawn
+GREEN, GREEN_TEXT = "#1baf7a", "#12875d"  # the text is darker, to be read on white
+HALO = [effects.withStroke(linewidth=2.5, foreground="white")]  # a label stays readable over the lines
 
 
 def prepare(folder):
@@ -148,9 +153,9 @@ def zones_map_figure(data, coastline):
     figure, axes = plt.subplots(1, 2, figsize=size(0.56), constrained_layout=True)
     mesh = draw_map(axes[0], grid, level, coastline, cmap="viridis", vmin=0, vmax=100)
     bar = figure.colorbar(mesh, ax=axes[0], orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, ticks=[0, 25, 50, 75, 95])
-    bar.set_label("G, percentile (95 circa = soglia)", fontsize=TICKS)
+    bar.set_label("percentile (95 circa = soglia)", fontsize=TICKS)
     bar.ax.tick_params(labelsize=TICKS)
-    axes[0].set_title("G", fontsize=9, loc="left", color=TEXT)
+    axes[0].set_title("G con normalizzazione", fontsize=9, loc="left", color=TEXT)
     colours = ["#f4f3ef", "#cfcdc6", ORANGE, BLUE]
     mesh = draw_map(axes[1], grid, zone, coastline, left=False, cmap=ListedColormap(colours), vmin=-0.5, vmax=3.5)
     bar = figure.colorbar(mesh, ax=axes[1], orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, ticks=range(4))
@@ -186,8 +191,9 @@ def profile_figure():
     for key, colour in ((SCORE, BLUE), (NORMAL, ORANGE)):
         axis.plot(table["position"][joined], table[f"{key} percentile"][joined], color=colour, linewidth=2, marker="o", markersize=5, markeredgecolor="white")
         axis.plot(table["position"][~joined], table[f"{key} percentile"][~joined], color=colour, linewidth=0, marker="o", markersize=5, markeredgecolor="white")
-    axis.annotate("G con normalizzazione", (3, 69), xytext=(10, 12), textcoords="offset points", fontsize=TICKS, color=TEXT)
-    axis.text(-0.4, 70, "distanza dal normale", fontsize=TICKS, color=TEXT, ha="right")
+    axis.text(2.7, 78, "G con normalizzazione", fontsize=TICKS, color=BLUE)
+    axis.text(-0.4, 78, "distanza dal normale", fontsize=TICKS, color=ORANGE, ha="right")
+    axis.text(0.15, 3, "bordo dell'evento", fontsize=TICKS, color=TEXT)
     axis.set_ylim(0, 106)
     axis.set_yticks([0, 25, 50, 75, 100])
     axis.set_ylabel("percentile mediano", fontsize=TICKS)
@@ -200,8 +206,8 @@ def profile_types_figure():
     """One cell out of the core some variables are back to normal, others are not: the variable of each type."""
     table = pd.read_csv(PROFILE)
     table = table[(table["type"] != "all") & (table["values"] >= MIN_VALUES)]
-    chosen = {"total_precipitation": (BLUE, 3.6, 0.42, -12), "vertical_velocity": ("#1baf7a", -7.6, 1.62, 0),
-              "mean_sea_level_pressure": (ORANGE, 3.7, 1.82, 7)}
+    chosen = {"total_precipitation": (BLUE, BLUE, 3.6, 0.42, -12), "vertical_velocity": (GREEN, GREEN_TEXT, -7.6, 1.62, 0),
+              "mean_sea_level_pressure": (ORANGE, ORANGE, 3.7, 1.82, 7)}
     figure, axis = plt.subplots(figsize=size(0.56), constrained_layout=True)
     for name, group in table.groupby("type"):
         group = group.sort_values("position")
@@ -209,13 +215,14 @@ def profile_types_figure():
             joined = group["position"].abs() < 8
             axis.plot(group["position"][joined], group["variable distance"][joined], color="#c8c6bf", linewidth=0.9, zorder=1)
             axis.plot(group["position"][~joined], group["variable distance"][~joined], color="#c8c6bf", linewidth=0, marker="o", markersize=2.5, zorder=1)
-    for name, (colour, x, y, shift) in chosen.items():
+    for name, (colour, label, x, y, shift) in chosen.items():
         group = table[table["type"] == name].sort_values("position")
         joined = group["position"].abs() < 8
         axis.plot(group["position"][joined], group["variable distance"][joined], color=colour, linewidth=2, zorder=2)
         axis.plot(group["position"][~joined], group["variable distance"][~joined], color=colour, linewidth=0, marker="o", markersize=5, markeredgecolor="white", zorder=2)
-        axis.annotate(TYPES[name], (x, y), xytext=(0, shift), textcoords="offset points", fontsize=TICKS, color=TEXT, zorder=3)
+        axis.annotate(TYPES[name], (x, y), xytext=(0, shift), textcoords="offset points", fontsize=TICKS, color=label, zorder=3)
     axis.annotate("altri tipi", (6.2, 1.62), fontsize=TICKS, color=MUTED)
+    axis.text(0.15, 0.08, "bordo dell'evento", fontsize=TICKS, color=TEXT)
     axis.set_ylim(0, 3.5)
     axis.set_ylabel("scarto della variabile (0 = normale)", fontsize=TICKS)
     position_axis(axis)
@@ -226,7 +233,7 @@ def profile_types_figure():
 def dropout_figure():
     """The dispersion in proportion to the error: by size of the error, across the events, at equal error."""
     data = json.loads((HERE / "dati" / "era5_dropout.json").read_text(encoding="utf-8"))
-    figure, (bands, across, classes) = plt.subplots(1, 3, figsize=size(0.42), constrained_layout=True, width_ratios=(1, 1.2, 1))
+    figure, (bands, across, classes) = plt.subplots(1, 3, figsize=size(0.46), constrained_layout=True, width_ratios=(1.3, 1.2, 0.95))
     numbers = data["ratio by band of the raw error"]
     place = np.arange(len(numbers["band"]))
     bands.bar(place, 100 * np.array(numbers["ratio"]), width=0.72, color=BLUE)
@@ -234,10 +241,11 @@ def dropout_figure():
         bands.text(x, 100 * y + 0.25, f"{100 * y:.1f}", ha="center", fontsize=6.5, color=TEXT)
     bands.set_ylim(0, 13)
     bands.set_yticks([])
-    bands.set_xticks(place, ["<50", "50-\n90", "90-\n95", "95-\n99", "99-\n99.9", ">99.9"])
+    bands.set_xticks(place, ["<50", "50–90", "90–95", "95–99", "99–99.9", ">99.9"], rotation=35, ha="right", rotation_mode="anchor")
     bands.tick_params(labelsize=6.5, length=0)
+    bands.set_ylabel("rapporto (%)", fontsize=TICKS)
     bands.set_xlabel("percentile dell'errore", fontsize=TICKS)
-    bands.set_title("Rapporto per errore (%)", fontsize=8.5, loc="left", color=TEXT)
+    bands.set_title("Secondo l'errore", fontsize=8.5, loc="left", color=TEXT)
     clean(bands, "top", "right", "left")
 
     position = np.array(data["positions"]["position"])
@@ -247,10 +255,11 @@ def dropout_figure():
     across.plot(position[~joined], ratio[~joined], color=BLUE, linewidth=0, marker="o", markersize=4, markeredgecolor="white")
     position_axis(across)
     across.set_xticks([-8, -4, -1, 1, 4, 8], ["8+", "4", "1", "1", "4", "8+"])
-    across.set_xlabel("celle: dentro | fuori", fontsize=TICKS)
+    across.set_xlabel("celle dal bordo: dentro | fuori", fontsize=TICKS)
+    across.set_ylabel("rapporto (%)", fontsize=TICKS)
     across.set_ylim(8, 11)
     across.set_yticks([8, 9, 10, 11])
-    across.set_title("Attraverso gli eventi (%)", fontsize=8.5, loc="left", color=TEXT)
+    across.set_title("Attraverso gli eventi", fontsize=8.5, loc="left", color=TEXT)
 
     numbers = data["classes of the ratio at equal raw error"]
     classes.bar(numbers["class"], numbers["normal flagged %"], width=0.72, color=ORANGE)
@@ -260,8 +269,9 @@ def dropout_figure():
     classes.set_yticks([])
     classes.set_xticks(numbers["class"], ["1", "2", "3", "4", "5"])
     classes.tick_params(labelsize=TICKS, length=0)
-    classes.set_xlabel("classe: concordi → discordi", fontsize=TICKS)
-    classes.set_title("Oltre la soglia del normale", fontsize=8.5, loc="left", color=TEXT)
+    classes.set_xlabel("classi, dalle estrazioni\nconcordi alle discordi", fontsize=TICKS)
+    classes.set_ylabel("oltre la soglia del normale", fontsize=TICKS)
+    classes.set_title("A parità di errore", fontsize=8.5, loc="left", color=TEXT)
     clean(classes, "top", "right", "left")
     figure.savefig(HERE / "era5_dropout.pdf")
     plt.close(figure)
@@ -273,24 +283,23 @@ def dropout_types_figure():
     positions = positions[(positions["type"] != "all") & (positions["values"] >= MIN_VALUES)]
     classes = pd.read_csv(HERE / "dati" / "era5_dropout_classi.csv")
     classes = classes[(classes["type"] != "all") & (classes["spread"] == "ratio") & (classes["bands"] == "raw error")]
-    chosen = {"total_precipitation": (BLUE, 3.4, 9.0, -11), "vertical_velocity": ("#1baf7a", -4.6, 8.2, -11),
-              "mean_sea_level_pressure": (ORANGE, 3.4, 10.5, 5)}
+    chosen = {"total_precipitation": (BLUE, BLUE, 0.7, 9.0, -11), "vertical_velocity": (GREEN, GREEN_TEXT, -7.4, 8.2, -11),
+              "mean_sea_level_pressure": (ORANGE, ORANGE, 3.4, 10.5, 5)}
     figure, (across, gap) = plt.subplots(1, 2, figsize=size(0.62), constrained_layout=True, width_ratios=(1.25, 1))
     for name, group in positions.groupby("type"):
         if name not in chosen:
             group = group.sort_values("position")
             joined = group["position"].abs() < 8
             across.plot(group["position"][joined], 100 * group["ratio value"][joined], color="#c8c6bf", linewidth=0.9, zorder=1)
-    for name, (colour, x, y, shift) in chosen.items():
+    for name, (colour, label, x, y, shift) in chosen.items():
         group = positions[positions["type"] == name].sort_values("position")
         joined = group["position"].abs() < 8
         across.plot(group["position"][joined], 100 * group["ratio value"][joined], color=colour, linewidth=2, zorder=2)
-        across.annotate(TYPES[name].replace(" al livello del mare", ""), (x, y), xytext=(0, shift), textcoords="offset points", fontsize=7.5, color=TEXT, zorder=3)
+        across.annotate(TYPES[name].replace(" al livello del mare", ""), (x, y), xytext=(0, shift), textcoords="offset points", fontsize=7.5, color=label, zorder=3, path_effects=HALO)
     across.annotate("umidità del suolo", (-4.6, 12.9), fontsize=7.5, color=MUTED)
     across.annotate("radiazione solare", (-7.6, 5.6), fontsize=7.5, color=MUTED)
     position_axis(across)
     across.set_xticks([-6, -4, -2, 2, 4, 6], ["6", "4", "2", "2", "4", "6"])
-    across.set_xlim(-8.3, 7.5)
     across.set_xlabel("celle dal bordo: dentro | fuori", fontsize=TICKS)
     across.set_ylabel("rapporto (%)", fontsize=TICKS)
     across.set_title("Il rapporto attraverso gli eventi", fontsize=9, loc="left", color=TEXT)
@@ -299,15 +308,15 @@ def dropout_types_figure():
     table = table.loc[table[5].sort_values().index]
     place = np.arange(len(table))
     gap.hlines(place, table[1], table[5], color=GRID, linewidth=1.5, zorder=1)
-    gap.scatter(table[1], place, s=26, color=BLUE, edgecolor="white", linewidth=0.6, zorder=2, label="concordi")
-    gap.scatter(table[5], place, s=26, color=ORANGE, edgecolor="white", linewidth=0.6, zorder=2, label="discordi")
+    gap.scatter(table[1], place, s=26, color=BLUE, edgecolor="white", linewidth=0.6, zorder=2, label="estrazioni concordi")
+    gap.scatter(table[5], place, s=26, color=ORANGE, edgecolor="white", linewidth=0.6, zorder=2, label="estrazioni discordi")
     gap.set_yticks(place, [TYPES[name] for name in table.index], fontsize=7)
     gap.set_xlim(0, 100)
-    gap.set_xlabel("oltre la soglia del normale (%)", fontsize=TICKS)
+    gap.set_xlabel("valori oltre la soglia del normale (%)", fontsize=TICKS)
     gap.tick_params(labelsize=7, length=0)
     gap.grid(axis="x", color=GRID, linewidth=0.6)
     gap.set_axisbelow(True)
-    gap.legend(frameon=False, fontsize=7.5, ncol=2, loc="upper center", bbox_to_anchor=(0.5, -0.13))
+    gap.legend(frameon=False, fontsize=7.5, ncol=2, loc="upper center", bbox_to_anchor=(0.4, -0.13), columnspacing=0.8)
     gap.set_title("A parità di errore", fontsize=9, loc="left", color=TEXT)
     clean(gap, "top", "right", "left")
     figure.savefig(HERE / "era5_dropout_tipi.pdf")
@@ -319,10 +328,10 @@ def dropout_maps_figure(coastline_path):
     maps = dict(np.load(HERE / "dati" / "era5_dropout_mappe.npz"))
     grid = {key: maps[key] for key in ("rows", "cols", "latitudes", "longitudes")}
     coastline = coastline_of(coastline_path, grid)
-    figure = plt.figure(figsize=size(0.86), constrained_layout=True)
+    figure = plt.figure(figsize=size(0.9), constrained_layout=True)
     panels = figure.add_gridspec(2, 6, height_ratios=(1.25, 1))
-    for slot, key, title, label, scale in ((panels[0, :3], "mean grezza", "Deviazione standard, media", r"$\times 10^{-4}$", 1e4),
-                                           (panels[0, 3:], "mean ratio", "Rapporto, medio", "%", 100)):
+    for slot, key, title, label, scale in ((panels[0, :3], "mean grezza", "Deviazione standard, media", r"deviazione standard dell'errore, $\times 10^{-4}$", 1e4),
+                                           (panels[0, 3:], "mean ratio", "Rapporto, medio", "rapporto (%)", 100)):
         axis = figure.add_subplot(slot)
         values = maps[key] * scale
         low, high = np.nanpercentile(values, (1, 99))
@@ -375,9 +384,9 @@ def case_figure(number, data, coastline):
     mesh = draw_map(right, grid, percentile(data[f"score_{SCORE}"], data[f"quantiles_{SCORE}"]), coastline, left=False,
                     cmap="viridis", vmin=0, vmax=100)
     bar = figure.colorbar(mesh, ax=right, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, ticks=[0, 25, 50, 75, 95])
-    bar.set_label("G, percentile (95 circa = soglia)", fontsize=TICKS)
+    bar.set_label("percentile (95 circa = soglia)", fontsize=TICKS)
     bar.ax.tick_params(labelsize=TICKS)
-    right.set_title("Dove G segnala", fontsize=9, loc="left", color=TEXT)
+    right.set_title("G con normalizzazione", fontsize=9, loc="left", color=TEXT)
     for axis in (left, right):
         axis.contour(longitudes, latitudes[::-1], picture[::-1], levels=[0.5], colors=TEXT, linewidths=0.6)
 
@@ -390,10 +399,11 @@ def case_figure(number, data, coastline):
         cell.axvspan(times[start] - half, times[stop] + half, color="#cde2fb", linewidth=0)
     cell.axvline(moment, color=TEXT, linewidth=0.8)
     cell.axhline(95, color=MUTED, linewidth=0.8, linestyle="--")
-    cell.plot(times, percentile(data[f"series_{SCORE}"], data[f"quantiles_{SCORE}"]), color=BLUE, linewidth=1.6, label="G")
-    cell.plot(times, percentile(data[f"series_{NORMAL}"], data[f"quantiles_{NORMAL}"]), color=ORANGE, linewidth=1.6,
-              label="distanza dal normale")
-    cell.legend(frameon=False, fontsize=TICKS, loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=2, columnspacing=1.2)
+    cell.plot(times, percentile(data[f"series_{SCORE}"], data[f"quantiles_{SCORE}"]), color=BLUE, linewidth=1.6)
+    cell.plot(times, percentile(data[f"series_{NORMAL}"], data[f"quantiles_{NORMAL}"]), color=ORANGE, linewidth=1.6)
+    keys = (Line2D([], [], color=BLUE, linewidth=1.6, label="G con normalizzazione"), Patch(color="#cde2fb", linewidth=0, label="cella nell'evento"),
+            Line2D([], [], color=ORANGE, linewidth=1.6, label="distanza dal normale"), Line2D([], [], color=TEXT, linewidth=0.8, label="istante delle mappe"))
+    cell.legend(handles=keys, frameon=False, fontsize=7, loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=2, columnspacing=1.2)
     cell.set_ylim(0, 102)
     cell.set_yticks([0, 50, 95])
     cell.set_ylabel("percentile", fontsize=TICKS)
@@ -408,8 +418,8 @@ def case_figure(number, data, coastline):
     event_times = pd.DatetimeIndex(data["event_times"])
     chain.fill_between(event_times, data["event_cells"], step="mid", color=BLUE, linewidth=0)
     chain.axvline(moment, color=TEXT, linewidth=0.8)
-    chain.set_title(f"La catena dura {len(event_times) * 3 / 24:.0f} giorni", fontsize=9, loc="left", color=TEXT)
-    chain.set_ylabel("celle segnalate", fontsize=TICKS)
+    chain.set_title(f"L'evento dura {len(event_times) * 3 / 24:.0f} giorni", fontsize=9, loc="left", color=TEXT)
+    chain.set_ylabel("celle dell'evento", fontsize=TICKS)
     chain.set_ylim(0, None)
     chain.margins(x=0)
     chain.tick_params(labelsize=TICKS, length=2)
