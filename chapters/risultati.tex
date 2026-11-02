@@ -490,31 +490,38 @@ Il risultato è coerente con il modo in cui queste variabili cambiano nello spaz
 \section{La dispersione del dropout}
 \label{sec:ris-dropout}
 
-Lo score è la media di 20 estrazioni con maschere di dropout diverse, e la deviazione standard delle estrazioni ne misura la \emph{dispersione} (Sezione~\ref{sec:score-dropout-montecarlo}). Non è una probabilità di anomalia: senza etichette non si può stabilire se una segnalazione con estrazioni concordi sia più giusta di una con estrazioni discordi. Si può però vedere quanto le segnalazioni dipendono dalle maschere, e in quali situazioni le estrazioni si separano. La sezione riguarda gli anni di test.
+Lo score è la media di 20 estrazioni con maschere di dropout diverse, e la deviazione standard delle estrazioni ne misura la \emph{dispersione} (Sezione~\ref{sec:score-dropout-montecarlo}). Non è una probabilità di anomalia: senza etichette non si può stabilire se una segnalazione con estrazioni concordi sia più giusta di una con estrazioni discordi. Si può però vedere quanto le segnalazioni dipendono dalle maschere, e in quali situazioni le estrazioni si separano. Poiché la dispersione cresce con l'errore da cui nasce, con una correlazione di rango di 0.86, conviene leggerla in proporzione: il \emph{rapporto} è la dispersione dell'errore del generatore divisa per l'errore stesso, prima della normalizzazione climatologica. La sezione riguarda gli anni di test.
 
 \paragraph{Le segnalazioni dipendono poco dalle maschere.} Il 78\% dei valori segnalati resta sopra la soglia togliendo allo score una deviazione standard, il 60\% togliendone due; dei valori non segnalati, solo l'1.6\% la supererebbe aggiungendone una. È una prova severa, perché la deviazione standard riguarda le singole estrazioni, mentre lo score ne è la media.
 
-\paragraph{La dispersione segue G.} Attraverso gli eventi la dispersione ha quasi lo stesso profilo di G (Figura~\ref{fig:ris-dropout}, a sinistra): il percentile mediano è 94 sul bordo interno del nucleo, 85 una cella fuori e 50 dopo sei celle, contro 96, 90 e 51 di G. Nel nucleo, nel contorno e fuori, quindi, la dispersione non dice nulla di diverso da G: è alta dove G è alto.
+\paragraph{Più l'errore è grande, più le estrazioni concordano in proporzione.} In valore assoluto la dispersione cresce con l'errore, ma il rapporto scende (Figura~\ref{fig:ris-dropout}, a sinistra): dal 10.8\% nella metà più bassa degli errori al 9.1\% fra il 95-esimo e il 99-esimo percentile, fino al 6.7\% nello 0.1\% più alto. I valori con l'errore più grande sono quindi quelli su cui, in proporzione, le maschere incidono meno.
+
+\paragraph{Attraverso gli eventi il rapporto è minimo vicino al bordo.} La dispersione assoluta ha quasi lo stesso profilo di G: il percentile mediano è 94 sul bordo interno del nucleo, 85 una cella fuori e 50 dopo sei celle, contro 96, 90 e 51 di G. Il rapporto si comporta diversamente (Figura~\ref{fig:ris-dropout}, al centro): è circa il 9.8\% lontano dagli eventi, scende al 9.2\% nel contorno e all'8.4\% due celle dentro il nucleo, poi risale verso l'interno, fino al 10.5\% nelle pochissime celle a 8 o più celle dal bordo, lo 0.13\% dei valori segnalati. Nel nucleo, nel contorno e fuori, quindi, le differenze ci sono ma sono piccole: fra 8.4\% e 10.5\%. Il motivo della risalita al centro non è verificato.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_dropout}
-    \caption{La dispersione del dropout sugli anni di test. A sinistra: percentile mediano di G con la normalizzazione e della sua dispersione, secondo le celle di distanza dal bordo dell'evento; la linea tratteggiata indica il valore tipico, 50. A destra: i valori segnalati, divisi a parità di G in cinque classi uguali, da quella con le estrazioni più concordi a quella con le più discordi; per ogni classe, la quota oltre la soglia della distanza dal normale. La dispersione segue G; a parità di G, più è alta, più i dati sono lontani dal normale.}
+    \caption{Il rapporto fra la dispersione del dropout e l'errore del generatore, sugli anni di test. A sinistra: per percentile dell'errore su tutti i valori. Al centro: secondo le celle di distanza dal bordo dell'evento; l'asse non parte da zero. A destra: i valori segnalati, divisi a parità di errore in cinque classi uguali per rapporto, da quella con le estrazioni più concordi a quella con le più discordi; per ogni classe, la quota oltre la soglia della distanza dal normale. Il rapporto scende con l'errore; a parità di errore, un rapporto più alto si accompagna a dati più lontani dal normale.}
     \label{fig:ris-dropout}
 \end{figure}
 
-\paragraph{A parità di G, più dispersione vuol dire dati più lontani dal normale.} Per togliere l'effetto di G, i valori segnalati sono divisi prima in 20 fasce di G e poi, in ogni fascia, in cinque classi uguali per dispersione. Tutte le classi hanno quindi lo stesso G, con una mediana di 5.17, mentre la dispersione mediana va da 0.36 a 1.15 (Figura~\ref{fig:ris-dropout}, a destra). Passando dalle estrazioni più concordi alle più discordi, la quota oltre la soglia della distanza dal normale sale dal 25\% al 61\%, e la quota di valori in cui nessuna variabile si allontana dal normale più di due volte la variabilità abituale scende dal 13\% all'8\%. Il risultato è lo stesso con la dispersione calcolata prima della normalizzazione climatologica. Le estrazioni, dunque, si separano di più dove i dati sono più lontani dal normale. È coerente con l'idea che il modello sia meno stabile sui dati più diversi da quelli visti in addestramento, anche se la verifica non lo dimostra.
+\paragraph{A parità di errore, più dispersione vuol dire dati più lontani dal normale.} Per confrontare valori con lo stesso errore, i valori segnalati sono divisi prima in 20 fasce di errore e poi, in ogni fascia, in cinque classi uguali per rapporto, che va da 0.05 a 0.15 (Figura~\ref{fig:ris-dropout}, a destra). Passando dalle estrazioni più concordi alle più discordi, la quota oltre la soglia della distanza dal normale sale dal 20\% al 62\%, e la quota di valori in cui nessuna variabile si allontana dal normale più di due volte la variabilità abituale scende dal 16\% all'8\%. Il risultato è quasi uguale dividendo a parità di G con la normalizzazione, dal 24\% al 61\%. Le estrazioni, dunque, si separano di più dove i dati sono più lontani dal normale; quelle più concordi riguardano più spesso errori che i dati della cella, da soli, non spiegano. È coerente con l'idea che il modello sia meno stabile sui dati più diversi da quelli visti in addestramento, anche se la verifica non lo dimostra.
 
-\paragraph{Sintesi.} La dispersione non è un secondo score: segue G e dipende poco dalle maschere nella maggior parte delle segnalazioni. A parità di G aggiunge però un'informazione, cioè quanto i dati sono lontani dal normale. Questo non rende più o meno affidabile una segnalazione: la distanza dal normale descrive i dati, non è un riferimento per giudicarla.
-% Numeri (2 novembre 2026, test, good-sweep-2): scripts/check_era5_dropout_flags.py, uscita
-% outputs/casi_good2_g/dropout_5pc.log, in figures/dati/era5_dropout.json. Dispersione mediana dei
-% valori segnalati: 0.194 volte la soglia. Con la dispersione grezza: oltre soglia 19.6, 34.3, 44.8,
-% 52.8, 59.8%; nessuna variabile oltre 2: 16.5, 10.2, 7.9, 7.0, 7.7%.
-% Da non riprendere senza ricalcolo: le classi di ottobre (analisi_good2/fiducia_test.log: a
-% parità di errore grezzo, su 400 istanti, variabile con l'errore più grande oltre 1 nell'84% con
-% estrazioni concordi e nel 67% con discordi) vanno in senso opposto a questa misura sulla distanza
-% dal normale di tutte le variabili. La differenza non dipende dalla dispersione grezza o normalizzata,
-% che danno lo stesso segno; il motivo non è verificato.
+\paragraph{Sintesi.} La dispersione non è un secondo score: cresce con G e dipende poco dalle maschere nella maggior parte delle segnalazioni. In proporzione le estrazioni concordano di più dove l'errore è più grande; a parità di errore, concordano di meno dove i dati sono più lontani dal normale. Né l'una né l'altra misura rende una segnalazione più o meno affidabile: la distanza dal normale descrive i dati, non è un riferimento per giudicarla.
+% Numeri (2 novembre 2026, test, good-sweep-2): scripts/check_era5_dropout_spread.py (--score-component
+% generator, un istante ogni 9, rapporto delle medie per fascia: log dropout_rapporto_bande.log) e
+% scripts/check_era5_dropout_flags.py (dropout_rapporto_5pc.log); figures/dati/era5_dropout.json. Dispersione
+% mediana dei valori segnalati: 0.194 volte la soglia; errore grezzo: 80.7 e 64.2% restano una e due
+% deviazioni sotto. Rapporto per posizione -8..-1, 1..8: 10.45, 9.69, 9.48, 9.33, 9.12, 8.76, 8.39, 8.61 |
+% 9.19, 9.62, 9.77, 9.77, 9.84, 9.84, 9.84, 10.14 (valore al percentile mediano, intero). Classi del
+% rapporto a parità di errore: oltre soglia 19.7, 32.8, 43.9, 53.2, 61.7%; nessuna variabile oltre 2: 15.5,
+% 10.4, 8.2, 7.2, 7.9%; a parità di G: 23.7, 32.8, 42.4, 51.3, 61.1%. Valori a 8 o più celle: 48537 su
+% 36656037.
+% Da non riprendere senza ricalcolo: le classi di ottobre (analisi_good2/fiducia_test.log: a parità di
+% errore grezzo, su 400 istanti, variabile con l'errore più grande oltre 1 nell'84% con estrazioni concordi
+% e nel 67% con discordi) vanno in senso opposto. Non dipende da come è definita la dispersione, che
+% qui dà lo stesso segno in tutte le forme: resta la differenza fra la sola variabile con l'errore più
+% grande e tutte le variabili, non verificata.
 
 \section{Casi specifici}
 \label{sec:ris-casi}

@@ -224,35 +224,44 @@ def profile_types_figure():
 
 
 def dropout_figure():
-    """The spread follows G across the events; at equal G, a larger spread goes with data farther from normal."""
+    """The dispersion in proportion to the error: by size of the error, across the events, at equal error."""
     data = json.loads((HERE / "dati" / "era5_dropout.json").read_text(encoding="utf-8"))
-    profile = pd.read_csv(PROFILE)
-    profile = profile[profile["type"] == "all"].sort_values("position")
-    figure, (across, classes) = plt.subplots(1, 2, figsize=size(0.46), constrained_layout=True, width_ratios=(1.45, 1))
-    across.axhline(50, color=MUTED, linewidth=0.8, linestyle="--")
+    figure, (bands, across, classes) = plt.subplots(1, 3, figsize=size(0.42), constrained_layout=True, width_ratios=(1, 1.2, 1))
+    numbers = data["ratio by band of the raw error"]
+    place = np.arange(len(numbers["band"]))
+    bands.bar(place, 100 * np.array(numbers["ratio"]), width=0.72, color=BLUE)
+    for x, y in zip(place, numbers["ratio"]):
+        bands.text(x, 100 * y + 0.25, f"{100 * y:.1f}", ha="center", fontsize=6.5, color=TEXT)
+    bands.set_ylim(0, 13)
+    bands.set_yticks([])
+    bands.set_xticks(place, ["<50", "50-90", "90-95", "95-99", "99-\n99.9", ">99.9"])
+    bands.tick_params(labelsize=6.5, length=0)
+    bands.set_xlabel("percentile dell'errore", fontsize=TICKS)
+    bands.set_title("Rapporto per errore (%)", fontsize=8.5, loc="left", color=TEXT)
+    clean(bands, "top", "right", "left")
+
     position = np.array(data["positions"]["position"])
-    spread = np.array(data["positions"]["spread percentile"])
+    ratio = 100 * np.array(data["positions"]["ratio"])
     joined = np.abs(position) < 8
-    g = profile.set_index("position").loc[position, f"{SCORE} percentile"].to_numpy()
-    for values, colour, label in ((g, BLUE, "G"), (spread, ORANGE, "dispersione")):
-        across.plot(position[joined], values[joined], color=colour, linewidth=2, marker="o", markersize=4, markeredgecolor="white", label=label)
-        across.plot(position[~joined], values[~joined], color=colour, linewidth=0, marker="o", markersize=4, markeredgecolor="white")
-    across.legend(frameon=False, fontsize=TICKS, loc="lower left")
-    across.set_ylim(0, 106)
-    across.set_yticks([0, 25, 50, 75, 100])
-    across.set_ylabel("percentile mediano", fontsize=TICKS)
+    across.plot(position[joined], ratio[joined], color=BLUE, linewidth=2, marker="o", markersize=4, markeredgecolor="white")
+    across.plot(position[~joined], ratio[~joined], color=BLUE, linewidth=0, marker="o", markersize=4, markeredgecolor="white")
     position_axis(across)
-    across.set_xticks([-8, -4, -1, 1, 4, 8], ["8 o più", "4", "1", "1", "4", "8 o più"])
-    across.set_title("Attraverso gli eventi", fontsize=9, loc="left", color=TEXT)
-    numbers = data["classes"]
+    across.set_xticks([-8, -4, -1, 1, 4, 8], ["8+", "4", "1", "1", "4", "8+"])
+    across.set_xlabel("celle: dentro | fuori", fontsize=TICKS)
+    across.set_ylim(8, 11)
+    across.set_yticks([8, 9, 10, 11])
+    across.set_title("Attraverso gli eventi (%)", fontsize=8.5, loc="left", color=TEXT)
+
+    numbers = data["classes of the ratio at equal raw error"]
     classes.bar(numbers["class"], numbers["normal flagged %"], width=0.72, color=ORANGE)
     for x, y in zip(numbers["class"], numbers["normal flagged %"]):
-        classes.text(x, y + 1.5, f"{y:.0f}%", ha="center", fontsize=TICKS, color=TEXT)
+        classes.text(x, y + 1.5, f"{y:.0f}%", ha="center", fontsize=6.5, color=TEXT)
     classes.set_ylim(0, 72)
     classes.set_yticks([])
-    classes.set_xticks(numbers["class"], ["1\nconcordi", "2", "3", "4", "5\ndiscordi"])
+    classes.set_xticks(numbers["class"], ["1", "2", "3", "4", "5"])
     classes.tick_params(labelsize=TICKS, length=0)
-    classes.set_title("Oltre la soglia del normale", fontsize=9, loc="left", color=TEXT)
+    classes.set_xlabel("classe: concordi → discordi", fontsize=TICKS)
+    classes.set_title("Oltre la soglia del normale", fontsize=8.5, loc="left", color=TEXT)
     clean(classes, "top", "right", "left")
     figure.savefig(HERE / "era5_dropout.pdf")
     plt.close(figure)
