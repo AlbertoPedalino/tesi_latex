@@ -102,7 +102,7 @@ La correlazione spaziale dice se i due score segnalano gli stessi luoghi nello s
 
 \paragraph{Il segno è lo stesso in ogni cella.} La correlazione temporale è calcolata in ogni cella sugli istanti: vale 1 se nella cella i due score salgono e scendono insieme. Fra G e D la correlazione di Spearman è negativa in tutte le celle, con mediana $-0.24$, e quella di Pearson ha mediana $-0.50$ (Figura~\ref{fig:ris-g-d-temporale}). Il legame ha quindi lo stesso segno nello spazio e nel tempo: quando in una cella il generatore sbaglia di più, D tende a scendere. È più forte nel sud del dominio, con una mediana di $-0.27$ fra 20$^\circ$ e 30$^\circ$N, e più debole a nord, con $-0.19$ fra 50$^\circ$ e 60$^\circ$N.
 
-\paragraph{La cornice vicino al bordo del dominio.} Nella mappa si vede una cornice a due celle dal bordo del dominio, dove la mediana della correlazione è $-0.19$, contro $-0.24$ nelle celle a più di quattro celle dal bordo. È probabilmente un effetto del modello: vicino al bordo le convoluzioni del generatore completano il campo con zeri, e il suo errore nelle prime tre celle è più alto del 3--4\% rispetto all'interno; il discriminatore legge questa fascia attraverso le patch, e il suo giudizio sulle ricostruzioni ha un piccolo minimo proprio a due celle dal bordo. Il meccanismo non è verificato in dettaglio.
+\paragraph{La cornice vicino al bordo del dominio.} Nella mappa si vede una cornice a due celle dal bordo del dominio, dove la correlazione è un po' più debole (mediana $-0.19$ contro $-0.24$). È probabilmente un effetto del modello, che vicino al bordo completa il campo con zeri; il meccanismo non è verificato in dettaglio.
 
 \begin{figure}[htbp]
     \centering
