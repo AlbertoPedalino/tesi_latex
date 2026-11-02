@@ -8,7 +8,7 @@
 % viene dai file della run good-sweep-2, con soglie e climatologie stimate sugli
 % anni di validazione; nessun riferimento esterno (E-OBS, CAPE, raffiche).
 
-Il capitolo riporta e discute i risultati del detector sui campi ERA5, nella configurazione scelta dalla ricerca degli iperparametri. In assenza di etichette, la domanda centrale è quale parte dello score di STGAN usare, e il comportamento del detector è studiato in più passi. Senza etichette, inoltre, una segnalazione indica dove lo score è alto, non che lì ci sia un'anomalia reale: questo vale per tutto il capitolo. La Sezione~\ref{sec:ris-ricerca} riguarda la scelta della configurazione. Le Sezioni~\ref{sec:ris-correlazione-spaziale}--\ref{sec:ris-g-d} esaminano le due componenti dello score, del generatore e del discriminatore, nello spazio e nel tempo, e la normalizzazione climatologica; da queste analisi e dal significato chiaro di G discende la scelta dello score, quello del generatore, normalizzato. La Sezione~\ref{sec:ris-confronti} confronta le segnalazioni del detector con quelle di metodi più semplici, la Sezione~\ref{sec:ris-eventi} le raggruppa in eventi per tipo e dimensione e studia come cala G attorno a ciò che segnala, la Sezione~\ref{sec:ris-dropout} esamina la dispersione del dropout, in generale e per tipo di evento, la Sezione~\ref{sec:ris-casi} esamina casi specifici, e la Sezione~\ref{sec:ris-soglia} verifica quanto i risultati dipendano dalla soglia.
+Il capitolo riporta e discute i risultati del detector sui campi ERA5, nella configurazione scelta dalla ricerca degli iperparametri. In assenza di etichette, la domanda centrale è quale parte dello score di STGAN usare, e il comportamento del detector è studiato in più passi. Senza etichette, inoltre, una segnalazione indica dove lo score è alto, non che lì il tempo sia davvero insolito: questo vale per tutto il capitolo. La Sezione~\ref{sec:ris-ricerca} riguarda la scelta della configurazione. Le Sezioni~\ref{sec:ris-correlazione-spaziale}--\ref{sec:ris-g-d} esaminano le due componenti dello score, del generatore e del discriminatore, nello spazio e nel tempo, e la normalizzazione climatologica; da queste analisi e dal significato chiaro di G discende la scelta dello score, quello del generatore, normalizzato. La Sezione~\ref{sec:ris-confronti} confronta le segnalazioni del detector con quelle di metodi più semplici, la Sezione~\ref{sec:ris-eventi} le raggruppa in eventi per tipo e dimensione e studia come cala G attorno a ciò che segnala, la Sezione~\ref{sec:ris-dropout} esamina la dispersione del dropout, in generale e per tipo di evento, la Sezione~\ref{sec:ris-casi} esamina casi specifici, e la Sezione~\ref{sec:ris-soglia} verifica quanto i risultati dipendano dalla soglia.
 
 \section{Ricerca dei parametri}
 \label{sec:ris-ricerca}
@@ -216,7 +216,7 @@ Per farlo, D va scomposta nei suoi due termini, $D_{\mathrm{reale}}$ e $D_{\math
     \end{tabular}
 \end{table}
 
-\paragraph{I valori con G più alto sono i più reali per il discriminatore.} Il terzo dei valori segnalati da G giudicato più reale è quello con G più alto: G con la normalizzazione, che conta di quante deviazioni standard un valore supera il consueto, ha una mediana di 6.7, contro 4.7 e 4.8 degli altri due terzi. Con la soglia più alta, inoltre, il percentile mediano di $D_{\mathrm{reale}}$ nel nucleo scende da 16 a 2 (Sezione~\ref{sec:ris-soglia}). Anche in letteratura il termine del discriminatore, preso da solo, rileva meno di quello di ricostruzione: in AnoGAN l'area sotto la curva ROC è 0.74 contro 0.88 (Sezione~\ref{sec:rw-gan}), su immagini e con un discriminatore usato in modo diverso.
+\paragraph{I valori con G più alto sono i più reali per il discriminatore.} Il terzo dei valori segnalati da G giudicato più reale è quello con G più alto: G con la normalizzazione, che conta di quante deviazioni standard un valore supera il consueto, ha una mediana di 6.7, contro 4.7 e 4.8 degli altri due terzi. Con la soglia più alta, inoltre, il percentile mediano di $D_{\mathrm{reale}}$ nel nucleo scende da 16 a 2 (Sezione~\ref{sec:ris-soglia}). In AnoGAN, su immagini etichettate e con un discriminatore usato in modo diverso, il termine del discriminatore preso da solo rileva meno di quello di ricostruzione: l'area sotto la curva ROC è 0.74 contro 0.88 (Sezione~\ref{sec:rw-gan}).
 
 \paragraph{Sugli anni di test.} Le stesse analisi, ripetute sugli anni di test 2005--2025 con la climatologia e le soglie stimate sulla validazione, danno gli stessi risultati (Tabella~\ref{tab:ris-conferma-test}): le correlazioni cambiano di uno o due centesimi, i percentili mediani di uno o due punti. Sul test G con la normalizzazione segnala il 5.6\% dei valori, un po' più del 5\%, perché negli anni di test l'errore del generatore è in media un po' più alto; per lo stesso motivo le quote per luogo arrivano al 7.6\%.
 
@@ -240,13 +240,13 @@ Per farlo, D va scomposta nei suoi due termini, $D_{\mathrm{reale}}$ e $D_{\math
         $D_{\mathrm{reale}}$ sopra la propria soglia: nucleo, lontano & 14\%, 3\% & 14\%, 3.5\% \\
         \addlinespace
         Quota per luogo di G con normalizzazione & 3.6--6.3\% & 3.6--7.6\% \\
-        Rugosità della ricostruzione rispetto all'osservazione & 0.86 & 0.86 \\
+        Rugosità della ricostruzione rispetto all'osservazione, mediana dei rapporti & 0.86 & 0.86 \\
         Celle del 5\% più alto di G in cui $D_{\mathrm{reale}}$ sale lisciando l'osservazione & 94\% & 94\% \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\paragraph{Sintesi.} G e D non concordano, e per questo il detector usa G con la normalizzazione climatologica, il cui significato è chiaro. Il comportamento di D si spiega solo in parte: dove G segnala, il discriminatore riconosce la ricostruzione come generata ma giudica l'osservazione più reale del consueto, e D scende. La levigatezza spiega al più una parte di questo comportamento. Da qui in poi, le segnalazioni di G sono quelle di G con la normalizzazione climatologica.
+\paragraph{Sintesi.} G e D non concordano, e sommarli renderebbe lo score difficile da interpretare. Il detector usa quindi G con la normalizzazione climatologica, il cui significato è chiaro. Il comportamento di D si spiega solo in parte: dove G segnala, il discriminatore riconosce la ricostruzione come generata ma giudica l'osservazione più reale del consueto, e D scende. La levigatezza spiega al più una parte di questo comportamento. Da qui in poi, le segnalazioni di G sono quelle di G con la normalizzazione climatologica.
 % Terzi dei valori segnalati da G (validazione, scripts/check_era5_discriminator_confidence.py, soglia al 5%, per
 % D(reale) crescente; 29 ottobre 2026): good-sweep-2 mediana di G 6.703, 4.706, 4.752; serene-sweep-14 6.731, 4.805,
 % 4.528, quindi lo stesso comportamento. Da verificare su optuna-27 quando avrà lo score.
@@ -415,12 +415,12 @@ vale 1 quando i due insiemi coincidono e 0 quando sono disgiunti. Due rilevatori
 
 Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi gli eventi, quali variabili vi si scostano di più e come cala G attorno a ciò che segnala. Questa sezione e la seguente mostrano il solo G con la normalizzazione, senza confrontarlo con altri metodi. Le segnalazioni sono raggruppate negli eventi della Sezione~\ref{sec:ris-g-d}: sugli anni di test sono 754692 eventi, con 36.7 milioni di valori.
 
-\paragraph{Pochi eventi enormi contengono quasi tutti i valori.} La dimensione di un evento è il numero dei suoi valori. Il 90\% degli eventi ha meno di 20 valori, e insieme contengono solo il 7\% dei valori segnalati; lo 0.5\% degli eventi, quelli con almeno 1000 valori, ne contiene il 76\% (Figura~\ref{fig:ris-eventi-dimensione}).
+\paragraph{Pochi eventi enormi contengono circa tre quarti dei valori.} La dimensione di un evento è il numero dei suoi valori. Il 90\% degli eventi ha meno di 20 valori, e insieme contengono solo il 7\% dei valori segnalati; lo 0.5\% degli eventi, quelli con almeno 1000 valori, ne contiene il 76\% (Figura~\ref{fig:ris-eventi-dimensione}).
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_eventi_dimensione}
-    \caption{Gli eventi di G sugli anni di test, per numero di valori: quota degli eventi (a sinistra) e quota dei valori segnalati che contengono (a destra). Gli eventi sono quasi tutti piccoli, ma quasi tutti i valori stanno in pochi eventi enormi.}
+    \caption{Gli eventi di G sugli anni di test, per numero di valori: quota degli eventi (a sinistra) e quota dei valori segnalati che contengono (a destra). Gli eventi sono quasi tutti piccoli, ma circa tre quarti dei valori stanno in pochi eventi enormi.}
     \label{fig:ris-eventi-dimensione}
 \end{figure}
 
@@ -468,7 +468,7 @@ Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi gli ev
 
 Il risultato è coerente con il modo in cui queste variabili cambiano nello spazio, anche se la verifica non lo dimostra: precipitazione e nuvole possono cambiare da una cella all'altra, mentre temperatura e pressione variano su aree più ampie. Nel primo gruppo il nucleo di G racchiude lo scostamento. Nel secondo lo scostamento continua oltre il nucleo: G ne segnala solo una parte, e le celle attorno, pur lontane dal normale, restano sotto la sua soglia.
 
-\paragraph{Sintesi.} Quasi tutti i valori segnalati stanno in pochi eventi enormi, per lo più di velocità verticale o precipitazione. G cala gradualmente attorno a ciò che segnala, senza un confine proprio, e il nucleo è sottile. La distanza dal normale ha lo stesso andamento, ma solo il 42\% dei valori segnalati ne supera la soglia. Vicino al bordo G è quasi uguale per tutti i tipi, mentre le variabili si comportano in modo diverso.
+\paragraph{Sintesi.} Circa tre quarti dei valori segnalati stanno in pochi eventi enormi, per lo più di velocità verticale o precipitazione. G cala gradualmente attorno a ciò che segnala, senza un confine proprio, e il nucleo è sottile. La distanza dal normale ha lo stesso andamento, ma solo il 42\% dei valori segnalati ne supera la soglia. Vicino al bordo G è quasi uguale per tutti i tipi, mentre le variabili si comportano in modo diverso.
 % Profilo (1 novembre 2026): scripts/check_era5_event_profile.py, uscita
 % outputs/casi_good2_g/profilo_5pc.csv, copiata in figures/dati/era5_eventi_profilo.csv. Una cella
 % fuori appartiene all'evento della cella segnalata più vicina. Posizione -8..-1, 1..8 (tutti):
@@ -656,7 +656,7 @@ Tutti i risultati precedenti usano la soglia del 95-esimo percentile degli score
 
 \paragraph{Il comportamento del discriminatore.} Con la soglia più alta gli eventi sono meno della metà, e il comportamento del discriminatore è lo stesso e più marcato. Nel nucleo $D_{\mathrm{reale}}$ e D scendono al percentile 2. Anche nel contorno $D_{\mathrm{reale}}$ diventa basso: con la soglia più alta gli eventi sono più estremi, e anche le celle attorno sono fra i valori più alti di G.
 
-\paragraph{Eventi e catene.} Con la soglia più alta le catene si accorciano ma restano: gli eventi più grandi di ciascun tipo durano fra 8 e 23 giorni, contro 16--97 giorni con il 5\%, e gli eventi con almeno 20 valori contengono ancora l'86\% dei valori segnalati. Cambia anche il terzo tipo con più valori negli eventi di almeno 20 valori: la copertura nuvolosa al posto della pressione.
+\paragraph{Eventi e catene.} Con la soglia più alta le catene si accorciano ma restano: gli eventi più grandi dei tre tipi con più valori durano fra 8 e 23 giorni, contro 16--97 giorni con il 5\%, e gli eventi con almeno 20 valori contengono ancora l'86\% dei valori segnalati. Cambia anche il terzo tipo con più valori negli eventi di almeno 20 valori: la copertura nuvolosa al posto della pressione.
 
 \paragraph{Confronti con metodi semplici.} Con la soglia più alta il quadro resta lo stesso, con un accordo più basso. La variazione in tre ore e MCD restano i rilevatori più vicini a G, con il 47\% delle sue segnalazioni condivise; il metodo più lontano resta HBOS, che scende dal 40.5\% al 25.5\%. La quota del solo G sale al 25.3\%, e quella della variazione in tre ore al 38.2\%. I valori segnalati da almeno cinque rilevatori su nove sono lo 0.72\%: il calo è in gran parte automatico, perché ogni rilevatore segnala circa cinque volte meno. L'accordo resta molto sopra il caso: con l'1\% due rilevatori indipendenti condividerebbero circa l'1\% delle segnalazioni, mentre G ne condivide il 47\% con la variazione in tre ore.
 
