@@ -440,7 +440,7 @@ Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi gli ev
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_eventi_mappa_zone}
-    \caption{G con la normalizzazione (a sinistra) e le sue zone (a destra) il 5 febbraio 2020 alle 06~UTC. Il nucleo è fatto delle celle sopra la soglia, il contorno delle otto celle attorno, la zona lontana delle celle a più di tre celle da ogni nucleo; le celle intermedie stanno fra le ultime due. È l'istante in cui conta più celle l'evento più grande di velocità verticale. Linee di costa da Natural Earth.}
+    \caption{G con la normalizzazione (a sinistra) e le sue zone (a destra) il 23 novembre 2017 alle 00~UTC. Il nucleo è fatto delle celle sopra la soglia, il contorno delle otto celle attorno, la zona lontana delle celle a più di tre celle da ogni nucleo; le celle intermedie stanno fra le ultime due. È l'istante dell'esempio di velocità verticale della Sezione~\ref{sec:ris-casi}. Linee di costa da Natural Earth.}
     \label{fig:ris-eventi-mappa-zone}
 \end{figure}
 
@@ -516,12 +516,12 @@ Fin qui si è usata la media delle estrazioni di dropout; questa sezione guarda 
     \label{fig:ris-dropout-tipi}
 \end{figure}
 
-\paragraph{La dispersione cella per cella.} La Figura~\ref{fig:ris-dropout-mappe} mostra la deviazione standard delle estrazioni in ogni cella. In media sugli anni di test è più alta a sud, dove è più alto anche l'errore: $1.80\times10^{-4}$ fra 20$^\circ$ e 30$^\circ$N contro $1.47\times10^{-4}$ fra 50$^\circ$ e 60$^\circ$N. I valori più alti cadono in poche aree che, a una lettura della mappa, sembrano corrispondere a rilievi come Alpi, Atlante, Caucaso e Zagros; il legame con l'orografia non è misurato. Il rapporto varia poco e va un po' nel senso opposto, dal 10.2\% al 10.7\%. Lungo il bordo del dominio si vede una sottile cornice: sulla prima fila di celle la deviazione standard è circa il 20\% più alta che all'interno, un effetto del modello simile a quello della Sezione~\ref{sec:ris-correlazione-temporale}. Nell'istante in cui conta più celle l'evento più grande di ciascuno dei tre tipi evidenziati, la deviazione standard è più alta nel nucleo, come ci si aspetta dal fatto che segue G.
+\paragraph{La dispersione cella per cella.} La Figura~\ref{fig:ris-dropout-mappe} mostra la deviazione standard delle estrazioni in ogni cella. In media sugli anni di test è più alta a sud, dove è più alto anche l'errore: $1.80\times10^{-4}$ fra 20$^\circ$ e 30$^\circ$N contro $1.47\times10^{-4}$ fra 50$^\circ$ e 60$^\circ$N. I valori più alti cadono in poche aree che, a una lettura della mappa, sembrano corrispondere a rilievi come Alpi, Atlante, Caucaso e Zagros; il legame con l'orografia non è misurato. Il rapporto varia poco e va un po' nel senso opposto, dal 10.2\% al 10.7\%. Lungo il bordo del dominio si vede una sottile cornice: sulla prima fila di celle la deviazione standard è circa il 20\% più alta che all'interno, un effetto del modello simile a quello della Sezione~\ref{sec:ris-correlazione-temporale}. Negli istanti dei tre esempi della Sezione~\ref{sec:ris-casi}, uno per ciascuno dei tre tipi evidenziati, la deviazione standard è più alta nel nucleo, come ci si aspetta dal fatto che segue G: in mediana circa quattro volte quella della zona lontana.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_dropout_mappe}
-    \caption{La deviazione standard delle estrazioni di dropout cella per cella. In alto: la sua media sugli anni di test e il rapporto medio con l'errore. In basso: la deviazione standard nell'istante in cui conta più celle l'evento più grande di tre tipi, con la stessa scala e il nucleo dell'evento racchiuso dalla linea arancione. Linee di costa da Natural Earth.}
+    \caption{La deviazione standard delle estrazioni di dropout cella per cella. In alto: la sua media sugli anni di test e il rapporto medio con l'errore. In basso: la deviazione standard negli istanti dei tre esempi della Sezione~\ref{sec:ris-casi}, con la stessa scala e il nucleo dell'evento racchiuso dalla linea arancione. Linee di costa da Natural Earth.}
     \label{fig:ris-dropout-mappe}
 \end{figure}
 
@@ -545,6 +545,9 @@ Fin qui si è usata la media delle estrazioni di dropout; questa sezione guarda 
 % Sopra il 97-esimo percentile della media (celle): 30.5-37.5N 45.5-50E 59; 37-42N 39.5-45E 56; 20-23.5N
 % 39.5-46E 42; 20-22N 14-19.5E 36; 42-44.5N 41-48E 33; 31-33.5N 8-4.5W 21; 46-47N 9.5-12E 14. La lettura come
 % rilievi è geografica, non misurata. Prima fila del dominio 1.96 contro 1.63 x 1e-4 all'interno (>= 8 celle).
+% Istanti degli esempi (3 novembre 2026, outputs/esempi_good2/istanti_std.npz, da scores/generator_std.npy):
+% mediana x 1e-4 nucleo, contorno, lontana: velocità verticale 3.80, 2.19, 0.88; precipitazione 3.35, 1.99,
+% 0.86; pressione 3.60, 2.52, 0.97.
 % Media per fascia di latitudine S->N: deviazione standard 1.80, 1.68, 1.60, 1.47 x 1e-4; rapporto 10.15,
 % 10.23, 10.54, 10.70%.
 % Da non riprendere senza ricalcolo: le classi di ottobre (analisi_good2/fiducia_test.log: a parità di
@@ -556,68 +559,71 @@ Fin qui si è usata la media delle estrazioni di dropout; questa sezione guarda 
 \section{Casi specifici}
 \label{sec:ris-casi}
 
-\provv{Bozza: i casi specifici, documentati, sono da concordare con il relatore e sostituiranno questi.}
+\provv{Bozza: i casi specifici da concordare con il relatore potranno sostituire o affiancare questi esempi.}
 
-Le sezioni precedenti descrivono gli eventi in generale e per tipo; questa ne guarda da vicino tre. I casi sono scelti con una regola fissata prima di esaminarli, così che nessuno sia preso per il suo aspetto: i tipi sono i tre con più valori negli eventi di almeno 20 valori, cioè velocità verticale, precipitazione e pressione al livello del mare; per ciascuno il caso è l'evento più grande, letto nell'istante in cui conta più celle. Non sono quindi i casi più importanti né i più tipici, ma mostrano che cosa c'è dentro gli eventi più grandi.
+Le sezioni precedenti descrivono gli eventi tutti insieme e per tipo; questa mostra un evento per ciascuno dei tre tipi principali, per vedere su una mappa che cosa riassumono i numeri. Gli esempi sono scelti con una regola fissata prima di esaminarli, così che nessuno sia preso per il suo aspetto: i tipi sono i tre con più valori negli eventi di almeno 20 valori, cioè velocità verticale, precipitazione e pressione al livello del mare; per ciascuno l'esempio è l'evento più grande fra quelli che durano al massimo tre giorni, letto nell'istante in cui conta più celle. Il limite di durata esclude le catene della Sezione~\ref{sec:ris-eventi}, che non sono un unico fenomeno. Gli esempi non sono quindi i casi più importanti né i più tipici: mostrano come appare un evento compatto di ciascun tipo.
 
-\paragraph{Come leggere le figure.} Le Figure~\ref{fig:ris-caso-velocita}--\ref{fig:ris-caso-pressione} hanno la stessa struttura. In alto a sinistra c'è lo scarto della variabile del tipo: bianco vuol dire normale, rosso sopra il normale, blu sotto. In alto a destra c'è G con la normalizzazione in percentile, con la stessa scala in tutti i casi: il giallo è oltre la soglia. Lo scarto è qui con il suo segno. La linea nera nelle due mappe racchiude il nucleo di questo evento in quell'istante; fuori possono esserci celle gialle di altri eventi. In basso a sinistra si segue nel tempo la cella del nucleo con G più alto, da tre giorni prima a tre giorni dopo, confrontando G con la distanza dal normale di tutte le variabili: la linea tratteggiata è la soglia di G, le bande azzurre sono gli istanti in cui la cella fa parte dell'evento. In basso a destra c'è il numero di celle dell'evento in ogni istante, cioè la catena; la linea verticale, anche a sinistra, segna l'istante delle mappe. La Tabella~\ref{tab:ris-casi} riassume le tre zone.
+\paragraph{Come leggere le figure.} Le Figure~\ref{fig:ris-caso-velocita}--\ref{fig:ris-caso-pressione} hanno la stessa struttura. In alto a sinistra c'è lo scarto della variabile del tipo: bianco vuol dire normale, rosso sopra il normale, blu sotto. In alto a destra c'è G con la normalizzazione in percentile, con la stessa scala in tutti gli esempi: il giallo è oltre la soglia. Lo scarto è qui con il suo segno. La linea nera nelle due mappe racchiude il nucleo di questo evento in quell'istante; fuori possono esserci celle gialle di altri eventi. In basso a sinistra si segue nel tempo la cella del nucleo con G più alto, da tre giorni prima a tre giorni dopo, confrontando G con la distanza dal normale di tutte le variabili: la linea tratteggiata è la soglia di G, le bande azzurre sono gli istanti in cui la cella fa parte dell'evento. In basso a destra c'è il numero di celle dell'evento in ogni istante; la linea verticale, anche a sinistra, segna l'istante delle mappe. La Tabella~\ref{tab:ris-casi} riassume le tre zone.
 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{I tre casi nell'istante delle mappe, con le celle del nucleo. Le colonne G e Distanza riportano il percentile mediano di G con la normalizzazione e della distanza dal normale nel nucleo, nel contorno e nella zona lontana, in quest'ordine. ``Oltre soglia'' è la quota dei valori del nucleo oltre la soglia della distanza dal normale.}
+    \caption{I tre esempi nell'istante delle mappe, con le celle del nucleo. Le colonne G e Distanza riportano il percentile mediano di G con la normalizzazione e della distanza dal normale nel nucleo, nel contorno e nella zona lontana, in quest'ordine. ``Oltre soglia'' è la quota dei valori del nucleo oltre la soglia della distanza dal normale.}
     \label{tab:ris-casi}
     \vspace{0.6em}
     \begin{tabular}{@{}lrrrrr@{}}
         \toprule
-        Tipo & Celle & G & Distanza & Oltre soglia & Durata (giorni) \\
+        Tipo & Celle & G & Distanza & Oltre soglia & Durata (ore) \\
         \midrule
-        Velocità verticale & 1355 & 97, 92, 42 & 96, 91, 39 & 67\% & 97 \\
-        Precipitazione & 1971 & 97, 92, 67 & 97, 92, 77 & 67\% & 36 \\
-        Pressione & 2306 & 97, 92, 40 & 93, 86, 43 & 44\% & 16 \\
+        Velocità verticale & 656 & 97, 92, 41 & 97, 91, 39 & 65\% & 72 \\
+        Precipitazione & 536 & 98, 91, 37 & 81, 74, 35 & 18\% & 54 \\
+        Pressione & 949 & 97, 92, 40 & 95, 93, 30 & 57\% & 66 \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\paragraph{Velocità verticale.} Il 5 febbraio 2020 il nucleo copre un'area estesa fra l'Europa centrale e il Mediterraneo orientale (Figura~\ref{fig:ris-caso-velocita}), dove la velocità verticale alterna bande molto sopra e molto sotto il normale. Nella cella seguita, G e la distanza dal normale salgono e scendono insieme: restano vicini ai valori più alti per circa tre giorni, poi G scende fin quasi a 0 mentre la distanza dal normale torna a valori tipici, intorno a 45. La catena difficilmente è un unico fenomeno: dura 97 giorni con più picchi, separati da periodi con poche celle.
+\paragraph{Velocità verticale.} Il 23 novembre 2017 il nucleo forma una fascia stretta che va dall'Atlantico, al largo della penisola iberica, fino alla Scandinavia, passando sulle Isole britanniche (Figura~\ref{fig:ris-caso-velocita}). Lungo la fascia la velocità verticale alterna bande sopra e sotto il normale: lo scarto è positivo nel 41\% delle celle del nucleo e negativo nelle altre, e nel 39\% è vicino al normale, inferiore a 1 in valore assoluto. La cella seguita sta sul bordo nord del dominio, a 60$^\circ$N, dove il modello ha l'effetto di cornice della Sezione~\ref{sec:ris-correlazione-temporale}: va letta con questa cautela. Lì G e la distanza dal normale salgono insieme oltre il 90-esimo percentile, vi restano per quasi due giorni, più o meno finché la cella fa parte dell'evento, e poi tornano a valori tipici. L'evento cresce e cala in modo regolare, con un solo massimo.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_caso_00}
-    \caption{Velocità verticale, 5 febbraio 2020 alle 06~UTC. Il nucleo copre gran parte delle bande più lontane dal normale; la cella seguita resta nell'evento per circa tre giorni; l'evento dura 97 giorni, dal 13 novembre 2019 al 18 febbraio 2020, con più picchi. Linee di costa da Natural Earth.}
+    \caption{Velocità verticale, 23 novembre 2017 alle 00~UTC. Il nucleo è una fascia stretta in cui la velocità verticale alterna bande sopra e sotto il normale; la cella seguita, sul bordo nord del dominio, resta oltre la soglia per quasi due giorni; l'evento dura tre giorni, dal 21 al 24 novembre 2017, con un solo massimo. Linee di costa da Natural Earth.}
     \label{fig:ris-caso-velocita}
 \end{figure}
 
-\paragraph{Precipitazione.} Il 1\textsuperscript{o} marzo 2005 il nucleo segue bande di precipitazione dal Nord Africa occidentale al Mediterraneo centrale, con altre due aree più a est (Figura~\ref{fig:ris-caso-precipitazione}). La cella seguita, nel Sahara, mostra il segnale più netto dei tre casi: per un solo istante la precipitazione è quasi 19 volte la sua variabilità abituale sopra il normale, e G e la distanza dal normale salgono insieme ai valori più alti. Il numero va letto con cautela: dove di solito non piove la variabilità abituale è minima, e lo scarto può essere grande anche con poca pioggia. In questo istante anche la zona lontana è meno tipica del solito, con percentili di 67 e 77: la zona senza segnalazioni non è necessariamente calma. Nella maggior parte del nucleo (63\% delle celle), inoltre, la precipitazione è vicina al normale, con uno scarto inferiore a 1: il tipo descrive l'evento nel suo insieme, non ogni cella.
+\paragraph{Precipitazione.} L'8 dicembre 2018 il nucleo copre un'area che va dall'Italia settentrionale al Baltico attraverso l'Europa centrale, con una seconda area più piccola più a est (Figura~\ref{fig:ris-caso-precipitazione}). La precipitazione è sopra il normale nell'80\% delle celle del nucleo, ma di poco: lo scarto mediano è 1.4 e supera 3 solo nel 2\% delle celle. È l'esempio meno estremo: nel nucleo la distanza dal normale di tutte le variabili ha un percentile mediano di 81, e solo il 18\% dei valori supera la sua soglia, contro il 42\% di tutti i valori segnalati (Sezione~\ref{sec:ris-eventi}). Nella cella seguita, nelle Alpi occidentali, lo scarto della precipitazione è solo 0.9, mentre G e la distanza dal normale sono vicini al massimo: lì G segnala la cella per altre variabili, e il tipo descrive l'evento nel suo insieme, non ogni cella. La stessa cella torna oltre la soglia il giorno dopo, quando l'evento è già finito, e fa quindi parte di un altro evento.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_caso_01}
-    \caption{Precipitazione, 1\textsuperscript{o} marzo 2005 alle 00~UTC. Il nucleo segue le bande di precipitazione, ma anche la zona lontana è meno tipica del solito; la cella seguita ha un picco di un solo istante; l'evento dura 36 giorni, dal 7 febbraio al 14 marzo 2005. Linee di costa da Natural Earth.}
+    \caption{Precipitazione, 8 dicembre 2018 alle 03~UTC. Il nucleo copre un'area in cui la precipitazione è poco sopra il normale; nella cella seguita la precipitazione è quasi normale e G segnala per altre variabili; l'evento dura poco più di due giorni, dal 6 all'8 dicembre 2018. Linee di costa da Natural Earth.}
     \label{fig:ris-caso-precipitazione}
 \end{figure}
 
-\paragraph{Pressione.} Il 28 marzo 2024 la pressione è molto sotto il normale sull'Europa occidentale, e il nucleo copre quell'area (Figura~\ref{fig:ris-caso-pressione}). Il nucleo comprende però anche una seconda area, staccata dalla prima in questo istante e unita solo attraverso il tempo, che arriva fino al Nord Africa e dove la pressione è vicina al normale. Lì si trova anche la cella con G più alto, in cui la pressione è quasi esattamente normale, mentre la distanza dal normale di tutte le variabili è al percentile 99: G e la distanza segnalano quella cella, ma per altre variabili. Anche qui, quindi, il tipo non descrive ogni cella. È il caso con la quota più bassa di valori oltre la soglia della distanza dal normale, il 44\%.
+\paragraph{Pressione.} Il 29 febbraio 2020 la pressione è sotto il normale in tutte le celle del nucleo, che copre l'Atlantico nord-orientale, le Isole britanniche, la Francia e il Mare del Nord (Figura~\ref{fig:ris-caso-pressione}): lo scarto mediano è $-2.4$, e nel 68\% delle celle supera 2 in valore assoluto. È l'esempio in cui G e la variabile del tipo concordano di più. Lo scostamento, però, continua oltre il nucleo, come nel profilo per tipo della Sezione~\ref{sec:ris-eventi}: delle celle con uno scarto oltre 3 il nucleo ne contiene il 54\%, e insieme al contorno l'84\%. Più a est G è alto anche sull'Europa centro-orientale, per lo più sotto la soglia, dove la pressione è vicina al normale. Nella cella seguita, nel nord della Francia, la pressione resta sotto il normale per tutti i sei giorni della finestra, e G e la distanza dal normale sono alti già il giorno prima dell'inizio dell'evento: l'evento coglie solo una parte di uno scostamento più lungo.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_caso_02}
-    \caption{Pressione al livello del mare, 28 marzo 2024 alle 06~UTC. Il nucleo copre la bassa pressione sull'Europa occidentale e un'area staccata fino al Nord Africa, dove la pressione è normale; la cella seguita è in quest'ultima; l'evento dura 16 giorni, dal 20 marzo al 5 aprile 2024. Linee di costa da Natural Earth.}
+    \caption{Pressione al livello del mare, 29 febbraio 2020 alle 09~UTC. Il nucleo copre l'area con la pressione più sotto il normale, che continua nel contorno; nella cella seguita la pressione resta sotto il normale per tutta la finestra; l'evento dura poco meno di tre giorni, dal 28 febbraio al 1\textsuperscript{o} marzo 2020. Linee di costa da Natural Earth.}
     \label{fig:ris-caso-pressione}
 \end{figure}
 
-\paragraph{Sintesi.} Nelle tre celle seguite, scelte fra quelle con G più alto, G e la distanza dal normale salgono e scendono insieme. Il nucleo contiene gran parte delle celle con la variabile del tipo più lontana dal normale: con uno scarto oltre 3, il 78\%, il 66\% e il 62\%. Sull'insieme del test l'accordo è minore: solo il 42\% dei valori segnalati supera la soglia della distanza dal normale (Sezione~\ref{sec:ris-eventi}). I casi mostrano anche i limiti della lettura per eventi: gli eventi più grandi sono catene e non singoli fenomeni, il tipo non descrive ogni cella, e la zona senza segnalazioni non è sempre calma. Sono esempi scelti con una regola, non una prova che le segnalazioni corrispondano a fenomeni reali, che senza un riferimento esterno non si può dare.
-% Numeri (1 novembre 2026): scripts/check_era5_event_cases.py, uscite outputs/casi_good2_g
-% (cases.csv, case_NN.npz), copiate in figures/dati/era5_caso_NN.npz; mediane per zona in
-% figures/dati/era5_casi_zone.json. La regola è nel docstring dello script ed è stata fissata
-% prima di leggere i risultati; la seconda specie di casi, gli eventi con la quota più alta di
-% valori segnalati solo da G, è stata tolta per mostrare il solo G (decisione dell'autore).
-% Correlazione di Pearson fra i percentili di G e del normale nella cella seguita: 0.94, 0.86, 0.82.
-% Distanza dal normale della variabile, nella cella all'istante: -3.9, 18.9, -0.07. Nucleo con
-% |distanza| < 1: 32%, 63%, 29%; > 2: 37%, 22%, 60%. Velocità verticale: la cella resta
-% nell'evento per 23 istanti su 49 di finestra. Celle con |scarto| > 3 nel nucleo dell'evento: 78, 66, 62%;
-% > 2: 57, 43, 52%. Parti del nucleo all'istante, pressione: 1159 celle (35-60N, 15W-13.5E, scarto mediano
-% 2.87) e 1051 (20-58N, 5.5-29E, 0.76). Nucleo di tutti gli eventi nell'istante del primo caso: 1441 celle.
+\paragraph{Sintesi.} Nelle tre celle seguite, scelte fra quelle con G più alto, G e la distanza dal normale salgono e scendono insieme. Il nucleo, però, non contiene tutte le celle in cui la variabile del tipo è più lontana dal normale: di quelle con uno scarto oltre 3, il 35\% per la velocità verticale, il 37\% per la precipitazione, su sole 27 celle, e il 54\% per la pressione. Per la pressione lo scostamento continua nel contorno; per la velocità verticale circa una cella su cinque di queste sta nella zona lontana, senza alcuna segnalazione. Negli esempi si vede anche quanto mostrano i numeri aggregati: il tipo non descrive ogni cella, G segnala anche valori non estremi, e un evento può cogliere solo una parte di uno scostamento più lungo. Sono esempi scelti con una regola, non una prova che le segnalazioni corrispondano a fenomeni reali, che senza un riferimento esterno non si può dare.
+% Numeri (3 novembre 2026): scripts/check_era5_event_cases.py con --longest-days 3 (regola fissata prima
+% di leggere i risultati, nel docstring dello script), uscite outputs/esempi_good2 (cases.csv,
+% case_NN.npz), copiate in figures/dati/era5_caso_NN.npz; mediane per zona in
+% figures/dati/era5_casi_zone.json. Durate 72, 54, 66 ore; valori 7849, 5815, 10026.
+% Correlazione di Pearson fra i percentili di G e del normale nella cella seguita: 0.92, 0.72, 0.68.
+% Scarto della variabile nella cella all'istante: -3.61, 0.89, -2.82. Nucleo con |scarto| < 1: 39, 37, 6%;
+% > 2: 29, 32, 68%; > 3: 10.5, 1.9, 10.2%; scarto positivo: 41, 80, 0%. Celle con |scarto| > 3: 199, 27,
+% 179; nel nucleo 35, 37, 54%; nel nucleo o nel contorno 38, 44, 84%; nella zona lontana 19, 7, 0%.
+% Nucleo sulla prima fila (60N): 23, 3, 23 celle. Velocità verticale: la cella resta nell'evento 10 istanti
+% su 49 (22/11 18 UTC - 24/11 03 UTC); G oltre il 90-esimo percentile dagli istanti 21 a 34. Parti del
+% nucleo all'istante: velocità verticale 581 celle (39-60N, 10.5W-20E) e 60; precipitazione 426
+% (40.5-57N, 5.5-19.5E, scarto mediano 1.00) e 92 (49-56.5N, 20-25E, 2.45); pressione 893 (38-60N,
+% 15W-10E) e 32. Celle segnalate fuori dal nucleo all'istante: 276, 76, 195. La lettura geografica è
+% fatta sulla mappa.
 
 \section{Sensibilità alla soglia}
 \label{sec:ris-soglia}
