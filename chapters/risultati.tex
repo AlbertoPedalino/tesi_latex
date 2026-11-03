@@ -245,6 +245,8 @@ Per farlo, D va scomposta nei suoi due termini, $D_{\mathrm{reale}}$ e $D_{\math
         \bottomrule
     \end{tabular}
 \end{table}
+% Da verificare al ricalcolo: la fonte della colonna del test non è registrata nei commenti per il
+% percentile mediano nel nucleo (16, 78, 10) e per la rugosità mediana dei rapporti (0.86).
 
 \paragraph{Sintesi.} G e D non concordano, e sommarli renderebbe lo score difficile da interpretare. Il detector usa quindi G con la normalizzazione climatologica, il cui significato è chiaro. Il comportamento di D si spiega solo in parte: dove G segnala, il discriminatore riconosce la ricostruzione come generata ma giudica l'osservazione più reale del consueto, e D scende. La levigatezza spiega al più una parte di questo comportamento. Da qui in poi, le segnalazioni di G sono quelle di G con la normalizzazione climatologica.
 % Terzi dei valori segnalati da G (validazione, scripts/check_era5_discriminator_confidence.py, soglia al 5%, per
@@ -490,7 +492,9 @@ Il risultato è coerente con il modo in cui queste variabili cambiano nello spaz
 \section{La dispersione del dropout}
 \label{sec:ris-dropout}
 
-Fin qui si è usata la media delle estrazioni di dropout; questa sezione guarda quanto differiscono fra loro. Lo score è la media di 20 estrazioni con maschere diverse, e la deviazione standard delle estrazioni ne misura la \emph{dispersione} (Sezione~\ref{sec:score-dropout-montecarlo}). Non è una probabilità di anomalia: senza etichette non si può stabilire se una segnalazione con estrazioni concordi sia più giusta di una con estrazioni discordi. Si può però vedere quanto le segnalazioni dipendono dalle maschere, e in quali situazioni le estrazioni si separano. Poiché la dispersione cresce con l'errore da cui nasce, con una correlazione di Spearman di 0.86, conviene leggerla in proporzione: il \emph{rapporto} è la dispersione dell'errore del generatore divisa per l'errore stesso, cioè G senza normalizzazione. La sezione riguarda gli anni di test.
+Fin qui si è usata la media delle estrazioni di dropout; questa sezione guarda quanto differiscono fra loro. Lo score è la media di 20 estrazioni con maschere diverse, e la deviazione standard delle estrazioni ne misura la \emph{dispersione} (Sezione~\ref{sec:score-dropout-montecarlo}). Non è una probabilità di anomalia: senza etichette non si può stabilire se una segnalazione con estrazioni concordi sia più giusta di una con estrazioni discordi. Si può però vedere quanto le segnalazioni dipendono dalle maschere, e in quali situazioni le estrazioni si separano. Poiché la dispersione cresce con l'errore da cui nasce, con una correlazione di Spearman di 0.86, conviene leggerla in proporzione%
+% Da verificare al ricalcolo: la fonte della Spearman 0.86 non è registrata nei commenti.
+: il \emph{rapporto} è la dispersione dell'errore del generatore divisa per l'errore stesso, cioè G senza normalizzazione. La sezione riguarda gli anni di test.
 
 \paragraph{Le segnalazioni dipendono poco dalle maschere.} Il 78\% dei valori segnalati resta sopra la soglia togliendo allo score, cioè a G con la normalizzazione, una deviazione standard delle estrazioni, misurata nella stessa scala; il 60\% togliendone due; dei valori non segnalati, solo l'1.6\% la supererebbe aggiungendone una. È una prova severa, perché la deviazione standard riguarda le singole estrazioni, mentre lo score ne è la media.
 
@@ -669,6 +673,8 @@ Tutti i risultati precedenti usano la soglia del 95-esimo percentile degli score
 \paragraph{Sintesi.} Le conclusioni sul discriminatore non dipendono dalla soglia, e con una soglia più alta diventano più nette. Anche il quadro del confronto con i metodi semplici non cambia, con un accordo più basso e una quota esclusiva di G più alta. Le catene si accorciano, ma restano. L'effetto della normalizzazione climatologica dipende invece dalla soglia: è quasi completo con il 5\%, solo parziale con l'1\%.
 % Numeri: per la quota per luogo i commenti della Sezione 6.4, per le zone quelli della
 % Sezione 6.5 (validazione, outputs/comportamento_good2, 29 ottobre 2026).
+% Eventi più grandi dei tre tipi con il 5% (1 novembre 2026, outputs/casi_good2_g/cases.csv, regola
+% del solo evento più grande): velocità verticale 97, precipitazione 36, pressione 16 giorni.
 % Eventi all'1% (1 novembre 2026, outputs/casi_good2_g_1pc): 296199 eventi, 7484975 valori, 6420225 in eventi
 % di almeno 20 valori (85.8%); casi precipitazione 150 istanti (19 giorni), velocità verticale 63 (8), copertura
 % nuvolosa 184 (23).
