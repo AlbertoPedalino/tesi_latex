@@ -340,8 +340,15 @@ def dropout_maps_figure(coastline_path):
         bar = figure.colorbar(mesh, ax=axis, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30)
         bar.set_label(label, fontsize=TICKS)
         bar.ax.tick_params(labelsize=TICKS)
-    cases = (("00", "2020-02-05 06:00:00", "Velocità verticale, 5/2/2020"), ("01", "2005-03-01 00:00:00", "Precipitazione, 1/3/2005"),
-             ("02", "2024-03-28 06:00:00", "Pressione, 28/3/2024"))
+    # The instants are those of the cases (check_era5_event_cases.py), given to check_era5_dropout_flags.py --instants
+    # as the "timestamp" column of cases.csv.
+    cases = []
+    for path in sorted((HERE / "dati").glob("era5_caso_*.npz")):
+        with np.load(path) as case:
+            record = json.loads(str(case["case"]))
+        moment = pd.Timestamp(record["timestamp"])
+        cases.append((path.stem[-2:], record["timestamp"],
+                      f"{TYPES[record['type']].replace(' al livello del mare', '')}, {moment.day}/{moment.month}/{moment.year}"))
     axes = []
     high = max(np.nanpercentile(maps[f"instant {moment} grezza"], 99) for _, moment, _ in cases) * 1e4
     for column, (number, moment, title) in enumerate(cases):
