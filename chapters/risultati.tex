@@ -245,8 +245,13 @@ Per farlo, D va scomposta nei suoi due termini, $D_{\mathrm{reale}}$ e $D_{\math
         \bottomrule
     \end{tabular}
 \end{table}
-% Da verificare al ricalcolo: la fonte della colonna del test non è registrata nei commenti per il
-% percentile mediano nel nucleo (16, 78, 10) e per la rugosità mediana dei rapporti (0.86).
+% Fonti della tabella verificate il 3 novembre 2026. Validazione: outputs/comportamento_good2/zone_g_dterms_5pc.csv
+% (172001 eventi; nucleo D(reale) 16, D(generato) 79, D 10); levigatezza_d.csv della validazione, mediana dei
+% rapporti fra rugosità ricostruita e osservata 0.860 (rapporto delle mediane 0.843). Test:
+% outputs/esempi_good2/zone_dterms_test_5pc.csv, check_era5_event_zones.py su outputs/good2v/test_generator_clim_day
+% e outputs/stgan_good_sweep_2_scored (754692 eventi; nucleo 16, 78, 10; D(reale) oltre la propria soglia
+% nel 14.2% del nucleo e nel 3.5% della zona lontana); outputs/analisi_good2/levigatezza_d.csv, mediana
+% dei rapporti 0.857.
 
 \paragraph{Sintesi.} G e D non concordano, e sommarli renderebbe lo score difficile da interpretare. Il detector usa quindi G con la normalizzazione climatologica, il cui significato è chiaro. Il comportamento di D si spiega solo in parte: dove G segnala, il discriminatore riconosce la ricostruzione come generata ma giudica l'osservazione più reale del consueto, e D scende. La levigatezza spiega al più una parte di questo comportamento. Da qui in poi, le segnalazioni di G sono quelle di G con la normalizzazione climatologica.
 % Terzi dei valori segnalati da G (validazione, scripts/check_era5_discriminator_confidence.py, soglia al 5%, per
@@ -493,7 +498,8 @@ Il risultato è coerente con il modo in cui queste variabili cambiano nello spaz
 \label{sec:ris-dropout}
 
 Fin qui si è usata la media delle estrazioni di dropout; questa sezione guarda quanto differiscono fra loro. Lo score è la media di 20 estrazioni con maschere diverse, e la deviazione standard delle estrazioni ne misura la \emph{dispersione} (Sezione~\ref{sec:score-dropout-montecarlo}). Non è una probabilità di anomalia: senza etichette non si può stabilire se una segnalazione con estrazioni concordi sia più giusta di una con estrazioni discordi. Si può però vedere quanto le segnalazioni dipendono dalle maschere, e in quali situazioni le estrazioni si separano. Poiché la dispersione cresce con l'errore da cui nasce, con una correlazione di Spearman di 0.86, conviene leggerla in proporzione%
-% Da verificare al ricalcolo: la fonte della Spearman 0.86 non è registrata nei commenti.
+% Spearman 0.856 fra errore grezzo e dispersione: outputs/casi_good2_g/dropout_rapporto_bande.log ("rank
+% correlation between score and spread"), verificata il 3 novembre 2026.
 : il \emph{rapporto} è la dispersione dell'errore del generatore divisa per l'errore stesso, cioè G senza normalizzazione. La sezione riguarda gli anni di test.
 
 \paragraph{Le segnalazioni dipendono poco dalle maschere.} Il 78\% dei valori segnalati resta sopra la soglia togliendo allo score, cioè a G con la normalizzazione, una deviazione standard delle estrazioni, misurata nella stessa scala; il 60\% togliendone due; dei valori non segnalati, solo l'1.6\% la supererebbe aggiungendone una. È una prova severa, perché la deviazione standard riguarda le singole estrazioni, mentre lo score ne è la media.
