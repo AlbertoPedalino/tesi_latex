@@ -26,7 +26,7 @@ Il detector parte da STGAN~\cite{deng2022stgan}, una rete avversaria proposta pe
     \item un generatore che opera sul campo intero con un'unità ricorrente convoluzionale, mentre il discriminatore resta locale;
     \item un ingresso riferito al clima di ogni cella, con una normalizzazione stagionale e pesi che misurano l'errore di ogni variabile in rapporto a quanto essa cambia abitualmente;
     \item uno score riferito alla climatologia di ogni cella e il dropout Monte Carlo nelle due reti, che associa a ogni score una misura di dispersione;
-    \item una validazione senza etichette su anni da cui sono tolti i valori più insoliti, con cui si scelgono i parametri dell'addestramento avversario senza usare gli anni di test.
+    \item una validazione senza etichette, in cui i valori più insoliti sono esclusi dalle misure con cui si scelgono i parametri dell'addestramento avversario, senza usare gli anni di test.
 \end{enumerate}
 
 \section{Obiettivi e contributi della tesi}
@@ -36,11 +36,11 @@ L'obiettivo della tesi è rilevare condizioni meteorologiche anomale in campi pr
     \item L'adattamento di STGAN a campi meteorologici privi di topologia fisica, con un generatore sul campo intero che rappresenta l'intorno di una cella con una convoluzione su griglia, e la definizione dell'obiettivo come rilevamento di condizioni nuove rispetto al periodo di addestramento.
     \item Uno score Monte Carlo, con il dropout nel generatore e nel discriminatore.
     \item Un protocollo di addestramento e di scelta della configurazione che non usa etichette né anni di test: una validazione da cui le condizioni insolite sono escluse con un criterio indipendente dal modello, e una misura della distanza fra campi osservati e ricostruiti.
-    \item Una valutazione senza etichette: lo studio delle componenti dello score nello spazio e nel tempo, e il confronto, a parità di segnalazioni, con rilevatori che non usano un modello e con modelli shallow.
+    \item Una valutazione senza etichette: lo studio delle componenti dello score nello spazio e nel tempo, e il confronto, a parità di segnalazioni, con rilevatori che non usano un modello e con modelli shallow, e la descrizione delle segnalazioni come eventi, con la dispersione del dropout e la dipendenza dalla soglia.
 \end{itemize}
 
 Il risultato principale è che l'errore del generatore e il giudizio del discriminatore non concordano: dove il primo segnala un valore insolito, il secondo in genere non lo segnala. Sommarli rende lo score difficile da interpretare: la tesi usa quindi il solo errore del generatore, il cui significato è chiaro.
 
 \section{Organizzazione del documento}
 
-Il Capitolo~\ref{chap:stato-arte} presenta i fondamenti teorici e i lavori su cui la tesi è costruita, per temi e in ordine cronologico all'interno di ciascun tema; si chiude con il modo in cui la tesi adatta STGAN e con la sua posizione rispetto ai lavori esaminati. Il Capitolo~\ref{chap:dati} descrive i campi ERA5 e la loro preparazione, e i dati PVGIS da cui il lavoro è partito. Il Capitolo~\ref{chap:metodologia} presenta il detector nella forma finale. Il Capitolo~\ref{chap:esperimenti} descrive come il detector è addestrato e valutato: la configurazione e la ricerca degli iperparametri, e il protocollo di valutazione. Il Capitolo~\ref{chap:risultati} riporta e discute i risultati. Il Capitolo~\ref{chap:conclusioni} riassume il lavoro e ne indica gli sviluppi futuri.
+Il Capitolo~\ref{chap:stato-arte} presenta i fondamenti teorici e i lavori su cui la tesi è costruita, per temi e in ordine cronologico all'interno di ciascun tema; si chiude con il modo in cui la tesi adatta STGAN e con la sua posizione rispetto ai lavori esaminati. Il Capitolo~\ref{chap:dati} descrive i campi ERA5 e la loro preparazione, e i dati PVGIS da cui il lavoro è partito. Il Capitolo~\ref{chap:metodologia} presenta il detector nella forma finale. Il Capitolo~\ref{chap:esperimenti} descrive come il detector è addestrato e valutato: la configurazione e la ricerca degli iperparametri, e il protocollo di valutazione. Il Capitolo~\ref{chap:risultati} studia le componenti dello score e sceglie quella da usare, confronta le segnalazioni con rilevatori più semplici e le descrive come eventi, con la dispersione del dropout e la dipendenza dalla soglia. Il Capitolo~\ref{chap:conclusioni} riassume il lavoro e ne indica gli sviluppi futuri.

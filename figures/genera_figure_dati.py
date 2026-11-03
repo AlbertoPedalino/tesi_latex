@@ -131,12 +131,13 @@ def change_figure(data, weights):
     axis.set_xlim(0.02, 150)
     axis.set_xticks([0.1, 1, 10, 100], ["0.1", "1", "10", "100"])
     axis.axvline(100 / len(features), color=MUTED, linestyle="--", linewidth=0.8)
-    axis.text(100 / len(features) * 1.08, -0.85, "quote uguali", color=MUTED, fontsize=8, va="center")
-    axis.set_ylim(-1.2, len(features) - 0.2)
+    axis.text(100 / len(features) * 1.08, -1.25, "quote uguali", color=MUTED, fontsize=8, va="center")
+    axis.set_ylim(-1.6, len(features) - 0.2)
     top = order[-1]
     axis.text(article[top] * 1.08, top_row := len(order) - 1 + 0.19, f"{article[top]:.1f}%", color=TEXT, fontsize=8,
               va="center", ha="left")
-    axis.text(detector[top] * 1.08, top_row - 0.38, f"{detector[top]:.1f}%", color=TEXT, fontsize=8, va="center")
+    axis.text(detector[top] * 1.15, top_row - 0.36, f"{detector[top]:.1f}%", color=TEXT, fontsize=8, va="center",
+              bbox=dict(facecolor="white", edgecolor="none", pad=0.6))
     axis.set_xlabel("Quota della variazione quadratica media su 24 ore (%)")
     axis.spines[["top", "right"]].set_visible(False)
     axis.grid(axis="x", color=GRID, linewidth=0.5)

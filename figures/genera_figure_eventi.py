@@ -42,10 +42,10 @@ TYPES = {"vertical_velocity": "Velocità verticale", "total_precipitation": "Pre
          "mean_sea_level_pressure": "Pressione al livello del mare", "total_cloud_cover": "Copertura nuvolosa",
          "boundary_layer_height": "Strato limite", "specific_humidity": "Umidità specifica",
          "volumetric_soil_water_layer_1": "Umidità del suolo", "friction_velocity": "Velocità di attrito",
-         "surface_solar_radiation_downwards": "Radiazione solare", "v_component_of_wind": "Vento nord-sud in quota",
-         "u_component_of_wind": "Vento est-ovest in quota", "2m_temperature": "Temperatura al suolo",
-         "temperature": "Temperatura in quota", "10m_v_component_of_wind": "Vento nord-sud al suolo",
-         "10m_u_component_of_wind": "Vento est-ovest al suolo"}
+         "surface_solar_radiation_downwards": "Radiazione solare", "v_component_of_wind": "Vento meridionale a 850 hPa",
+         "u_component_of_wind": "Vento zonale a 850 hPa", "2m_temperature": "Temperatura a 2 m",
+         "temperature": "Temperatura a 850 hPa", "10m_v_component_of_wind": "Vento meridionale a 10 m",
+         "10m_u_component_of_wind": "Vento zonale a 10 m"}
 RAMP = LinearSegmentedColormap.from_list("blu", ("#eef4fc", "#9ec5f4", "#3987e5", "#184f95", "#0d366b"))
 SCORE, NORMAL = "G+clim", "normale"
 CORE = "core"
@@ -270,7 +270,7 @@ def dropout_figure():
     classes.set_xticks(numbers["class"], ["1", "2", "3", "4", "5"])
     classes.tick_params(labelsize=TICKS, length=0)
     classes.set_xlabel("classi, dalle estrazioni\nconcordi alle discordi", fontsize=TICKS)
-    classes.set_ylabel("oltre la soglia del normale", fontsize=TICKS)
+    classes.set_ylabel("oltre la soglia della\ndistanza dal normale", fontsize=TICKS)
     classes.set_title("A parità di errore", fontsize=8.5, loc="left", color=TEXT)
     clean(classes, "top", "right", "left")
     figure.savefig(HERE / "era5_dropout.pdf")
@@ -312,11 +312,11 @@ def dropout_types_figure():
     gap.scatter(table[5], place, s=26, color=ORANGE, edgecolor="white", linewidth=0.6, zorder=2, label="estrazioni discordi")
     gap.set_yticks(place, [TYPES[name] for name in table.index], fontsize=7)
     gap.set_xlim(0, 100)
-    gap.set_xlabel("valori oltre la soglia del normale (%)", fontsize=TICKS)
+    gap.set_xlabel("oltre la soglia della distanza\ndal normale (%)", fontsize=TICKS)
     gap.tick_params(labelsize=7, length=0)
     gap.grid(axis="x", color=GRID, linewidth=0.6)
     gap.set_axisbelow(True)
-    gap.legend(frameon=False, fontsize=7.5, ncol=2, loc="upper center", bbox_to_anchor=(0.4, -0.13), columnspacing=0.8)
+    gap.legend(frameon=False, fontsize=7.5, ncol=2, loc="upper center", bbox_to_anchor=(0.4, -0.2), columnspacing=0.8)
     gap.set_title("A parità di errore", fontsize=9, loc="left", color=TEXT)
     clean(gap, "top", "right", "left")
     figure.savefig(HERE / "era5_dropout_tipi.pdf")
@@ -350,7 +350,7 @@ def dropout_maps_figure(coastline_path):
         with np.load(HERE / "dati" / f"era5_caso_{number}.npz") as case:
             picture = np.zeros((len(grid["latitudes"]), len(grid["longitudes"])))
             picture[grid["rows"], grid["cols"]] = case["core"]
-        axis.contour(grid["longitudes"], grid["latitudes"][::-1], picture[::-1], levels=[0.5], colors=ORANGE, linewidths=0.8)
+        axis.contour(grid["longitudes"], grid["latitudes"][::-1], picture[::-1], levels=[0.5], colors=ORANGE, linewidths=1.6)
         axis.set_title(title, fontsize=8, loc="left", color=TEXT)
         axes.append(axis)
     bar = figure.colorbar(mesh, ax=axes, orientation="horizontal", shrink=0.5, pad=0.02, aspect=40)

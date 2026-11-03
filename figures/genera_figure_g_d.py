@@ -210,7 +210,7 @@ def terms_temporal_figure(data, coastline):
 
 def zones_figure(data):
     figure, axis = plt.subplots(figsize=size(0.42), constrained_layout=True)
-    labels = {"G": "G", "Dreale": REAL, "Dricostruito": GENERATED, "D": "D"}
+    labels = {"G": "G senza normalizzazione", "Dreale": REAL, "Dricostruito": GENERATED, "D": "D"}
     zones = ("nucleo", "contorno", "lontana")
     shades = ("#184f95", "#5598e7", "#b7d3f6")  # one hue, darker at the core
     positions = np.arange(len(data["zone_scores"]))
