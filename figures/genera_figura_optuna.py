@@ -65,14 +65,12 @@ def main():
 
     norm = Normalize(vmin=0.0025, vmax=0.007)
     finished = (trials.state == "finished").to_numpy()
-    for phase, marker in (("W&B", "o"), ("Optuna", "s")):
-        chosen = finished & (trials.phase == phase).to_numpy()
-        mesh = axis.scatter(coords[chosen, 0], coords[chosen, 1], c=trials.mmd[chosen], cmap=RAMP, norm=norm,
-                            marker=marker, s=46, edgecolors="white", linewidths=0.8, zorder=3)
+    mesh = axis.scatter(coords[finished, 0], coords[finished, 1], c=trials.mmd[finished], cmap=RAMP, norm=norm,
+                        marker="o", s=46, edgecolors="white", linewidths=0.8, zorder=3)
     failed = (trials.state == "non-finite").to_numpy()
     axis.scatter(coords[failed, 0], coords[failed, 1], marker="x", s=36, color=MUTED, linewidths=1.2, zorder=3)
     running = (trials.state == "running").to_numpy()
-    axis.scatter(coords[running, 0], coords[running, 1], marker="s", s=46, facecolors="none", edgecolors=TEXT,
+    axis.scatter(coords[running, 0], coords[running, 1], marker="o", s=46, facecolors="none", edgecolors=TEXT,
                  linewidths=1.0, zorder=3)
 
     best = int(trials.mmd.idxmin())
@@ -101,15 +99,13 @@ def main():
     bar.set_label("MMD sulla validazione (più scuro = migliore)", fontsize=TICKS)
     bar.ax.tick_params(labelsize=TICKS)
     keys = [Line2D([], [], marker="o", linestyle="", color="#3987e5", markeredgecolor="white", markersize=6.5,
-                   label="sweep di W&B"),
-            Line2D([], [], marker="s", linestyle="", color="#3987e5", markeredgecolor="white", markersize=6.5,
-                   label="Optuna"),
+                   label="prova"),
             Line2D([], [], marker="x", linestyle="", color=MUTED, markersize=6, label="perdita non finita"),
-            Line2D([], [], marker="s", linestyle="", markerfacecolor="none", markeredgecolor=TEXT, markersize=6.5,
+            Line2D([], [], marker="o", linestyle="", markerfacecolor="none", markeredgecolor=TEXT, markersize=6.5,
                    label="in corso"),
             Line2D([], [], marker="o", linestyle="", markerfacecolor="none", markeredgecolor=REGION,
                    markeredgewidth=1.6, markersize=10, label="regione migliore")]
-    axis.legend(handles=keys, frameon=False, fontsize=7, loc="upper center", bbox_to_anchor=(0.5, -0.13), ncol=3,
+    axis.legend(handles=keys, frameon=False, fontsize=7, loc="upper center", bbox_to_anchor=(0.5, -0.13), ncol=4,
                 handletextpad=0.3, columnspacing=1.0)
     axis.set_xlabel(f"prima componente principale ({100 * variance[0]:.0f}\\%)".replace("\\%", "%"), fontsize=TICKS)
     axis.set_ylabel(f"seconda componente ({100 * variance[1]:.0f}%)", fontsize=TICKS)
