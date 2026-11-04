@@ -13,15 +13,26 @@ Il capitolo riporta e discute i risultati del detector sui campi ERA5, nella con
 \section{Ricerca dei parametri}
 \label{sec:ris-ricerca}
 
-% Descrizione della ricerca in due fasi (controller bayesiano di W&B, poi
-% Optuna ripartito dalle stesse esecuzioni), con la figura dell'assestamento:
-% obiettivo di ogni prova e migliore fino a quel momento, e percorso delle
-% configurazioni nello spazio dei parametri. Figura da generare fra qualche giorno
-% dallo studio Optuna era5-gan (outputs/optuna/era5-gan.db sul server).
-% Ricordare: la PCA dei quattro parametri tiene il 38% della varianza sulla prima
-% componente, quanto darebbe il caso con 21 esecuzioni; mostrare i parametri
-% direttamente (scripts/plot_era5_sweep_pca.py) o concordare con il relatore.
-\provv{Sezione da scrivere quando la ricerca con Optuna si sarà assestata.}
+La ricerca descritta nella Sezione~\ref{sec:exp-configurazioni} conta 29 prove: 18 dello sweep di Weights \& Biases e 11 di Optuna. Quattro si sono interrotte per una loss non finita. La Figura~\ref{fig:ris-ricerca} le mostra nel piano delle prime due componenti principali dei quattro iperparametri, presi in scala logaritmica e standardizzati. Il piano tiene il 71\% della varianza: due prove vicine nel piano possono essere lontane nei quattro parametri, e per questo la regione migliore è indicata sulle sue prove e non come un'area.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{era5_optuna_pca}
+    \caption{Le prove della ricerca degli iperparametri nel piano delle prime due componenti principali dei quattro iperparametri (71\% della varianza). Il colore è la distanza MMD sulla validazione, più scuro dove è più bassa; i cerchi arancioni indicano le tre prove della regione migliore. Nel riquadro, la direzione in cui cresce ciascun iperparametro. Le prove non si avvicinano via via alla regione migliore: una volta stimata, la ricerca esplora le zone meno note.}
+    \label{fig:ris-ricerca}
+\end{figure}
+
+\paragraph{La regione migliore.} Tre prove formano la regione migliore: tasso di apprendimento del generatore fra $5.7\times10^{-4}$ e $8.2\times10^{-4}$, del discriminatore fra $1.5\times10^{-3}$ e $3.3\times10^{-3}$, peso della ricostruzione fra 64 e 173, aggiornamenti 1:1. Le loro distanze MMD sono 0.00259, 0.00327 e 0.00384: le prime due sono le più basse dell'intera ricerca, la terza vale quanto la migliore fuori dalla regione. La configurazione scelta è la prova con 0.00259. Per questa prova il processo gaussiano di Optuna stima un valore atteso di $0.0032\pm0.0004$, con un rumore dell'obiettivo di circa 0.0005: parte del suo vantaggio sulle prove vicine dipende quindi dal seme, ed è un limite di una ricerca con un solo seme per configurazione.
+
+\paragraph{Esplorare, non convergere.} Le prove non si avvicinano via via alla regione migliore, e la figura non mostra un percorso che migliora piano piano. Ogni prova di Optuna è scelta dove il miglioramento atteso è più alto, che dipende sia dal valore atteso sia dall'incertezza. Vicino alla regione migliore il processo non si aspetta miglioramenti oltre il rumore, e il miglioramento atteso più alto cade nelle zone che conosce meno: le ultime prove, con peso della ricostruzione fino a 2000 e tasso del generatore sceso fino a $10^{-4}$, hanno dato distanze fra 0.0038 e 0.0054. La ricerca si è fermata per la regola della Sezione~\ref{sec:exp-configurazioni}: otto prove consecutive senza un miglioramento di almeno 0.0004. \provv{L'ultima prova (in corso il 4 novembre 2026) va aggiunta alla figura e al conteggio.}
+% Prove: report di scripts/optuna_era5_stgan.py sullo studio era5-gan-extended-2 (4 novembre 2026),
+% copiato in figures/dati/era5_optuna_prove.csv; figura da figures/genera_figura_optuna.py. Regione
+% migliore: serene-sweep-14 (lr G 5.725e-4, lr D 1.489e-3, peso 115.2, 1:1, 0.00327), optuna-26 (8.178e-4,
+% 3.271e-3, 173.2, 1:1, 0.00384), optuna-27 (7.647e-4, 3.059e-3, 63.71, 1:1, 0.00259; W&B usk5o8rc). Fuori
+% dalla regione la migliore è 0.00384 (lr G 1.573e-4, peso 2000, 1:2, lr D 5e-3). Processo gaussiano
+% (preview, 4 novembre 2026): per optuna-27 0.00318 +- 0.00036, rumore 0.00048, segnale 0.00162; scale di
+% lunghezza lr G 0.30, lr D 0.33, peso 0.42, aggiornamenti 1.03 (quasi irrilevanti). PCA: prima componente
+% 40%, seconda 31%.
 
 \section{Correlazione spaziale degli score}
 \label{sec:ris-correlazione-spaziale}
