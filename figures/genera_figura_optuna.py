@@ -100,12 +100,13 @@ def main():
     bar.ax.tick_params(labelsize=TICKS)
     keys = [Line2D([], [], marker="o", linestyle="", color="#3987e5", markeredgecolor="white", markersize=6.5,
                    label="prova"),
-            Line2D([], [], marker="x", linestyle="", color=MUTED, markersize=6, label="perdita non finita"),
-            Line2D([], [], marker="o", linestyle="", markerfacecolor="none", markeredgecolor=TEXT, markersize=6.5,
-                   label="in corso"),
-            Line2D([], [], marker="o", linestyle="", markerfacecolor="none", markeredgecolor=REGION,
-                   markeredgewidth=1.6, markersize=10, label="regione migliore")]
-    axis.legend(handles=keys, frameon=False, fontsize=7, loc="upper center", bbox_to_anchor=(0.5, -0.13), ncol=4,
+            Line2D([], [], marker="x", linestyle="", color=MUTED, markersize=6, label="perdita non finita")]
+    if running.any():  # the key only while a trial is still running
+        keys.append(Line2D([], [], marker="o", linestyle="", markerfacecolor="none", markeredgecolor=TEXT,
+                           markersize=6.5, label="in corso"))
+    keys.append(Line2D([], [], marker="o", linestyle="", markerfacecolor="none", markeredgecolor=REGION,
+                       markeredgewidth=1.6, markersize=10, label="regione migliore"))
+    axis.legend(handles=keys, frameon=False, fontsize=7, loc="upper center", bbox_to_anchor=(0.5, -0.13), ncol=len(keys),
                 handletextpad=0.3, columnspacing=1.0)
     axis.set_xlabel(f"prima componente principale ({100 * variance[0]:.0f}\\%)".replace("\\%", "%"), fontsize=TICKS)
     axis.set_ylabel(f"seconda componente ({100 * variance[1]:.0f}%)", fontsize=TICKS)
