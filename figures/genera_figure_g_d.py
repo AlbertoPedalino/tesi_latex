@@ -9,12 +9,12 @@ first the typical one, then the one with the highest mean G):
     python figures/genera_figure_g_d.py --prepare <folder with the downloaded files>
 which writes figures/dati/era5_g_d.npz. Then:
     python figures/genera_figure_g_d.py [--coastline <ne_50m_coastline.geojson>]
-which writes figures/era5_g_d_correlazione_spaziale.pdf, era5_g_d_mappe.pdf, era5_g_d_correlazione_temporale.pdf,
+which writes figures/era5_g_d_correlazione_spaziale.pdf, era5_g_d_correlazione_temporale.pdf,
 era5_d_termini_correlazione_temporale.pdf, era5_d_termini_zone.pdf, era5_zone_schema.pdf (a sketch of the
-zones) and era5_d_termini_mappa.pdf. The coastline,
+zones) and era5_d_termini_mappa.pdf. The typical timestamp stays in the data but is no longer drawn. The coastline,
 from Natural Earth (public domain), is optional and not kept in the repository.
 
-Run: good-sweep-2, validation years 2000-2004. D's score is D(real) - D(generated), D's outputs on the observed and on the
+Run: optuna-27, validation years 2000-2004. D's score is D(real) - D(generated), D's outputs on the observed and on the
 reconstructed patch (1 = judged generated); D(generated) is read as D(real) minus D's score.
 """
 import argparse
@@ -37,13 +37,15 @@ BLUE, ORANGE, AQUA, YELLOW = "#2a78d6", "#eb6834", "#1baf7a", "#eda100"
 TEXT, MUTED, GRID = "#0b0b0b", "#52514e", "#e2e1dc"
 COAST = "#3d3c39"
 ROLLING_DAYS = 30
-LIMIT = 0.5  # temporal correlations drawn on [-LIMIT, LIMIT]
+LIMIT_G_D = 0.3    # the G-D temporal correlation, symmetric; the frame near the border goes beyond (arrow)
+LIMIT_TERMS = 1.0  # G against the two terms of D: the full range of a correlation
 
 plt.rcParams.update({
     "font.family": "serif",
     "font.serif": ["Latin Modern Roman", "CMU Serif", "DejaVu Serif"],
     "font.size": 9,
     "pdf.fonttype": 42,
+    "mathtext.fontset": "cm",
     "axes.edgecolor": MUTED,
     "axes.labelcolor": TEXT,
     "xtick.color": MUTED,
@@ -89,7 +91,6 @@ def image(data, values):
 
 REAL, GENERATED = r"$D_{\mathrm{reale}}$", r"$D_{\mathrm{generato}}$"
 TICKS = 8  # tick labels, in points at the printed size
-RING = 2   # the frame of the temporal correlation map, in cells from the border of the domain
 
 
 def draw_map(axis, data, values, coastline, *, left=True, bottom=True, **style):
@@ -152,7 +153,7 @@ def spatial_figure(data):
     axis.set_xlim(days.min(), days.max())
     axis.xaxis.set_major_locator(dates.YearLocator())
     axis.xaxis.set_major_formatter(dates.DateFormatter("%Y"))
-    axis.set_ylim(-1, 0.5)
+    axis.set_ylim(-0.7, 0.6)
     axis.set_ylabel("correlazione spaziale\nfra G e D")
     axis.tick_params(labelsize=TICKS)
     axis.grid(axis="y", color=GRID, linewidth=0.5)
@@ -162,37 +163,13 @@ def spatial_figure(data):
     plt.close(figure)
 
 
-def maps_figure(data, coastline):
-    """G and D at the typical timestamp (the median spatial correlation); the other one is in era5_d_termini_mappa."""
-    row = 0
-    # Colour bars below the maps, so that the two maps take the whole width.
-    figure, axes = plt.subplots(1, 2, figsize=size(0.56), constrained_layout=True)
-    for column, (key, label) in enumerate((("G", "G (alto = più insolito)"), ("D", "D (alto = più insolito)"))):
-        values = data[key][row]
-        low, high = np.nanpercentile(values, (1, 99))
-        mesh = draw_map(axes[column], data, values, coastline, left=column == 0, cmap="viridis", vmin=low, vmax=high)
-        bar = figure.colorbar(mesh, ax=axes[column], orientation="horizontal", shrink=0.9, pad=0.02, aspect=30)
-        bar.set_label(label, fontsize=TICKS)
-        bar.ax.tick_params(labelsize=TICKS)
-        bar.ax.locator_params(nbins=5)
-    figure.savefig(HERE / "era5_g_d_mappe.pdf", dpi=300)
-    plt.close(figure)
-
-
 def temporal_figure(data, coastline):
+    """The G-D temporal correlation of each cell, on a symmetric diverging scale: red = together, blue = opposite."""
     figure, axis = plt.subplots(figsize=size(0.62), constrained_layout=True)
-    mesh = draw_map(axis, data, data["temporal_g_d"], coastline, cmap="viridis", vmin=-0.4, vmax=0.0)
-    colour_bar(figure, mesh, axis, "correlazione temporale fra G e D (Spearman)")
-    # The frame two cells from the border, where the correlation is weaker (an effect of the model).
-    latitudes, longitudes = data["latitudes"], data["longitudes"]
-    step = abs(float(latitudes[1] - latitudes[0]))
-    south, north = latitudes.min() + RING * step, latitudes.max() - RING * step
-    west, east = longitudes.min() + RING * step, longitudes.max() - RING * step
-    axis.plot([west, east, east, west, west], [south, south, north, north, south], color="white", linewidth=0.8,
-              linestyle=(0, (3, 2)))
-    axis.annotate("cornice a due celle dal bordo", xy=(east, north - 4), xytext=(east - 4, north - 4), ha="right",
-                  va="center", fontsize=7, color="white",
-                  arrowprops={"arrowstyle": "->", "color": "white", "linewidth": 0.7})
+    mesh = draw_map(axis, data, data["temporal_g_d"], coastline, cmap="RdBu_r", vmin=-LIMIT_G_D, vmax=LIMIT_G_D)
+    bar = figure.colorbar(mesh, ax=axis, shrink=0.85, pad=0.02, extend="max")
+    bar.set_label("correlazione temporale fra G e D (Spearman)", fontsize=TICKS)
+    bar.ax.tick_params(labelsize=TICKS)
     figure.savefig(HERE / "era5_g_d_correlazione_temporale.pdf", dpi=300)
     plt.close(figure)
 
@@ -201,7 +178,8 @@ def terms_temporal_figure(data, coastline):
     figure, axes = plt.subplots(1, 2, figsize=size(0.42), constrained_layout=True)
     for column, (axis, key, title) in enumerate(zip(axes, ("temporal_g_real", "temporal_g_generated"),
                                                     (f"Spearman fra G e {REAL}", f"Spearman fra G e {GENERATED}"))):
-        mesh = draw_map(axis, data, data[key], coastline, left=column == 0, cmap="RdBu_r", vmin=-LIMIT, vmax=LIMIT)
+        mesh = draw_map(axis, data, data[key], coastline, left=column == 0, cmap="RdBu_r", vmin=-LIMIT_TERMS,
+                        vmax=LIMIT_TERMS)
         axis.set_title(title, fontsize=9)
     colour_bar(figure, mesh, list(axes), "correlazione temporale (Spearman)")
     figure.savefig(HERE / "era5_d_termini_correlazione_temporale.pdf", dpi=300)
@@ -264,17 +242,27 @@ def zones_scheme_figure():
 
 
 def terms_map_figure(data, coastline):
+    """G and the terms of D at the timestamp with the highest mean G; each panel has its own scale (1st-99th
+    percentile), and the orange line encloses the 1% of the cells with the highest G at that timestamp."""
     row = 1  # the highest mean G of the period
-    fields = (("G", "G (alto = più insolito)", data["G"][row]),
-              ("Dreale", f"{REAL} (1 = giudicato generato)", data["Dreale"][row]),
-              ("Dricostruito", f"{GENERATED} (1 = giudicato generato)", data["Dreale"][row] - data["D"][row]),
-              ("D", f"D = {REAL} $-$ {GENERATED}", data["D"][row]))
-    figure, axes = plt.subplots(2, 2, figsize=size(0.80), constrained_layout=True)
-    for index, (axis, (_, label, values)) in enumerate(zip(axes.ravel(), fields)):
+    fields = (("G: errore di ricostruzione", "alto = più insolito", data["G"][row]),
+              (f"{REAL}: giudizio sull'osservazione", "alto = giudicata generata", data["Dreale"][row]),
+              (f"{GENERATED}: giudizio sulla ricostruzione", "alto = giudicata generata",
+               data["Dreale"][row] - data["D"][row]),
+              (f"D = {REAL} $-$ {GENERATED}", "alto = più insolito", data["D"][row]))
+    top = data["G"][row] >= np.nanpercentile(data["G"][row], 99)
+    outline = np.nan_to_num(image(data, top.astype(float)), nan=0.0)
+    figure, axes = plt.subplots(2, 2, figsize=size(1.0), constrained_layout=True)
+    for index, (axis, (title, label, values)) in enumerate(zip(axes.ravel(), fields)):
         low, high = np.nanpercentile(values, (1, 99))
         mesh = draw_map(axis, data, values, coastline, left=index % 2 == 0, bottom=index >= 2, cmap="viridis",
                         vmin=low, vmax=high)
-        colour_bar(figure, mesh, axis, label)
+        axis.contour(data["longitudes"], data["latitudes"], outline, levels=[0.5], colors=ORANGE, linewidths=1.0)
+        axis.set_title(title, fontsize=9)
+        bar = figure.colorbar(mesh, ax=axis, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30)
+        bar.set_label(label, fontsize=TICKS)
+        bar.ax.tick_params(labelsize=TICKS - 1)
+        bar.ax.locator_params(nbins=5)
     figure.savefig(HERE / "era5_d_termini_mappa.pdf", dpi=300)
     plt.close(figure)
 
@@ -291,7 +279,6 @@ def main():
         data = {key: stored[key] for key in stored.files}
     coastline = coastline_of(args.coastline, data)
     spatial_figure(data)
-    maps_figure(data, coastline)
     temporal_figure(data, coastline)
     terms_temporal_figure(data, coastline)
     zones_figure(data)

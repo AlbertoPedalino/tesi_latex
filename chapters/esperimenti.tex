@@ -11,7 +11,7 @@ La configurazione del detector è fissata, a eccezione di quattro iperparametri 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Configurazione del detector su ERA5. Nella parte superiore i valori fissati, nella parte inferiore gli iperparametri della ricerca, con l'intervallo esplorato e il valore della configurazione scelta. In scala logaritmica, per esempio, i rapporti 0.5 e 2 sono equidistanti da 1.}
+    \caption{Configurazione del detector su ERA5. Nella parte superiore i valori fissati, nella parte inferiore gli iperparametri della ricerca, con l'intervallo esplorato e il valore della configurazione scelta. In scala logaritmica, per esempio, i valori 50 e 200 sono equidistanti da 100.}
     \label{tab:configurazioni}
     \vspace{0.6em}
     \begin{tabular}{@{}L{0.36}L{0.48}L{0.09}@{}}
@@ -32,17 +32,17 @@ La configurazione del detector è fissata, a eccezione di quattro iperparametri 
         Epoche & 6, come nel codice degli autori di STGAN & -- \\
         Precisione & BF16, pesi in FP32 & -- \\
         \addlinespace
-        Tasso di apprendimento del generatore & da $10^{-4}$ a $3\cdot10^{-3}$, in scala logaritmica; scelto \provv{$4.93\cdot10^{-4}$} & \ref{sec:stgan} \\
-        Rapporto fra i tassi del discriminatore e del generatore & da 0.25 a 4, in scala logaritmica; scelto \provv{0.951} & \ref{sec:stgan} \\
-        Peso di ricostruzione $\lambda_G$ & da 50 a 2000, in scala logaritmica; scelto \provv{176.6} & \ref{sec:stgan} \\
-        Aggiornamenti per batch, $n_D{:}n_G$ & 1:1, 2:1 oppure 1:2; scelto \provv{1:1} & \ref{sec:stgan} \\
+        Tasso di apprendimento del generatore & da $10^{-4}$ a $3\cdot10^{-3}$, in scala logaritmica; scelto $7.65\cdot10^{-4}$ & \ref{sec:stgan} \\
+        Tasso di apprendimento del discriminatore & da $2.5\cdot10^{-5}$ a $5\cdot10^{-3}$, in scala logaritmica; scelto $3.06\cdot10^{-3}$ & \ref{sec:stgan} \\
+        Peso di ricostruzione $\lambda_G$ & da 25 a 2000, in scala logaritmica; scelto 63.7 & \ref{sec:stgan} \\
+        Aggiornamenti per batch, $n_D{:}n_G$ & 1:1, 2:1 oppure 1:2; scelto 1:1 & \ref{sec:stgan} \\
         \bottomrule
     \end{tabular}
 \end{table}
 
 \paragraph{Obiettivo.} L'obiettivo della ricerca è la distanza MMD fra campi osservati e ricostruiti nello spazio delle componenti principali (Sezione~\ref{sec:monitoraggio-senza-etichette}), mediata sulle ultime cinque epoche, da minimizzare: la prima epoca è esclusa perché, all'inizio dell'addestramento, è poco indicativa della configurazione. Ogni esecuzione è addestrata sugli anni 1980--1999 e misurata sugli anni di validazione, senza calcolare score sul test. Ogni configurazione è addestrata una sola volta, con lo stesso seme per tutte le esecuzioni. Le esecuzioni interrotte perché una loss ha assunto valori infiniti o indefiniti (NaN) non hanno un obiettivo e sono escluse dalla scelta.
 
-\paragraph{Due fasi.} La ricerca si è svolta in due fasi. La prima ha usato il metodo bayesiano degli sweep di Weights \& Biases, che stima con un processo gaussiano l'obiettivo in funzione degli iperparametri. Il suo modello usa però una sola scala di lunghezza per tutti gli iperparametri e non stima il rumore dell'obiettivo; nelle esecuzioni di questo lavoro, con un obiettivo rumoroso, le sue proposte non si sono ristrette attorno ai risultati migliori. La seconda fase usa la libreria Optuna, con un processo gaussiano che stima una scala per ogni iperparametro e il rumore dell'obiettivo, e riparte dalle esecuzioni della prima fase con lo stesso seme. La ricerca è fermata quando più prove consecutive non migliorano il miglior obiettivo di almeno 0.0004, un valore vicino al rumore dell'obiettivo stimato dal processo gaussiano. È scelta la configurazione con l'obiettivo più basso fra le esecuzioni completate. Le esecuzioni, il loro andamento e la configurazione scelta sono riportati nella Sezione~\ref{sec:ris-ricerca}.
+\paragraph{La ricerca.} Le prove sono proposte con un metodo bayesiano: un processo gaussiano stima l'obiettivo in funzione degli iperparametri, a partire dalle prove già completate, e la prova successiva è scelta dove il miglioramento atteso è più alto. La ricerca è fermata quando più prove consecutive non migliorano il miglior obiettivo di almeno 0.0004, un valore vicino al rumore dell'obiettivo stimato dal processo gaussiano. È scelta la configurazione con l'obiettivo più basso fra le esecuzioni completate. Le esecuzioni, il loro andamento e la configurazione scelta sono riportati nella Sezione~\ref{sec:ris-ricerca}.
 
 \paragraph{Pesi e calcolo.} Del modello scelto si usano i pesi dell'ultima epoca, come nel codice degli autori\footnote{\url{https://github.com/dleyan/STGAN}}, che salva i pesi a ogni epoca e valuta quelli dell'ultima: nessuna epoca è scelta in base al risultato. Un'epoca comprende 58384 batch di un istante, cioè gli istanti di addestramento meno i 56 di contesto del trend. Nella configurazione scelta un'epoca dura circa 2.4 ore, quindi un'esecuzione di sei epoche poco più di 14 ore. I modelli sono implementati in PyTorch~\cite{paszke2019pytorch}. Nella preparazione dei dati (Sezione~\ref{sec:dati-pipeline}) i file mensili in formato NetCDF~\cite{rew1990netcdf} sono letti con xarray~\cite{hoyer2017xarray}; durante l'addestramento e il calcolo degli score i file \texttt{.npy} sono letti con NumPy~\cite{harris2020numpy} in mappatura di memoria; le tabelle di score sono elaborate con pandas~\cite{mckinney2010pandas}; il Capitolo~\ref{chap:risultati} usa anche SciPy~\cite{virtanen2020scipy}. Tutti i modelli sono addestrati su una scheda NVIDIA RTX PRO 6000 Blackwell.
 % Ricerca, prima fase: sweep W&B 913ez3rt, creato il 16 ottobre 2026 da
@@ -58,11 +58,10 @@ La configurazione del detector è fissata, a eccezione di quattro iperparametri 
 % figura della 6.1 mostra che le prove non si concentrano. Durata di un'epoca:
 % 7.1 minuti ogni 2919 batch nel log dell'agente. Scheda grafica: stesso server
 % della tesi di Stiven Gjinaj.
-% Run scelta finora: good-sweep-2 (W&B 5qlj2lwg, progetto physiq_pv), MMD media
-% 0.004446, scelta il 19 ottobre 2026 fra le 5 esecuzioni completate allora; al 29
-% ottobre la migliore è serene-sweep-14 (0.00327): la scelta finale va rivista
-% quando Optuna si ferma; i quattro valori scelti della Tabella 5.1 sono marcati
-% \provv e vanno sostituiti con quelli della run migliore. Pesi: model_epoch_6.pt.
+% Run scelta: optuna-27, prova 27 del primo studio Optuna (W&B usk5o8rc, cartella
+% outputs/optuna/era5-gan/trial_27/era5/usk5o8rc/results, seme 20), MMD 0.00259, la più bassa
+% della ricerca (figures/dati/era5_optuna_prove.csv). Tassi: G 7.647e-4, D 3.059e-3, quindi
+% rapporto 4.0003, al limite superiore dell'intervallo; lambda 63.71; 1:1. Pesi: model_epoch_6.pt.
 % Ultima epoca come nel codice degli autori: tester.py carica G_<epoch>.pth con epoch=6 (main.py), letto il 21
 % ottobre 2026. Optuna e W&B non sono citati: aggiungere i riferimenti solo dopo averli
 % letti.
@@ -83,4 +82,4 @@ calcolato su un istante ogni dieci degli anni di validazione e su tutte le celle
 % tutte le celle, senza escludere i valori segnati come insoliti. Verificato il 29
 % ottobre 2026.
 
-\paragraph{Score usato e termini di confronto.} Lo score del detector è lo score di ricostruzione $\zeta$ dell'equazione~\eqref{eq:score-finale}, che nel Capitolo~\ref{chap:risultati} è chiamato G con la normalizzazione. Dalla stessa esecuzione sono calcolati anche la componente del discriminatore e lo score combinato dell'articolo: la scelta di $\zeta$ è motivata nella Sezione~\ref{sec:ris-g-d}: le due componenti non concordano sugli anni di validazione, e la componente di ricostruzione ha un significato chiaro. Non esistono etichette di anomalia. Gli anni di test non intervengono né nell'addestramento né nella scelta della configurazione; il comportamento degli score e il loro confronto con altri metodi sono descritti nel Capitolo~\ref{chap:risultati}.
+\paragraph{Score usato e termini di confronto.} Lo score del detector è lo score di ricostruzione $\zeta$ dell'equazione~\eqref{eq:score-finale}, che nel Capitolo~\ref{chap:risultati} è chiamato G con la normalizzazione. Dalla stessa esecuzione sono calcolati anche la componente del discriminatore e lo score combinato dell'articolo: la scelta di $\zeta$ è motivata nella Sezione~\ref{sec:ris-conferma}: le due componenti non concordano sugli anni di validazione, e la componente di ricostruzione ha un significato chiaro. Non esistono etichette di anomalia. Gli anni di test non intervengono né nell'addestramento né nella scelta della configurazione; il comportamento degli score e il loro confronto con altri metodi sono descritti nel Capitolo~\ref{chap:risultati}.

@@ -2,7 +2,7 @@
 the specific cases. Made for a reader who is not an expert of the domain: one message for every figure.
 
 Run from the thesis folder. First, once, gather the data from the folder downloaded from the server
-(outputs/casi_good2_g, written by scripts/check_era5_event_zones.py, check_era5_event_profile.py and
+(outputs/finale_optuna27, with the cases of outputs/finale_optuna27/esempi, written by scripts/check_era5_event_zones.py, check_era5_event_profile.py and
 check_era5_event_cases.py of the code repository):
     python figures/genera_figure_eventi.py --prepare <folder with the downloaded files>
 which writes figures/dati/era5_eventi_zone.csv, era5_eventi_profilo.csv and era5_caso_NN.npz. Then:
@@ -11,7 +11,7 @@ which writes figures/era5_eventi_dimensione.pdf, era5_eventi_tipo.pdf, era5_even
 era5_eventi_profilo.pdf, era5_eventi_profilo_tipi.pdf, era5_dropout.pdf, era5_dropout_tipi.pdf, era5_dropout_mappe.pdf, era5_caso_NN.pdf, and figures/dati/era5_casi_zone.json with the medians of every case.
 The coastline, from Natural Earth (public domain), is not kept in the repository.
 
-Run: good-sweep-2, test years 2005-2025, threshold from the validation years.
+Run: optuna-27 (outputs/finale_optuna27), test years 2005-2025, threshold from the validation years.
 """
 import argparse
 import json
@@ -282,7 +282,7 @@ def profile_types_figure():
     table = pd.read_csv(PROFILE)
     table = table[(table["type"] != "all") & (table["values"] >= MIN_VALUES)]
     chosen = {"total_precipitation": (BLUE, BLUE, 3.6, 0.42, -12), "vertical_velocity": (GREEN, GREEN_TEXT, -7.6, 1.62, 0),
-              "mean_sea_level_pressure": (ORANGE, ORANGE, 3.7, 1.82, 7),
+              "total_cloud_cover": (ORANGE, ORANGE, -5.3, 3.3, 0),
               "2m_temperature": (YELLOW, "#a87300", 0.3, 2.4, 0)}
     figure, axis = plt.subplots(figsize=size(0.56), constrained_layout=True)
     for name, group in table.groupby("type"):
@@ -333,8 +333,8 @@ def dropout_figure():
     across.set_xticks([-8, -4, -1, 1, 4, 8], ["8+", "4", "1", "1", "4", "8+"])
     across.set_xlabel("celle dal bordo: dentro | fuori", fontsize=TICKS)
     across.set_ylabel("rapporto (%)", fontsize=TICKS)
-    across.set_ylim(8, 11)
-    across.set_yticks([8, 9, 10, 11])
+    across.set_ylim(9, 11.5)
+    across.set_yticks([9, 10, 11])
     across.set_title("Attraverso gli eventi", fontsize=8.5, loc="left", color=TEXT)
 
     numbers = data["classes of the ratio at equal raw error"]
@@ -359,40 +359,46 @@ def dropout_types_figure():
     positions = positions[(positions["type"] != "all") & (positions["values"] >= MIN_VALUES)]
     classes = pd.read_csv(HERE / "dati" / "era5_dropout_classi.csv")
     classes = classes[(classes["type"] != "all") & (classes["spread"] == "ratio") & (classes["bands"] == "raw error")]
-    chosen = {"total_precipitation": (BLUE, BLUE, 0.7, 9.0, -11), "vertical_velocity": (GREEN, GREEN_TEXT, -7.4, 8.2, -11),
-              "mean_sea_level_pressure": (ORANGE, ORANGE, 3.4, 10.5, 5)}
+    # The three types drawn in colour are named in a legend: the lines of precipitation and vertical velocity
+    # overlap outside the events, and a label written next to them would be ambiguous.
+    chosen = {"total_precipitation": BLUE, "vertical_velocity": GREEN, "total_cloud_cover": ORANGE}
     figure, (across, gap) = plt.subplots(1, 2, figsize=size(0.62), constrained_layout=True, width_ratios=(1.25, 1))
     for name, group in positions.groupby("type"):
         if name not in chosen:
             group = group.sort_values("position")
             joined = group["position"].abs() < 8
             across.plot(group["position"][joined], 100 * group["ratio value"][joined], color="#c8c6bf", linewidth=0.9, zorder=1)
-    for name, (colour, label, x, y, shift) in chosen.items():
+    for name, colour in chosen.items():
         group = positions[positions["type"] == name].sort_values("position")
         joined = group["position"].abs() < 8
-        across.plot(group["position"][joined], 100 * group["ratio value"][joined], color=colour, linewidth=2, zorder=2)
-        across.annotate(TYPES[name].replace(" al livello del mare", ""), (x, y), xytext=(0, shift), textcoords="offset points", fontsize=7.5, color=label, zorder=3, path_effects=HALO)
+        across.plot(group["position"][joined], 100 * group["ratio value"][joined], color=colour, linewidth=2, zorder=2,
+                    label=TYPES[name])
+    across.set_ylim(4.6, None)  # room for the legend under the lines
+    across.legend(frameon=False, fontsize=7, loc="lower right", handlelength=1.4)
     across.annotate("umidità del suolo", (-4.6, 12.9), fontsize=7.5, color=MUTED)
-    across.annotate("radiazione solare", (-7.6, 5.6), fontsize=7.5, color=MUTED)
+    across.annotate("radiazione solare", (-6.2, 7.0), fontsize=7.5, color=MUTED)
     position_axis(across)
     across.set_xticks([-6, -4, -2, 2, 4, 6], ["6", "4", "2", "2", "4", "6"])
     across.set_xlabel("celle dal bordo: dentro | fuori", fontsize=TICKS)
     across.set_ylabel("rapporto (%)", fontsize=TICKS)
     across.set_title("Il rapporto attraverso gli eventi", fontsize=9, loc="left", color=TEXT)
 
+    # Classes 1, 4 and 5: the share rises from class 1 to class 3 or 4 in every type, and in most types falls in class 5.
     table = classes.pivot(index="type", columns="class", values="normal flagged %")
-    table = table.loc[table[5].sort_values().index]
+    table = table.loc[table[4].sort_values().index]
     place = np.arange(len(table))
-    gap.hlines(place, table[1], table[5], color=GRID, linewidth=1.5, zorder=1)
-    gap.scatter(table[1], place, s=26, color=BLUE, edgecolor="white", linewidth=0.6, zorder=2, label="estrazioni concordi")
-    gap.scatter(table[5], place, s=26, color=ORANGE, edgecolor="white", linewidth=0.6, zorder=2, label="estrazioni discordi")
+    gap.hlines(place, table[[1, 4, 5]].min(axis=1), table[[1, 4, 5]].max(axis=1), color=GRID, linewidth=1.5, zorder=1)
+    gap.scatter(table[1], place, s=26, color=BLUE, edgecolor="white", linewidth=0.6, zorder=2, label="classe 1 (concordi)")
+    gap.scatter(table[4], place, s=26, color=MUTED, edgecolor="white", linewidth=0.6, zorder=2, label="classe 4")
+    gap.scatter(table[5], place, s=26, color=ORANGE, edgecolor="white", linewidth=0.6, zorder=3, label="classe 5 (discordi)")
     gap.set_yticks(place, [TYPES[name] for name in table.index], fontsize=7)
     gap.set_xlim(0, 100)
     gap.set_xlabel("oltre la soglia della distanza\ndal normale (%)", fontsize=TICKS)
     gap.tick_params(labelsize=7, length=0)
     gap.grid(axis="x", color=GRID, linewidth=0.6)
     gap.set_axisbelow(True)
-    gap.legend(frameon=False, fontsize=7.5, ncol=2, loc="upper center", bbox_to_anchor=(0.4, -0.2), columnspacing=0.8)
+    figure.legend(*gap.get_legend_handles_labels(), frameon=False, fontsize=7.5, ncol=3, loc="outside lower right",
+                  columnspacing=0.8)
     gap.set_title("A parità di errore", fontsize=9, loc="left", color=TEXT)
     clean(gap, "top", "right", "left")
     figure.savefig(HERE / "era5_dropout_tipi.pdf")
@@ -424,7 +430,7 @@ def dropout_maps_figure(coastline_path):
             record = json.loads(str(case["case"]))
         moment = pd.Timestamp(record["timestamp"])
         cases.append((path.stem[-2:], record["timestamp"],
-                      f"{TYPES[record['type']].replace(' al livello del mare', '')}, {moment.day}/{moment.month}/{moment.year}"))
+                      f"{TYPES[record['type']].replace(' al livello del mare', '')}\n{moment.day}/{moment.month}/{moment.year}"))
     axes = []
     high = max(np.nanpercentile(maps[f"instant {moment} grezza"], 99) for _, moment, _ in cases) * 1e4
     for column, (number, moment, title) in enumerate(cases):
@@ -503,7 +509,9 @@ def case_figure(number, data, coastline):
     cell.tick_params(labelsize=TICKS, length=2)
     cell.xaxis.set_major_locator(dates.DayLocator(interval=2))
     cell.xaxis.set_major_formatter(dates.DateFormatter("%d/%m"))
-    cell.set_title(f"Una cella del nucleo ({record['cell latitude']:g}°N, {record['cell longitude']:g}°E)", fontsize=9, loc="left", color=TEXT)
+    east = record["cell longitude"]
+    where = f"{east:g}°E" if east >= 0 else f"{-east:g}°W"
+    cell.set_title(f"Una cella del nucleo ({record['cell latitude']:g}°N, {where})", fontsize=9, loc="left", color=TEXT)
     clean(cell, "top", "right")
 
     chain = figure.add_subplot(panels[1, 1])

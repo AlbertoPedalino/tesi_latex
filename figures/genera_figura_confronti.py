@@ -1,7 +1,7 @@
 """Generate the figure of the comparison of the detectors: the Jaccard index of the flags of every pair.
 
 Highest 5% of each score, with its threshold from the validation years, on the test years 2005-2025 of
-good-sweep-2 (figures/dati/era5_confronti.json, from scripts/compare_era5_detectors.py of the code repository).
+the final run (figures/dati/era5_confronti.json, from scripts/compare_era5_detectors.py of the code repository).
 
 Run from the thesis folder:
     python figures/genera_figura_confronti.py

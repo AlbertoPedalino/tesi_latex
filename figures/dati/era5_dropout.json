@@ -1,25 +1,143 @@
 {
-  "source": "outputs/casi_good2_g/dropout_rapporto_bande.log and dropout_rapporto_5pc.log, scripts/check_era5_dropout_spread.py and check_era5_dropout_flags.py, test 2005-2025, good-sweep-2, 2 November 2026",
-  "solid": {"one spread lower %": 78.0, "two spreads lower %": 60.2, "not flagged, one spread higher %": 1.6, "median spread over threshold": 0.194},
+  "source": "outputs/finale_optuna27/logs/dropout_rapporto_bande.log, dropout_5pc.log and dropout_rapporto_5pc.log, scripts/check_era5_dropout_spread.py and check_era5_dropout_flags.py (run_era5_final_analyses.sh), test 2005-2025, optuna-27, 5 November 2026",
+  "solid": {
+    "one spread lower %": 74.8,
+    "two spreads lower %": 55.0,
+    "not flagged, one spread higher %": 1.8,
+    "median spread over threshold": 0.222
+  },
   "ratio by band of the raw error": {
-    "band": ["0-50", "50-90", "90-95", "95-99", "99-99.9", "99.9-100"],
-    "ratio": [0.1078, 0.1015, 0.09556, 0.09098, 0.08333, 0.06667]
+    "band": [
+      "0-50",
+      "50-90",
+      "90-95",
+      "95-99",
+      "99-99.9",
+      "99.9-100"
+    ],
+    "ratio": [
+      0.1111,
+      0.1136,
+      0.1183,
+      0.1158,
+      0.09734,
+      0.09054
+    ]
   },
   "classes of the ratio at equal raw error": {
-    "class": [1, 2, 3, 4, 5],
-    "median ratio": [0.050, 0.070, 0.086, 0.106, 0.146],
-    "normal percentile": [83.418, 90.067, 93.064, 94.965, 96.842],
-    "normal flagged %": [19.719, 32.815, 43.850, 53.196, 61.711],
-    "largest value": [2.854, 3.029, 3.184, 3.319, 3.479],
-    "none beyond 2 %": [15.524, 10.365, 8.212, 7.166, 7.932]
+    "class": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "median ratio": [
+      0.054,
+      0.079,
+      0.1,
+      0.127,
+      0.187
+    ],
+    "normal percentile": [
+      85.856,
+      91.448,
+      93.47,
+      94.291,
+      92.957
+    ],
+    "normal flagged %": [
+      24.339,
+      38.328,
+      46.226,
+      49.737,
+      45.273
+    ],
+    "largest value": [
+      2.992,
+      3.122,
+      3.198,
+      3.207,
+      3.035
+    ],
+    "none beyond 2 %": [
+      13.468,
+      10.2,
+      9.345,
+      9.395,
+      12.354
+    ]
   },
   "classes of the ratio at equal score": {
-    "normal flagged %": [23.712, 32.759, 42.353, 51.323, 61.143],
-    "none beyond 2 %": [13.834, 10.723, 8.862, 7.727, 8.052]
+    "normal flagged %": [
+      27.158,
+      37.726,
+      45.112,
+      48.986,
+      44.92
+    ],
+    "none beyond 2 %": [
+      12.439,
+      10.474,
+      9.727,
+      9.665,
+      12.457
+    ]
   },
   "positions": {
-    "position": [-8, -7, -6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8],
-    "spread percentile": [100, 100, 99, 99, 99, 99, 97, 94, 85, 74, 64, 58, 53, 50, 47, 37],
-    "ratio": [0.1045, 0.09693, 0.09475, 0.09331, 0.09116, 0.08756, 0.08389, 0.08611, 0.09188, 0.0962, 0.09766, 0.09766, 0.0984, 0.0984, 0.0984, 0.1014]
+    "position": [
+      -8,
+      -7,
+      -6,
+      -5,
+      -4,
+      -3,
+      -2,
+      -1,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "spread percentile": [
+      100,
+      99,
+      99,
+      99,
+      99,
+      98,
+      97,
+      94,
+      85,
+      74,
+      65,
+      58,
+      53,
+      49,
+      46,
+      35
+    ],
+    "ratio": [
+      0.112,
+      0.1042,
+      0.1026,
+      0.1002,
+      0.09863,
+      0.0963,
+      0.09553,
+      0.1002,
+      0.1018,
+      0.1026,
+      0.1034,
+      0.1034,
+      0.1034,
+      0.1034,
+      0.1034,
+      0.105
+    ]
   }
 }

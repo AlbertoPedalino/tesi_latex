@@ -3,96 +3,96 @@
   "record": {
    "case": 0,
    "type": "vertical_velocity",
-   "values": 7849,
+   "values": 6894,
    "start": "2017-11-21 15:00:00",
-   "end": "2017-11-24 15:00:00",
-   "timestamps": 25,
-   "hours": 72.0,
+   "end": "2017-11-24 06:00:00",
+   "timestamps": 22,
+   "hours": 63.0,
    "timestamp": "2017-11-23 00:00:00",
-   "values at the timestamp": 656,
-   "latitude": 52.14862804878049,
-   "longitude": 1.1996951219512195,
-   "cell latitude": 60.0,
-   "cell longitude": 13.5
+   "values at the timestamp": 549,
+   "latitude": 52.361566484517304,
+   "longitude": 3.1193078324225865,
+   "cell latitude": 58.5,
+   "cell longitude": 8.5
   },
   "core": {
-   "cells": 656,
-   "G percentile": 97.1758602102022,
-   "distance": 1.329779863357544
+   "cells": 549,
+   "G percentile": 97.39446674623879,
+   "distance": 1.5067591667175293
   },
   "edge": {
-   "cells": 355,
-   "G percentile": 91.69661029701524,
-   "distance": 0.8603267669677734
+   "cells": 311,
+   "G percentile": 91.47023091461737,
+   "distance": 0.8587806820869446
   },
   "far": {
-   "cells": 7326,
-   "G percentile": 41.21438078171905,
-   "distance": 0.5150603652000427
+   "cells": 7381,
+   "G percentile": 42.31694895686298,
+   "distance": 0.5174053907394409
   }
  },
  "total_precipitation": {
   "record": {
    "case": 1,
    "type": "total_precipitation",
-   "values": 5815,
-   "start": "2018-12-06 15:00:00",
-   "end": "2018-12-08 21:00:00",
-   "timestamps": 19,
-   "hours": 54.0,
-   "timestamp": "2018-12-08 03:00:00",
-   "values at the timestamp": 536,
-   "latitude": 49.29664179104478,
-   "longitude": 14.189365671641792,
-   "cell latitude": 45.5,
-   "cell longitude": 7.0
+   "values": 7385,
+   "start": "2006-05-16 15:00:00",
+   "end": "2006-05-19 15:00:00",
+   "timestamps": 25,
+   "hours": 72.0,
+   "timestamp": "2006-05-19 03:00:00",
+   "values at the timestamp": 576,
+   "latitude": 51.814236111111114,
+   "longitude": 14.338541666666666,
+   "cell latitude": 56.5,
+   "cell longitude": 23.0
   },
   "core": {
-   "cells": 536,
-   "G percentile": 97.8416200722238,
-   "distance": 1.3992915153503418
+   "cells": 576,
+   "G percentile": 96.96267227386744,
+   "distance": 2.1951513290405273
   },
   "edge": {
-   "cells": 288,
-   "G percentile": 91.23433019020379,
-   "distance": 1.1783721446990967
+   "cells": 446,
+   "G percentile": 91.11109791842887,
+   "distance": 0.9532312154769897
   },
   "far": {
-   "cells": 8730,
-   "G percentile": 37.36842364347308,
-   "distance": 0.3610278367996216
+   "cells": 7706,
+   "G percentile": 32.91270448434383,
+   "distance": 0.32308441400527954
   }
  },
- "mean_sea_level_pressure": {
+ "total_cloud_cover": {
   "record": {
    "case": 2,
-   "type": "mean_sea_level_pressure",
-   "values": 10026,
-   "start": "2020-02-28 00:00:00",
-   "end": "2020-03-01 18:00:00",
+   "type": "total_cloud_cover",
+   "values": 4933,
+   "start": "2024-06-14 06:00:00",
+   "end": "2024-06-17 00:00:00",
    "timestamps": 23,
    "hours": 66.0,
-   "timestamp": "2020-02-29 09:00:00",
-   "values at the timestamp": 949,
-   "latitude": 50.94467860906217,
-   "longitude": -1.3182297154899896,
-   "cell latitude": 49.5,
-   "cell longitude": 0.0
+   "timestamp": "2024-06-15 12:00:00",
+   "values at the timestamp": 404,
+   "latitude": 30.32920792079208,
+   "longitude": -4.139851485148514,
+   "cell latitude": 23.5,
+   "cell longitude": -13.0
   },
   "core": {
-   "cells": 949,
-   "G percentile": 97.33003391748174,
-   "distance": 2.3809614181518555
+   "cells": 404,
+   "G percentile": 98.38304159779011,
+   "distance": 2.148432731628418
   },
   "edge": {
-   "cells": 478,
-   "G percentile": 92.174626715187,
-   "distance": 2.086038589477539
+   "cells": 218,
+   "G percentile": 89.13945589192357,
+   "distance": 1.015892505645752
   },
   "far": {
-   "cells": 7420,
-   "G percentile": 39.688302866240164,
-   "distance": 0.5464534163475037
+   "cells": 6284,
+   "G percentile": 43.138111170177865,
+   "distance": 0.5670354962348938
   }
  }
 }

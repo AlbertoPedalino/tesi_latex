@@ -2,14 +2,18 @@
 and with the climatology of the score.
 
 Share of the flagged values of the score, by latitude band and calendar month, on the validation years
-2000-2004 of good-sweep-2 (figures/dati/era5_g_luogo.json, from scripts/check_era5_score_by_place.py of the code
-repository). The threshold of each score is its 95th percentile over the validation years, as everywhere in
+2000-2004 of the final run (figures/dati/era5_g_luogo.json, from scripts/check_era5_score_by_place.py of the code
+repository, run by scripts/run_era5_score_behaviour.sh). The threshold of each score is its 95th percentile over the validation years, as everywhere in
 the thesis, so that both scores flag 5% on average.
 
-Run from the thesis folder:
+Run from the thesis folder. First, once, gather the data from the logs of the behaviour output (its folder logs/,
+with luogo_g_grezzo_5pc.log and luogo_g_clim_5pc.log):
+    python figures/genera_figura_g_luogo.py --prepare <behaviour output folder>
+Then:
     python figures/genera_figura_g_luogo.py
 which writes figures/era5_g_luogo.pdf.
 """
+import argparse
 import json
 import pathlib
 
@@ -38,7 +42,40 @@ plt.rcParams.update({
 })
 
 
+def read_log(path):
+    """Bands, cells and the share of flagged values by band and month from a log of check_era5_score_by_place.py."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+    start = next(index for index, line in enumerate(lines) if line.startswith("latitude"))
+    bands, cells, shares = [], [], []
+    for line in lines[start + 1:]:
+        fields = line.split()
+        if len(fields) != 14:
+            break
+        bands.append(fields[0])
+        cells.append(int(fields[1]))
+        shares.append([float(value) for value in fields[2:]])
+    return bands, cells, shares
+
+
+def prepare(folder):
+    folder = pathlib.Path(folder)
+    bands, cells, raw = read_log(folder / "logs" / "luogo_g_grezzo_5pc.log")
+    clim_bands, _, clim = read_log(folder / "logs" / "luogo_g_clim_5pc.log")
+    if clim_bands != bands:
+        raise ValueError("The two logs are not over the same bands")
+    DATA.write_text(json.dumps({"source": f"scripts/check_era5_score_by_place.py, logs of {folder.name}", "top_percent": 5,
+                                "bands": bands, "cells": cells, "G": raw, "G_clim": clim}, indent=2),
+                    encoding="utf-8")
+    print(f"written {DATA}")
+
+
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--prepare", type=pathlib.Path)
+    args = parser.parse_args()
+    if args.prepare is not None:
+        prepare(args.prepare)
+        return
     data = json.loads(DATA.read_text(encoding="utf-8"))
     top = data["top_percent"]
     panels = (("G", "G senza normalizzazione"), ("G_clim", "G con normalizzazione (giorno ±15 × ora)"))

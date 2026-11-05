@@ -5,12 +5,15 @@
 % precedente, basato sulla conferma da E-OBS, è in
 % backup/2026-10-27_risultati_provvisori_eobs.tex (non compilato). Le fonti dei
 % numeri sono nei commenti alla fine di ciascuna sezione. Regola: ogni numero
-% viene dai file della run good-sweep-2, con soglie e climatologie stimate sugli
-% anni di validazione; nessun riferimento esterno (E-OBS, CAPE, raffiche).
+% viene dai file della run finale optuna-27 (outputs/comportamento_optuna27 per la
+% validazione, outputs/finale_optuna27 e outputs/confronti_good2 per il test,
+% scaricati in Tesi/risultati_optuna27/outputs; 5 novembre 2026), con soglie e
+% climatologie stimate sugli anni di validazione; nessun riferimento esterno
+% (E-OBS, CAPE, raffiche).
 
-Il capitolo riporta e discute i risultati del detector sui campi ERA5, nella configurazione scelta dalla ricerca degli iperparametri. In assenza di etichette, la domanda centrale è quale parte dello score di STGAN usare, e il comportamento del detector è studiato in più passi. Senza etichette, inoltre, una segnalazione indica dove lo score è alto, non che lì il tempo sia davvero insolito: questo vale per tutto il capitolo. Salvo dove indicato, un valore è segnalato quando supera il 95-esimo percentile del proprio score sugli anni di validazione. La Sezione~\ref{sec:ris-ricerca} riguarda la scelta della configurazione. Le Sezioni~\ref{sec:ris-correlazione-spaziale}--\ref{sec:ris-g-d} esaminano le due componenti dello score, del generatore e del discriminatore, nello spazio e nel tempo, e la normalizzazione climatologica; da queste analisi e dal significato chiaro di G discende la scelta dello score: G con la normalizzazione, cioè lo score di ricostruzione $\zeta$ della Sezione~\ref{sec:normalizzazione-climatologica-score}. La Sezione~\ref{sec:ris-confronti} confronta le segnalazioni del detector con quelle di metodi più semplici, la Sezione~\ref{sec:ris-eventi} le raggruppa in eventi per tipo e dimensione, studia come cala G attorno a ciò che segnala, confrontandolo con gli eventi dei metodi più semplici, e mostra un evento per tipo, la Sezione~\ref{sec:ris-dropout} esamina la dispersione del dropout, in generale e per tipo di evento, la Sezione~\ref{sec:ris-casi} esamina casi documentati, e la Sezione~\ref{sec:ris-soglia} verifica quanto i risultati dipendano dalla soglia.
+Il capitolo riporta e discute i risultati del detector sui campi ERA5, nella configurazione scelta dalla ricerca degli iperparametri. In assenza di etichette, la domanda centrale è quale parte dello score di STGAN usare, e il comportamento del detector è studiato in più passi. Senza etichette, inoltre, una segnalazione indica dove lo score è alto, non che lì il tempo sia davvero insolito: questo vale per tutto il capitolo. Nel capitolo un valore è una coppia di cella e istante; salvo dove indicato, è segnalato quando supera il 95-esimo percentile del proprio score sugli anni di validazione. La Sezione~\ref{sec:ris-ricerca} riguarda la scelta della configurazione. La Sezione~\ref{sec:ris-correlazione-spaziale} confronta le due componenti dello score, del generatore e del discriminatore, nello spazio e nel tempo, la Sezione~\ref{sec:ris-climatologia} esamina la normalizzazione climatologica e la Sezione~\ref{sec:ris-g-d} che cosa giudica il discriminatore. La Sezione~\ref{sec:ris-conferma} conferma questi risultati sugli anni di test e fissa la scelta dello score, che discende da queste analisi e dal significato chiaro di G: G con la normalizzazione, cioè lo score di ricostruzione $\zeta$ della Sezione~\ref{sec:normalizzazione-climatologica-score}. La Sezione~\ref{sec:ris-confronti} confronta le segnalazioni del detector con quelle di metodi più semplici, la Sezione~\ref{sec:ris-eventi} le raggruppa in eventi per tipo e dimensione, studia come cala G attorno a ciò che segnala, confrontandolo con gli eventi dei metodi più semplici, e mostra un evento per tipo, la Sezione~\ref{sec:ris-dropout} esamina la dispersione del dropout, in generale e per tipo di evento, la Sezione~\ref{sec:ris-casi} esamina casi documentati, e la Sezione~\ref{sec:ris-soglia} verifica quanto i risultati dipendano dalla soglia.
 
-\section{Ricerca dei parametri}
+\section{Ricerca degli iperparametri}
 \label{sec:ris-ricerca}
 
 La ricerca della Sezione~\ref{sec:exp-configurazioni} conta 29 prove, quattro delle quali interrotte per una loss non finita. La Figura~\ref{fig:ris-ricerca} le mostra nel piano delle prime due componenti principali dei quattro iperparametri, presi in scala logaritmica e standardizzati. Il piano tiene il 71\% della varianza: due prove vicine nel piano possono essere lontane nei quattro parametri, e per questo la regione migliore è indicata sulle sue prove e non come un'area.
@@ -23,11 +26,11 @@ La ricerca della Sezione~\ref{sec:exp-configurazioni} conta 29 prove, quattro de
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_optuna_pca}
-    \caption{Le prove della ricerca degli iperparametri nel piano delle prime due componenti principali dei quattro iperparametri (71\% della varianza). Il colore è la distanza MMD sulla validazione, più scuro dove è più bassa; i cerchi arancioni indicano le tre prove della regione migliore. Nel riquadro, la direzione in cui cresce ciascun iperparametro. Le prove non si avvicinano via via alla regione migliore: una volta stimata, la ricerca esplora le zone meno note.}
+    \caption{Le prove della ricerca degli iperparametri nel piano delle prime due componenti principali dei quattro iperparametri (71\% della varianza). Il colore è la distanza MMD sulla validazione, più scuro dove è più bassa; i cerchi arancioni indicano le tre prove della regione migliore. Nel riquadro, la direzione in cui cresce ciascun iperparametro: lr G e lr D sono i tassi di apprendimento del generatore e del discriminatore, peso $\lambda$ il peso della ricostruzione, agg. D:G gli aggiornamenti del discriminatore e del generatore per batch. Le prove non si avvicinano via via alla regione migliore: una volta stimata, la ricerca esplora le zone meno note.}
     \label{fig:ris-ricerca}
 \end{figure}
 
-\paragraph{La regione migliore.} Tre prove formano la regione migliore: tasso di apprendimento del generatore fra $5.7\times10^{-4}$ e $8.2\times10^{-4}$, del discriminatore fra $1.5\times10^{-3}$ e $3.3\times10^{-3}$, peso della ricostruzione fra 64 e 173, aggiornamenti 1:1. Le loro distanze MMD sono 0.00259, 0.00327 e 0.00384: le prime due sono le più basse dell'intera ricerca, e le tre prove sono l'una la più vicina all'altra. Fuori dalla regione la prova migliore vale 0.00367, ma è isolata e le prove più vicine hanno dato fra 0.0038 e 0.0044: è un risultato singolo, non una regione. La configurazione scelta è la prova con 0.00259. Per questa prova il processo gaussiano di Optuna stima un valore atteso di $0.0032\pm0.0004$, con un rumore dell'obiettivo di circa 0.0005: parte del suo vantaggio sulle prove vicine dipende quindi dal seme, ed è un limite di una ricerca con un solo seme per configurazione.
+\paragraph{La regione migliore.} Tre prove formano la regione migliore: tasso di apprendimento del generatore fra $5.7\times10^{-4}$ e $8.2\times10^{-4}$, del discriminatore fra $1.5\times10^{-3}$ e $3.3\times10^{-3}$, peso della ricostruzione fra 64 e 173, aggiornamenti 1:1. Le loro distanze MMD sono 0.00259, 0.00327 e 0.00384: le prime due sono le più basse dell'intera ricerca, e le tre prove sono l'una la più vicina all'altra. Fuori dalla regione la prova migliore vale 0.00367, ma è isolata e le prove più vicine hanno dato fra 0.0038 e 0.0044: è un risultato singolo, non una regione. Anche oltre la regione, con il tasso del discriminatore fino a 50 volte quello del generatore e il peso della ricostruzione fino a 60, le distanze non scendono: la prova con rapporto 9.6 fra i due tassi e peso 60, per esempio, vale 0.0041. La configurazione scelta è la prova con 0.00259. Per questa prova il processo gaussiano della ricerca stima un valore atteso di $0.0032\pm0.0004$, con un rumore dell'obiettivo di circa 0.0005: parte del suo vantaggio sulle prove vicine dipende quindi dal seme, ed è un limite di una ricerca con un solo seme per configurazione.
 
 \paragraph{Esplorare, non convergere.} Le prove non si avvicinano via via alla regione migliore, e la figura non mostra un percorso che migliora piano piano. Ogni prova è scelta dove il miglioramento atteso è più alto, che dipende sia dal valore atteso sia dall'incertezza. Vicino alla regione migliore il processo non si aspetta miglioramenti oltre il rumore, e il miglioramento atteso più alto cade nelle zone che conosce meno: le ultime prove, con peso della ricostruzione fino a 2000 e tasso del generatore sceso fino a $10^{-4}$, hanno dato distanze fra 0.0037 e 0.0054.
 % Prove: report di scripts/optuna_era5_stgan.py sullo studio era5-gan-extended-2 (4 novembre 2026, sera,
@@ -45,10 +48,10 @@ La ricerca della Sezione~\ref{sec:exp-configurazioni} conta 29 prove, quattro de
 % fluent-sweep-13 0.00417, ext-24 0.00433, ext-26 0.00444, ext-25 0.00384. PCA: prima componente
 % 40%, seconda 31%.
 
-\section{Correlazione spaziale degli score}
+\section{G e D: un legame debole}
 \label{sec:ris-correlazione-spaziale}
 
-Lo score di STGAN somma due componenti, e prima di sceglierne una conviene capire se segnalano le stesse situazioni. Questa sezione e le tre seguenti riguardano gli anni di validazione 2000--2004 della configurazione scelta: 14616 istanti su 10611 celle. Sono gli anni su cui si sceglie lo score del detector (Sezione~\ref{sec:exp-protocollo}); le stesse misure sugli anni di test sono riassunte alla fine della Sezione~\ref{sec:ris-g-d}. Le grandezze usate sono riassunte nella Tabella~\ref{tab:ris-score}. G e D sono le due componenti dello score, medie sulle 20 estrazioni (Sezione~\ref{sec:score-dropout-montecarlo}); $D_{\mathrm{reale}}$ e $D_{\mathrm{generato}}$ sono le due uscite del discriminatore da cui D è calcolata, e servono nella Sezione~\ref{sec:ris-g-d}. 
+Lo score di STGAN somma due componenti, e prima di sceglierne una conviene capire se segnalano le stesse situazioni. Questa sezione e le due seguenti riguardano gli anni di validazione 2000--2004 della configurazione scelta: 14616 istanti su 10611 celle. Sono gli anni su cui si sceglie lo score del detector (Sezione~\ref{sec:exp-protocollo}); la Sezione~\ref{sec:ris-conferma} ripete le stesse misure sugli anni di test. Le grandezze usate sono riassunte nella Tabella~\ref{tab:ris-score}. G e D sono le due componenti dello score, medie sulle 20 estrazioni (Sezione~\ref{sec:score-dropout-montecarlo}); $D_{\mathrm{reale}}$ e $D_{\mathrm{generato}}$ sono le due uscite del discriminatore da cui D è calcolata, e servono nella Sezione~\ref{sec:ris-g-d}.
 Il discriminatore è addestrato a dare 1 al campo generato e 0 a quello osservato: un valore alto delle sue uscite significa quindi ``giudicato generato''. Va fatta attenzione al nome: $D_{\mathrm{reale}}$ è il giudizio sull'osservazione, e un suo valore alto significa che l'osservazione è giudicata generata. Nell'idea di STGAN un'osservazione di questo tipo non somiglia a quelle viste in addestramento, e per questo un valore alto di D, come di G, significa ``più insolito''.
 
 \begin{table}[htbp]
@@ -70,77 +73,67 @@ Il discriminatore è addestrato a dare 1 al campo generato e 0 a quello osservat
     \end{tabular}
 \end{table}
 
-Due score sono confrontati con la correlazione di Pearson, calcolata sui valori, e con quella di Spearman, calcolata sui ranghi e quindi meno sensibile a pochi valori estremi.
+I due score sono confrontati con due correlazioni. Quella di Spearman è calcolata sui ranghi: dice se i due score mettono i valori nello stesso ordine, e pochi valori estremi pesano poco. Quella di Pearson è calcolata sui valori, e dà più peso ai valori estremi. Entrambe valgono 1 se i due score vanno insieme, $-1$ se vanno in senso opposto, 0 se non hanno legame.
 
-\paragraph{G e D tendono a ordinare i luoghi in senso opposto.} La correlazione spaziale è calcolata in ogni istante sulle celle: vale 1 se i due score ordinano i luoghi allo stesso modo, $-1$ se li ordinano in modo opposto. Fra G e D è negativa quasi sempre: la correlazione di Spearman vale in media $-0.23$ ed è negativa in tutti gli istanti tranne uno (Figura~\ref{fig:ris-g-d-spaziale}). Un valore di $-0.23$ indica un legame debole, lontano da $-1$, ma di segno quasi costante. Nello stesso istante, quindi, le celle in cui il generatore sbaglia di più tendono a essere quelle a cui il discriminatore dà uno score più basso, cioè meno anomalo. La correlazione di Pearson, più sensibile ai valori estremi, è più negativa, con una media di $-0.50$: il legame opposto è più forte fra i valori più alti di G.
+\paragraph{Nello spazio, G e D ordinano i luoghi quasi senza legame.} La correlazione spaziale è calcolata in ogni istante sulle celle, e dice se i due score segnalano gli stessi luoghi nello stesso istante. Fra G e D la correlazione di Spearman vale in media $0.015$ ed è negativa nel 44\% degli istanti (Figura~\ref{fig:ris-g-d-spaziale}). Il segno segue la stagione: la media è $0.10$ da dicembre a febbraio e $-0.06$ da giugno ad agosto. Sull'insieme delle celle, quindi, i due score ordinano i luoghi quasi in modo indipendente, e il poco legame che c'è cambia segno con la stagione.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_g_d_correlazione_spaziale}
-    \caption{Correlazione spaziale fra G e D in ogni istante degli anni di validazione, calcolata sulle 10611 celle: media giornaliera (linea sottile) e media mobile su 30 giorni (linea spessa). Le due correlazioni restano negative per quasi tutto il periodo.}
+    \caption{Correlazione spaziale fra G e D in ogni istante degli anni di validazione, calcolata sulle 10611 celle: media giornaliera (linea sottile) e media mobile su 30 giorni (linea spessa). La correlazione di Spearman (in blu) oscilla attorno a zero con la stagione; quella di Pearson (in arancione) è negativa in circa due giorni su tre, soprattutto in estate.}
     \label{fig:ris-g-d-spaziale}
 \end{figure}
 
-\paragraph{Un istante tipico.} La Figura~\ref{fig:ris-g-d-mappe} mostra G e D il 13 dicembre 2001 alle 15~UTC, l'istante in cui la correlazione di Spearman è uguale alla sua mediana sulla validazione ($-0.23$). Le celle in cui G è più alto, su un'area dell'Europa centrale e su una più piccola nel Mediterraneo orientale, sono fra quelle in cui D è più basso. Un secondo istante, quello con la media di G più alta della validazione, è esaminato nella Sezione~\ref{sec:ris-g-d}.
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=\textwidth]{era5_g_d_mappe}
-    \caption{G (a sinistra) e D (a destra) il 13 dicembre 2001 alle 15~UTC, un istante con la correlazione spaziale di Spearman uguale alla mediana della validazione. Per entrambi i colori chiari indicano valori più insoliti; ogni mappa ha una propria scala, dal primo al 99-esimo percentile dei suoi valori, quindi i colori non si confrontano fra le due mappe. Le celle con G più alto sono in gran parte fra quelle con D più basso. Linee di costa da Natural Earth.}
-    \label{fig:ris-g-d-mappe}
-\end{figure}
-% Numeri (29 ottobre 2026): scripts/run_era5_score_behaviour.sh sul server, run di
-% validazione con la storia reale outputs/stgan_good_sweep_2_validation, uscite in
-% outputs/comportamento_good2 (log in logs/), scaricate in Tesi/mappe_val e rilette
-% in locale. Correlazioni: correlazioni_g_d/spatial_correlation.csv e
-% temporal_correlation.npz. Istanti delle mappe: mappe_istanti.npz (istante tipico =
-% Spearman spaziale più vicina alla mediana; G medio più alto = 9/8/2003 12 UTC).
-% Figure: figures/genera_figure_g_d.py --prepare Tesi/mappe_val.
-% Spearman spaziale: media -0.233, mediana -0.232, negativa in 14615 istanti su
-% 14616; Pearson media -0.50. Per mese da -0.198 (novembre) a -0.279 (luglio);
-% dicembre-febbraio -0.211, giugno-agosto -0.270; per ora da -0.193 (21 UTC) a
-% -0.277 (12 UTC). Media giornaliera di Pearson positiva in nessun giorno.
-% Sul test (prima versione di questa sezione, run outputs/stgan_good_sweep_2_scored,
-% outputs/analisi_good2/correlazioni_g_d): Spearman media -0.24, Pearson -0.51,
-% giugno-agosto -0.28, 12 UTC -0.29; Pearson giornaliera positiva in 8 giorni fra il
-% 28/11/2019 e il 7/1/2020 (massimo 0.21 il 27/12/2019): candidato per i casi.
-% Bordo, sul test (controllo del 28 ottobre 2026, per anello di distanza dal bordo 0,1,2,3,4,5
-% e interno >=8, un istante ogni 97 del test): media di G 0.00173, 0.00171, 0.00171,
-% 0.00166, 0.00165, 0.00164 | 0.00164; D(reale) 0.5039, 0.5088, 0.5084, 0.5080,
-% 0.5080, 0.5084 | 0.5086; D(generato) 0.5188, 0.5228, 0.5204, 0.5221, 0.5218,
-% 0.5219 | 0.5217. Mediana della correlazione temporale di Spearman G-D per anello
-% (temporal_correlation.npz) -0.252, -0.259, -0.191, -0.236, -0.226 | -0.252 (>=5),
-% su tutti e quattro i lati; G-D(generato) 0.10, 0.23, 0.18, 0.21, 0.21 | 0.28.
-% Nell'anello 0 i due termini di D cambiano anche perché la patch esce dal reticolo
-% (celle azzerate e mascherate), ma nella correlazione G-D i due cambiamenti si
-% compensano. Le ricostruzioni vicino al bordo non sono salvate: il meccanismo del
-% minimo di D(generato) a distanza 2 non è verificato in dettaglio. Da riprendere
-% nei Limiti.
-
-\section{Correlazione temporale degli score}
 \label{sec:ris-correlazione-temporale}
-
-La correlazione spaziale dice se i due score segnalano gli stessi luoghi nello stesso istante; quella temporale dice se, in un luogo, salgono e scendono insieme.
-
-\paragraph{Il segno è lo stesso in ogni cella.} La correlazione temporale è calcolata in ogni cella sugli istanti: vale 1 se nella cella i due score salgono e scendono insieme. Fra G e D la correlazione di Spearman è negativa in tutte le celle, con mediana $-0.24$, e quella di Pearson ha mediana $-0.50$ (Figura~\ref{fig:ris-g-d-temporale}). Il legame ha quindi lo stesso segno nello spazio e nel tempo: quando in una cella il generatore sbaglia di più, D tende a scendere. È più forte nel sud del dominio, con una mediana di $-0.27$ fra 20$^\circ$ e 30$^\circ$N, e più debole a nord, con $-0.19$ fra 50$^\circ$ e 60$^\circ$N.
-
-\paragraph{La cornice vicino al bordo del dominio.} Nella mappa si vede una cornice a due celle dal bordo del dominio, dove la correlazione è un po' più debole (mediana $-0.19$ contro $-0.24$). È probabilmente un effetto del modello, che vicino al bordo completa il campo con zeri; il meccanismo non è verificato in dettaglio.
+\paragraph{Nel tempo, il legame è debole e non ha lo stesso segno in ogni cella.} La correlazione temporale è calcolata in ogni cella sugli istanti, e dice se in quel luogo i due score salgono e scendono insieme. Fra G e D la correlazione di Spearman ha mediana $-0.05$ ed è negativa nel 67\% delle celle (Figura~\ref{fig:ris-g-d-temporale}). Il legame è un po' più forte nel sud del dominio, con una mediana di $-0.11$ fra 20$^\circ$ e 30$^\circ$N, e più debole fra 40$^\circ$ e 50$^\circ$N, con $-0.02$. Escludendo le tre file vicino al bordo, la correlazione è positiva nel 26\% delle celle, per lo più fra 35$^\circ$ e 50$^\circ$N.\footnote{Nelle tre file di celle più vicine al bordo del dominio la correlazione è invece in genere positiva, con una mediana fra $0.08$ e $0.17$, e nella Figura~\ref{fig:ris-g-d-temporale} forma una cornice rossa. È probabilmente un effetto del modello, che vicino al bordo completa il campo con zeri; il meccanismo non è verificato in dettaglio.} Anche nel tempo, quindi, i due score sono quasi indipendenti, e il segno del loro legame dipende dal luogo.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_g_d_correlazione_temporale}
-    \caption{Correlazione temporale di Spearman fra G e D in ogni cella, sugli istanti degli anni di validazione. La correlazione è negativa in tutte le celle, più forte (colori scuri) nel sud del dominio. La linea tratteggiata indica la cornice a due celle dal bordo, probabilmente un effetto del modello. Linee di costa da Natural Earth.}
+    \caption{Correlazione temporale di Spearman fra G e D in ogni cella, sugli anni di validazione. Il blu indica che D scende quando G sale, il rosso che i due salgono insieme; la scala va da $-0.3$ a $0.3$, e la freccia indica che alcune celle superano $0.3$. La correlazione è vicina a zero quasi ovunque: è negativa in due celle su tre, soprattutto a sud, e positiva in molte celle fra 35$^\circ$ e 50$^\circ$N. La cornice rossa lungo il bordo è probabilmente un effetto del modello. Linee di costa da Natural Earth.}
     \label{fig:ris-g-d-temporale}
 \end{figure}
 
-\section{Normalizzazione climatologica e distribuzione delle segnalazioni}
+\paragraph{L'unico legame di segno costante: dove G è più alto, D tende a essere più basso.} La correlazione di Pearson, che dà più peso ai valori estremi, è più negativa di quella di Spearman. Nello spazio vale in media $-0.12$ ed è negativa nel 65\% degli istanti, soprattutto in estate ($-0.28$ da giugno ad agosto); nel tempo ha mediana $-0.25$ ed è negativa nell'83\% delle celle. Questo suggerisce che il legame riguardi i valori più alti di G, come verifica la Sezione~\ref{sec:ris-g-d}: quando e dove il generatore sbaglia di più, il discriminatore tende a dare uno score più basso, cioè meno anomalo. La stessa sezione cerca di capire perché.
+% Numeri (5 novembre 2026): scripts/run_era5_score_behaviour.sh sul server, run di
+% validazione con la storia reale outputs/stgan_optuna27_validation, uscite in
+% outputs/comportamento_optuna27 (log in logs/), scaricate in Tesi/risultati_optuna27/outputs
+% e rilette in locale. Correlazioni: correlazioni_g_d/spatial_correlation.csv e
+% temporal_correlation.npz. Figure: figures/genera_figure_g_d.py.
+% Spearman spaziale: media 0.015, mediana 0.016, negativa in 6469 istanti su 14616
+% (44.3%); Pearson media -0.117, mediana -0.127, negativa nel 64.8% degli istanti,
+% dicembre-febbraio +0.062, giugno-agosto -0.276. Spearman per mese da -0.071 (giugno)
+% a 0.103 (dicembre e gennaio); dicembre-febbraio 0.095, giugno-agosto -0.064; per ora da
+% -0.051 (15 UTC) a 0.084 (3 UTC). Media giornaliera di Pearson positiva in 562 giorni
+% su 1827.
+% Spearman temporale G-D fra -0.248 e 0.850 nelle celle (fra -0.248 e 0.264 a tre o più
+% celle dal bordo), mediana -0.050, negativa nel 66.8%; mediana per fascia S->N -0.113,
+% -0.039, -0.016, -0.052. A tre o più celle dal bordo positiva in 2427 celle su 9375
+% (25.9%), il 70% di queste fra 35 e 50N. Pearson temporale mediana -0.246, negativa
+% nell'82.9% delle celle.
+% Sul test (outputs/finale_optuna27/correlazioni_g_d, run outputs/stgan_optuna27_scored):
+% Spearman media -0.001, mediana -0.000, negativa nel 50.0% degli istanti; Pearson
+% media -0.144; Spearman giugno-agosto -0.086, dicembre-febbraio 0.088, 12 UTC -0.055;
+% Pearson giornaliera positiva in 2197 giorni su 7670.
+% Bordo (nota a piè di pagina): mediana della correlazione temporale di Spearman per anello
+% di distanza dal bordo 0,1,2,3,4,5 | interno >=8 (temporal_correlation.npz). Validazione:
+% G-D 0.167, 0.077, 0.145, -0.128, -0.088, -0.067 | -0.055 (positiva nel 96%, 75%, 95%
+% delle celle dei primi tre anelli; -0.060 a più di quattro celle); G-D(generato) -0.687,
+% -0.686, -0.704, -0.651, -0.658, -0.659 | -0.694. Test: G-D 0.155, 0.074, 0.137, -0.141,
+% -0.103, -0.079 | -0.072; G-D(generato) -0.685, -0.690, -0.701, -0.655, -0.659, -0.657 |
+% -0.688. Le medie di G, D(reale) e D(generato) per anello non sono state ricalcolate.
+% Nell'anello 0 i due termini di D cambiano anche perché la patch esce dal reticolo
+% (celle azzerate e mascherate). Le ricostruzioni vicino al bordo non sono salvate: il
+% meccanismo della cornice non è verificato in dettaglio. Da riprendere nei Limiti.
+
+\section{La normalizzazione climatologica}
 \label{sec:ris-climatologia}
 
-Il valore di G dipende anche da dove e quando è calcolato: dove l'errore è grande per natura, G segnala di più. La normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}) toglie questa differenza, esprimendo ogni score rispetto a ciò che è abituale per la stessa cella, lo stesso periodo dell'anno e la stessa ora. Questa sezione verifica che cosa cambia nelle correlazioni e nelle segnalazioni.
+Il valore di G dipende anche da dove e quando è calcolato: dove l'errore è grande per natura, G segnala di più. La normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}) toglie questa differenza, esprimendo ogni score rispetto a ciò che è abituale per la stessa cella, lo stesso periodo dell'anno e la stessa ora. Questa sezione verifica se la normalizzazione cambia il legame fra G e D della Sezione~\ref{sec:ris-correlazione-spaziale}, e dove cadono le segnalazioni.
 
-\paragraph{L'ordine degli score cambia poco.} Dopo la normalizzazione la correlazione di Spearman fra G e D vale in media $-0.22$ nello spazio e ha mediana $-0.22$ nel tempo, quasi come prima. Ciascuno score conserva quasi lo stesso ordine: la correlazione di Spearman fra lo score prima e dopo la normalizzazione è 0.91 per G e 0.94 per D, in media in ogni istante sulle celle.
+\paragraph{Il legame fra G e D resta debole.} Dopo la normalizzazione la correlazione di Spearman fra G e D vale in media $0.01$ nello spazio e ha mediana $-0.01$ nel tempo: resta vicina a zero. Ciascuno score conserva quasi lo stesso ordine: la correlazione di Spearman fra lo score prima e dopo la normalizzazione è 0.91 per G e 0.89 per D, in media in ogni istante sulle celle.
 
-\paragraph{Le segnalazioni di G diventano quasi uniformi.} La normalizzazione cambia invece dove cadono le segnalazioni (Figura~\ref{fig:ris-g-luogo}). Un valore, nel capitolo, è una coppia di cella e istante; è segnalato quando supera la soglia del proprio score, il 95-esimo percentile dello stesso score sugli anni di validazione (Sezione~\ref{sec:exp-protocollo}): sugli stessi anni ciascuno score segnala quindi il 5\% dei valori. Senza normalizzazione G segnala soprattutto a sud e in estate, dove il suo errore è alto per natura: la quota va dall'1.3\% fra 50$^\circ$ e 60$^\circ$N in dicembre al 12.1\% fra 20$^\circ$ e 30$^\circ$N in agosto. Con la normalizzazione resta fra il 3.6\% e il 6.3\% in ogni fascia e in ogni mese. È l'effetto atteso dalla Sezione~\ref{sec:normalizzazione-climatologica-score}: la normalizzazione toglie la differenza di prevedibilità fra luoghi e stagioni. Con una soglia più alta l'effetto è solo parziale (Sezione~\ref{sec:ris-soglia}).
+\paragraph{Le segnalazioni di G diventano quasi uniformi.} La normalizzazione cambia invece dove cadono le segnalazioni (Figura~\ref{fig:ris-g-luogo}). Come nel resto del capitolo, un valore è segnalato quando supera la soglia del proprio score, il 95-esimo percentile dello stesso score sugli anni di validazione (Sezione~\ref{sec:exp-protocollo}): sugli stessi anni ciascuno score segnala quindi il 5\% dei valori. Senza normalizzazione G segnala soprattutto a sud e in estate, dove il suo errore è alto per natura: la quota va dall'1.6\% fra 50$^\circ$ e 60$^\circ$N in dicembre all'11.1\% fra 20$^\circ$ e 30$^\circ$N in agosto. Con la normalizzazione resta fra il 3.7\% e il 6.3\% in ogni fascia e in ogni mese. È l'effetto atteso dalla Sezione~\ref{sec:normalizzazione-climatologica-score}: la normalizzazione toglie la differenza di prevedibilità fra luoghi e stagioni. La normalizzazione riduce le differenze fra luoghi e stagioni di circa tre quarti con il 5\% e di circa tre quinti con l'1\% (Sezione~\ref{sec:ris-soglia}).
 
 \begin{figure}[htbp]
     \centering
@@ -148,46 +141,42 @@ Il valore di G dipende anche da dove e quando è calcolato: dove l'errore è gra
     \caption{Quota dei valori segnalati, per fascia di latitudine e mese, sugli anni di validazione: G senza (in alto) e con (in basso) la normalizzazione climatologica, calcolata per cella, giorno dell'anno, con una finestra di $\pm15$ giorni, e ora. La soglia di ciascuno score è il suo 95-esimo percentile sugli stessi anni. La scala dei colori non è lineare: il bianco corrisponde al 5\%, il blu a quote minori, il rosso a quote maggiori. Senza normalizzazione le segnalazioni si concentrano a sud e in estate, con la normalizzazione sono distribuite in modo quasi uniforme.}
     \label{fig:ris-g-luogo}
 \end{figure}
-% Numeri (29 ottobre 2026, outputs/comportamento_good2): correlazioni con G+clim e
+% Numeri (5 novembre 2026, outputs/comportamento_optuna27): correlazioni con G+clim e
 % D+clim = generator_clim e discriminator_clim, climatologia giorno +-15 x ora sugli
-% anni di validazione, un anno fuori, esclusi i valori segnati. Spearman temporale
-% G-D fra -0.40 e -0.07 nelle celle, mediana per fascia S->N -0.273, -0.264, -0.225,
-% -0.186; cornice: mediana -0.185 a due celle dal bordo, -0.243 a più di quattro.
-% Bordo sulla validazione (29 ottobre 2026, un istante ogni 97, per anello di distanza
-% dal bordo 0..5 e interno >=8): G 0.00158, 0.00157, 0.00158, 0.00153, 0.00152, 0.00151
-% | 0.00152 (+3.3-3.9% nelle prime tre celle); D(reale) 0.5042, 0.5086, 0.5084, 0.5081,
-% 0.5079, 0.5082 | 0.5092; D(generato) 0.5179, 0.5209, 0.5187, 0.5200, 0.5197, 0.5199 |
-% 0.5204 (minimo locale a distanza 2; l'anello 0 ha la patch che esce dal reticolo). Dopo la normalizzazione: Spearman G+clim-D+clim media
-% -0.220 nello spazio, mediana -0.224 nel tempo; G-G+clim 0.909, D-D+clim 0.944
-% (media nello spazio).
+% anni di validazione, un anno fuori, esclusi i valori segnati.
+% Dopo la normalizzazione: Spearman G+clim-D+clim media 0.014 nello spazio, mediana
+% -0.014 nel tempo; G-G+clim 0.906, D-D+clim 0.891 (media nello spazio).
 % Quote per luogo: scripts/check_era5_score_by_place.py, log
 % logs/luogo_g_grezzo_5pc.log e luogo_g_clim_5pc.log; dati in
-% figures/dati/era5_g_luogo.json, figura figures/genera_figura_g_luogo.py. Quota
-% media G 4.9%, G+clim 5.0%; scarto medio dalla quota media 2.2 punti senza
-% normalizzazione, 0.5 con (relativo 0.44 e 0.11).
-% Soglia al 99-esimo percentile (logs/luogo_g_*_1pc.log): G fra 0.1% e 3.6%, medie
-% per fascia N->S 0.25/0.48/1.21/1.98; G+clim fra 0.5% e 2.1%, medie per fascia
-% 0.74/0.81/1.06/1.40; scarto relativo 0.71 contro 0.25.
-% Sul test, con le soglie della validazione (prima versione): G 1.9-16.3%, G+clim
-% 3.6-7.6%, quota media G+clim 5.6%; all'1% G 0.2-5.1%, G+clim 0.6-2.5%.
+% figures/dati/era5_g_luogo.json, figura figures/genera_figura_g_luogo.py. Dai log
+% (48 caselle, una cifra decimale): G 1.6-11.1%, G+clim 3.7-6.3%; quota media G 4.9%,
+% G+clim 5.0%; scarto medio dalla quota media 1.9 punti senza normalizzazione, 0.5 con
+% (relativo 0.39 e 0.11).
+% Soglia al 99-esimo percentile (logs/luogo_g_*_1pc.log): G fra 0.2% e 3.6%, medie
+% per fascia N->S 0.27/0.49/1.19/1.98; G+clim fra 0.5% e 2.1%, medie per fascia
+% 0.68/0.80/1.10/1.43; scarto relativo 0.70 contro 0.28.
+% Sul test (outputs/finale_optuna27/logs/luogo_g_clim_*pc.log, climatologia
+% outputs/optuna27/test_generator_clim_day, soglie della validazione): G+clim 3.6-7.8%,
+% media delle caselle 5.6%; all'1% G+clim 0.6-2.6%. Quota di valori segnalati da G+clim
+% sul test 5.54% (36093783 su 61360 x 10611, zone_g_dterms_5pc.csv).
 
-\section{Il comportamento del discriminatore}
+\section{Che cosa giudica il discriminatore}
 \label{sec:ris-g-d}
 
-Le sezioni precedenti mostrano che G e D tendono a ordinare celle e istanti in senso opposto, e questa sezione mostra che, dove G segnala un valore insolito, D in genere non lo segnala. Senza etichette il disaccordo, da solo, non dice quale delle due componenti abbia ragione. La scelta poggia quindi su un altro motivo: G ha un significato chiaro, cioè misura quanto un campo si allontana da ciò che il modello si aspetta, mentre D dipende anche dal giudizio sulla ricostruzione. Sommarle, come nel metodo originale, metterebbe insieme due segnali in disaccordo e renderebbe lo score difficile da interpretare. Per questo il detector usa G, e questa sezione cerca di capire perché D si comporta in modo diverso.
+Le sezioni precedenti mostrano che G e D sono quasi indipendenti, con un solo legame di segno costante: dove G è più alto, D tende a essere più basso. Questa sezione cerca di capire perché, scomponendo D nei suoi due termini, $D_{\mathrm{reale}}$ e $D_{\mathrm{generato}}$ (Tabella~\ref{tab:ris-score}): D è alta quando il discriminatore giudica generata l'osservazione più della sua ricostruzione.
 
-Per farlo, D va scomposta nei suoi due termini, $D_{\mathrm{reale}}$ e $D_{\mathrm{generato}}$ (Tabella~\ref{tab:ris-score}): D è alta quando il discriminatore giudica generata l'osservazione più della sua ricostruzione.
-
-\paragraph{$D_{\mathrm{generato}}$ cresce con G, $D_{\mathrm{reale}}$ no.} La correlazione temporale di Spearman fra G e $D_{\mathrm{generato}}$ ha mediana 0.26 ed è positiva nel 99.5\% delle celle (Figura~\ref{fig:ris-d-termini-temporale}): dove il generatore sbaglia, il discriminatore riconosce la ricostruzione come generata. Quella fra G e $D_{\mathrm{reale}}$ ha mediana 0.03: il giudizio sull'osservazione non segue l'ordine di G. I valori più alti di G cadono però insieme ai valori più bassi di $D_{\mathrm{reale}}$: la correlazione di Pearson, che dà peso ai valori estremi, ha mediana $-0.39$. La correlazione negativa fra G e D nasce quindi da entrambi i termini: D è la differenza $D_{\mathrm{reale}}$$-$$D_{\mathrm{generato}}$, e dove G è alto $D_{\mathrm{generato}}$ sale e, nei valori più alti di G, $D_{\mathrm{reale}}$ scende. Entrambi abbassano D.
+\paragraph{Quando G sale, entrambi i termini scendono.} La correlazione temporale di Spearman fra G e $D_{\mathrm{reale}}$ ha mediana $-0.73$, quella fra G e $D_{\mathrm{generato}}$ ha mediana $-0.69$, ed entrambe sono negative in tutte le celle (Figura~\ref{fig:ris-d-termini-temporale}). Quando il generatore sbaglia di più, il discriminatore giudica più reali del consueto sia l'osservazione sia la sua ricostruzione.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_d_termini_correlazione_temporale}
-    \caption{Correlazione temporale di Spearman, in ogni cella, fra G e il giudizio del discriminatore sull'osservazione, $D_{\mathrm{reale}}$ (a sinistra), e sulla ricostruzione, $D_{\mathrm{generato}}$ (a destra), sugli anni di validazione. Il rosso indica che i due crescono insieme. $D_{\mathrm{generato}}$ cresce con G quasi ovunque, $D_{\mathrm{reale}}$ non ne segue l'ordine. Linee di costa da Natural Earth.}
+    \caption{Correlazione temporale di Spearman, in ogni cella, fra G e il giudizio del discriminatore sull'osservazione, $D_{\mathrm{reale}}$ (a sinistra), e sulla ricostruzione, $D_{\mathrm{generato}}$ (a destra), sugli anni di validazione, su una scala da $-1$ a $1$. Tutte le celle sono blu, con valori intorno a $-0.7$: in ogni luogo entrambi i giudizi scendono quando G sale. Linee di costa da Natural Earth.}
     \label{fig:ris-d-termini-temporale}
 \end{figure}
 
-\paragraph{Gli eventi di G.} Le correlazioni riguardano tutti i valori. Per vedere che cosa fa il discriminatore proprio dove G segnala, gli score sono letti attorno agli eventi di G. Un evento è un insieme di valori di G con la normalizzazione climatologica sopra la sua soglia, collegati nello spazio e nel tempo: due valori fanno parte dello stesso evento se in un istante le loro celle si toccano, anche in diagonale, o se sono la stessa cella in due istanti consecutivi. Sugli anni di validazione risultano 172001 eventi, con 7.7 milioni di valori in tutto, in media circa 45 valori per evento.
+\paragraph{I due termini si compensano.} Poiché scendono insieme, i due termini sono legati fra loro, con una correlazione di Spearman mediana di $0.73$. D è la loro differenza, e di questo movimento comune conserva solo una piccola parte: per questo il suo legame con G è debole. Nei valori più alti di G, però, $D_{\mathrm{reale}}$ scende un po' più di $D_{\mathrm{generato}}$, e D scende: è il legame negativo che la correlazione di Pearson mette in luce nella Sezione~\ref{sec:ris-correlazione-spaziale}.
+
+\paragraph{Gli eventi di G.} Le correlazioni riguardano tutti i valori. Per vedere che cosa fa il discriminatore proprio dove G segnala, gli score sono letti attorno agli eventi di G. Un evento è un insieme di valori di G con la normalizzazione climatologica sopra la sua soglia, collegati nello spazio e nel tempo: due valori fanno parte dello stesso evento se in un istante le loro celle si toccano, anche in diagonale, o se sono la stessa cella in due istanti consecutivi. Sugli anni di validazione risultano 184877 eventi, con 7.7 milioni di valori in tutto, in media circa 42 valori per evento.
 
 \paragraph{Le zone e la misura.} In ogni istante le celle sono divise in tre zone (Figura~\ref{fig:ris-zone-schema}): il \emph{nucleo}, le celle di un evento; il \emph{contorno}, le otto celle attorno a una cella del nucleo, le stesse della patch $3\times3$ letta dal discriminatore, escluse quelle del nucleo; e la zona \emph{lontana}, le celle a più di tre celle da ogni nucleo. Le celle intermedie non sono considerate. Nucleo e contorno sono definiti dalle sole segnalazioni di G: indicano dove G segnala, non dove il tempo è davvero insolito, che senza un riferimento esterno non si può stabilire. In ciascuna zona ogni score è riassunto dal suo \emph{percentile mediano}: per ogni valore si calcola a quale percentile sta fra tutti i valori dello stesso score sugli anni di validazione, da 0 (il più basso) a 100 (il più alto), e se ne prende la mediana. In una zona senza legame con gli eventi il percentile mediano sarebbe vicino a 50.
 
@@ -198,149 +187,163 @@ Per farlo, D va scomposta nei suoi due termini, $D_{\mathrm{reale}}$ e $D_{\math
     \label{fig:ris-zone-schema}
 \end{figure}
 
+\paragraph{Dove G segnala, il discriminatore giudica reali l'osservazione e la ricostruzione.} La Figura~\ref{fig:ris-d-termini-zone} riporta il risultato. Come riferimento è mostrato G senza normalizzazione, molto legato allo score che definisce il nucleo (correlazione di Spearman 0.91, Sezione~\ref{sec:ris-climatologia}), e quindi alto nel nucleo quasi per costruzione; nel contorno è alto in parte perché lo score di una cella è l'errore medio sulla sua patch $3\times3$, che contiene celle del nucleo. I due termini del discriminatore fanno il contrario, e questo non dipende dalla definizione delle zone: nel nucleo $D_{\mathrm{reale}}$ ha un percentile mediano di 5 e $D_{\mathrm{generato}}$ di 6, cioè sia le osservazioni segnalate da G sia le loro ricostruzioni sono giudicate più reali del consueto, anche se di poco in valore assoluto. Nel contorno restano bassi, con 12 e 15, anche perché il discriminatore legge la stessa patch; lontano dagli eventi salgono a 58 e 57. In D i due effetti in parte si compensano, e nel nucleo il percentile mediano è 27.
+
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_d_termini_zone}
-    \caption{Percentile mediano di G senza normalizzazione, di $D_{\mathrm{reale}}$, di $D_{\mathrm{generato}}$ e di D nel nucleo degli eventi di G con la normalizzazione climatologica, nel loro contorno e lontano da essi, sugli anni di validazione. La linea tratteggiata indica 50, il valore atteso senza legame con gli eventi. G serve da riferimento: è alto nel nucleo per costruzione. Nel nucleo $D_{\mathrm{reale}}$ è basso e $D_{\mathrm{generato}}$ alto, e D scende al percentile 10.}
+    \caption{Percentile mediano di G senza normalizzazione, di $D_{\mathrm{reale}}$, di $D_{\mathrm{generato}}$ e di D nel nucleo degli eventi di G con la normalizzazione climatologica, nel loro contorno e lontano da essi, sugli anni di validazione. La linea tratteggiata indica 50, il valore atteso senza legame con gli eventi. G, alto nel nucleo quasi per costruzione, serve da riferimento. Nel nucleo $D_{\mathrm{reale}}$ e $D_{\mathrm{generato}}$ sono entrambi molto bassi, e D, la loro differenza, è al percentile 27.}
     \label{fig:ris-d-termini-zone}
 \end{figure}
 
-\paragraph{Dove G segnala, il discriminatore giudica l'osservazione più reale.} La Figura~\ref{fig:ris-d-termini-zone} riporta il risultato. G serve da riferimento: nel nucleo è alto per costruzione, nel contorno in parte perché lo score di una cella è l'errore medio sulla sua patch $3\times3$, che contiene celle del nucleo. Lo stesso vale in parte per $D_{\mathrm{generato}}$, che legge la stessa patch. $D_{\mathrm{reale}}$ fa il contrario, e questo non dipende dalla definizione delle zone: nel nucleo ha una mediana di 16, cioè le osservazioni segnalate da G sono giudicate più reali del consueto, anche se di poco in valore assoluto; nel contorno e lontano torna intorno a 50. Nella componente D i due effetti si sommano e la mediana nel nucleo scende a 10.
+\paragraph{Dove G segnala, D in genere non segnala.} Il 25.0\% dei valori del nucleo supera la soglia di D, contro il 2.9\% della zona lontana: D segnala nel nucleo più che altrove, ma in tre valori su quattro non segnala. Il giudizio sull'osservazione va invece nel senso opposto: solo lo 0.5\% dei valori del nucleo supera la soglia di $D_{\mathrm{reale}}$, contro il 6.1\% lontano dagli eventi. Anche fra i valori segnalati da G il legame è lo stesso: il terzo con $D_{\mathrm{reale}}$ più basso, cioè con l'osservazione giudicata più reale, è quello con G più alto, con una mediana di G con la normalizzazione di 7.0 contro 4.8 e 4.4 degli altri due terzi. Con una soglia più alta il comportamento è lo stesso e più marcato (Sezione~\ref{sec:ris-soglia}).
 
-\paragraph{Quanto segnala D.} Solo il 10.5\% dei valori del nucleo supera la soglia di D: dove G segnala, D in genere non segnala. Questa minoranza non è però trascurabile: è più del doppio del 4.1\% della zona lontana. Anche il giudizio sull'osservazione non è uniforme: il 14\% dei valori del nucleo supera la soglia di $D_{\mathrm{reale}}$, contro il 3\% lontano dagli eventi. Con una soglia più alta il comportamento è lo stesso e più marcato (Sezione~\ref{sec:ris-soglia}).
-
-\paragraph{Un esempio: l'istante con G più alto.} La Figura~\ref{fig:ris-d-termini-mappa} mostra i termini il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta della validazione. Sull'area principale del Nord Africa in cui G è alto $D_{\mathrm{reale}}$ è vicino a zero e $D_{\mathrm{generato}}$ è al massimo: il discriminatore giudica reale l'osservazione e generata la ricostruzione, e la loro differenza porta D ai valori più bassi del dominio. Su un'area più piccola più a sud-ovest, anch'essa con G alto, il giudizio è meno netto ($D_{\mathrm{reale}}$ ha una mediana di 0.37): è uno dei casi della minoranza descritta sopra. $D_{\mathrm{reale}}$ è basso anche più a est, nella penisola arabica: lì G è intorno al 94-esimo percentile dell'istante, ma la scala della figura, dominata dai valori nordafricani, non lo mostra.
+\paragraph{Un esempio: l'istante con G più alto.} La Figura~\ref{fig:ris-d-termini-mappa} mostra i termini il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta della validazione. Nell'area principale del Nord Africa in cui G è alto, $D_{\mathrm{reale}}$ è vicino a zero, con una mediana di 0.07, e anche $D_{\mathrm{generato}}$ è fra i valori più bassi dell'istante, con una mediana di 0.19: il discriminatore giudica reali sia l'osservazione sia la ricostruzione, l'osservazione di più, e D è fra i valori più bassi del dominio. Su un'area più piccola più a sud-ovest, anch'essa con G alto, il giudizio sull'osservazione è meno netto ($D_{\mathrm{reale}}$ ha una mediana di 0.15), ma anche lì D è basso. $D_{\mathrm{reale}}$ è basso anche nella penisola arabica, dove G è intorno al 94-esimo percentile dell'istante.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_d_termini_mappa}
-    \caption{G, $D_{\mathrm{reale}}$, $D_{\mathrm{generato}}$ e D il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta degli anni di validazione. Ogni mappa ha una propria scala, dal primo al 99-esimo percentile dei suoi valori. Sull'area principale in cui G è alto (in chiaro), $D_{\mathrm{reale}}$ è vicino a zero e $D_{\mathrm{generato}}$ è al massimo, e D è al minimo. Linee di costa da Natural Earth.}
+    \caption{G, $D_{\mathrm{reale}}$, $D_{\mathrm{generato}}$ e D il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta degli anni di validazione. La linea arancione racchiude l'1\% delle celle con G più alto nell'istante; ogni mappa ha una propria scala, dal primo al 99-esimo percentile dei suoi valori. Dentro la linea $D_{\mathrm{reale}}$, $D_{\mathrm{generato}}$ e D sono fra i valori più bassi (colori scuri): osservazione e ricostruzione sono giudicate reali, e D è basso. Linee di costa da Natural Earth.}
     \label{fig:ris-d-termini-mappa}
 \end{figure}
 
-\paragraph{Le ricostruzioni sono più lisce, e lisciare un campo ne alza il giudizio.} Una possibile spiegazione è che il discriminatore riconosca le ricostruzioni dal loro aspetto più liscio: in letteratura i modelli addestrati con un errore quadratico, come in parte il generatore della tesi~\cite{rasp2020weatherbench,lam2023graphcast}, e le ricostruzioni di un autoencoder variazionale~\cite{pacal2026heatwavedrivers} producono campi troppo regolari e smussano gli estremi. L'ipotesi è messa alla prova su 240 istanti della validazione (Tabella~\ref{tab:ris-levigatezza}), misurando la rugosità, cioè la differenza quadratica media fra celle adiacenti, e lisciando un campo con la media della sua patch $3\times3$; il modello è usato senza dropout, perché il giudizio non cambi con la maschera. Le ricostruzioni sono meno rugose delle osservazioni in tutti gli istanti. Nei 240 istanti il giudizio sull'osservazione vale in media 0.46 nel 5\% più alto di G, contro 0.51 su tutte le celle. Lisciando l'osservazione, il discriminatore la giudica più generata nell'89\% delle celle, e nel 94\% di quelle con G più alto. Le celle in cui G è alto tendono a essere anche le più rugose, con una correlazione di Spearman mediana di 0.49. La levigatezza è quindi un indizio che il discriminatore può usare, ma non l'unico: la rugosità locale da sola non ordina il giudizio sulle osservazioni (correlazione mediana 0.025), e il lisciamento riduce anche i valori più estremi, un effetto che la verifica non separa.
+\paragraph{Le ricostruzioni non sono più lisce delle osservazioni.} Una spiegazione possibile del comportamento di D è che il discriminatore riconosca le ricostruzioni dal loro aspetto più liscio: in letteratura i modelli addestrati con un errore quadratico~\cite{rasp2020weatherbench,lam2023graphcast}, come in parte il generatore della tesi, e le ricostruzioni di un autoencoder variazionale~\cite{pacal2026heatwavedrivers} producono campi troppo regolari e smussano gli estremi. L'ipotesi è messa alla prova su 240 istanti della validazione (Tabella~\ref{tab:ris-levigatezza}), misurando la rugosità, cioè la differenza quadratica media fra celle adiacenti; il modello è usato senza dropout, perché il giudizio non cambi con la maschera di dropout. Le ricostruzioni non sono però più lisce delle osservazioni: la loro rugosità è in mediana 1.10 volte quella osservata, ed è minore solo nel 22\% degli istanti. La levigatezza della ricostruzione non spiega quindi il comportamento di D.
 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Rugosità e giudizio medio del discriminatore su quattro campi, mediane su 240 istanti degli anni di validazione, con il modello senza dropout. Un giudizio più alto significa ``più generato''.}
+    \caption{Rugosità e giudizio medio del discriminatore sull'osservazione, sulla ricostruzione e sulle loro versioni lisciate con la media della patch $3\times3$: mediane su 240 istanti degli anni di validazione, con il modello senza dropout. Un giudizio più alto significa ``più generato''. Ricostruzione e osservazione hanno una rugosità simile; lisciare un campo ne riduce molto la rugosità e alza un poco il giudizio.}
     \label{tab:ris-levigatezza}
     \vspace{0.6em}
     \begin{tabular}{@{}lrr@{}}
         \toprule
         Campo & Rugosità & Giudizio del discriminatore \\
         \midrule
-        Osservazione & 0.00082 & 0.511 \\
-        Ricostruzione & 0.00069 & 0.521 \\
-        Osservazione lisciata & 0.00021 & 0.524 \\
-        Ricostruzione lisciata & 0.00016 & 0.531 \\
+        Osservazione & 0.00082 & 0.502 \\
+        Ricostruzione & 0.00089 & 0.502 \\
+        Osservazione lisciata & 0.00021 & 0.512 \\
+        Ricostruzione lisciata & 0.00019 & 0.513 \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\paragraph{I valori con G più alto sono i più reali per il discriminatore.} Il terzo dei valori segnalati da G giudicato più reale è quello con G più alto: G con la normalizzazione, che conta di quante deviazioni standard un valore supera il consueto, ha una mediana di 6.7, contro 4.7 e 4.8 degli altri due terzi. Con la soglia più alta, inoltre, il percentile mediano di $D_{\mathrm{reale}}$ nel nucleo scende da 16 a 2 (Sezione~\ref{sec:ris-soglia}). In AnoGAN, su immagini etichettate e con un discriminatore usato in modo diverso, il termine del discriminatore preso da solo rileva meno di quello di ricostruzione: l'area sotto la curva ROC è 0.74 contro 0.88 (Sezione~\ref{sec:rw-gan}).
+\paragraph{Una lettura: i campi rugosi sono giudicati reali.} La stessa verifica suggerisce un'altra lettura. Lisciando l'osservazione con la media della sua patch $3\times3$, il discriminatore la giudica più generata nel 99\% delle celle, e nel 99.6\% di quelle con G più alto. La rugosità locale ordina il giudizio sulle osservazioni: la correlazione di Spearman mediana fra le due è $-0.61$, negativa in tutti gli istanti, cioè le celle più rugose sono giudicate più reali. Le stesse celle tendono ad avere anche G alto, con una correlazione mediana di $0.49$: dove il campo è rugoso, il generatore tende a sbagliare di più. Coerentemente, nei 240 istanti il giudizio sull'osservazione vale in media 0.45 nel 5\% più alto di G, contro 0.50 su tutte le celle. La rugosità potrebbe quindi spiegare in parte perché, dove G segnala, il discriminatore giudica reali le osservazioni. È una lettura di correlazioni, non una prova: il lisciamento, per esempio, riduce anche i valori più estremi, un effetto che la verifica non separa.
 
-\paragraph{Sugli anni di test.} Le stesse analisi, ripetute sugli anni di test 2005--2025 con la climatologia e le soglie stimate sulla validazione, danno gli stessi risultati (Tabella~\ref{tab:ris-conferma-test}): le correlazioni cambiano di uno o due centesimi, i percentili mediani di uno o due punti. Sul test G con la normalizzazione segnala il 5.6\% dei valori, un po' più del 5\%, perché negli anni di test l'errore del generatore è in media un po' più alto; per lo stesso motivo le quote per luogo arrivano al 7.6\%.
+\paragraph{Il termine del discriminatore, preso da solo.} Anche in AnoGAN, su immagini etichettate e con un discriminatore usato in modo diverso, il termine del discriminatore preso da solo rileva meno di quello di ricostruzione: l'area sotto la curva ROC è 0.74 contro 0.88 (Sezione~\ref{sec:rw-gan}).
+% Numeri (5 novembre 2026, validazione, outputs/comportamento_optuna27): correlazioni dei
+% termini in correlazioni_g_dterms (temporal_correlation.npz, mediane nelle celle; nei
+% file D(generato) si chiama D_generato): G-D(generato) Spearman -0.689, Pearson -0.662,
+% negative in tutte le celle; G-D(reale) Spearman -0.732, Pearson -0.767, negative in
+% tutte; D(reale)-D(generato) Spearman 0.733, positiva in tutte; G-D Pearson -0.246.
+% Spaziali (media sugli istanti): G-D(reale) Spearman -0.696, G-D(generato) -0.684.
+% Zone: zone_g_dterms_5pc.csv e _1pc.csv, eventi di generator_clim, soglie della
+% validazione stessa; nucleo|contorno|lontano: G 97|89|40, D(reale) 5|12|58, D(generato)
+% 6|15|57, D 27|39|51; D(reale) sopra la propria soglia nello 0.45% del nucleo contro il
+% 6.13% lontano. D oltre la propria soglia, nucleo|contorno|lontano: 25.01|14.23|2.88%
+% (sul test 24.26|13.79|2.81%). Per dimensione (1, 2-4, 5-19, 20-99, 100-999, 1000-9999,
+% >9999 valori) D(reale) nel nucleo 15, 14, 12, 8, 6, 5, 3. Per tipo (percentile di
+% D(reale) nel nucleo, da una dimensione all'altra; zone_g_dterms_5pc_types.csv): copertura
+% nuvolosa 1-21, velocità verticale 5-12, radiazione 1-5, strato limite 3-10; pressione 3-24,
+% umidità del suolo 4-19, velocità di attrito 3-13, umidità specifica 6-26.
+% Precipitazione e velocità verticale: 60% dei valori del nucleo (30.9% e 28.8%).
+% Gruppi più piccoli: un evento (vento a 10 m, componente u, 1000-9999 valori; vento in
+% quota, componente v, >9999 valori). All'1%: 70954 eventi, 1.5 milioni di valori nel
+% nucleo; G 99|97|47, D(reale) 1|4|53, D(generato) 2|6|52, D 2|12|51; D(reale) sopra la
+% propria soglia all'1% nello 0.21% del nucleo contro l'1.05% lontano; D nel 12.5% del
+% nucleo contro lo 0.69% lontano.
+% Terzi dei valori segnalati da G (validazione, scripts/check_era5_discriminator_confidence.py,
+% soglia al 5%, per D(reale) crescente; outputs/finale_optuna27/logs/fiducia_d_val.log, 5
+% novembre 2026): 7728944 valori, mediana di G+clim 6.984, 4.842, 4.391; mediana di D(reale)
+% 0.379, 0.458, 0.491.
+% Mappa del 9/8/2003: mappe_istanti.npz e outputs/finale_optuna27/logs/mappe_istanti.log
+% (G medio più alto = 9/8/2003 12 UTC, 0.00746); celle nell'1% più alto di G dell'istante
+% (la linea arancione della figura): 85 celle 27.5-30.5N 2.5-12.5E, mediane D(reale) 0.073,
+% D(generato) 0.186 (percentile 1 dell'istante), D -0.112 (percentile 7); 22 celle
+% 23-25.5N 5.5-2W, D(reale) 0.151, D(generato) 0.265, D -0.116. Penisola arabica (lat <=
+% 38N, lon >= 35E, D(reale) < 0.3): 164 celle, G al percentile 93.7 dell'istante
+% (mediana), D(reale) 0.240; il minimo di D dell'istante è a 32.5N 39.5E.
+% Levigatezza: scripts/check_era5_discriminator_smoothness.py, logs/levigatezza_d.log,
+% levigatezza_d.csv (240 istanti, uno ogni 61, modo eval): rugosità mediana osservato
+% 0.00082, ricostruito 0.00089, osservato lisciato 0.00021, ricostruito lisciato 0.00019;
+% rapporto ricostruito/osservato mediana 1.101, sotto 1 nel 21.7% degli istanti; D medio
+% 0.5020, 0.5019, 0.5118, 0.5134; D osservato nel 5% di G più alto 0.4549. Lisciando: D
+% sale nel 99.3% delle celle (+0.0098), nel 5% di G più alto nel 99.6% (+0.0379).
+% Spearman rugosità locale - D osservato -0.613 (negativa nel 100% degli istanti), - G
+% +0.485, - aumento di D +0.762.
+% Paçal et al., p. 971: 'the VAE reconstructions tend to smooth out extremes'.
+% Test (outputs/finale_optuna27, run outputs/stgan_optuna27_scored, eventi di
+% outputs/optuna27/test_generator_clim_day, soglie della validazione): correlazioni dei
+% termini in correlazioni_g_dterms (nei file D(generato) si chiama Dricostruito),
+% mediane nelle celle: G-D(generato) Spearman -0.685, negativa in tutte le celle;
+% G-D(reale) Spearman -0.733, Pearson -0.750, negative in tutte; D(reale)-D(generato)
+% Spearman 0.732. Zone (zone_g_dterms_5pc.csv): 794206 eventi, 36.1 milioni di valori nel
+% nucleo; G 97|88|39, D(reale) 5|13|59, D(generato) 6|16|58, D 23|37|52; D(reale) sopra la
+% propria soglia nello 0.52% del nucleo contro il 6.22% lontano. Per dimensione D(reale)
+% nel nucleo 16, 15, 13, 8, 6, 5, 4. Per tipo: copertura nuvolosa 1-22, velocità
+% verticale 5-13, radiazione 1-5, strato limite 4-10; pressione 5-27, umidità del suolo
+% 4-19, velocità di attrito 7-14, umidità specifica 2-25. Precipitazione e velocità
+% verticale: 61% dei valori del nucleo. Soglia al 99-esimo percentile
+% (zone_g_dterms_1pc.csv): 317892 eventi, 7.4 milioni di valori nel nucleo; G 99|97|46,
+% D(reale) 1|4|53, D(generato) 2|6|52, D 2|11|51; D(reale) sopra la propria soglia all'1%
+% nello 0.22% del nucleo contro l'1.04% lontano.
+% Levigatezza sul test (logs/levigatezza_d.log, 240 istanti, uno ogni 255, modo eval):
+% rugosità mediana osservato 0.00087, ricostruito 0.00095, osservato lisciato 0.00022,
+% ricostruito lisciato 0.00019; rapporto mediana 1.077, sotto 1 nel 31.7% degli istanti;
+% D medio 0.5005, 0.5010, 0.5113, 0.5131; D osservato nel 5% di G più alto 0.4500.
+% Lisciando: D sale nel 99.3% delle celle (+0.0105), nel 5% di G più alto nel 99.6%
+% (+0.0432). Spearman rugosità locale - D osservato -0.611 (negativa nel 100% degli
+% istanti), - G +0.485, - aumento di D +0.757.
+
+\section{Conferma sul test e scelta dello score}
+\label{sec:ris-conferma}
+
+Le Sezioni~\ref{sec:ris-correlazione-spaziale}--\ref{sec:ris-g-d} riguardano gli anni di validazione, su cui si sceglie lo score. Questa sezione verifica che i loro risultati valgano anche sugli anni di test e fissa la scelta.
+
+\paragraph{Sugli anni di test i risultati sono gli stessi.} Le stesse analisi, ripetute sugli anni di test 2005--2025 con la climatologia e le soglie stimate sulla validazione, danno gli stessi risultati (Tabella~\ref{tab:ris-conferma-test}): le correlazioni cambiano di al più tre centesimi, i percentili mediani di al più quattro punti. Sul test G con la normalizzazione segnala il 5.5\% dei valori, un po' più del 5\%, probabilmente perché negli anni di test l'errore del generatore è in media un po' più alto; per lo stesso motivo le quote per luogo arrivano al 7.8\%.
 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Le principali misure delle Sezioni~\ref{sec:ris-correlazione-spaziale}--\ref{sec:ris-g-d} sugli anni di validazione, dove si sceglie lo score, e sugli anni di test. Sul test climatologia e soglie sono quelle stimate sulla validazione.}
+    \caption{Le principali misure delle Sezioni~\ref{sec:ris-correlazione-spaziale}--\ref{sec:ris-g-d} sugli anni di validazione, dove si sceglie lo score, e sugli anni di test. Sul test climatologia e soglie sono quelle stimate sulla validazione. Fra parentesi, la correlazione di Pearson.}
     \label{tab:ris-conferma-test}
     \vspace{0.6em}
     \begin{tabular}{@{}L{0.56}rr@{}}
         \toprule
         Misura & Validazione & Test \\
         \midrule
-        Correlazione spaziale di Spearman fra G e D, media & $-0.23$ & $-0.24$ \\
-        Correlazione temporale di Spearman fra G e D, mediana & $-0.24$ & $-0.25$ \\
-        Correlazione temporale fra G e $D_{\mathrm{generato}}$, mediana & 0.26 & 0.26 \\
-        Correlazione temporale fra G e $D_{\mathrm{reale}}$, mediana (Pearson) & 0.03 ($-0.39$) & 0.02 ($-0.40$) \\
+        Correlazione spaziale di Spearman fra G e D, media & $0.015$ & $-0.001$ \\
+        Correlazione temporale di Spearman fra G e D, mediana & $-0.05$ & $-0.07$ \\
+        Correlazione temporale fra G e $D_{\mathrm{generato}}$, mediana & $-0.69$ & $-0.69$ \\
+        Correlazione temporale fra G e $D_{\mathrm{reale}}$, mediana (Pearson) & $-0.73$ ($-0.77$) & $-0.73$ ($-0.75$) \\
         \addlinespace
-        Eventi di G con normalizzazione & 172001 & 754692 \\
-        Percentile mediano nel nucleo: $D_{\mathrm{reale}}$, $D_{\mathrm{generato}}$, D & 16, 79, 10 & 16, 78, 10 \\
-        $D_{\mathrm{reale}}$ sopra la propria soglia: nucleo, lontano & 14\%, 3\% & 14\%, 3.5\% \\
+        Eventi di G con normalizzazione & 184877 & 794206 \\
+        Percentile mediano nel nucleo: $D_{\mathrm{reale}}$, $D_{\mathrm{generato}}$, D & 5, 6, 27 & 5, 6, 23 \\
+        $D_{\mathrm{reale}}$ sopra la propria soglia: nucleo, lontano & 0.5\%, 6.1\% & 0.5\%, 6.2\% \\
         \addlinespace
-        Quota per luogo di G con normalizzazione & 3.6--6.3\% & 3.6--7.6\% \\
-        Rugosità della ricostruzione rispetto all'osservazione, mediana dei rapporti & 0.86 & 0.86 \\
-        Celle del 5\% più alto di G in cui $D_{\mathrm{reale}}$ sale lisciando l'osservazione & 94\% & 94\% \\
+        Quota per luogo di G con normalizzazione & 3.7--6.3\% & 3.6--7.8\% \\
+        Rugosità della ricostruzione rispetto all'osservazione, mediana dei rapporti & 1.10 & 1.08 \\
+        Celle del 5\% più alto di G in cui $D_{\mathrm{reale}}$ sale lisciando l'osservazione & 99.6\% & 99.6\% \\
         \bottomrule
     \end{tabular}
 \end{table}
-% Fonti della tabella verificate il 3 novembre 2026. Validazione: outputs/comportamento_good2/zone_g_dterms_5pc.csv
-% (172001 eventi; nucleo D(reale) 16, D(generato) 79, D 10); levigatezza_d.csv della validazione, mediana dei
-% rapporti fra rugosità ricostruita e osservata 0.860 (rapporto delle mediane 0.843). Test:
-% outputs/esempi_good2/zone_dterms_test_5pc.csv, check_era5_event_zones.py su outputs/good2v/test_generator_clim_day
-% e outputs/stgan_good_sweep_2_scored (754692 eventi; nucleo 16, 78, 10; D(reale) oltre la propria soglia
-% nel 14.2% del nucleo e nel 3.5% della zona lontana); outputs/analisi_good2/levigatezza_d.csv, mediana
-% dei rapporti 0.857.
+% Fonti della tabella (5 novembre 2026). Validazione: outputs/comportamento_optuna27/zone_g_dterms_5pc.csv
+% (184877 eventi; nucleo D(reale) 5, D(generato) 6, D 27; D(reale) oltre la propria soglia nello 0.45% del
+% nucleo e nel 6.13% della zona lontana); correlazioni_g_d e correlazioni_g_dterms (temporal_correlation.npz,
+% mediane nelle celle: G-D Spearman -0.050, G-D(generato) -0.689, G-D(reale) -0.732, Pearson -0.767);
+% levigatezza_d.csv della validazione, mediana dei rapporti fra rugosità ricostruita e osservata 1.101
+% (rapporto delle mediane 1.086). Test: outputs/finale_optuna27/zone_g_dterms_5pc.csv,
+% check_era5_event_zones.py con gli eventi di outputs/optuna27/test_generator_clim_day e gli score di
+% outputs/stgan_optuna27_scored, soglie della validazione (794206 eventi; nucleo 5, 6, 23; D(reale) oltre la
+% propria soglia nello 0.52% del nucleo e nel 6.22% della zona lontana); correlazioni in
+% outputs/finale_optuna27/correlazioni_g_d e correlazioni_g_dterms (Spearman spaziale media -0.001; mediane
+% nelle celle G-D -0.066, G-D(generato) -0.685, G-D(reale) -0.733, Pearson -0.750);
+% outputs/finale_optuna27/levigatezza_d.csv, mediana dei rapporti 1.077 (rapporto delle mediane 1.086).
 
-\paragraph{Sintesi.} G e D non concordano, e sommarli renderebbe lo score difficile da interpretare. Il detector usa quindi G con la normalizzazione climatologica, il cui significato è chiaro. Il comportamento di D si spiega solo in parte: dove G segnala, il discriminatore riconosce la ricostruzione come generata ma giudica l'osservazione più reale del consueto, e D scende. La levigatezza spiega al più una parte di questo comportamento. Da qui in poi, le segnalazioni di G sono quelle di G con la normalizzazione climatologica.
-% Terzi dei valori segnalati da G (validazione, scripts/check_era5_discriminator_confidence.py, soglia al 5%, per
-% D(reale) crescente; 29 ottobre 2026): good-sweep-2 mediana di G 6.703, 4.706, 4.752; serene-sweep-14 6.731, 4.805,
-% 4.528, quindi lo stesso comportamento. Da verificare su optuna-27 quando avrà lo score.
+\paragraph{D non porta un'informazione stabile e coerente con G.} Su validazione e test il quadro è lo stesso. Il legame fra G e D è debole e cambia segno con la stagione e con il luogo. Dove G segnala, il discriminatore giudica reali sia l'osservazione sia la ricostruzione: i due giudizi si compensano, e D in genere non segnala. Senza etichette questo disaccordo, da solo, non dice quale delle due componenti abbia ragione.
+
+\paragraph{Lo score del detector è G con la normalizzazione climatologica.} La scelta poggia sul significato delle due componenti. G ha un significato chiaro: misura quanto un campo si allontana da ciò che il modello si aspetta. D dipende anche dal giudizio sulla ricostruzione, e il suo comportamento si spiega solo in parte. Sommarle, come nel metodo originale, metterebbe insieme due segnali in disaccordo e renderebbe lo score difficile da interpretare. Il detector usa quindi G con la normalizzazione climatologica, lo score di ricostruzione $\zeta$ della Sezione~\ref{sec:normalizzazione-climatologica-score}, che distribuisce le segnalazioni in modo quasi uniforme fra luoghi e stagioni (Sezione~\ref{sec:ris-climatologia}). Da qui in poi, le segnalazioni di G sono quelle di G con la normalizzazione climatologica.
 
 \provv{Score combinato: i Capitoli 4 e 5 lo annunciano, qui non è misurato. Da decidere con la run finale: allineare quei capitoli oppure aggiungere una frase con un numero.}
-% D oltre la propria soglia, nucleo|contorno|lontano: 10.50|9.04|4.13% (zone_g_dterms_5pc.csv, validazione, letto il
-% 2 novembre 2026).
-% Numeri (29 ottobre 2026, validazione, outputs/comportamento_good2): correlazioni dei
-% termini in correlazioni_g_dterms (temporal_correlation.npz, mediane nelle celle):
-% G-D(generato) Spearman 0.260, positiva nel 99.5% delle celle; G-D(reale) Spearman
-% 0.027 (negativa nel 36% delle celle), Pearson -0.391, negativa in tutte;
-% D(reale)-D(generato) Spearman 0.577. Zone: zone_g_dterms_5pc.csv e _1pc.csv, eventi
-% di generator_clim, soglie della validazione stessa; nucleo|contorno|lontano: G
-% 97|89|40, D(reale) 16|54|49, D(generato) 79|73|46, D 10|23|54; D(reale) sopra la
-% propria soglia nel 14.1% del nucleo contro il 3.1% lontano. Per dimensione
-% D(reale) nel nucleo 33, 22, 13, 16. Per tipo: copertura nuvolosa 3-6, velocità
-% verticale 5-14, radiazione 5-35, strato limite 9-22; pressione 38-64, umidità del
-% suolo 39-49, velocità di attrito 34-53, umidità specifica 29-48. Precipitazione e
-% velocità verticale: 58% dei valori del nucleo. All'1%: 64862 eventi, 1.5 milioni
-% di valori nel nucleo; G 99|97|47, D(reale) 2|13|50, D(generato) 85|83|49, D 2|7|52;
-% D(reale) sopra la propria soglia all'1% nel 5.6% del nucleo contro lo 0.7% lontano;
-% gruppo più piccolo: temperatura a 850 hPa, eventi >19 valori, 21 eventi.
-% Mappa del 9/8/2003, celle nell'1% più alto di G dell'istante: 84 celle 27-31N 4-12.5E, D(reale) mediana 0.003;
-% 19 celle 23.5-25N 5-2W, mediana 0.368 (controllato il 2 novembre 2026, figures/dati/era5_g_d.npz).
-% Levigatezza: logs/levigatezza_d.log, levigatezza_d.csv (240 istanti, uno ogni 61,
-% pesi dell'epoca 6, modo eval): rugosità mediana osservato 0.00082, ricostruito
-% 0.00069, osservato lisciato 0.00021, ricostruito lisciato 0.00016; D medio 0.5114,
-% 0.5208, 0.5243, 0.5305; D osservato nel 5% di G più alto 0.4643. Lisciando: D sale
-% nell'88.5% delle celle (+0.0128), nel 5% di G più alto nel 94.0% (+0.0878).
-% Spearman rugosità locale - D osservato +0.025 (negativa nel 34% degli istanti),
-% - G +0.494, - aumento di D +0.402.
-% Tabella di conferma, colonna del test: numeri della prima versione di questa
-% sezione, qui sotto.
-% Test: correlazioni dei termini in outputs/analisi_good2/correlazioni_g_dterms
-% (check_era5_score_correlation.py con @real e @generated; nei file D(generato) si
-% chiama Dricostruito), mediane nelle celle da temporal_correlation.npz, rilette il
-% 28 ottobre 2026: G-D(generato) Spearman positiva nel 99.5% delle celle; G-D(reale)
-% Pearson negativa in tutte le celle; D(reale)-D(generato) Spearman mediana 0.57.
-% Zone: scripts/check_era5_event_zones.py --events G+clim
-% (outputs/good2v/test_generator_clim_day, soglia della validazione da
-% good2v/val_gen_clim_day), --scores G, Dreale, Dricostruito, D
-% (outputs/stgan_good_sweep_2_scored, soglia della validazione), --far 3; csv
-% outputs/analisi_good2/zone_g_dterms_soglia_val.csv, log zone_g_dterms_soglia_val.log
-% (28 ottobre 2026; la prima versione, con la soglia del test, è zone_g_dterms.csv).
-% Soglia al 99-esimo percentile (zone_g_dterms_1pc.csv/.log, 28 ottobre 2026): 296199
-% eventi, 7.5 milioni di valori nel nucleo; percentili nucleo|contorno|lontano: G
-% 99|97|46, D(reale) 2|13|51, D(generato) 86|83|49, D 2|8|52; D(reale) sopra la propria
-% soglia all'1% nel 5.5% del nucleo contro lo 0.9% lontano. Gruppo più piccolo:
-% temperatura a 850 hPa, eventi >19 valori, 78 eventi.
-% Levigatezza: scripts/check_era5_discriminator_smoothness.py, log
-% outputs/analisi_good2/levigatezza_d.log, csv levigatezza_d.csv (240 istanti, uno ogni
-% 255, pesi dell'epoca 6, modo eval): rugosità mediana osservato 0.00087, ricostruito
-% 0.00074, osservato lisciato 0.00022, ricostruito lisciato 0.00017; D medio osservato
-% 0.5115, ricostruito 0.5223, osservato lisciato 0.5260, ricostruito lisciato 0.5325;
-% D osservato nel 5% di G più alto 0.4572. Lisciando: D sale nell'88.6% delle celle
-% (+0.0139), nel 5% di G più alto nel 94.2% (+0.0992). Spearman rugosità locale - D
-% osservato +0.026 (negativa nel 36% degli istanti), - G +0.498, - aumento di D +0.397.
-% Paçal et al., p. 971: 'the VAE reconstructions tend to smooth out extremes'.
-% D(reale): contorno 54, lontano 50; tutti gli score lontano fra 39 e 54. Nel nucleo
-% il 14% dei valori supera la soglia di D(reale) della validazione, contro il 3.5%
-% lontano. Mediana di D(reale) nel nucleo per dimensione: 33 (1 valore), 22 (2-4),
-% 14 (5-19), 16 (>19). Per tipo (secondo la dimensione): copertura nuvolosa 3-7,
-% velocità verticale 6-16, radiazione 4-35, strato limite 9-22; pressione 46-60,
-% umidità del suolo 38-49, velocità di attrito 40-53. Velocità verticale e
-% precipitazione: 60% dei valori del nucleo.
 
 \section{Confronto con metodi semplici}
 \label{sec:ris-confronti}
@@ -369,7 +372,7 @@ Le sezioni precedenti scelgono lo score del detector, G con la normalizzazione c
         \addlinespace
         Variazione in tre ore & il tempo & errore della risposta ``valore di tre ore prima'' \\
         \addlinespace
-        G con normalizzazione & spazio e tempo & errore del generatore (Sezione~\ref{sec:score-dropout-montecarlo}) \\
+        G con normalizzazione & spazio e tempo & errore del generatore (Sezioni~\ref{sec:score-dropout-montecarlo} e~\ref{sec:normalizzazione-climatologica-score}) \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -390,16 +393,16 @@ vale 1 quando i due insiemi coincidono e 0 quando sono disgiunti. Due rilevatori
         \toprule
         Rilevatore & Segnalati & Da solo & Di G & Jaccard \\
         \midrule
-        Variazione in tre ore & 5.48\% & 32.0\% & 54.2\% & 37.9\% \\
-        MCD & 5.43\% & 7.9\% & 53.7\% & 37.6\% \\
-        PCA & 5.31\% & 0.6\% & 50.7\% & 35.3\% \\
-        Isolation Forest & 5.17\% & 4.1\% & 45.5\% & 31.1\% \\
-        CBLOF & 5.41\% & 7.8\% & 45.1\% & 29.9\% \\
-        COPOD & 5.16\% & 6.9\% & 44.8\% & 30.5\% \\
-        Distanza dal normale & 5.62\% & 14.0\% & 42.3\% & 26.8\% \\
-        HBOS & 5.14\% & 9.5\% & 40.5\% & 26.9\% \\
+        Variazione in tre ore & 5.48\% & 31.8\% & 53.9\% & 37.2\% \\
+        MCD & 5.43\% & 7.9\% & 52.1\% & 35.7\% \\
+        PCA & 5.31\% & 0.6\% & 48.7\% & 33.1\% \\
+        Isolation Forest & 5.17\% & 4.1\% & 44.0\% & 29.4\% \\
+        CBLOF & 5.41\% & 7.7\% & 43.4\% & 28.2\% \\
+        COPOD & 5.16\% & 6.9\% & 43.4\% & 29.0\% \\
+        Distanza dal normale & 5.62\% & 14.0\% & 40.8\% & 25.4\% \\
+        HBOS & 5.14\% & 9.5\% & 39.2\% & 25.5\% \\
         \addlinespace
-        G con normalizzazione & 5.63\% & 16.4\% & -- & -- \\
+        G con normalizzazione & 5.54\% & 18.1\% & -- & -- \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -413,38 +416,42 @@ vale 1 quando i due insiemi coincidono e 0 quando sono disgiunti. Due rilevatori
     \label{fig:ris-confronti-jaccard}
 \end{figure}
 
-\paragraph{G si sovrappone a entrambi.} Il 54\% delle segnalazioni di G è segnalato anche dalla variazione in tre ore, e fra il 40\% e il 54\% da ciascuno dei metodi che leggono il punto, contro il 5\% atteso fra rilevatori indipendenti. Il rilevatore più vicino alla variazione in tre ore è G, con un indice di Jaccard del 38\%; fra gli altri il più vicino è MCD, con il 26\%. Il risultato è coerente con la definizione di G: il generatore risponde a partire dagli istanti precedenti, quindi il suo errore può crescere sia quando un valore si allontana dal consueto sia quando cambia in fretta. L'accordo da solo non dimostra però questo meccanismo. Nessun singolo metodo semplice riproduce le segnalazioni di G: il più vicino ne condivide poco più della metà.
+\paragraph{G si sovrappone a entrambi.} Il 54\% delle segnalazioni di G è segnalato anche dalla variazione in tre ore, e fra il 39\% e il 52\% da ciascuno dei metodi che leggono il punto, contro il 5\% atteso fra rilevatori indipendenti. Il rilevatore più vicino alla variazione in tre ore è G, con un indice di Jaccard del 37\%; fra gli altri il più vicino è MCD, con il 26\%. Il risultato è coerente con la definizione di G: il generatore risponde a partire dagli istanti precedenti, quindi il suo errore può crescere sia quando un valore si allontana dal consueto sia quando cambia in fretta. L'accordo da solo non dimostra però questo meccanismo. Nessun singolo metodo semplice riproduce le segnalazioni di G: il più vicino ne condivide poco più della metà.
 
-\paragraph{Il voto a maggioranza.} Il 4.25\% dei valori è segnalato da almeno cinque rilevatori su nove, e il 50.1\% delle segnalazioni di G è condiviso da questa maggioranza. Sette rilevatori su nove leggono il punto, quindi il voto misura soprattutto quanto si è vicini a quel gruppo, non quale rilevatore sia migliore.
+\paragraph{Il voto a maggioranza.} Il 4.22\% dei valori è segnalato da almeno cinque rilevatori su nove, e il 48.3\% delle segnalazioni di G è condiviso da questa maggioranza. Sette rilevatori su nove leggono il punto, quindi il voto misura soprattutto quanto si è vicini a quel gruppo, non quale rilevatore sia migliore.
 
-\paragraph{Le segnalazioni del solo G.} Il 16.4\% delle segnalazioni di G non è segnalato da nessun altro rilevatore, circa lo 0.9\% di tutti i valori; l'83.6\% è quindi segnalato anche da almeno un altro, contro circa il 14\% atteso se G fosse indipendente da loro: tanti sono i valori segnalati da almeno uno degli altri otto. La quota esclusiva di G è intermedia: è il 32.0\% per la variazione in tre ore, il 14.0\% per la distanza dal normale, meno del 10\% per i modelli shallow. Una quota esclusiva non è di per sé un pregio: può indicare ciò che solo il generatore coglie, per esempio perché legge le celle vicine, oppure un suo errore. Il confronto non permette di distinguere i due casi.
+\paragraph{Le segnalazioni del solo G.} Il 18.1\% delle segnalazioni di G non è segnalato da nessun altro rilevatore, circa l'1\% di tutti i valori; l'81.9\% è quindi segnalato anche da almeno un altro, contro circa il 14\% atteso se G fosse indipendente da loro: tanti sono i valori segnalati da almeno uno degli altri otto. La quota esclusiva di G è intermedia: è il 31.8\% per la variazione in tre ore, il 14.0\% per la distanza dal normale, meno del 10\% per i modelli shallow. Una quota esclusiva non è di per sé un pregio: può indicare ciò che solo il generatore coglie, per esempio perché legge le celle vicine, oppure un suo errore. Il confronto non permette di distinguere i due casi.
 
-\paragraph{La stabilità dei modelli shallow.} I modelli shallow dipendono dal campione su cui sono stimati. Per verificarlo sono stati stimati altre due volte, con un campione cinque volte più grande e con un altro seme, e le segnalazioni sono confrontate sulla validazione. PCA, MCD e COPOD non cambiano, con un indice di Jaccard fra il 98\% e il 99\%. CBLOF dipende dalla dimensione del campione. Isolation Forest e HBOS cambiano anche con il solo seme: HBOS con sé stesso arriva al 54--58\%. Il 27\% fra G e HBOS va quindi confrontato con questo valore, non con il 100\%. L'accordo di G con la variazione in tre ore, MCD e PCA non ne risente, perché la variazione in tre ore non dipende da un campione, e MCD e PCA sono stabili.
+\paragraph{La stabilità dei modelli shallow.} I modelli shallow dipendono dal campione su cui sono stimati. Per verificarlo sono stati stimati altre tre volte, e le segnalazioni sono confrontate sulla validazione: con un campione cinque volte più grande, con un altro seme e con un campione cento volte più grande, di 20 milioni di vettori presi da tutti gli istanti di addestramento, al più 350 celle per istante. Tutti i vettori degli anni di addestramento, circa 620 milioni, non sono stati usati per motivi di memoria: la sola matrice dei dati occuperebbe circa 74\,GB. PCA, MCD e COPOD non cambiano, con un indice di Jaccard fra il 98\% e il 99\% anche con il campione più grande. CBLOF dipende dalla dimensione del campione: con un altro seme l'indice è dell'86\%, con il campione più grande del 58\%. Isolation Forest e HBOS cambiano anche con il solo seme, e il campione più grande non li cambia di più: Isolation Forest con sé stesso arriva al 70--72\%, HBOS al 52--58\%. Il 25.5\% fra G e HBOS va quindi confrontato con questo valore, non con il 100\%. L'accordo di G con la variazione in tre ore, MCD e PCA non ne risente, perché la variazione in tre ore non dipende da un campione, e MCD e PCA sono stabili.
 
 \paragraph{Sintesi.} I metodi che leggono il punto segnalano in larga parte gli stessi valori, la variazione in tre ore ne segnala altri, e G si sovrappone a entrambi senza coincidere con nessuno. Oltre otto segnalazioni di G su dieci sono segnalate anche da almeno un metodo più semplice, contro circa il 14\% atteso se G fosse indipendente da loro. Questo sostiene la coerenza del detector, ma non ne misura l'accuratezza.
-% Numeri (29 ottobre 2026, test 2005-2025, good-sweep-2): scripts/run_era5_comparisons.sh
+% Numeri (5 novembre 2026, test 2005-2025, MODEL optuna-27): scripts/run_era5_comparisons.sh
 % con SPATIAL='' e COMPARED='pca cblof mcd hbos copod iforest normal change_3h', uscite in
-% outputs/confronti_good2, log logs/comparison_5pc.log e comparison_1pc.log (9 rilevatori,
-% 651090960 valori, maggioranza 5 di 9). Figura: figures/genera_figura_confronti.py, dati
-% figures/dati/era5_confronti.json. Valori segnalati da 0,...,9 rilevatori: 85.40, 5.40,
-% 2.59, 1.29, 1.07, 0.92, 0.82, 0.83, 0.82, 0.86; almeno 5: 4.25%. Solo G: 5.63 x 0.164 =
-% 0.92% dei valori. Jaccard fra i sette che leggono il punto: minimo 34.7 (MCD-HBOS),
-% massimo 63.1 (PCA-Isolation Forest); variazione con quei sette: 16.5-26.4.
+% outputs/confronti_good2 (nome storico della cartella; G+clim è optuna-27), log
+% logs/comparison_5pc.log e comparison_1pc.log (9 rilevatori, 651090960 valori, maggioranza 5 di 9).
+% I modelli shallow, ristimati con lo stesso seme, danno gli stessi score: cambiano solo la riga e
+% la colonna di G e le quote "da solo", che dipendono anche da G. Figura:
+% figures/genera_figura_confronti.py, dati figures/dati/era5_confronti.json. Valori segnalati da
+% 0,...,9 rilevatori: 85.32, 5.47, 2.62, 1.29, 1.08, 0.91, 0.83, 0.86, 0.78, 0.84; almeno 5: 4.22%.
+% Solo G: 5.54 x 0.181 = 1.00% dei valori; valori segnalati da almeno uno degli altri otto:
+% 14.68 - 1.00 = 13.7%. Di G con i sette che leggono il punto: da 39.2 (HBOS) a 52.1 (MCD).
+% Jaccard fra i sette che leggono il punto: minimo 34.7 (MCD-HBOS), massimo 63.1 (PCA-Isolation
+% Forest); variazione con quei sette: 16.5-26.4.
 % Stabilità: scripts/check_era5_shallow_sample.sh (29 ottobre 2026, validazione, base /
 % grande / seme1, Jaccard al 5%): PCA 98.8/98.3/99.0, MCD 99.0/98.1/98.3, COPOD
 % 99.2/98.7/98.9, CBLOF 71.2/86.2/68.5, Isolation Forest 72.4/69.6/69.8, HBOS
 % 54.1/58.1/56.9 (base-grande, base-seme1, grande-seme1). All'1%: PCA 98.2-98.8; CBLOF
-% 71-89, Isolation Forest 61-64, HBOS 50-54. Da ricalcolare sulla run finale: MODEL in
-% run_era5_comparisons.sh.
+% 71-89, Isolation Forest 61-64, HBOS 50-54. Non dipende dal modello: i modelli shallow non
+% leggono G.
 % Fonti: le descrizioni dei modelli shallow sono quelle di Liu e Paparrizos (TSB-AD,
 % appendice sui metodi); i lavori originali non sono citati perché non letti.
 
 \section{Eventi per tipo e dimensione}
 \label{sec:ris-eventi}
 
-Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi gli eventi, quali variabili vi si scostano di più e come cala G attorno a ciò che segnala. Le segnalazioni sono raggruppate negli eventi della Sezione~\ref{sec:ris-g-d}: sugli anni di test sono 754692 eventi, con 36.7 milioni di valori, dove un valore è, come nel resto del capitolo, una cella in un istante. Come livello di riferimento, le stesse misure sono ripetute sugli eventi che ciascuna delle otto baseline della Sezione~\ref{sec:ris-confronti} forma con le proprie segnalazioni, anch'esse al 5\% con la soglia stimata sulla validazione (Tabella~\ref{tab:ris-eventi-baseline}). Le baseline leggono ogni cella da sola e non dipendono dal modello addestrato.
+Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi gli eventi, quali variabili vi si scostano di più e come cala G attorno a ciò che segnala. Le segnalazioni sono raggruppate negli eventi della Sezione~\ref{sec:ris-g-d}: sugli anni di test sono 794206 eventi, con 36.1 milioni di valori, dove un valore è, come nel resto del capitolo, una cella in un istante. Come livello di riferimento, le stesse misure sono ripetute sugli eventi che ciascuna delle otto baseline della Sezione~\ref{sec:ris-confronti} forma con le proprie segnalazioni, anch'esse al 5\% con la soglia stimata sulla validazione (Tabella~\ref{tab:ris-eventi-baseline}). Le baseline leggono ogni cella da sola e non dipendono dal modello addestrato.
 
-\paragraph{Pochi eventi enormi contengono circa tre quarti dei valori.} La dimensione di un evento è il numero dei suoi valori. Il 90\% degli eventi ha meno di 20 valori, e insieme contengono solo il 7\% dei valori segnalati; lo 0.5\% degli eventi, quelli con almeno 1000 valori, ne contiene il 76\% (Figura~\ref{fig:ris-eventi-dimensione}). Le baseline formano più eventi minuscoli: fra il 94.7\% e il 97.1\% dei loro eventi ha meno di 20 valori, contro il 90.3\% di G, le cui segnalazioni sono quindi più raggruppate.
+\paragraph{Pochi eventi enormi contengono circa tre quarti dei valori.} La dimensione di un evento è il numero dei suoi valori. Il 91\% degli eventi ha meno di 20 valori, e insieme contengono solo il 7\% dei valori segnalati; lo 0.5\% degli eventi, quelli con almeno 1000 valori, ne contiene il 75\% (Figura~\ref{fig:ris-eventi-dimensione}). Le baseline formano più eventi minuscoli: fra il 94.7\% e il 97.1\% dei loro eventi ha meno di 20 valori, contro il 90.6\% di G, le cui segnalazioni sono quindi più raggruppate.
 
 \begin{figure}[htbp]
     \centering
@@ -463,7 +470,7 @@ Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi gli ev
         \toprule
         Metodo & Eventi & \shortstack[r]{Eventi\\$<20$} & \shortstack[r]{Valori in\\eventi $\geq1000$} & 1 fuori & 2 fuori & 6 fuori \\
         \midrule
-        G con normalizzazione & 755\,k & 90.3\% & 76.1\% & 90 & 80 & 51 \\
+        G con normalizzazione & 794\,k & 90.6\% & 75.5\% & 90 & 79 & 50 \\
         \addlinespace
         Distanza dal normale & 768\,k & 95.1\% & 85.6\% & 87 & 73 & 47 \\
         Variazione in tre ore & 2.80\,M & 96.5\% & 60.2\% & 84 & 64 & 41 \\
@@ -477,7 +484,7 @@ Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi gli ev
     \end{tabular}
 \end{table}
 
-\paragraph{Il tipo di evento.} Il tipo di un evento è la variabile d'ingresso più lontana dal proprio normale stagionale, in media sul nucleo: dice quale variabile si scosta di più, non quale fenomeno sia avvenuto, e le variabili con valori molto estremi, come la precipitazione, possono risultare più spesso le più lontane. La velocità verticale e la precipitazione raccolgono da sole il 60\% dei valori segnalati di G (Figura~\ref{fig:ris-eventi-tipo}). Il tipo dominante dipende dal metodo. La variazione in tre ore ha quasi gli stessi tipi di G, con velocità verticale e precipitazione al 65\% dei valori. Nella distanza dal normale e in CBLOF il tipo principale è l'umidità del suolo, con il 64\% e il 41\% dei valori: è una variabile che cambia lentamente e forma eventi lunghi. In COPOD e HBOS è la velocità di attrito, con il 22\%, seguita dallo strato limite. Negli shallow, in generale, i valori sono divisi fra più tipi.
+\paragraph{Il tipo di evento.} Il tipo di un evento è la variabile d'ingresso più lontana dal proprio normale stagionale, in media sul nucleo: dice quale variabile si scosta di più, non quale fenomeno sia avvenuto, e le variabili con valori molto estremi, come la precipitazione, possono risultare più spesso le più lontane. La velocità verticale e la precipitazione raccolgono da sole il 61\% dei valori segnalati di G; segue, molto distante, la copertura nuvolosa, con il 7\% (Figura~\ref{fig:ris-eventi-tipo}). Il tipo dominante dipende dal metodo. La variazione in tre ore ha quasi gli stessi tipi di G, con velocità verticale e precipitazione al 65\% dei valori e la copertura nuvolosa al terzo posto. Nella distanza dal normale e in CBLOF il tipo principale è l'umidità del suolo, con il 64\% e il 41\% dei valori: è una variabile che cambia lentamente e forma eventi lunghi. In COPOD e HBOS è la velocità di attrito, con il 22\%, seguita dallo strato limite. Negli shallow, in generale, i valori sono divisi fra più tipi.
 
 \begin{figure}[htbp]
     \centering
@@ -486,9 +493,9 @@ Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi gli ev
     \label{fig:ris-eventi-tipo}
 \end{figure}
 
-\paragraph{Gli eventi più grandi sono catene.} Due valori fanno parte dello stesso evento se si toccano, nello spazio o nel tempo. Con il 5\% dei valori segnalati, segnalazioni di situazioni diverse finiscono per toccarsi e formano catene, cioè eventi grandi tenuti insieme da contatti successivi: l'evento più grande di velocità verticale dura 97 giorni, e per più della metà degli istanti conta meno di 50 celle. Un evento enorme, quindi, difficilmente è un unico fenomeno, e la sua dimensione dice quanto si estende la catena. Le catene non sono una particolarità di G: in tutti i metodi gli eventi con almeno 1000 valori contengono fra il 60\% e l'86\% dei valori segnalati (Tabella~\ref{tab:ris-eventi-baseline}). Sono quindi soprattutto un effetto della quota segnalata e del modo in cui le segnalazioni sono collegate.
+\paragraph{Gli eventi più grandi sono catene.} Due valori fanno parte dello stesso evento se si toccano, nello spazio o nel tempo. Con il 5\% dei valori segnalati, segnalazioni di situazioni diverse possono toccarsi e unirsi in un solo evento. Gli eventi più grandi durano settimane: il più grande di precipitazione dura 40 giorni, quello di velocità verticale 23, e in quasi tutti i loro istanti contano centinaia di celle, con una mediana rispettivamente di 472 e 723. Un evento così lungo difficilmente è un unico fenomeno: è piuttosto una catena, cioè una successione di situazioni tenute insieme da contatti successivi, e la sua dimensione dice quanto si estende la catena. Le catene non sono una particolarità di G: in tutti i metodi gli eventi con almeno 1000 valori contengono fra il 60\% e l'86\% dei valori segnalati (Tabella~\ref{tab:ris-eventi-baseline}). Sono quindi soprattutto un effetto della quota segnalata e del modo in cui le segnalazioni sono collegate.
 
-\paragraph{Le zone su una mappa.} Resta da vedere se G distingue da solo il centro di ciò che segnala, il contorno e ciò che non segnala. La Figura~\ref{fig:ris-eventi-mappa-zone} mostra le zone della Sezione~\ref{sec:ris-g-d} in un istante: G è più alto nel nucleo, sfuma nel contorno e nella zona lontana è basso in mediana (41 in questo istante, Tabella~\ref{tab:ris-casi}).
+\paragraph{Le zone su una mappa.} Resta da vedere se G distingue da solo il centro di ciò che segnala, il contorno e ciò che non segnala. La Figura~\ref{fig:ris-eventi-mappa-zone} mostra le zone della Sezione~\ref{sec:ris-g-d} in un istante: G è più alto nel nucleo, sfuma nel contorno e nella zona lontana è basso in mediana (42 in questo istante, Tabella~\ref{tab:ris-casi}).
 
 \begin{figure}[htbp]
     \centering
@@ -497,62 +504,71 @@ Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi gli ev
     \label{fig:ris-eventi-mappa-zone}
 \end{figure}
 
-\paragraph{G cala in modo graduale.} Una mappa è un solo esempio. La Figura~\ref{fig:ris-eventi-profilo} riassume tutti gli anni di test: per ogni cella si conta a quante celle sta dal bordo dell'evento più vicino, verso l'interno o verso l'esterno, e si legge il percentile mediano dello score sugli stessi anni, dove 100 è il valore più alto e 50 un valore tipico. La prima cella dentro è l'ultima del nucleo; la prima fuori è il contorno. Che le celle segnalate stiano sopra la soglia e le altre sotto è vero per costruzione; il risultato è la forma della curva. Una cella dentro il bordo G vale 96, una cella fuori 90, due celle fuori 80, tre celle fuori 69, e torna a un valore tipico dopo circa sei celle, cioè tre gradi, circa 300~km. Oltre scende ancora, perché lontano dagli eventi restano soprattutto i valori bassi. G distingue quindi centro, contorno ed esterno in modo graduale, senza un confine proprio: la soglia taglia una curva continua. Le baseline, ciascuna sui propri eventi, hanno la stessa forma, ma quasi tutte calano più in fretta: due celle fuori G vale 80, le baseline fra 64 (variazione in tre ore) e 77 (Isolation Forest); solo COPOD, con 82, è simile a G. A sei celle tutti i metodi sono fra 41 e 56. Per G parte della gradualità vicino al bordo dipende dalla patch $3\times3$ su cui lo score è mediato, che le baseline, lette cella per cella, non hanno. Il nucleo, inoltre, è sottile: il 65\% dei valori segnalati sta sul suo bordo, a una sola cella dall'esterno.
+\paragraph{G cala in modo graduale.} Una mappa è un solo esempio. La Figura~\ref{fig:ris-eventi-profilo} riassume tutti gli anni di test: per ogni cella si conta a quante celle sta dal bordo dell'evento più vicino, verso l'interno o verso l'esterno, e si legge il percentile mediano dello score sugli stessi anni, dove 100 è il valore più alto e 50 un valore tipico. La prima cella dentro è l'ultima del nucleo; la prima fuori è il contorno. Che le celle segnalate stiano sopra la soglia e le altre sotto è vero per costruzione; il risultato è la forma della curva. Una cella dentro il bordo G vale 96, una cella fuori 90, due celle fuori 79, tre celle fuori 68, e torna a un valore tipico dopo circa sei celle, cioè tre gradi, circa 300~km. Oltre scende ancora, perché lontano dagli eventi restano soprattutto i valori bassi. G distingue quindi centro, contorno ed esterno in modo graduale, senza un confine proprio: la soglia taglia una curva continua. Le baseline, ciascuna sui propri eventi, hanno la stessa forma, ma quasi tutte calano più in fretta: due celle fuori G vale 79, le baseline fra 64 (variazione in tre ore) e 77 (Isolation Forest); solo COPOD, con 82, è simile a G. A sei celle tutti i metodi sono fra 41 e 56. Per G parte della gradualità vicino al bordo dipende dalla patch $3\times3$ su cui lo score è mediato, che le baseline, lette cella per cella, non hanno. Il nucleo, inoltre, è sottile: il 67\% dei valori segnalati sta sul suo bordo, a una sola cella dall'esterno.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_eventi_profilo}
-    \caption{Profilo attraverso gli eventi, sugli anni di test, con la soglia di ciascun metodo al 95-esimo percentile del proprio score sulla validazione: percentile mediano dello score secondo le celle di distanza dal bordo dell'evento più vicino, per G con la normalizzazione e per ciascuna baseline, ognuna sui propri eventi. I sei modelli shallow sono in grigio. Che le celle dentro stiano sopra la soglia e quelle fuori sotto è per costruzione. Tutti i metodi tornano verso un valore tipico dopo circa sei celle; G cala più gradualmente di quasi tutte le baseline. Il punto finale raccoglie tutte le celle a 8 o più celle dal bordo.}
+    \caption{Profilo attraverso gli eventi, sugli anni di test, con la soglia di ciascun metodo al 95-esimo percentile del proprio score sulla validazione: percentile mediano dello score secondo le celle di distanza dal bordo dell'evento più vicino, per G con la normalizzazione e per ciascuna baseline, ognuna sui propri eventi. I sei modelli shallow sono in grigio. Che le celle dentro stiano sopra la soglia e quelle fuori sotto è per costruzione. Tutti i metodi tornano verso un valore tipico dopo circa sei celle; G cala più gradualmente di quasi tutte le baseline. Per G è riportato anche il punto a 8 o più celle dal bordo.}
     \label{fig:ris-eventi-profilo}
 \end{figure}
 
-\paragraph{Anche la distanza dal normale segue il profilo di G.} Letta sugli eventi di G invece che sui propri, la distanza dal normale non è un riferimento per giudicare G: descrive com'erano i dati dove G segnala. Questi valori non sono quelli della linea arancione della Figura~\ref{fig:ris-eventi-profilo}, che segue gli eventi della distanza dal normale stessa. Ha lo stesso andamento: 99 nelle celle più interne, 89 una cella dentro il bordo, 79 una cella fuori, 50 dopo sei celle. Anche dentro il nucleo continua a salire verso l'interno, da 89 a 96 in una sola cella, e questo non dipende dal taglio della soglia. Che le due grandezze salgano insieme mostra che le segnalazioni non cadono a caso, non che siano giuste.
+\paragraph{Anche la distanza dal normale segue il profilo di G.} Letta sugli eventi di G invece che sui propri, la distanza dal normale non è un riferimento per giudicare G: descrive com'erano i dati dove G segnala. Questi valori non sono quelli della linea arancione della Figura~\ref{fig:ris-eventi-profilo}, che segue gli eventi della distanza dal normale stessa. Ha lo stesso andamento: 99--100 nelle celle più interne, 89 una cella dentro il bordo, 79 una cella fuori, 50 dopo sei celle. Anche dentro il nucleo continua a salire verso l'interno, da 89 a 96 in una sola cella, e questo non dipende dal taglio della soglia. Che le due grandezze salgano insieme mostra che le segnalazioni non cadono a caso, non che siano giuste.
 
-\paragraph{Insolito, ma non sempre estremo.} Nel nucleo solo il 42\% dei valori supera la soglia della distanza dal normale, contro il 16\% nel contorno e il 2\% nella zona lontana. Il restante 58\% resta sotto quella soglia: G segnala anche valori che, presi uno per uno, non sono fra i più lontani dal clima. In parte è atteso, perché i due score misurano cose diverse. Anche la dimensione conta: il percentile mediano della distanza dal normale nel nucleo va da 81--82 negli eventi con meno di 20 valori a 95 in quelli con più di 9999, quindi gli eventi piccoli sono i meno estremi.
+\paragraph{Insolito, ma non sempre estremo.} Nel nucleo solo il 41\% dei valori supera la soglia della distanza dal normale, contro il 16\% nel contorno e il 2\% nella zona lontana. Il restante 59\% resta sotto quella soglia: G segnala anche valori che, presi uno per uno, non sono fra i più lontani dal clima. In parte è atteso, perché i due score misurano cose diverse. Anche la dimensione conta: il percentile mediano della distanza dal normale nel nucleo va da 79--80 negli eventi con meno di 20 valori a 95 in quelli con più di 9999, quindi gli eventi piccoli sono i meno estremi.
 
-\paragraph{Per tipo di evento, G è simile, le variabili no.} Vicino al bordo G è quasi uguale per tutti i tipi: una cella fuori vale fra 89 e 91. Più lontano si separa di poco: a sei celle va da 44 per la radiazione solare a 60 per la pressione. Le differenze grandi riguardano invece lo \emph{scarto} della variabile del tipo (Figura~\ref{fig:ris-eventi-profilo-tipi}). A differenza della distanza dal normale, che riassume tutte le variabili di una cella, lo scarto riguarda una sola variabile: dice di quante volte la sua variabilità abituale, per quel luogo e periodo, essa si allontana dal normale, in valore assoluto. La variabile del tipo è per definizione la più lontana dal normale nel nucleo: è in parte atteso che lì lo scarto sia alto e fuori scenda, e il confronto utile è fra i tipi. Per precipitazione, copertura nuvolosa e radiazione solare lo scarto torna vicino ai valori di fondo entro due celle dal bordo: per la precipitazione scende da 1.33 nell'ultima cella del nucleo a 0.48 due celle fuori. La velocità verticale scende un po' più lentamente. Per pressione e temperatura resta alto a lungo: a sette celle fuori la pressione ha ancora uno scarto di 1.38, la temperatura a 2~m di 1.33. I venti e l'umidità specifica stanno in mezzo. Lo scarto mediano non è mai zero: lontano dagli eventi vale 0.42 per la precipitazione e 0.88 per la pressione, e questi sono i valori di fondo.
+\paragraph{Per tipo di evento, G è simile, le variabili no.} Vicino al bordo G è quasi uguale per tutti i tipi: una cella fuori vale fra 89 e 91. Più lontano si separa di poco: a sei celle va da 43 per la radiazione solare a 58 per la pressione. Le differenze grandi riguardano invece lo \emph{scarto} della variabile del tipo (Figura~\ref{fig:ris-eventi-profilo-tipi}). A differenza della distanza dal normale, che riassume tutte le variabili di una cella, lo scarto riguarda una sola variabile: dice di quante volte la sua variabilità abituale, per quel luogo e periodo, essa si allontana dal normale, in valore assoluto. La variabile del tipo è per definizione la più lontana dal normale nel nucleo: è in parte atteso che lì lo scarto sia alto e fuori scenda, e il confronto utile è fra i tipi. Per precipitazione, copertura nuvolosa e radiazione solare lo scarto torna vicino ai valori di fondo entro due celle dal bordo: per la precipitazione scende da 1.33 nell'ultima cella del nucleo a 0.48 due celle fuori, per la copertura nuvolosa da 1.62 a 0.52. La velocità verticale scende più lentamente, da 1.38 a 0.78. Per la temperatura a 2~m resta alto a lungo: a sette celle fuori lo scarto è ancora 1.33. La pressione e la temperatura a 850~hPa, fra le curve grigie, si comportano allo stesso modo, con 1.38 e 1.58 a sette celle; i venti e l'umidità specifica stanno in mezzo. Lo scarto mediano non è mai zero: a otto o più celle dal bordo vale 0.42 per la precipitazione e 0.98 per la pressione, e questi sono i valori di fondo.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_eventi_profilo_tipi}
-    \caption{Per ogni tipo di evento, scarto mediano della variabile che dà il nome al tipo, secondo le celle di distanza dal bordo dell'evento, sugli anni di test: 0 è il valore normale, 1 uno scostamento pari alla variabilità abituale. Il punto finale raccoglie tutte le celle a 8 o più celle dal bordo. Sono colorati i tre tipi con più valori negli eventi di almeno 20 valori e la temperatura a 2~m, citata nel testo; le curve usano tutti gli eventi del tipo. Non sono tracciate le distanze con meno di 1000 valori, e l'asse è limitato a 3.5. Precipitazione e velocità verticale tornano presto vicine ai valori di fondo, pressione e temperatura restano lontane anche a molte celle.}
+    \caption{Per ogni tipo di evento, scarto mediano della variabile che dà il nome al tipo, secondo le celle di distanza dal bordo dell'evento, sugli anni di test: 0 è il valore normale, 1 uno scostamento pari alla variabilità abituale. Il punto finale raccoglie tutte le celle a 8 o più celle dal bordo. Sono colorati i tre tipi con più valori negli eventi di almeno 20 valori (velocità verticale, precipitazione e copertura nuvolosa) e la temperatura a 2~m, citata nel testo; gli altri tipi sono in grigio, e le curve usano tutti gli eventi del tipo. Non sono tracciati i punti calcolati su meno di 1000 valori, e l'asse è limitato a 3.5. Precipitazione e copertura nuvolosa tornano presto vicine ai valori di fondo, la velocità verticale un po' più lentamente; la temperatura resta lontana dal normale anche a molte celle.}
     \label{fig:ris-eventi-profilo-tipi}
 \end{figure}
 
 Il risultato è coerente con il modo in cui queste variabili cambiano nello spazio, anche se la verifica non lo dimostra: precipitazione e nuvole possono cambiare da una cella all'altra, mentre temperatura e pressione variano su aree più ampie. Nel primo gruppo il nucleo di G racchiude lo scostamento. Nel secondo lo scostamento continua oltre il nucleo: G ne segnala solo una parte, e le celle attorno, pur lontane dal normale, restano sotto la sua soglia.
 
-\paragraph{Sintesi.} Circa tre quarti dei valori segnalati stanno in pochi eventi enormi, per lo più di velocità verticale o precipitazione; queste catene si formano con tutti i metodi. G fa meno eventi minuscoli delle baseline, e i suoi tipi somigliano a quelli della variazione in tre ore. G cala gradualmente attorno a ciò che segnala, senza un confine proprio, più lentamente di quasi tutte le baseline, in parte per la patch su cui è mediato; il nucleo è sottile. Letta sugli eventi di G, la distanza dal normale ha lo stesso andamento, ma solo il 42\% dei valori segnalati ne supera la soglia. Vicino al bordo G è quasi uguale per tutti i tipi, mentre le variabili si comportano in modo diverso.
+\paragraph{Sintesi.} Circa tre quarti dei valori segnalati stanno in pochi eventi enormi, per lo più di velocità verticale o precipitazione; queste catene si formano con tutti i metodi. G fa meno eventi minuscoli delle baseline, e i suoi tipi somigliano a quelli della variazione in tre ore. G cala gradualmente attorno a ciò che segnala, senza un confine proprio, più lentamente di quasi tutte le baseline, in parte per la patch su cui è mediato; il nucleo è sottile. Letta sugli eventi di G, la distanza dal normale ha lo stesso andamento, ma solo il 41\% dei valori segnalati ne supera la soglia. Vicino al bordo G è quasi uguale per tutti i tipi, mentre le variabili si comportano in modo diverso.
 % Baseline (5 novembre 2026; non dipendono dal modello): scripts/run_era5_baseline_events.sh (codice 69063e4f),
 % uscita outputs/eventi_baseline sul server, copiata in figures/dati/baseline/; riepilogo
-% figures/dati/era5_eventi_baseline.csv scritto da figures/genera_figure_eventi.py. Ogni baseline:
-% climatologia del test da outputs/confronti_good2/climatology/test/<nome>, soglia della validazione.
-% Tipi di G e variazione in tre ore: velocità verticale 34.7|38.7, precipitazione 25.2|25.9. Primo tipo:
-% normale umidità del suolo 64.3, CBLOF 41.4, COPOD velocità di attrito 21.8 (poi strato limite 12.9), HBOS 21.9
-% (strato limite 15.1), PCA precipitazione 19.0, MCD 43.1, Isolation Forest velocità verticale 19.9.
-% Profilo (1 novembre 2026): scripts/check_era5_event_profile.py, uscita
-% outputs/casi_good2_g/profilo_5pc.csv, copiata in figures/dati/era5_eventi_profilo.csv. Una cella
-% fuori appartiene all'evento della cella segnalata più vicina. Posizione -8..-1, 1..8 (tutti):
-% G+clim 100, 100, 100, 99, 99, 99, 99, 96 | 90, 80, 69, 62, 56, 51, 47, 34; normale 99, 99, 99,
-% 99, 98, 97, 96, 89 | 79, 69, 63, 58, 54, 50, 47, 39; variabile del tipo 3.22, 3.03, 2.82, 2.68,
-% 2.48, 2.33, 2.12, 1.72 | 1.33, 0.98, 0.78, 0.73, 0.68, 0.62, 0.58, 0.52. Valori sul bordo
-% interno 23999647 su 36656037 (65.5%). Zone (zone_5pc.csv): G+clim 97|90|40, G 97|88|39, normale
-% 92|79|43, normale oltre la propria soglia 42.3|16.1|2.0%.
-% Numeri (1 novembre 2026, test 2005-2025, good-sweep-2): scripts/check_era5_event_zones.py
-% --events e --scores G+clim=outputs/good2v/test_generator_clim_day, G, normale=
-% outputs/confronti_good2/climatology/test/normal, uscite outputs/casi_good2_g/zone_5pc.csv,
-% copiato in figures/dati/era5_eventi_zone.csv. Figure: figures/genera_figure_eventi.py.
-% Meno di 20 valori: 681451 eventi (90.3%), 2617983 valori (7.1%). Almeno 1000 valori: 3862
-% eventi (0.51%), 27886092 valori (76.1%). Velocità verticale 12725267 e precipitazione
-% 9253228 valori su 36656037 (59.9%). Zone (tutti): G+clim 97|90|40, G 97|88|39, normale
-% 92|79|43, normale oltre la propria soglia 42.3|16.1|2.0%. Normale nel nucleo per dimensione:
-% 82, 81, 81, 84, 88, 92, 95. Velocità verticale, catena: 775 istanti, 55% con meno di 50 celle.
+% figures/dati/era5_eventi_baseline.csv scritto da figures/genera_figure_eventi.py, con la riga di G
+% (optuna-27). Ogni baseline: climatologia del test da outputs/confronti_good2/climatology/test/<nome>,
+% soglia della validazione. Tipi di G e variazione in tre ore: velocità verticale 33.8|38.7, precipitazione
+% 27.2|25.9, copertura nuvolosa 7.2|6.0. Primo tipo: normale umidità del suolo 64.3, CBLOF 41.4, COPOD
+% velocità di attrito 21.8 (poi strato limite 12.9), HBOS 21.9 (strato limite 15.1), PCA precipitazione
+% 19.0, MCD 43.1, Isolation Forest velocità verticale 19.9.
+% Profilo (5 novembre 2026, test 2005-2025, optuna-27): scripts/check_era5_event_profile.py, uscita
+% outputs/finale_optuna27/profilo_5pc.csv (log logs/profilo_5pc.log), copiata in
+% figures/dati/era5_eventi_profilo.csv. Una cella fuori appartiene all'evento della cella segnalata più
+% vicina. Posizione -8..-1, 1..8 (tutti): G+clim 100, 100, 100, 100, 99, 99, 99, 96 | 90, 79, 68, 61, 55,
+% 50, 47, 34; normale 100, 99, 99, 99, 98, 98, 96, 89 | 79, 69, 63, 57, 53, 50, 47, 39; variabile del tipo
+% 3.53, 3.18, 2.98, 2.78, 2.58, 2.33, 2.12, 1.72 | 1.33, 0.98, 0.82, 0.73, 0.68, 0.62, 0.62, 0.52. Valori
+% sul bordo interno 24332985 su 36093783 (67.4%); a 8 o più celle dentro 30865 (0.09%). Per tipo, G a una
+% cella fuori 89-91, a sei celle da 43 (radiazione) a 58 (pressione). Scarto della variabile del tipo,
+% posizioni -1, 1, 2, 7, 8+: precipitazione 1.33, 0.68, 0.48, 0.42, 0.42; copertura nuvolosa 1.62, 0.98,
+% 0.52, 0.48, 0.58; radiazione 2.33, 1.23, 0.58, 0.42, 0.48; velocità verticale 1.38, 0.98, 0.78, 0.52,
+% 0.42; temperatura a 2 m 2.22, 2.12, 1.92, 1.33, 0.88; pressione 2.08, 1.98, 1.88, 1.38, 0.98;
+% temperatura a 850 hPa 2.18, 2.08, 2.02, 1.58, 1.08.
+% Numeri (5 novembre 2026, test 2005-2025, optuna-27): scripts/check_era5_event_zones.py --events
+% outputs/optuna27/test_generator_clim_day e --scores G+clim, G, normale=
+% outputs/confronti_good2/climatology/test/normal, uscite outputs/finale_optuna27/zone_5pc.csv (log
+% logs/zone_5pc.log), copiato in figures/dati/era5_eventi_zone.csv. Figure: figures/genera_figure_eventi.py.
+% 794206 eventi, 36093783 valori. Meno di 20 valori: 719594 eventi (90.6%), 2690790 valori (7.5%). Almeno
+% 1000 valori: 3883 eventi (0.49%), 27245412 valori (75.5%). Velocità verticale 12212132 e precipitazione
+% 9800944 valori (61.0%); copertura nuvolosa 2597606 (7.2%). Zone (tutti): G+clim 97|90|39, G 97|88|39,
+% normale 92|79|43, normale oltre la propria soglia 40.8|16.2|2.0%. Normale nel nucleo per dimensione:
+% 80, 79, 80, 83, 86, 91, 95. Eventi più grandi per tipo (outputs/finale_optuna27/casi_5pc/cases.csv e
+% case_NN.npz, regola del solo evento più grande, logs/casi_5pc.log): precipitazione 960 ore (40.0 giorni,
+% 321 istanti, mediana 472 celle per istante, meno di 50 celle nel 2.5% degli istanti, almeno 100 nel
+% 93.8%), velocità verticale 555 ore (23.1 giorni, 186 istanti, mediana 723, 2.2%, 95.7%), copertura
+% nuvolosa 603 ore (25.1 giorni, 202 istanti, mediana 689, 5.9%, 92.6%).
 
 \subsection{Un evento per tipo}
 \label{sec:ris-esempi}
 
-Fin qui gli eventi sono descritti tutti insieme e per tipo; resta da vedere un evento per ciascuno dei tre tipi principali, per vedere su una mappa che cosa riassumono i numeri. Gli esempi sono scelti con una regola fissata prima di esaminarli, così che nessuno sia preso per il suo aspetto: i tipi sono i tre con più valori negli eventi di almeno 20 valori, cioè velocità verticale, precipitazione e pressione al livello del mare; per ciascuno l'esempio è l'evento con più valori fra quelli che durano al massimo tre giorni, letto nell'istante in cui conta più celle. Il limite di durata esclude le catene descritte sopra, che non sono un unico fenomeno. Gli esempi non sono quindi i casi più importanti né i più tipici: mostrano come appare un evento compatto di ciascun tipo.
+Fin qui gli eventi sono descritti tutti insieme e per tipo; resta da vedere un evento per ciascuno dei tre tipi principali, per vedere su una mappa che cosa riassumono i numeri. Gli esempi sono scelti con una regola fissata prima di esaminarli, così che nessuno sia preso per il suo aspetto: i tipi sono i tre con più valori negli eventi di almeno 20 valori, cioè velocità verticale, precipitazione e copertura nuvolosa; per ciascuno l'esempio è l'evento con più valori fra quelli che durano al massimo tre giorni, letto nell'istante in cui conta più celle. Il limite di durata esclude le catene descritte sopra, che non sono un unico fenomeno. Gli esempi non sono quindi i casi più importanti né i più tipici: mostrano come appare un evento compatto di ciascun tipo.
 
-\paragraph{Come leggere le figure.} Le Figure~\ref{fig:ris-caso-velocita}--\ref{fig:ris-caso-pressione} hanno la stessa struttura. In alto a sinistra c'è lo scarto della variabile del tipo, qui con il suo segno (nel profilo per tipo è in valore assoluto): bianco vuol dire normale, rosso sopra il normale, blu sotto. In alto a destra c'è G con la normalizzazione in percentile, con la stessa scala in tutti gli esempi: il giallo è oltre la soglia. La linea nera nelle due mappe racchiude il nucleo di questo evento in quell'istante; fuori possono esserci celle gialle di altri eventi. In basso a sinistra si segue nel tempo la cella del nucleo con G più alto nell'istante delle mappe, da tre giorni prima a tre giorni dopo, confrontando G con la distanza dal normale di tutte le variabili e, sull'asse a destra, con lo scarto della variabile del tipo: la linea tratteggiata è la soglia di G, le bande azzurre sono gli istanti in cui la cella fa parte dell'evento. In basso a destra c'è il numero di celle dell'evento in ogni istante; la linea verticale, anche a sinistra, segna l'istante delle mappe. La Tabella~\ref{tab:ris-casi} riassume le tre zone.
+\paragraph{Come leggere le figure.} Le Figure~\ref{fig:ris-caso-velocita}--\ref{fig:ris-caso-nuvole} hanno la stessa struttura. In alto a sinistra c'è lo scarto della variabile del tipo, qui con il suo segno (nel profilo per tipo è in valore assoluto): bianco vuol dire normale, rosso sopra il normale, blu sotto. In alto a destra c'è G con la normalizzazione in percentile, con la stessa scala in tutti gli esempi: il giallo è oltre la soglia. La linea nera nelle due mappe racchiude il nucleo di questo evento in quell'istante; fuori possono esserci celle gialle di altri eventi. In basso a sinistra si segue nel tempo la cella del nucleo con G più alto nell'istante delle mappe, da tre giorni prima a tre giorni dopo, confrontando G con la distanza dal normale di tutte le variabili e, sull'asse a destra, con lo scarto della variabile del tipo: la linea tratteggiata è la soglia di G, le bande azzurre sono gli istanti in cui la cella fa parte dell'evento. In basso a destra c'è il numero di celle dell'evento in ogni istante; la linea verticale, anche a sinistra, segna l'istante delle mappe. La Tabella~\ref{tab:ris-casi} riassume le tre zone.
 
 \begin{table}[htbp]
     \centering
@@ -564,127 +580,144 @@ Fin qui gli eventi sono descritti tutti insieme e per tipo; resta da vedere un e
         \toprule
         Tipo & Celle & G & Distanza & Oltre soglia & Durata (ore) \\
         \midrule
-        Velocità verticale & 656 & 97, 92, 41 & 97, 91, 39 & 65\% & 72 \\
-        Precipitazione & 536 & 98, 91, 37 & 81, 74, 35 & 18\% & 54 \\
-        Pressione & 949 & 97, 92, 40 & 95, 93, 30 & 57\% & 66 \\
+        Velocità verticale & 549 & 97, 91, 42 & 97, 94, 40 & 65\% & 63 \\
+        Precipitazione & 576 & 97, 91, 33 & 91, 87, 44 & 34\% & 72 \\
+        Copertura nuvolosa & 404 & 98, 89, 43 & 93, 56, 33 & 46\% & 66 \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\paragraph{Velocità verticale.} Il 23 novembre 2017 il nucleo forma una fascia stretta che, a una lettura della mappa, va dalla costa atlantica della penisola iberica fino alla Scandinavia, passando sulle Isole britanniche (Figura~\ref{fig:ris-caso-velocita}). Lungo la fascia la velocità verticale alterna bande sopra e sotto il normale: lo scarto è positivo nel 41\% delle celle del nucleo e negativo nelle altre, e nel 39\% è vicino al normale, inferiore a 1 in valore assoluto. La cella seguita sta sulla prima fila del dominio, a 60$^\circ$N, dove il modello completa il campo con zeri (Sezione~\ref{sec:ris-correlazione-temporale}) e la dispersione del dropout è più alta che all'interno (Sezione~\ref{sec:ris-dropout}): va letta con questa cautela. Lì G e la distanza dal normale salgono insieme oltre il 90-esimo percentile, vi restano per circa un giorno e mezzo, più o meno finché la cella fa parte dell'evento, e poi tornano a valori tipici. L'evento cresce e cala in modo regolare, con un massimo netto.
+\paragraph{Velocità verticale.} Il 23 novembre 2017 il nucleo forma una fascia stretta che, a una lettura della mappa, va dall'Atlantico al largo del Portogallo fino alla Scandinavia meridionale, passando sul Golfo di Biscaglia, sulla Manica e sul Mare del Nord (Figura~\ref{fig:ris-caso-velocita}). Lungo la fascia la velocità verticale, che in ERA5 è in Pa\,s$^{-1}$ e quindi è negativa quando l'aria sale, è per lo più sotto il normale: lo scarto è negativo nel 73\% delle celle del nucleo, e nel 34\% è vicino al normale, inferiore a 1 in valore assoluto. Una parte del nucleo, 25 celle, sta sulla prima fila del dominio, a 60$^\circ$N, cioè sul bordo del dominio, dove il modello si comporta probabilmente in modo diverso (Sezione~\ref{sec:ris-correlazione-temporale}): quella parte va letta con cautela. Nella cella seguita, a 58.5$^\circ$N e 8.5$^\circ$E, G supera la soglia nelle prime ore del 22 novembre e vi resta, salvo una breve pausa, per circa un giorno e mezzo, finché la cella fa parte dell'evento; la distanza dal normale sale insieme a G e supera il 90-esimo percentile per circa un giorno. Poi entrambi tornano a valori tipici. L'evento cresce e cala in modo abbastanza regolare, con il massimo nell'istante delle mappe.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_caso_00}
-    \caption{Velocità verticale, 23 novembre 2017 alle 00~UTC. Il nucleo è una fascia stretta in cui la velocità verticale alterna bande sopra e sotto il normale; la cella seguita, sul bordo nord del dominio, resta oltre o appena sotto la soglia per circa un giorno e mezzo; l'evento dura tre giorni, dal 21 al 24 novembre 2017, con un massimo netto. Linee di costa da Natural Earth.}
+    \caption{Velocità verticale, 23 novembre 2017 alle 00~UTC. Il nucleo è una fascia stretta in cui la velocità verticale è per lo più sotto il normale; nella cella seguita G resta oltre la soglia, salvo una breve pausa, per circa un giorno e mezzo, e la distanza dal normale sale e scende insieme a G; l'evento dura 63 ore, dal 21 al 24 novembre 2017, con il massimo nell'istante delle mappe. Linee di costa da Natural Earth.}
     \label{fig:ris-caso-velocita}
 \end{figure}
 
-\paragraph{Precipitazione.} L'8 dicembre 2018 il nucleo copre un'area che, a una lettura della mappa, va dalla Corsica e dalla Sardegna, attraverso l'Italia settentrionale e l'Europa centrale, fino al Baltico, con una seconda area più piccola più a est (Figura~\ref{fig:ris-caso-precipitazione}). La precipitazione è sopra il normale nell'80\% delle celle del nucleo, ma di poco: lo scarto mediano è 1.4 e supera 3 solo nel 2\% delle celle. È l'esempio meno estremo: nel nucleo la distanza dal normale di tutte le variabili ha un percentile mediano di 81, e solo il 18\% dei valori supera la sua soglia, contro il 42\% di tutti i valori segnalati. Nella cella seguita, nelle Alpi occidentali, nell'istante delle mappe lo scarto della precipitazione è solo 0.9, mentre la distanza dal normale di tutte le variabili è vicina al massimo: a scostarsi sono altre variabili, e il tipo descrive l'evento nel suo insieme, non ogni cella. La stessa cella torna oltre la soglia il giorno dopo, quando l'evento è già finito, e fa quindi parte di un altro evento.
+\paragraph{Precipitazione.} Il 19 maggio 2006 il nucleo è diviso in più parti (Figura~\ref{fig:ris-caso-precipitazione}). A una lettura della mappa, la maggiore va dalle Alpi orientali, attraverso l'Europa centro-orientale, fino al Baltico; una seconda copre l'Inghilterra meridionale, la Manica e il Benelux; altre più piccole stanno fra le due, sulle Alpi e attorno alle Baleari. La precipitazione è sopra il normale nel 91\% delle celle del nucleo, con uno scarto mediano di 2.2, e lo scarto supera 3 nel 28\% delle celle. È l'esempio meno estremo per la distanza dal normale di tutte le variabili: nel nucleo ha un percentile mediano di 91, e il 34\% dei valori ne supera la soglia, contro il 41\% di tutti i valori segnalati. La cella seguita, a 56.5$^\circ$N e 23$^\circ$E, mostra che G e la distanza dal normale non vanno sempre insieme. La distanza dal normale vi è sopra il 90-esimo percentile fin dall'inizio della serie, tre giorni prima, mentre la precipitazione è vicina al normale e G resta sotto la soglia: a scostarsi dal normale sono quindi altre variabili. G supera la soglia solo la sera del 18 maggio, quando la precipitazione sale sopra il normale, e la cella fa parte dell'evento per tre istanti, fino all'istante delle mappe. La stessa cella torna oltre la soglia il 21 maggio, quando l'evento è già finito, e fa quindi parte di un altro evento.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_caso_01}
-    \caption{Precipitazione, 8 dicembre 2018 alle 03~UTC. Il nucleo copre un'area in cui la precipitazione è poco sopra il normale; nella cella seguita, nell'istante delle mappe, la precipitazione è quasi normale e a scostarsi sono altre variabili; l'evento dura poco più di due giorni, dal 6 all'8 dicembre 2018. Linee di costa da Natural Earth.}
+    \caption{Precipitazione, 19 maggio 2006 alle 03~UTC. Il nucleo è diviso in più parti, in cui la precipitazione è quasi ovunque sopra il normale; nella cella seguita la distanza dal normale è alta già nei giorni prima, e G supera la soglia solo quando arriva la precipitazione; l'evento dura 72 ore, dal 16 al 19 maggio 2006, e finisce poche ore dopo il massimo. Linee di costa da Natural Earth.}
     \label{fig:ris-caso-precipitazione}
 \end{figure}
 
-\paragraph{Pressione.} Il 29 febbraio 2020 la pressione è sotto il normale in tutte le celle del nucleo, che, a una lettura della mappa, copre l'Atlantico nord-orientale, la parte occidentale della penisola iberica, la Francia, le Isole britanniche e il Mare del Nord (Figura~\ref{fig:ris-caso-pressione}): lo scarto mediano è $-2.4$, e nel 68\% delle celle supera 2 in valore assoluto. È l'esempio in cui il nucleo coincide di più con lo scostamento della variabile del tipo. Lo scostamento, però, continua oltre il nucleo, come nel profilo per tipo: delle celle con uno scarto oltre 3 il nucleo ne contiene il 54\%, e insieme al contorno l'84\%. Più a est G è alto anche sull'Europa centro-orientale, per lo più sotto la soglia, dove la pressione è vicina al normale. Nella cella seguita, nel nord della Francia, la pressione resta fra due e tre volte la variabilità abituale sotto il normale dal 29 febbraio al 2 marzo, anche dopo che la cella è uscita dall'evento: G resta alto, ma per lo più sotto la soglia. L'evento coglie quindi solo una parte di uno scostamento più lungo.
+\paragraph{Copertura nuvolosa.} Il 15 giugno 2024 il nucleo forma una fascia stretta che, a una lettura della mappa, va dalla costa atlantica del Sahara occidentale, attraverso il Marocco e l'Algeria, fino alla costa mediterranea dell'Algeria, con una piccola parte sul mare fra le Baleari e la Sardegna (Figura~\ref{fig:ris-caso-nuvole}). La copertura nuvolosa è sopra il normale nel 92\% delle celle del nucleo, con uno scarto mediano di 2.1, e lo scarto supera 3 nel 19\% delle celle. Il nucleo segue lo scostamento da vicino: la distanza dal normale ha un percentile mediano di 93 nel nucleo e di 56 nel contorno, il calo più netto dei tre esempi. Sulla stessa mappa G è alto anche altrove, soprattutto sul Mediterraneo orientale: nell'istante delle mappe 911 celle sono segnalate fuori da questo nucleo, e appartengono ad altri eventi. Nella cella seguita, a 23.5$^\circ$N e 13$^\circ$W, G supera la soglia per cinque istanti, dalle 03 alle 15~UTC del 15 giugno, gli stessi in cui la cella fa parte dell'evento; lo scarto della copertura nuvolosa vi è fra 1.9 e 3.5, e la distanza dal normale supera il 90-esimo percentile dalle 06 alle 12~UTC. Prima e dopo, G e la distanza dal normale tornano a valori tipici. L'evento resta fra circa 200 e 320 celle per quasi due giorni, con il massimo nell'istante delle mappe.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_caso_02}
-    \caption{Pressione al livello del mare, 29 febbraio 2020 alle 09~UTC. Il nucleo copre l'area con la pressione più sotto il normale, che continua nel contorno; nella cella seguita la pressione resta molto sotto il normale anche dopo che la cella è uscita dall'evento; l'evento dura poco meno di tre giorni, dal 28 febbraio al 1\textsuperscript{o} marzo 2020. Linee di costa da Natural Earth.}
-    \label{fig:ris-caso-pressione}
+    \caption{Copertura nuvolosa, 15 giugno 2024 alle 12~UTC. Il nucleo è una fascia stretta sull'Africa nord-occidentale in cui la copertura nuvolosa è quasi ovunque sopra il normale; nella cella seguita G e la distanza dal normale salgono e scendono insieme, e G resta oltre la soglia per dodici ore; l'evento dura 66 ore, dal 14 al 17 giugno 2024. Linee di costa da Natural Earth.}
+    \label{fig:ris-caso-nuvole}
 \end{figure}
 
-\paragraph{Che cosa mostrano gli esempi.} Nelle tre celle seguite, scelte fra quelle con G più alto, G e la distanza dal normale salgono e scendono insieme. Il nucleo, però, non contiene tutte le celle in cui la variabile del tipo è più lontana dal normale: di quelle con uno scarto oltre 3, il 35\% per la velocità verticale, il 37\% per la precipitazione, su sole 27 celle, e il 54\% per la pressione. Per la pressione lo scostamento continua nel contorno; per la velocità verticale circa una cella su cinque di queste sta nella zona lontana, senza alcuna segnalazione. Negli esempi si vede anche quanto mostrano i numeri aggregati: il tipo non descrive ogni cella, G segnala anche valori non estremi, e un evento può cogliere solo una parte di uno scostamento più lungo. Sono esempi scelti con una regola, non una prova che le segnalazioni corrispondano a fenomeni reali, che senza un riferimento esterno non si può dare.
-% Numeri (3 novembre 2026): scripts/check_era5_event_cases.py con --longest-days 3 (regola fissata prima
-% di leggere i risultati, nel docstring dello script), uscite outputs/esempi_good2 (cases.csv,
-% case_NN.npz), copiate in figures/dati/era5_caso_NN.npz; mediane per zona in
-% figures/dati/era5_casi_zone.json. Durate 72, 54, 66 ore; valori 7849, 5815, 10026.
-% Correlazione di Pearson fra i percentili di G e del normale nella cella seguita: 0.92, 0.72, 0.68.
-% Scarto della variabile nella cella all'istante: -3.61, 0.89, -2.82. Nucleo con |scarto| < 1: 39, 37, 6%;
-% > 2: 29, 32, 68%; > 3: 10.5, 1.9, 10.2%; scarto positivo: 41, 80, 0%. Celle con |scarto| > 3: 199, 27,
-% 179; nel nucleo 35, 37, 54%; nel nucleo o nel contorno 38, 44, 84%; nella zona lontana 19, 7, 0%.
-% Nucleo sulla prima fila (60N): 23, 3, 23 celle. Velocità verticale: la cella resta nell'evento 10 istanti
-% su 49 (22/11 18 UTC - 24/11 03 UTC); G oltre il 90-esimo percentile dagli istanti 21 a 34. Parti del
-% nucleo all'istante: velocità verticale 581 celle (39-60N, 10.5W-20E) e 60; precipitazione 426
-% (40.5-57N, 5.5-19.5E, scarto mediano 1.00) e 92 (49-56.5N, 20-25E, 2.45); pressione 893 (38-60N,
-% 15W-10E) e 32. Celle segnalate fuori dal nucleo all'istante: 276, 76, 195. La lettura geografica è
+\paragraph{Che cosa mostrano gli esempi.} In due delle tre celle seguite, scelte fra quelle con G più alto, G e la distanza dal normale salgono e scendono insieme; nella cella della precipitazione la distanza dal normale è alta già nei giorni prima, e G supera la soglia solo quando arriva la precipitazione. Il nucleo, inoltre, non contiene tutte le celle in cui la variabile del tipo è più lontana dal normale: di quelle con uno scarto oltre 3 contiene il 37\% per la velocità verticale, il 62\% per la precipitazione e il 57\% per la copertura nuvolosa. Per la velocità verticale quasi una cella su cinque di queste sta nella zona lontana, senza alcuna segnalazione; per gli altri due tipi solo l'1\%. Negli esempi si vede anche quanto mostrano i numeri aggregati: il tipo non descrive ogni cella, perché in una parte del nucleo la variabile del tipo è vicina al normale, e G segnala anche valori che, per la distanza dal normale, non sono fra i più estremi. Sono esempi scelti con una regola, non una prova che le segnalazioni corrispondano a fenomeni reali, che senza un riferimento esterno non si può dare.
+% Numeri (5 novembre 2026, test, optuna-27): scripts/check_era5_event_cases.py con --longest-days 3 (regola
+% fissata prima di leggere i risultati, nel docstring dello script), uscite outputs/finale_optuna27/esempi
+% (cases.csv, case_NN.npz, log logs/esempi.log), copiate in figures/dati/era5_caso_NN.npz; mediane per zona
+% in figures/dati/era5_casi_zone.json; le altre misure rilette in locale dagli npz. Tipi scelti: i tre con
+% più valori negli eventi con più di 19 valori (logs/casi_5pc.log: velocità verticale 11761727,
+% precipitazione 9438967, copertura nuvolosa 2422226; poi pressione 2053485). Istanti 23/11/2017 00 UTC,
+% 19/5/2006 03 UTC, 15/6/2024 12 UTC; durate 63, 72, 66 ore; valori 6894, 7385, 4933; celle nell'istante
+% 549, 576, 404. Percentile mediano della distanza dal normale nucleo|contorno|lontana: 96.8|94.0|40.2,
+% 91.5|86.5|43.9, 93.3|56.5|33.0; di G+clim 97.4|91.5|42.3, 97.0|91.1|32.9, 98.4|89.1|43.1; oltre la
+% soglia della distanza dal normale nel nucleo 65.0, 33.5, 46.3%.
+% Correlazione di Pearson fra i percentili di G e del normale nella cella seguita: 0.78, 0.45, 0.74.
+% Scarto della variabile nella cella all'istante: -1.02, 1.11, 3.54. Nucleo con |scarto| < 1: 34, 23, 20%;
+% > 2: 36, 54, 59%; > 3: 13.5, 27.8, 19.3%; scarto positivo: 27, 91, 92%; scarto mediano -1.06, 2.20, 2.15.
+% Celle con |scarto| > 3: 199, 259, 136; nel nucleo 37, 62, 57%; nel nucleo o nel contorno 38, 69, 69%;
+% nella zona lontana 19, 1.2, 1.5%. Nucleo sulla prima fila (60N): 25, 0, 0 celle. Celle segnalate fuori
+% dal nucleo all'istante: 306, 174, 911.
+% Velocità verticale: cella 58.5N 8.5E; nell'evento 11 istanti su 49 (22/11 03-09 e 22/11 18-23/11 15
+% UTC); G oltre il 90-esimo percentile dal 22/11 03 al 23/11 21, il normale dal 22/11 18 al 23/11 18.
+% Parti del nucleo: 543 celle (37.5-60N, 11.5W-21E, scarto mediano -1.09) e 6 celle in due parti.
+% Precipitazione: cella 56.5N 23E; normale oltre il 90-esimo percentile in tutti gli istanti dal 16/5 03
+% al 18/5 21 UTC, con scarto della precipitazione fra -0.9 e 0.3; G oltre la soglia il 18/5 21, 19/5 00,
+% 03 (nell'evento) e il 21/5 12. Parti del nucleo: 316 celle (46.5-59.5N, 12-31E, scarto mediano 2.78),
+% 166 (48-55.5N, 5.5W-7.5E, 1.68), 29 (38-41N, 1.5-4.5E, -0.45), 23, 16, 12, 9, 5.
+% Copertura nuvolosa: cella 23.5N 13W; G oltre la soglia dal 15/6 03 al 15/6 15 UTC (gli istanti
+% nell'evento), normale oltre il 90-esimo percentile 06-12 UTC; scarto in quegli istanti 2.5, 2.9, 2.5,
+% 3.5, 1.9. Parti del nucleo: 378 celle (20-39N, 15W-3.5E, scarto mediano 2.18) e 26 (38.5-40.5N,
+% 4.5-8E, 2.00). Celle dell'evento fra 194 e 316 dal 14/6 12 al 16/6 09 UTC. La lettura geografica è
 % fatta sulla mappa.
 
 \section{La dispersione del dropout}
 \label{sec:ris-dropout}
 
 Fin qui si è usata la media delle estrazioni di dropout; questa sezione guarda quanto differiscono fra loro. Lo score è la media di 20 estrazioni con maschere diverse, e la deviazione standard delle estrazioni ne misura la \emph{dispersione} (Sezione~\ref{sec:score-dropout-montecarlo}). Non è una probabilità di anomalia: senza etichette non si può stabilire se una segnalazione con estrazioni concordi sia più giusta di una con estrazioni discordi. Si può però vedere quanto le segnalazioni dipendono dalle maschere, e in quali situazioni le estrazioni si separano. Poiché la dispersione cresce con l'errore da cui nasce, con una correlazione di Spearman di 0.86, conviene leggerla in proporzione%
-% Spearman 0.856 fra errore grezzo e dispersione: outputs/casi_good2_g/dropout_rapporto_bande.log ("rank
-% correlation between score and spread"), verificata il 3 novembre 2026.
+% Spearman 0.861 fra errore grezzo e dispersione: outputs/finale_optuna27/logs/dropout_rapporto_bande.log
+% ("rank correlation between score and spread"), optuna-27, 5 novembre 2026.
 : il \emph{rapporto} è la dispersione dell'errore del generatore divisa per l'errore stesso, cioè G senza normalizzazione. La sezione riguarda gli anni di test.
 
-\paragraph{Le segnalazioni dipendono poco dalle maschere.} Il 78\% dei valori segnalati resta sopra la soglia togliendo allo score, cioè a G con la normalizzazione, una deviazione standard delle estrazioni, misurata nella stessa scala; il 60\% togliendone due; dei valori non segnalati, solo l'1.6\% la supererebbe aggiungendone una. È una prova severa, perché la deviazione standard riguarda le singole estrazioni, mentre lo score ne è la media.
+\paragraph{Le segnalazioni dipendono poco dalle maschere.} Il 75\% dei valori segnalati resta sopra la soglia togliendo allo score, cioè a G con la normalizzazione, una deviazione standard delle estrazioni, misurata nella stessa scala; il 55\% togliendone due; dei valori non segnalati, solo l'1.8\% la supererebbe aggiungendone una. È una prova severa, perché la deviazione standard riguarda le singole estrazioni, mentre lo score ne è la media.
 
-\paragraph{Più l'errore è grande, più le estrazioni concordano in proporzione.} In valore assoluto la dispersione cresce con l'errore, ma il rapporto scende (Figura~\ref{fig:ris-dropout}, a sinistra): dal 10.8\% nella metà più bassa degli errori al 9.1\% fra il 95-esimo e il 99-esimo percentile, fino al 6.7\% nello 0.1\% più alto. I valori con l'errore più grande sono quindi quelli su cui, in proporzione, le maschere incidono meno.
+\paragraph{In proporzione, la dispersione cala solo sugli errori più grandi.} In valore assoluto la dispersione cresce con l'errore, ma in proporzione resta quasi costante (Figura~\ref{fig:ris-dropout}, a sinistra): il rapporto è fra l'11.1\% e l'11.8\% in tutte le fasce fino al 99-esimo percentile dell'errore, e scende solo oltre, al 9.7\% fra il 99-esimo e il 99.9-esimo percentile e al 9.1\% nello 0.1\% più alto. Le maschere incidono quindi sull'errore in proporzione quasi uguale, tranne sui valori con l'errore più grande, su cui incidono un po' meno.
 
-\paragraph{Attraverso gli eventi il rapporto è minimo vicino al bordo.} La dispersione assoluta ha quasi lo stesso profilo di G: il percentile mediano è 94 sul bordo interno del nucleo, 85 una cella fuori e 50 dopo sei celle, contro 96, 90 e 51 di G. Il rapporto si comporta diversamente (Figura~\ref{fig:ris-dropout}, al centro): è circa il 9.8\% lontano dagli eventi, scende al 9.2\% nel contorno e all'8.4\% due celle dentro il nucleo, poi risale verso l'interno, fino al 10.5\% nelle pochissime celle a 8 o più celle dal bordo, lo 0.13\% dei valori segnalati. Nel nucleo, nel contorno e fuori, quindi, le differenze ci sono ma sono piccole: fra 8.4\% e 10.5\%. Il motivo della risalita al centro non è verificato.
+\paragraph{Attraverso gli eventi il rapporto è minimo poco dentro il bordo.} La dispersione assoluta ha quasi lo stesso profilo di G: il percentile mediano è 94 sul bordo interno del nucleo, 85 una cella fuori e 49 dopo sei celle, contro 96, 90 e 50 di G. Il rapporto si comporta diversamente (Figura~\ref{fig:ris-dropout}, al centro): è circa il 10.3\% a tre o più celle fuori dagli eventi, il 10.2\% nel contorno, scende al 9.6\% due celle dentro il nucleo, poi risale verso l'interno, fino all'11.2\% nelle pochissime celle a 8 o più celle dal bordo, lo 0.09\% dei valori segnalati. Nel nucleo, nel contorno e fuori, quindi, le differenze ci sono ma sono piccole: fra il 9.6\% e l'11.2\%. Il motivo della risalita al centro non è verificato.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_dropout}
-    \caption{Il rapporto fra la dispersione del dropout e l'errore del generatore, sugli anni di test, con la soglia di G al 95-esimo percentile. A sinistra: per percentile dell'errore su tutti i valori. Al centro: secondo le celle di distanza dal bordo dell'evento; l'asse non parte da zero. A destra: i valori segnalati, divisi a parità di errore in cinque classi uguali per rapporto, da quella con le estrazioni più concordi a quella con le più discordi; per ogni classe, la quota oltre la soglia della distanza dal normale. Il rapporto scende con l'errore; a parità di errore, un rapporto più alto si accompagna a dati più lontani dal normale.}
+    \caption{Il rapporto fra la dispersione del dropout e l'errore del generatore, sugli anni di test, con la soglia di G al 95-esimo percentile. A sinistra: per percentile dell'errore su tutti i valori. Al centro: secondo le celle di distanza dal bordo dell'evento; l'asse non parte da zero. A destra: i valori segnalati, divisi a parità di errore in cinque classi uguali per rapporto, da quella con le estrazioni più concordi a quella con le più discordi; per ogni classe, la quota oltre la soglia della distanza dal normale. Il rapporto è quasi costante e scende solo nell'1\% più alto degli errori; a parità di errore, la quota oltre la soglia sale dalla classe 1 alla 4 e cala nella 5.}
     \label{fig:ris-dropout}
 \end{figure}
 
-\paragraph{A parità di errore, più dispersione vuol dire dati più lontani dal normale.} Per confrontare valori con lo stesso errore, i valori segnalati sono divisi prima in 20 fasce di errore e poi, in ogni fascia, in cinque classi uguali per rapporto, che va dal 5\% al 15\% (Figura~\ref{fig:ris-dropout}, a destra). Passando dalle estrazioni più concordi alle più discordi, la quota oltre la soglia della distanza dal normale sale dal 20\% al 62\%, e la quota di valori in cui nessuna variabile si allontana dal normale più di due volte la variabilità abituale scende dal 16\% all'8\%. Il risultato è quasi uguale dividendo a parità di G con la normalizzazione, dal 24\% al 61\%. Le estrazioni, dunque, si separano di più dove i dati sono più lontani dal normale; quelle più concordi cadono più spesso dove nessuna variabile della cella è lontana dal normale. È coerente con l'idea che il modello sia meno stabile sui dati più diversi da quelli visti in addestramento, anche se la verifica non lo dimostra.
+\paragraph{A parità di errore, più dispersione va con dati più lontani dal normale, ma non nella classe più discorde.} Per confrontare valori con lo stesso errore, i valori segnalati sono divisi prima in 20 fasce di errore e poi, in ogni fascia, in cinque classi uguali per rapporto; il rapporto mediano va dal 5\% della classe 1, con le estrazioni più concordi, al 19\% della classe 5, con le più discordi (Figura~\ref{fig:ris-dropout}, a destra). Dalla classe 1 alla 4 la quota oltre la soglia della distanza dal normale sale dal 24\% al 50\%; nella classe 5 scende al 45\%. La quota di valori in cui nessuna variabile si allontana dal normale più di due volte la variabilità abituale fa il contrario: è il 13\% nella classe 1, circa il 9\% nelle classi 3 e 4 e di nuovo il 12\% nella 5. Il risultato è quasi uguale dividendo a parità di G con la normalizzazione: dal 27\% della classe 1 al 49\% della 4, e il 45\% nella 5. Fino alla classe 4, dunque, le estrazioni si separano di più dove i dati sono più lontani dal normale, e quelle più concordi cadono più spesso dove nessuna variabile della cella è lontana dal normale. Questo è coerente con l'idea che il modello sia meno stabile sui dati più diversi da quelli visti in addestramento. La classe più discorde, però, non segue l'andamento, e il legame non è quindi un semplice ``più dispersione, dati più insoliti''; il motivo del calo nell'ultima classe non è verificato, e la verifica, nel complesso, non dimostra quell'idea.
 
-\paragraph{Per tipo di evento il quadro è simile.} Con gli stessi tipi della Sezione~\ref{sec:ris-eventi}, il rapporto ha quasi ovunque il minimo una o due celle dentro il bordo e sale verso l'esterno (Figura~\ref{fig:ris-dropout-tipi}, a sinistra); la radiazione solare ha il minimo più basso. Fa eccezione l'umidità del suolo, con il rapporto più alto e senza risalita verso l'esterno. A parità di errore, in tutti i tipi le estrazioni più discordi hanno una quota più alta di valori oltre la soglia della distanza dal normale (Figura~\ref{fig:ris-dropout-tipi}, a destra): per esempio dal 16\% al 54\% per la velocità verticale.
+\paragraph{Per tipo di evento il quadro è simile.} Con gli stessi tipi della Sezione~\ref{sec:ris-eventi}, il rapporto è quasi ovunque più basso dentro il nucleo, in genere due o tre celle dentro il bordo, e sale verso l'esterno (Figura~\ref{fig:ris-dropout-tipi}, a sinistra); la radiazione solare ha il minimo più basso, il 7.1\%. Fa eccezione l'umidità del suolo, con il rapporto più alto, che scende verso l'esterno. A parità di errore, in ogni tipo la classe 1 ha la quota più bassa di valori oltre la soglia della distanza dal normale, ma la più alta è la classe 3 o 4 (la classe 3 non è mostrata nella figura), non la 5 (Figura~\ref{fig:ris-dropout-tipi}, a destra): per la velocità verticale, per esempio, la quota va dal 20\% della classe 1 al 45\% della classe 4, e scende al 40\% nella 5. Solo per precipitazione e umidità del suolo la classe 5 è alla pari con la 4.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_dropout_tipi}
-    \caption{Il dropout per tipo di evento, sugli anni di test. A sinistra: rapporto fra dispersione ed errore secondo le celle di distanza dal bordo, con evidenziati i tre tipi con più valori negli eventi di almeno 20 valori; non sono tracciate le distanze con meno di 1000 valori né le celle a 8 o più dal bordo. A destra: a parità di errore, quota dei valori oltre la soglia della distanza dal normale nella classe con le estrazioni più concordi e in quella con le più discordi. Il minimo vicino al bordo e il divario fra le classi valgono per quasi tutti i tipi.}
+    \caption{Il dropout per tipo di evento, sugli anni di test. A sinistra: rapporto fra dispersione ed errore secondo le celle di distanza dal bordo, con evidenziati, nella legenda, i tre tipi con più valori negli eventi di almeno 20 valori; gli altri tipi sono in grigio, e non sono tracciati i punti calcolati su meno di 1000 valori né quelli a 8 o più celle dal bordo. A destra: a parità di errore, quota dei valori oltre la soglia della distanza dal normale nella classe 1, con le estrazioni più concordi, nella classe 4 e nella classe 5, con le più discordi; i tipi sono ordinati per la classe 4, e dove le classi 4 e 5 coincidono il segno della classe 5 nasconde quello della 4. Il rapporto è più basso poco dentro il bordo in quasi tutti i tipi; la classe 1 ha sempre la quota più bassa, la 5 quasi mai la più alta.}
     \label{fig:ris-dropout-tipi}
 \end{figure}
 
-\paragraph{La dispersione cella per cella.} La Figura~\ref{fig:ris-dropout-mappe} mostra la deviazione standard delle estrazioni in ogni cella. In media sugli anni di test è più alta a sud, dove è più alto anche l'errore: $1.80\times10^{-4}$ fra 20$^\circ$ e 30$^\circ$N contro $1.47\times10^{-4}$ fra 50$^\circ$ e 60$^\circ$N. I valori più alti cadono in poche aree che, a una lettura della mappa, sembrano corrispondere a rilievi come Alpi, Atlante, Caucaso e Zagros; il legame con l'orografia non è misurato. Il rapporto varia poco e va un po' nel senso opposto, dal 10.2\% al 10.7\%. Lungo il bordo del dominio si vede una sottile cornice: sulla prima fila di celle la deviazione standard è circa il 20\% più alta che all'interno, un effetto del modello simile a quello della Sezione~\ref{sec:ris-correlazione-temporale}. Negli istanti dei tre esempi della Sezione~\ref{sec:ris-esempi}, uno per ciascuno dei tre tipi evidenziati, la deviazione standard è più alta nel nucleo, come ci si aspetta dal fatto che segue G: in mediana circa quattro volte quella della zona lontana.
+\paragraph{La dispersione cella per cella.} La Figura~\ref{fig:ris-dropout-mappe} mostra la deviazione standard delle estrazioni in ogni cella. In media sugli anni di test è più alta a sud, dove è più alto anche l'errore: $2.28\times10^{-4}$ fra 20$^\circ$ e 30$^\circ$N contro $1.85\times10^{-4}$ fra 50$^\circ$ e 60$^\circ$N, circa il 23\% in più a sud. Il rapporto medio varia poco, fra l'11.0\% e l'11.4\% da una fascia all'altra, senza un andamento con la latitudine. Lungo il bordo del dominio si vede una cornice: sulla fila di celle più esterna la deviazione standard è in media 1.8 volte quella delle celle a otto o più celle dal bordo, probabilmente un effetto del modello simile a quello della Sezione~\ref{sec:ris-correlazione-temporale}. Due terzi delle celle sopra il 97-esimo percentile della media stanno entro tre celle dal bordo. All'interno i valori più alti cadono in poche aree che, a una lettura della mappa, sembrano corrispondere a rilievi come Alpi, Caucaso, Anatolia orientale e Zagros; il legame con l'orografia non è misurato. Negli istanti dei tre esempi della Sezione~\ref{sec:ris-esempi}, uno per ciascuno dei tre tipi evidenziati, la deviazione standard è più alta nel nucleo, come ci si aspetta dal fatto che segue G: in mediana da quattro a sei volte e mezzo quella della zona lontana.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_dropout_mappe}
-    \caption{La deviazione standard delle estrazioni di dropout cella per cella. In alto: la sua media sugli anni di test e il rapporto medio con l'errore. In basso: la deviazione standard negli istanti dei tre esempi della Sezione~\ref{sec:ris-esempi}, con una scala comune ai tre e il nucleo dell'evento racchiuso dalla linea arancione. Linee di costa da Natural Earth.}
+    \caption{La deviazione standard delle estrazioni di dropout cella per cella. In alto: la sua media sugli anni di test e il rapporto medio con l'errore; lungo il bordo del dominio si vede la cornice descritta nel testo. In basso: la deviazione standard negli istanti dei tre esempi della Sezione~\ref{sec:ris-esempi} (23 novembre 2017, 19 maggio 2006 e 15 giugno 2024), con una scala comune ai tre e il nucleo dell'evento racchiuso dalla linea arancione. Linee di costa da Natural Earth.}
     \label{fig:ris-dropout-mappe}
 \end{figure}
 
-\paragraph{Sintesi.} Nelle segnalazioni di G il dropout ha un comportamento definito, che si ripete in quasi tutti i tipi di evento. In valore assoluto la dispersione cresce con G, e la maggior parte delle segnalazioni dipende poco dalle maschere. In proporzione, le estrazioni concordano di più sugli errori più grandi. Attraverso gli eventi il rapporto è più basso una o due celle dentro il bordo e risale di poco verso l'interno. A parità di errore, concordano di meno dove i dati sono più lontani dal normale: la prima lettura confronta errori diversi, questa valori con lo stesso errore. Questo descrive il comportamento del modello e non rende una segnalazione più o meno affidabile.
-% Numeri (2 novembre 2026, test, good-sweep-2): scripts/check_era5_dropout_spread.py (--score-component
-% generator, un istante ogni 9, rapporto delle medie per fascia: log dropout_rapporto_bande.log) e
-% scripts/check_era5_dropout_flags.py (dropout_rapporto_5pc.log); figures/dati/era5_dropout.json. Dispersione
-% mediana dei valori segnalati: 0.194 volte la soglia; errore grezzo: 80.7 e 64.2% restano una e due
-% deviazioni sotto. Rapporto per posizione -8..-1, 1..8: 10.45, 9.69, 9.48, 9.33, 9.12, 8.76, 8.39, 8.61 |
-% 9.19, 9.62, 9.77, 9.77, 9.84, 9.84, 9.84, 10.14 (valore al percentile mediano, intero). Classi del
-% rapporto a parità di errore: oltre soglia 19.7, 32.8, 43.9, 53.2, 61.7%; nessuna variabile oltre 2: 15.5,
-% 10.4, 8.2, 7.2, 7.9%; a parità di G: 23.7, 32.8, 42.4, 51.3, 61.1%. Valori a 8 o più celle: 48537 su
-% 36656037.
-% Per tipo e mappe (2 novembre 2026, dropout_tipi_5pc*, in figures/dati/era5_dropout_*): rapporto per
-% posizione -2, 1, 7: velocità verticale 8.16, 9.04, 9.77; precipitazione 8.46, 9.19, 9.69; pressione
-% 9.12, 9.84, 10.37; radiazione -2 5.30; umidità del suolo 11.82, 13.13, 11.32. Oltre soglia, classi 1 e 5
-% a parità di errore: velocità verticale 16.2, 54.0; precipitazione 21.6, 62.2; pressione 30.7, 73.5;
-% suolo 30.6, 94.2; nuvole 29.5, 52.8 (classe 4), 45.7; radiazione 20.8, 42.2, 41.1. Variazione in tre
-% ore sotto la soglia del normale: 52.2, 53.9, 53.2, 51.7, 47.6 (criterio fissato prima sull'ipotesi che
-% le estrazioni concordi siano i casi di andamento insolito: discesa regolare di almeno 5 punti: non raggiunto).
-% Sopra il 97-esimo percentile della media (celle): 30.5-37.5N 45.5-50E 59; 37-42N 39.5-45E 56; 20-23.5N
-% 39.5-46E 42; 20-22N 14-19.5E 36; 42-44.5N 41-48E 33; 31-33.5N 8-4.5W 21; 46-47N 9.5-12E 14. La lettura come
-% rilievi è geografica, non misurata. Prima fila del dominio 1.96 contro 1.63 x 1e-4 all'interno (>= 8 celle).
-% Istanti degli esempi (3 novembre 2026, outputs/esempi_good2/istanti_std.npz, da scores/generator_std.npy):
-% mediana x 1e-4 nucleo, contorno, lontana: velocità verticale 3.80, 2.19, 0.88; precipitazione 3.35, 1.99,
-% 0.86; pressione 3.60, 2.52, 0.97.
-% Media per fascia di latitudine S->N: deviazione standard 1.80, 1.68, 1.60, 1.47 x 1e-4; rapporto 10.15,
-% 10.23, 10.54, 10.70%.
-% Da non riprendere senza ricalcolo: le classi di ottobre (analisi_good2/fiducia_test.log: a parità di
-% errore grezzo, su 400 istanti, variabile con l'errore più grande oltre 1 nell'84% con estrazioni concordi
-% e nel 67% con discordi) vanno in senso opposto. Non dipende da come è definita la dispersione, che
-% qui dà lo stesso segno in tutte le forme: resta la differenza fra la sola variabile con l'errore più
-% grande e tutte le variabili, non verificata.
+\paragraph{Sintesi.} Nelle segnalazioni di G il dropout ha un comportamento definito, che si ripete in quasi tutti i tipi di evento. In valore assoluto la dispersione cresce con G, e la maggior parte delle segnalazioni dipende poco dalle maschere. In proporzione all'errore la dispersione è quasi costante, e cala solo sugli errori più grandi. Attraverso gli eventi il rapporto è più basso poco dentro il bordo e risale di poco verso l'interno. A parità di errore, le estrazioni concordano di meno dove i dati sono più lontani dal normale, fino alla classe 4; la classe più discorde non segue questo andamento. Questo descrive il comportamento del modello e non rende una segnalazione più o meno affidabile.
+% Numeri (5 novembre 2026, test, optuna-27, run_era5_final_analyses.sh): scripts/check_era5_dropout_spread.py
+% (--score-component generator, un istante ogni 9, rapporto delle medie per fascia: log
+% outputs/finale_optuna27/logs/dropout_rapporto_bande.log) e scripts/check_era5_dropout_flags.py
+% (logs/dropout_5pc.log, dropout_rapporto_5pc.log, dropout_tipi_5pc.log); figures/dati/era5_dropout.json.
+% Valori segnalati da G+clim: 36093783. Restano segnalati togliendo una e due deviazioni 74.8 e 55.0%; non
+% segnalati che lo diventano aggiungendone una 1.8%; dispersione mediana dei valori segnalati 0.222 volte la
+% soglia. Errore grezzo (dropout_rapporto_bande.log): 76.0 e 57.4% restano una e due deviazioni sotto.
+% Rapporto per fascia di percentile dell'errore 0-50, 50-90, 90-95, 95-99, 99-99.9, 99.9-100: 11.11, 11.36,
+% 11.83, 11.58, 9.73, 9.05%. Rapporto per posizione -8..-1, 1..8: 11.20, 10.42, 10.26, 10.02, 9.86, 9.63,
+% 9.55, 10.02 | 10.18, 10.26, 10.34, 10.34, 10.34, 10.34, 10.34, 10.50 (valore al percentile mediano).
+% Percentile mediano della dispersione assoluta (grezza) -1, 1, 6: 94, 85, 49. Classi del rapporto a parità
+% di errore grezzo: rapporto mediano 5.4, 7.9, 10.0, 12.7, 18.7%; oltre soglia 24.3, 38.3, 46.2, 49.7,
+% 45.3%; nessuna variabile oltre 2: 13.5, 10.2, 9.3, 9.4, 12.4%; a parità di G: oltre soglia 27.2, 37.7,
+% 45.1, 49.0, 44.9%. Valori a 8 o più celle dentro: 30865 su 36093783 (0.09%).
+% Per tipo e mappe (dropout_tipi_5pc*, in figures/dati/era5_dropout_*): rapporto per posizione -2, 1, 7:
+% velocità verticale 9.32, 9.86, 10.18; precipitazione 9.55, 10.10, 10.18; copertura nuvolosa 8.45, 9.32,
+% 10.02; radiazione -2 7.11; umidità del suolo 12.34, 12.99, 11.48 (-8 13.61). Oltre soglia, classi 1, 4, 5 a
+% parità di errore: velocità verticale 20.5, 44.5, 39.9; precipitazione 25.5, 49.9, 49.9; copertura
+% nuvolosa 33.5, 48.8 (classe 3 51.2), 36.5; umidità del suolo 39.1, 77.5, 77.2; pressione 37.5, 63.0,
+% 49.7. Classe con la quota più alta: 4 in tutti i tipi tranne copertura nuvolosa e temperatura a 850 hPa
+% (3); precipitazione 4 e 5 alla pari.
+% Mappe (figures/dati/era5_dropout_mappe.npz = outputs/finale_optuna27/dropout_tipi_5pc_maps.npz):
+% deviazione standard media per fascia di latitudine S->N ([20,30), [30,40), [40,50), [50,60]) 2.28, 2.05,
+% 1.99, 1.85 x 1e-4; rapporto medio 11.43, 10.98, 11.17, 11.39%. Anello più esterno 3.47 contro 1.96 x
+% 1e-4 a 8 o più celle dal bordo (1.77 volte); anelli 1 e 2: 2.50, 2.47. Sopra il 97-esimo percentile della
+% media (3.26 x 1e-4): 66% delle celle entro tre celle dal bordo; all'interno (celle) 39.5-42N 39-43.5E 35;
+% 44.5-46.5N 6.5-8E 12; 43.5-44.5N 41-42.5E 12; 46-47N 10-11.5E 9; 42-43N 46.5-47.5E 9; 36.5-37.5N
+% 45.5-46.5E 9; 32-33N 36-37E 9; 37-38N 43-44E 6; 45.5-46.5N 24.5-25.5E 5. La lettura come rilievi è
+% geografica, non misurata.
+% Istanti degli esempi (mediana della deviazione standard x 1e-4 nucleo, contorno, lontana, dalle mappe degli
+% istanti in era5_dropout_mappe.npz e dalle zone di era5_caso_NN.npz): velocità verticale 5.95, 2.97, 1.06;
+% precipitazione 4.06, 2.83, 1.02; copertura nuvolosa 8.40, 2.98, 1.28 (nucleo/lontana 5.6, 4.0, 6.5).
 
 \section{Casi specifici}
 \label{sec:ris-casi}
@@ -707,42 +740,48 @@ Tutti i risultati precedenti usano la soglia del 95-esimo percentile degli score
         \toprule
         Analisi & Misura & 95-esimo & 99-esimo \\
         \midrule
-        Quota per luogo (Sez.~\ref{sec:ris-climatologia}) & G senza normalizzazione, intervallo fra fasce e mesi & 1.3--12.1\% & 0.1--3.6\% \\
-         & G con normalizzazione, intervallo & 3.6--6.3\% & 0.5--2.1\% \\
-         & differenza relativa, G senza $\rightarrow$ con normalizzazione & 0.44 $\rightarrow$ 0.11 & 0.71 $\rightarrow$ 0.25 \\
+        Quota per luogo (Sez.~\ref{sec:ris-climatologia}) & G senza normalizzazione, intervallo fra fasce e mesi & 1.6--11.1\% & 0.2--3.6\% \\
+         & G con normalizzazione, intervallo & 3.7--6.3\% & 0.5--2.1\% \\
+         & differenza relativa, G senza $\rightarrow$ con normalizzazione & 0.39 $\rightarrow$ 0.11 & 0.70 $\rightarrow$ 0.28 \\
         \addlinespace
-        Zone degli eventi (Sez.~\ref{sec:ris-g-d}) & eventi di G con normalizzazione & 172001 & 64862 \\
-         & $D_{\mathrm{reale}}$ nel nucleo, percentile mediano & 16 & 2 \\
-         & $D_{\mathrm{reale}}$ nel contorno, percentile mediano & 54 & 13 \\
-         & D nel nucleo, percentile mediano & 10 & 2 \\
+        Zone degli eventi (Sez.~\ref{sec:ris-g-d}) & eventi di G con normalizzazione & 184877 & 70954 \\
+         & $D_{\mathrm{reale}}$ nel nucleo, percentile mediano & 5 & 1 \\
+         & $D_{\mathrm{reale}}$ nel contorno, percentile mediano & 12 & 4 \\
+         & D nel nucleo, percentile mediano & 27 & 2 \\
         \addlinespace
-        Confronti (Sez.~\ref{sec:ris-confronti}) & segnalazioni di G condivise con la variazione in tre ore & 54.2\% & 47.5\% \\
-         & condivise con MCD & 53.7\% & 47.4\% \\
-         & condivise con HBOS & 40.5\% & 25.5\% \\
-         & segnalazioni del solo G & 16.4\% & 25.3\% \\
-         & valori segnalati da almeno 5 rilevatori su 9 & 4.25\% & 0.72\% \\
+        Confronti (Sez.~\ref{sec:ris-confronti}) & segnalazioni di G condivise con la variazione in tre ore & 53.9\% & 46.4\% \\
+         & condivise con MCD & 52.1\% & 45.8\% \\
+         & condivise con HBOS & 39.2\% & 24.3\% \\
+         & segnalazioni del solo G & 18.1\% & 27.4\% \\
+         & valori segnalati da almeno 5 rilevatori su 9 & 4.22\% & 0.72\% \\
         \bottomrule
     \end{tabular}
 \end{table}
 
 \paragraph{La normalizzazione climatologica nella coda.} Con la soglia più alta la normalizzazione riduce ancora molto le differenze fra luoghi e stagioni, ma non le annulla: resta un eccesso di segnalazioni a sud, dove la quota media è circa il doppio di quella a nord. La normalizzazione allinea media e deviazione standard dell'errore di ogni cella, non la frequenza dei suoi valori più estremi; con il 5\% questa differenza si vede appena, con l'1\% sì.
 
-\paragraph{Il comportamento del discriminatore.} Con la soglia più alta gli eventi sono meno della metà, e il comportamento del discriminatore è lo stesso e più marcato. Nel nucleo $D_{\mathrm{reale}}$ e D scendono al percentile 2. Anche nel contorno $D_{\mathrm{reale}}$ diventa basso: con la soglia più alta gli eventi sono più estremi, e anche le celle attorno sono fra i valori più alti di G.
+\paragraph{Il comportamento del discriminatore.} Con la soglia più alta gli eventi sono meno della metà, e il comportamento del discriminatore è lo stesso e più marcato. Nel nucleo $D_{\mathrm{reale}}$ scende dal percentile 5 all'1 e D dal 27 al 2. Anche nel contorno $D_{\mathrm{reale}}$ scende, da 12 a 4: con la soglia più alta gli eventi sono più estremi, e anche le celle attorno sono fra i valori più alti di G.
 
-\paragraph{Eventi e catene.} Con la soglia più alta le catene si accorciano ma restano: gli eventi più grandi dei tre tipi con più valori durano fra 8 e 23 giorni, contro 16--97 giorni con il 5\%, e gli eventi con almeno 20 valori contengono ancora l'86\% dei valori segnalati. Cambia anche il terzo tipo con più valori negli eventi di almeno 20 valori: la copertura nuvolosa al posto della pressione.
+\paragraph{Eventi e catene.} Con la soglia più alta le catene si accorciano ma restano: gli eventi più grandi dei tre tipi con più valori durano fra 8 e 24 giorni, contro 23--40 giorni con il 5\%, e gli eventi con almeno 20 valori contengono ancora l'85\% dei valori segnalati, contro il 93\% con il 5\%. I tre tipi con più valori negli eventi di almeno 20 valori restano velocità verticale, precipitazione e copertura nuvolosa, ma la precipitazione passa al primo posto.
 
-\paragraph{Confronti con metodi semplici.} Con la soglia più alta il quadro resta lo stesso, con un accordo più basso. La variazione in tre ore e MCD restano i rilevatori più vicini a G, con il 47\% delle sue segnalazioni condivise; il metodo più lontano resta HBOS, che scende dal 40.5\% al 25.5\%. La quota del solo G sale al 25.3\%, e quella della variazione in tre ore al 38.2\%. I valori segnalati da almeno cinque rilevatori su nove sono lo 0.72\%: il calo è in gran parte automatico, perché ogni rilevatore segnala circa cinque volte meno. L'accordo resta molto sopra il caso: con l'1\% due rilevatori indipendenti condividerebbero circa l'1\% delle segnalazioni, mentre G ne condivide il 47\% con la variazione in tre ore.
+\paragraph{Confronti con metodi semplici.} Con la soglia più alta il quadro resta lo stesso, con un accordo più basso. La variazione in tre ore e MCD restano i rilevatori più vicini a G, con il 46\% delle sue segnalazioni condivise; il metodo più lontano resta HBOS, che scende dal 39.2\% al 24.3\%. La quota del solo G sale al 27.4\%, e quella della variazione in tre ore al 38.3\%. I valori segnalati da almeno cinque rilevatori su nove sono lo 0.72\%: il calo è in gran parte automatico, perché ogni rilevatore segnala circa cinque volte meno. L'accordo resta molto sopra il caso: con l'1\% due rilevatori indipendenti condividerebbero circa l'1\% delle segnalazioni, mentre G ne condivide il 46\% con la variazione in tre ore.
 
-\paragraph{Sintesi.} Le conclusioni sul discriminatore non dipendono dalla soglia, e con una soglia più alta diventano più nette. Anche il quadro del confronto con i metodi semplici non cambia, con un accordo più basso e una quota esclusiva di G più alta. Le catene si accorciano, ma restano. L'effetto della normalizzazione climatologica dipende invece dalla soglia: è quasi completo con il 5\%, solo parziale con l'1\%.
-% Numeri: per la quota per luogo i commenti della Sezione 6.4, per le zone quelli della
-% Sezione 6.5 (validazione, outputs/comportamento_good2, 29 ottobre 2026).
-% Eventi più grandi dei tre tipi con il 5% (1 novembre 2026, outputs/casi_good2_g/cases.csv, regola
-% del solo evento più grande): velocità verticale 97, precipitazione 36, pressione 16 giorni.
-% Eventi all'1% (1 novembre 2026, outputs/casi_good2_g_1pc): 296199 eventi, 7484975 valori, 6420225 in eventi
-% di almeno 20 valori (85.8%); casi precipitazione 150 istanti (19 giorni), velocità verticale 63 (8), copertura
-% nuvolosa 184 (23).
-% Rapporto fra le quote medie a sud e a nord con G+clim all'1%: 1.40 / 0.74 = 1.9
-% (sul test 1.74 / 0.82 = 2.1).
+\paragraph{Sintesi.} Le conclusioni sul discriminatore non dipendono dalla soglia, e con una soglia più alta diventano più nette. Anche il quadro del confronto con i metodi semplici non cambia, con un accordo più basso e una quota esclusiva di G più alta. Le catene si accorciano, ma restano. L'effetto della normalizzazione climatologica dipende invece dalla soglia: la normalizzazione riduce le differenze fra luoghi e stagioni di circa tre quarti con il 5\% e di circa tre quinti con l'1\%.
+% Numeri (5 novembre 2026, optuna-27). Quota per luogo e zone: validazione, outputs/comportamento_optuna27
+% (i commenti delle Sezioni 6.3 e 6.4); quote per luogo da logs/luogo_g_grezzo_{5,1}pc.log e
+% luogo_g_clim_{5,1}pc.log (48 caselle, una cifra decimale; differenza relativa = scarto medio assoluto
+% dalla media delle caselle diviso per la media: 0.390 e 0.107 al 5%, 0.697 e 0.281 all'1%); zone da
+% zone_g_dterms_5pc.csv e zone_g_dterms_1pc.csv (logs/zone_g_dterms_*pc.log). Confronti: test,
+% outputs/confronti_good2/logs/comparison_5pc.log e comparison_1pc.log con MODEL optuna-27.
+% Eventi più grandi dei tre tipi (regola del solo evento più grande, outputs/finale_optuna27/casi_5pc e
+% casi_1pc, cases.csv): al 5% velocità verticale 555 ore (23.1 giorni), precipitazione 960 (40.0),
+% copertura nuvolosa 603 (25.1); all'1% precipitazione 411 ore (17.1 giorni, 138 istanti), velocità
+% verticale 186 (7.8, 63), copertura nuvolosa 564 (23.5, 189). Eventi all'1% (logs/casi_1pc.log): 317892
+% eventi, 7435523 valori, 6323252 in eventi di almeno 20 valori (85.0%); valori negli eventi con più di 19
+% valori: precipitazione 2353900, velocità verticale 1949717, copertura nuvolosa 504300, radiazione 353676.
+% Al 5% gli eventi con almeno 20 valori contengono il 92.5% dei valori (33402993 su 36093783).
+% Rapporto fra le quote medie a sud e a nord con G+clim all'1%: validazione 1.43 / 0.68 = 2.1 (sul test,
+% outputs/finale_optuna27/logs/luogo_g_clim_1pc.log, 1.79 / 0.74 = 2.4).
 
 % Nascosta dal 28 ottobre 2026 su richiesta dell'autore: i limiti si scrivono alla fine.
 % Il testo resta qui, non compilato.
