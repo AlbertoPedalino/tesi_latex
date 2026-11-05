@@ -59,6 +59,7 @@ BASELINES = {"normal": "Distanza dal normale", "change_3h": "Variazione in tre o
              "cblof": "CBLOF", "copod": "COPOD", "hbos": "HBOS", "iforest": "Isolation Forest"}
 SIMPLE = {"normal": ORANGE, "change_3h": GREEN}  # drawn in colour; the shallow models in grey
 SHALLOW_GREY = "#b9b7b0"
+PURPLE = "#7b3fbf"  # the distance from normal read on the events of G, not on its own
 EMPTY = "#d9d8d4"  # cells of the type tables with no event
 
 
@@ -173,7 +174,7 @@ def types_figure(zones):
     """Which variables dominate, and at which size, for G and for every baseline: the values flagged by type and size."""
     order = type_order(zones)
     norm = LogNorm(vmin=5e3, vmax=2.5e7)
-    figure, axes = plt.subplots(3, 3, figsize=size(1.08), sharex=True, sharey=True, constrained_layout=True)
+    figure, axes = plt.subplots(3, 3, figsize=size(1.18), sharex=True, sharey=True, constrained_layout=True)
     for axis, (label, key, table, _) in zip(axes.flat, method_tables()):
         table = table.set_index(["type", "size"])
         grid = np.full((len(order), len(SIZES)), np.nan)
@@ -183,17 +184,19 @@ def types_figure(zones):
                     grid[row, column] = table.loc[(name, band), f"{key} core values"]
         axis.set_facecolor(EMPTY)  # a size with no event of that type
         mesh = axis.imshow(grid, cmap=RAMP, norm=norm, aspect="auto", interpolation="nearest")
-        axis.set_title("G" if key == SCORE else label, fontsize=7.5, loc="left", color=BLUE if key == SCORE else TEXT,
+        # The two long names on two lines: on one line they would run into the title of the next panel.
+        title = {"Distanza dal normale": "Distanza\ndal normale", "Variazione in tre ore": "Variazione\nin tre ore"}.get(label, label)
+        axis.set_title("G" if key == SCORE else title, fontsize=8.5, loc="left", color=BLUE if key == SCORE else TEXT,
                        fontweight="bold" if key == SCORE else "normal")
-        axis.tick_params(length=0, labelsize=6)
+        axis.tick_params(length=0, labelsize=7.5)
         for side in axis.spines.values():
             side.set_visible(key == SCORE)
             side.set_color(BLUE)
     for axis in axes[-1]:
         axis.set_xticks(range(len(SIZES)), ("1", "2–4", "5–19", "20–99", "100–999", "1000–9999", "oltre 9999"),
-                        fontsize=6.5, rotation=90)
+                        fontsize=7.5, rotation=90)
     for axis in axes[:, 0]:
-        axis.set_yticks(range(len(order)), [TYPES[name] for name in order], fontsize=7)
+        axis.set_yticks(range(len(order)), [TYPES[name] for name in order], fontsize=7.5)
     figure.supxlabel("numero di valori dell'evento", fontsize=TICKS)
     bar = figure.colorbar(mesh, ax=axes, shrink=0.5, pad=0.01, aspect=30)
     bar.set_label("valori segnalati (scala logaritmica)", fontsize=TICKS)
@@ -220,8 +223,8 @@ def zones_map_figure(data, coastline):
     axes[0].set_title("G con normalizzazione", fontsize=9, loc="left", color=TEXT)
     colours = ["#f4f3ef", "#cfcdc6", ORANGE, BLUE]
     mesh = draw_map(axes[1], grid, zone, coastline, left=False, cmap=ListedColormap(colours), vmin=-0.5, vmax=3.5)
-    bar = figure.colorbar(mesh, ax=axes[1], orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, ticks=range(4))
-    bar.set_ticklabels(("lontana", "intermedia", "contorno", "nucleo"), fontsize=6)
+    bar = figure.colorbar(mesh, ax=axes[1], orientation="horizontal", shrink=1.0, pad=0.02, aspect=30, ticks=range(4))
+    bar.set_ticklabels(("lontana", "intermedia", "contorno", "nucleo"), fontsize=7.5)  # 7.5: at 8 "intermedia" runs into its neighbours
     bar.ax.tick_params(length=0)
     axes[1].set_title("Le zone", fontsize=9, loc="left", color=TEXT)
     figure.savefig(HERE / "era5_eventi_mappa_zone.pdf", dpi=300)
@@ -242,7 +245,7 @@ def position_axis(axis):
 
 def profile_figure():
     """Each method across its own events: G falls more gradually than most baselines, all typical about six cells out."""
-    figure, axis = plt.subplots(figsize=size(0.56), constrained_layout=True)
+    figure, axis = plt.subplots(figsize=size(0.62), constrained_layout=True)
     axis.axhline(50, color=MUTED, linewidth=0.8, linestyle="--")
     axis.text(-8.2, 50, "valore tipico", fontsize=TICKS, color=MUTED, va="bottom")
     axis.axhline(95, color=MUTED, linewidth=0.8, linestyle=":")
@@ -258,10 +261,20 @@ def profile_figure():
             style = dict(color=SHALLOW_GREY, linewidth=0.9, marker="o", markersize=2, zorder=2)
         axis.plot(table["position"][joined], table[f"{key} percentile"][joined], **style)
         axis.plot(table["position"][~joined], table[f"{key} percentile"][~joined], **{**style, "linewidth": 0})
+    # The distance from normal read on the events of G (the text of Section 6.7), not on its own events.
+    table = pd.read_csv(PROFILE)
+    table = table[table["type"] == "all"].sort_values("position")
+    joined = table["position"].abs() < 8
+    style = dict(color=PURPLE, linewidth=1.6, linestyle=(0, (4, 2)), marker="o", markersize=3.5, markeredgecolor="white",
+                 zorder=3.5)
+    axis.plot(table["position"][joined], table[f"{NORMAL} percentile"][joined], **style)
+    axis.plot(table["position"][~joined], table[f"{NORMAL} percentile"][~joined], **{**style, "linewidth": 0})
     axis.text(0.15, 3, "bordo dell'evento", fontsize=TICKS, color=TEXT)
     keys = [Line2D([], [], color=BLUE, linewidth=2.2, marker="o", markersize=5, markeredgecolor="white",
                    label="G con normalizzazione"),
-            Line2D([], [], color=ORANGE, linewidth=1.6, label="distanza dal normale"),
+            Line2D([], [], color=ORANGE, linewidth=1.6, label="distanza dal normale, sui propri eventi"),
+            Line2D([], [], color=PURPLE, linewidth=1.6, linestyle=(0, (4, 2)),
+                   label="distanza dal normale, sugli eventi di G"),
             Line2D([], [], color=GREEN, linewidth=1.6, label="variazione in tre ore"),
             Line2D([], [], color=SHALLOW_GREY, linewidth=0.9, label="sei modelli shallow")]
     copod = method_tables()[list(BASELINES).index("copod") + 1][3]
@@ -410,14 +423,16 @@ def dropout_maps_figure(coastline_path):
     maps = dict(np.load(HERE / "dati" / "era5_dropout_mappe.npz"))
     grid = {key: maps[key] for key in ("rows", "cols", "latitudes", "longitudes")}
     coastline = coastline_of(coastline_path, grid)
-    figure = plt.figure(figsize=size(0.9), constrained_layout=True)
-    panels = figure.add_gridspec(2, 6, height_ratios=(1.25, 1))
-    for slot, key, title, label, scale in ((panels[0, :3], "mean grezza", "Deviazione standard, media", r"deviazione standard dell'errore, $\times 10^{-4}$", 1e4),
-                                           (panels[0, 3:], "mean ratio", "Rapporto, medio", "rapporto (%)", 100)):
+    figure = plt.figure(figsize=size(0.98), constrained_layout=True)
+    # One grid per row: in a single grid the margins of the top maps would also narrow the small maps of the bottom row.
+    rows = figure.add_gridspec(2, 1, height_ratios=(1.14, 1.0))
+    top, bottom = rows[0].subgridspec(1, 2), rows[1].subgridspec(1, 3)
+    for slot, key, title, label, scale in ((top[0, 0], "mean grezza", "Deviazione standard, media", r"deviazione standard dell'errore, $\times 10^{-4}$", 1e4),
+                                           (top[0, 1], "mean ratio", "Rapporto, medio", "rapporto (%)", 100)):
         axis = figure.add_subplot(slot)
         values = maps[key] * scale
         low, high = np.nanpercentile(values, (1, 99))
-        mesh = draw_map(axis, grid, values, coastline, left=slot == panels[0, :3], cmap="viridis", vmin=low, vmax=high)
+        mesh = draw_map(axis, grid, values, coastline, left=slot == top[0, 0], cmap="viridis", vmin=low, vmax=high)
         axis.set_title(title, fontsize=9, loc="left", color=TEXT)
         bar = figure.colorbar(mesh, ax=axis, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30)
         bar.set_label(label, fontsize=TICKS)
@@ -434,13 +449,15 @@ def dropout_maps_figure(coastline_path):
     axes = []
     high = max(np.nanpercentile(maps[f"instant {moment} grezza"], 99) for _, moment, _ in cases) * 1e4
     for column, (number, moment, title) in enumerate(cases):
-        axis = figure.add_subplot(panels[1, 2 * column:2 * column + 2])
+        axis = figure.add_subplot(bottom[0, column])
         mesh = draw_map(axis, grid, maps[f"instant {moment} grezza"] * 1e4, coastline, left=column == 0, cmap="viridis", vmin=0, vmax=high)
         with np.load(HERE / "dati" / f"era5_caso_{number}.npz") as case:
             picture = np.zeros((len(grid["latitudes"]), len(grid["longitudes"])))
             picture[grid["rows"], grid["cols"]] = case["core"]
         axis.contour(grid["longitudes"], grid["latitudes"][::-1], picture[::-1], levels=[0.5], colors=ORANGE, linewidths=1.6)
         axis.set_title(title, fontsize=8, loc="left", color=TEXT)
+        if column > 0:  # the latitudes are those of the first map: without them the small maps are wider
+            axis.tick_params(labelleft=False)
         axes.append(axis)
     bar = figure.colorbar(mesh, ax=axes, orientation="horizontal", shrink=0.5, pad=0.02, aspect=40)
     bar.set_label(r"deviazione standard dell'errore, $\times 10^{-4}$", fontsize=TICKS)
