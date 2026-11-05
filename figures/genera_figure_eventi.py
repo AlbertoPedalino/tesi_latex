@@ -31,7 +31,7 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from scipy import ndimage
 
-from genera_figure_g_d import BLUE, GRID, MUTED, ORANGE, TEXT, TICKS, coastline_of, draw_map, size
+from genera_figure_g_d import BLUE, GRID, MUTED, ORANGE, TEXT, TICKS, YELLOW, coastline_of, draw_map, size
 
 HERE = pathlib.Path(__file__).parent
 ZONES = HERE / "dati" / "era5_eventi_zone.csv"
@@ -52,6 +52,14 @@ CORE = "core"
 MIN_VALUES = 1000  # a position of a type with fewer values is not drawn
 GREEN, GREEN_TEXT = "#1baf7a", "#12875d"  # the text is darker, to be read on white
 HALO = [effects.withStroke(linewidth=2.5, foreground="white")]  # a label stays readable over the lines
+# The baselines of the comparison section, each with its own events (scripts/run_era5_baseline_events.sh of the code
+# repository: check_era5_event_zones.py and check_era5_event_profile.py with --events and --scores the baseline).
+BASELINE_DIR = HERE / "dati" / "baseline"
+BASELINES = {"normal": "Distanza dal normale", "change_3h": "Variazione in tre ore", "pca": "PCA", "mcd": "MCD",
+             "cblof": "CBLOF", "copod": "COPOD", "hbos": "HBOS", "iforest": "Isolation Forest"}
+SIMPLE = {"normal": ORANGE, "change_3h": GREEN}  # drawn in colour; the shallow models in grey
+SHALLOW_GREY = "#b9b7b0"
+EMPTY = "#d9d8d4"  # cells of the type tables with no event
 
 
 def prepare(folder):
@@ -61,6 +69,47 @@ def prepare(folder):
     for path in sorted(folder.glob("case_*.npz")):
         shutil.copyfile(path, HERE / "dati" / f"era5_caso_{path.stem[-2:]}.npz")
     print(f"written {ZONES}")
+
+
+def prepare_baselines(folder):
+    """The tables of the baselines, from the output of run_era5_baseline_events.sh."""
+    BASELINE_DIR.mkdir(exist_ok=True)
+    for name in BASELINES:
+        for stem in (f"zone_{name}_5pc", f"zone_{name}_5pc_types", f"profilo_{name}_5pc"):
+            shutil.copyfile(pathlib.Path(folder) / f"{stem}.csv", BASELINE_DIR / f"{stem}.csv")
+    print(f"written {BASELINE_DIR}")
+
+
+def method_tables():
+    """For G and every baseline: its name, the column prefix of its score, its zones and its profile."""
+    zones = pd.read_csv(ZONES, dtype={"size": str})
+    methods = [("G con normalizzazione", SCORE, zones, pd.read_csv(PROFILE))]
+    for name, label in BASELINES.items():
+        methods.append((label, name, pd.read_csv(BASELINE_DIR / f"zone_{name}_5pc.csv", dtype={"size": str}),
+                        pd.read_csv(BASELINE_DIR / f"profilo_{name}_5pc.csv")))
+    return methods
+
+
+def baseline_summary():
+    """The numbers of the table of G and the baselines: sizes, profile and main types of their own events."""
+    rows = []
+    for label, key, zones, profile in method_tables():
+        by_size = zones[zones["type"] == "all"].set_index("size")
+        values = by_size.loc[list(SIZES), f"{key} core values"].sum()
+        events = by_size.loc[list(SIZES), "events"].sum()
+        types = zones[(zones["type"] != "all") & ~zones["type"].str.startswith("far") & zones["size"].isin(SIZES)]
+        types = types.groupby("type")[f"{key} core values"].sum().sort_values(ascending=False) / values * 100
+        line = profile[profile["type"] == "all"].set_index("position")[f"{key} percentile"]
+        rows.append({"metodo": label, "eventi": int(events), "valori": int(values),
+                     "eventi sotto 20 %": 100 * by_size.loc[["1", "2-4", "5-19"], "events"].sum() / events,
+                     "valori in eventi da 1000 %": 100 * by_size.loc[["1000-9999", ">9999"], f"{key} core values"].sum() / values,
+                     **{f"percentile a {cells} fuori": line[cells] for cells in (1, 2, 3, 6)},
+                     "lontano": zones[zones["type"].str.startswith("far")][f"{key} core percentile"].iloc[0],
+                     **{f"tipo {rank + 1}": f"{name} {share:.1f}" for rank, (name, share) in enumerate(types.head(3).items())}})
+    table = pd.DataFrame(rows)
+    table.to_csv(HERE / "dati" / "era5_eventi_baseline.csv", index=False, float_format="%.1f")
+    with pd.option_context("display.width", 250, "display.max_columns", 30):
+        print(table.round(1).to_string(index=False))
 
 
 def read_zones():
@@ -98,7 +147,7 @@ def sizes_figure(zones):
         axis.tick_params(length=0, labelsize=TICKS)
         clean(axis, "top", "right", "bottom")
     axes[0].set_yticks(place, [label.replace("\n", "") if "–" in label else label.replace("\n", " ") for label in SIZE_LABELS])
-    axes[0].set_ylabel("valori dell'evento", fontsize=TICKS)
+    axes[0].set_ylabel("numero di valori dell'evento", fontsize=TICKS)
     figure.savefig(HERE / "era5_eventi_dimensione.pdf")
     plt.close(figure)
 
@@ -121,21 +170,34 @@ def table_axes(axis, order):
 
 
 def types_figure(zones):
-    """Which variables dominate, and at which size: the values flagged, by type and size."""
+    """Which variables dominate, and at which size, for G and for every baseline: the values flagged by type and size."""
     order = type_order(zones)
-    table = np.full((len(order), len(SIZES)), np.nan)
-    for row, name in enumerate(order):
-        for column, band in enumerate(SIZES):
-            if (name, band) in zones.index:
-                table[row, column] = zones.loc[(name, band), f"{SCORE} {CORE} values"]
-    norm = LogNorm(vmin=5e3, vmax=1.5e7)
-    figure, axis = plt.subplots(figsize=size(0.62), constrained_layout=True)
-    axis.imshow(table, cmap=RAMP, norm=norm, aspect="auto")
-    for (row, column), value in np.ndenumerate(table):
-        if np.isfinite(value):
-            axis.text(column, row, compact(value), ha="center", va="center", fontsize=7,
-                      color="white" if norm(value) > 0.55 else TEXT)
-    table_axes(axis, order)
+    norm = LogNorm(vmin=5e3, vmax=2.5e7)
+    figure, axes = plt.subplots(3, 3, figsize=size(1.08), sharex=True, sharey=True, constrained_layout=True)
+    for axis, (label, key, table, _) in zip(axes.flat, method_tables()):
+        table = table.set_index(["type", "size"])
+        grid = np.full((len(order), len(SIZES)), np.nan)
+        for row, name in enumerate(order):
+            for column, band in enumerate(SIZES):
+                if (name, band) in table.index:
+                    grid[row, column] = table.loc[(name, band), f"{key} core values"]
+        axis.set_facecolor(EMPTY)  # a size with no event of that type
+        mesh = axis.imshow(grid, cmap=RAMP, norm=norm, aspect="auto", interpolation="nearest")
+        axis.set_title("G" if key == SCORE else label, fontsize=7.5, loc="left", color=BLUE if key == SCORE else TEXT,
+                       fontweight="bold" if key == SCORE else "normal")
+        axis.tick_params(length=0, labelsize=6)
+        for side in axis.spines.values():
+            side.set_visible(key == SCORE)
+            side.set_color(BLUE)
+    for axis in axes[-1]:
+        axis.set_xticks(range(len(SIZES)), ("1", "2–4", "5–19", "20–99", "100–999", "1000–9999", "oltre 9999"),
+                        fontsize=6.5, rotation=90)
+    for axis in axes[:, 0]:
+        axis.set_yticks(range(len(order)), [TYPES[name] for name in order], fontsize=7)
+    figure.supxlabel("numero di valori dell'evento", fontsize=TICKS)
+    bar = figure.colorbar(mesh, ax=axes, shrink=0.5, pad=0.01, aspect=30)
+    bar.set_label("valori segnalati (scala logaritmica)", fontsize=TICKS)
+    bar.ax.tick_params(labelsize=TICKS)
     figure.savefig(HERE / "era5_eventi_tipo.pdf")
     plt.close(figure)
 
@@ -159,7 +221,7 @@ def zones_map_figure(data, coastline):
     colours = ["#f4f3ef", "#cfcdc6", ORANGE, BLUE]
     mesh = draw_map(axes[1], grid, zone, coastline, left=False, cmap=ListedColormap(colours), vmin=-0.5, vmax=3.5)
     bar = figure.colorbar(mesh, ax=axes[1], orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, ticks=range(4))
-    bar.set_ticklabels(("lontana", "intermedia", "contorno", "nucleo"), fontsize=7)
+    bar.set_ticklabels(("lontana", "intermedia", "contorno", "nucleo"), fontsize=6)
     bar.ax.tick_params(length=0)
     axes[1].set_title("Le zone", fontsize=9, loc="left", color=TEXT)
     figure.savefig(HERE / "era5_eventi_mappa_zone.pdf", dpi=300)
@@ -179,21 +241,34 @@ def position_axis(axis):
 
 
 def profile_figure():
-    """G falls gradually across its own events, and is back to typical values about six cells out."""
-    table = pd.read_csv(PROFILE)
-    table = table[table["type"] == "all"].sort_values("position")
-    figure, axis = plt.subplots(figsize=size(0.5), constrained_layout=True)
+    """Each method across its own events: G falls more gradually than most baselines, all typical about six cells out."""
+    figure, axis = plt.subplots(figsize=size(0.56), constrained_layout=True)
     axis.axhline(50, color=MUTED, linewidth=0.8, linestyle="--")
     axis.text(-8.2, 50, "valore tipico", fontsize=TICKS, color=MUTED, va="bottom")
     axis.axhline(95, color=MUTED, linewidth=0.8, linestyle=":")
-    axis.text(8.2, 96, "soglia di G", fontsize=TICKS, color=MUTED, va="bottom", ha="right")
-    joined = table["position"].abs() < 8  # the last points gather all the cells beyond: not joined to the others
-    for key, colour in ((SCORE, BLUE), (NORMAL, ORANGE)):
-        axis.plot(table["position"][joined], table[f"{key} percentile"][joined], color=colour, linewidth=2, marker="o", markersize=5, markeredgecolor="white")
-        axis.plot(table["position"][~joined], table[f"{key} percentile"][~joined], color=colour, linewidth=0, marker="o", markersize=5, markeredgecolor="white")
-    axis.text(2.7, 78, "G con normalizzazione", fontsize=TICKS, color=BLUE)
-    axis.text(-0.4, 78, "distanza dal normale", fontsize=TICKS, color=ORANGE, ha="right")
+    axis.text(8.2, 96, "soglia", fontsize=TICKS, color=MUTED, va="bottom", ha="right")
+    for label, key, _, table in reversed(method_tables()):  # G last, on top
+        table = table[table["type"] == "all"].sort_values("position")
+        joined = table["position"].abs() < 8  # the last points gather all the cells beyond: not joined to the others
+        if key == SCORE:
+            style = dict(color=BLUE, linewidth=2.2, marker="o", markersize=5, markeredgecolor="white", zorder=4)
+        elif key in SIMPLE:
+            style = dict(color=SIMPLE[key], linewidth=1.6, marker="o", markersize=3.5, markeredgecolor="white", zorder=3)
+        else:
+            style = dict(color=SHALLOW_GREY, linewidth=0.9, marker="o", markersize=2, zorder=2)
+        axis.plot(table["position"][joined], table[f"{key} percentile"][joined], **style)
+        axis.plot(table["position"][~joined], table[f"{key} percentile"][~joined], **{**style, "linewidth": 0})
     axis.text(0.15, 3, "bordo dell'evento", fontsize=TICKS, color=TEXT)
+    keys = [Line2D([], [], color=BLUE, linewidth=2.2, marker="o", markersize=5, markeredgecolor="white",
+                   label="G con normalizzazione"),
+            Line2D([], [], color=ORANGE, linewidth=1.6, label="distanza dal normale"),
+            Line2D([], [], color=GREEN, linewidth=1.6, label="variazione in tre ore"),
+            Line2D([], [], color=SHALLOW_GREY, linewidth=0.9, label="sei modelli shallow")]
+    copod = method_tables()[list(BASELINES).index("copod") + 1][3]
+    copod = copod[copod["type"] == "all"].set_index("position")["copod percentile"]
+    axis.annotate("COPOD", (3, copod[3]), xytext=(4, 5), textcoords="offset points", fontsize=TICKS - 1, color=MUTED)
+    axis.legend(handles=keys, frameon=False, fontsize=TICKS, loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=2,
+                handlelength=1.8, columnspacing=1.5)
     axis.set_ylim(0, 106)
     axis.set_yticks([0, 25, 50, 75, 100])
     axis.set_ylabel("percentile mediano", fontsize=TICKS)
@@ -207,7 +282,8 @@ def profile_types_figure():
     table = pd.read_csv(PROFILE)
     table = table[(table["type"] != "all") & (table["values"] >= MIN_VALUES)]
     chosen = {"total_precipitation": (BLUE, BLUE, 3.6, 0.42, -12), "vertical_velocity": (GREEN, GREEN_TEXT, -7.6, 1.62, 0),
-              "mean_sea_level_pressure": (ORANGE, ORANGE, 3.7, 1.82, 7)}
+              "mean_sea_level_pressure": (ORANGE, ORANGE, 3.7, 1.82, 7),
+              "2m_temperature": (YELLOW, "#a87300", 0.3, 2.4, 0)}
     figure, axis = plt.subplots(figsize=size(0.56), constrained_layout=True)
     for name, group in table.groupby("type"):
         group = group.sort_values("position")
@@ -220,7 +296,7 @@ def profile_types_figure():
         joined = group["position"].abs() < 8
         axis.plot(group["position"][joined], group["variable distance"][joined], color=colour, linewidth=2, zorder=2)
         axis.plot(group["position"][~joined], group["variable distance"][~joined], color=colour, linewidth=0, marker="o", markersize=5, markeredgecolor="white", zorder=2)
-        axis.annotate(TYPES[name], (x, y), xytext=(0, shift), textcoords="offset points", fontsize=TICKS, color=label, zorder=3)
+        axis.annotate(TYPES[name], (x, y), xytext=(0, shift), textcoords="offset points", fontsize=TICKS, color=label, zorder=3, path_effects=HALO)
     axis.annotate("altri tipi", (6.2, 1.62), fontsize=TICKS, color=MUTED)
     axis.text(0.15, 0.08, "bordo dell'evento", fontsize=TICKS, color=TEXT)
     axis.set_ylim(0, 3.5)
@@ -458,11 +534,15 @@ def case_medians(data):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--prepare", type=pathlib.Path, help="Folder with the files downloaded from the server")
+    parser.add_argument("--prepare-baselines", type=pathlib.Path, help="Output of run_era5_baseline_events.sh")
     parser.add_argument("--coastline", type=pathlib.Path, help="Natural Earth coastline, GeoJSON")
     args = parser.parse_args()
     if args.prepare is not None:
         prepare(args.prepare)
+    if args.prepare_baselines is not None:
+        prepare_baselines(args.prepare_baselines)
     zones = read_zones()
+    baseline_summary()
     sizes_figure(zones)
     types_figure(zones)
     profile_figure()

@@ -1,0 +1,10 @@
+metodo,eventi,valori,eventi sotto 20 %,valori in eventi da 1000 %,percentile a 1 fuori,percentile a 2 fuori,percentile a 3 fuori,percentile a 6 fuori,lontano,tipo 1,tipo 2,tipo 3
+G con normalizzazione,754692,36656037,90.3,76.1,90.0,80.0,69.0,51.0,40.0,vertical_velocity 34.7,total_precipitation 25.2,mean_sea_level_pressure 7.1
+Distanza dal normale,768299,36618161,95.1,85.6,87.0,73.0,63.0,47.0,40.0,volumetric_soil_water_layer_1 64.3,total_precipitation 7.0,vertical_velocity 5.3
+Variazione in tre ore,2798206,35661562,96.5,60.2,84.0,64.0,54.0,41.0,38.0,vertical_velocity 38.7,total_precipitation 25.9,total_cloud_cover 6.0
+PCA,1159266,34592530,95.8,79.4,88.0,75.0,65.0,47.0,40.0,total_precipitation 19.0,vertical_velocity 18.9,boundary_layer_height 16.4
+MCD,1727536,35357577,96.4,73.7,87.0,70.0,60.0,43.0,39.0,total_precipitation 43.1,vertical_velocity 24.8,volumetric_soil_water_layer_1 9.3
+CBLOF,979948,35234290,95.3,81.5,87.0,71.0,61.0,45.0,40.0,volumetric_soil_water_layer_1 41.4,total_precipitation 16.7,vertical_velocity 9.9
+COPOD,697402,33597037,94.7,84.5,91.0,82.0,74.0,56.0,41.0,friction_velocity 21.8,total_precipitation 16.4,boundary_layer_height 12.9
+HBOS,1578183,33482260,97.1,78.1,88.0,76.0,67.0,48.0,39.0,friction_velocity 21.9,boundary_layer_height 15.1,vertical_velocity 12.6
+Isolation Forest,1189079,33655186,96.0,79.0,89.0,77.0,67.0,49.0,40.0,vertical_velocity 19.9,friction_velocity 19.6,total_precipitation 19.3
