@@ -3,7 +3,7 @@
 
 Il capitolo descrive il detector nella forma usata sui campi ERA5. La Sezione~\ref{sec:formulazione} formula il problema: che cosa entra nel detector, che cosa ne esce e quando un valore è segnalato. Seguono l'architettura del generatore e del discriminatore con gli obiettivi dell'addestramento avversario (Sezione~\ref{sec:stgan}), l'ingresso del modello (Sezione~\ref{sec:ingresso-normalizzazione-era5}), i pesi delle variabili nell'errore di ricostruzione, i valori esclusi dalle misure sulla validazione, le componenti dello score con il dropout Monte Carlo, la normalizzazione climatologica dello score e la misura con cui si confrontano le configurazioni. Il capitolo si ferma allo score: ciò che se ne ricava, come il raggruppamento delle segnalazioni in eventi, è descritto nel Capitolo~\ref{chap:risultati}.
 
-La Figura~\ref{fig:catena-detector} riporta l'ordine in cui questi passaggi agiscono su un istante, e per ogni quantità stimata gli anni su cui è stimata: normalizzazione stagionale e pesi sugli anni di addestramento, prima di addestrare il modello; climatologia e soglia sugli anni di validazione, dopo l'addestramento. Il discriminatore non compare nella catena: serve all'addestramento del generatore e allo score combinato.
+La Figura~\ref{fig:catena-detector} riporta l'ordine in cui questi passaggi agiscono su un istante, e per ogni quantità stimata gli anni su cui è stimata: normalizzazione stagionale e pesi sugli anni di addestramento, prima di addestrare il modello; climatologia e soglia sugli anni di validazione, dopo l'addestramento. Il discriminatore non compare nella catena: serve all'addestramento del generatore.
 
 \begin{figure}[htbp]
     \centering
@@ -218,7 +218,7 @@ La componente cresce quindi sia quando la ricostruzione si allontana dall'osserv
 
 \subsection{Score combinato e score di ricostruzione}
 
-Dalla stessa esecuzione sono ricavati due score. Lo \emph{score combinato} è quello dell'articolo. Le due componenti sono riportate su una scala comune con un min--max e sommate con peso unitario, estrazione per estrazione:
+Dalla stessa esecuzione sono ricavati due score. Lo \emph{score combinato} è quello dell'articolo; è riportato per completezza, ma non è usato come score del detector (Sezione~\ref{sec:ris-conferma}). Le due componenti sono riportate su una scala comune con un min--max e sommate con peso unitario, estrazione per estrazione:
 \begin{equation}
 a^{(j)}_{tn}=
 \frac{s^{(j)}_{G,tn}-r_{\min}}{r_{\max}-r_{\min}}
