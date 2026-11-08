@@ -233,7 +233,7 @@ def zones_scheme_figure():
     axis.tick_params(which="both", length=0, labelbottom=False, labelleft=False)
     for spine in axis.spines.values():
         spine.set_edgecolor(MUTED)
-    legend = (("nucleo: le celle dell'evento", colours[0]), ("contorno: le celle che toccano il nucleo", colours[1]),
+    legend = (("nucleo: le celle del cluster", colours[0]), ("contorno: le celle che toccano il nucleo", colours[1]),
               ("celle intermedie, escluse", colours[2]), ("lontana: oltre 3 celle da ogni nucleo", colours[3]))
     axis.legend(handles=[Patch(facecolor=colour, edgecolor=MUTED, linewidth=0.5, label=label) for label, colour in legend],
                 loc="center left", bbox_to_anchor=(1.02, 0.5), frameon=False, fontsize=8)

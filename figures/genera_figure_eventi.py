@@ -84,7 +84,7 @@ def prepare_baselines(folder):
 def method_tables():
     """For G and every baseline: its name, the column prefix of its score, its zones and its profile."""
     zones = pd.read_csv(ZONES, dtype={"size": str})
-    methods = [("G con normalizzazione", SCORE, zones, pd.read_csv(PROFILE))]
+    methods = [(r"$G_\mathrm{n}$", SCORE, zones, pd.read_csv(PROFILE))]
     for name, label in BASELINES.items():
         methods.append((label, name, pd.read_csv(BASELINE_DIR / f"zone_{name}_5pc.csv", dtype={"size": str}),
                         pd.read_csv(BASELINE_DIR / f"profilo_{name}_5pc.csv")))
@@ -137,7 +137,7 @@ def sizes_figure(zones):
     values = np.array([row[f"{SCORE} {CORE} values"] for row in rows], dtype=float)
     figure, axes = plt.subplots(1, 2, figsize=size(0.42), sharey=True, constrained_layout=True)
     place = np.arange(len(SIZES))[::-1]
-    for axis, shares, title in ((axes[0], 100 * events / events.sum(), "Quota degli eventi"),
+    for axis, shares, title in ((axes[0], 100 * events / events.sum(), "Quota dei cluster"),
                                 (axes[1], 100 * values / values.sum(), "Quota dei valori segnalati")):
         axis.barh(place, shares, height=0.72, color=BLUE)
         for y, share in zip(place, shares):
@@ -148,7 +148,7 @@ def sizes_figure(zones):
         axis.tick_params(length=0, labelsize=TICKS)
         clean(axis, "top", "right", "bottom")
     axes[0].set_yticks(place, [label.replace("\n", "") if "–" in label else label.replace("\n", " ") for label in SIZE_LABELS])
-    axes[0].set_ylabel("numero di valori dell'evento", fontsize=TICKS)
+    axes[0].set_ylabel("numero di valori del cluster", fontsize=TICKS)
     figure.savefig(HERE / "era5_eventi_dimensione.pdf")
     plt.close(figure)
 
@@ -164,7 +164,7 @@ def table_axes(axis, order):
     axis.set_yticks(range(len(order)), [TYPES.get(name, "Tutti i tipi") for name in order])
     axis.xaxis.tick_top()
     axis.xaxis.set_label_position("top")
-    axis.set_xlabel("valori dell'evento", fontsize=TICKS)
+    axis.set_xlabel("valori del cluster", fontsize=TICKS)
     axis.tick_params(length=0, labelsize=TICKS)
     for side in axis.spines.values():
         side.set_visible(False)
@@ -197,7 +197,7 @@ def types_figure(zones):
                         fontsize=7.5, rotation=90)
     for axis in axes[:, 0]:
         axis.set_yticks(range(len(order)), [TYPES[name] for name in order], fontsize=7.5)
-    figure.supxlabel("numero di valori dell'evento", fontsize=TICKS)
+    figure.supxlabel("numero di valori del cluster", fontsize=TICKS)
     bar = figure.colorbar(mesh, ax=axes, shrink=0.5, pad=0.01, aspect=30)
     bar.set_label("valori segnalati (scala logaritmica)", fontsize=TICKS)
     bar.ax.tick_params(labelsize=TICKS)
@@ -220,7 +220,7 @@ def zones_map_figure(data, coastline):
     bar = figure.colorbar(mesh, ax=axes[0], orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, ticks=[0, 25, 50, 75, 95])
     bar.set_label("percentile (95 circa = soglia)", fontsize=TICKS)
     bar.ax.tick_params(labelsize=TICKS)
-    axes[0].set_title("G con normalizzazione", fontsize=9, loc="left", color=TEXT)
+    axes[0].set_title(r"$G_\mathrm{n}$", fontsize=9, loc="left", color=TEXT)
     colours = ["#f4f3ef", "#cfcdc6", ORANGE, BLUE]
     mesh = draw_map(axes[1], grid, zone, coastline, left=False, cmap=ListedColormap(colours), vmin=-0.5, vmax=3.5)
     bar = figure.colorbar(mesh, ax=axes[1], orientation="horizontal", shrink=1.0, pad=0.02, aspect=30, ticks=range(4))
@@ -236,7 +236,7 @@ def position_axis(axis):
     axis.axvline(0, color=TEXT, linewidth=0.8)
     axis.set_xlim(-8.3, 8.3)
     axis.set_xticks([-8, -6, -4, -2, -1, 1, 2, 4, 6, 8], ["8 o più", "6", "4", "2", "1", "1", "2", "4", "6", "8 o più"])
-    axis.set_xlabel("celle dal bordo dell'evento:  dentro  |  fuori", fontsize=TICKS)
+    axis.set_xlabel("celle dal bordo del cluster:  dentro  |  fuori", fontsize=TICKS)
     axis.tick_params(labelsize=TICKS, length=0)
     axis.grid(axis="y", color=GRID, linewidth=0.6)
     axis.set_axisbelow(True)
@@ -268,13 +268,13 @@ def profile_figure():
     style = dict(color=PURPLE, linewidth=1.6, linestyle=(0, (4, 2)), marker="o", markersize=3.5, markeredgecolor="white",
                  zorder=3.5)
     axis.plot(table["position"][joined], table[f"{NORMAL} percentile"][joined], **style)
-    axis.plot(table["position"][~joined], table[f"{NORMAL} percentile"][~joined], **{**style, "linewidth": 0})
-    axis.text(0.15, 3, "bordo dell'evento", fontsize=TICKS, color=TEXT)
+    axis.plot(table["position"][~joined], table[f"{NORMAL} percentile"][~joined], **{**style, "linestyle": "none"})
+    axis.text(0.15, 3, "bordo del cluster", fontsize=TICKS, color=TEXT)
     keys = [Line2D([], [], color=BLUE, linewidth=2.2, marker="o", markersize=5, markeredgecolor="white",
-                   label="G con normalizzazione"),
-            Line2D([], [], color=ORANGE, linewidth=1.6, label="distanza dal normale, sui propri eventi"),
+                   label=r"$G_\mathrm{n}$"),
+            Line2D([], [], color=ORANGE, linewidth=1.6, label="distanza dal normale, sui propri cluster"),
             Line2D([], [], color=PURPLE, linewidth=1.6, linestyle=(0, (4, 2)),
-                   label="distanza dal normale, sugli eventi di G"),
+                   label="distanza dal normale, sui cluster di G"),
             Line2D([], [], color=GREEN, linewidth=1.6, label="variazione in tre ore"),
             Line2D([], [], color=SHALLOW_GREY, linewidth=0.9, label="sei modelli shallow")]
     copod = method_tables()[list(BASELINES).index("copod") + 1][3]
@@ -311,7 +311,7 @@ def profile_types_figure():
         axis.plot(group["position"][~joined], group["variable distance"][~joined], color=colour, linewidth=0, marker="o", markersize=5, markeredgecolor="white", zorder=2)
         axis.annotate(TYPES[name], (x, y), xytext=(0, shift), textcoords="offset points", fontsize=TICKS, color=label, zorder=3, path_effects=HALO)
     axis.annotate("altri tipi", (6.2, 1.62), fontsize=TICKS, color=MUTED)
-    axis.text(0.15, 0.08, "bordo dell'evento", fontsize=TICKS, color=TEXT)
+    axis.text(0.15, 0.08, "bordo del cluster", fontsize=TICKS, color=TEXT)
     axis.set_ylim(0, 3.5)
     axis.set_ylabel("scarto della variabile (0 = normale)", fontsize=TICKS)
     position_axis(axis)
@@ -348,7 +348,7 @@ def dropout_figure():
     across.set_ylabel("rapporto (%)", fontsize=TICKS)
     across.set_ylim(9, 11.5)
     across.set_yticks([9, 10, 11])
-    across.set_title("Attraverso gli eventi", fontsize=8.5, loc="left", color=TEXT)
+    across.set_title("Attraverso i cluster", fontsize=8.5, loc="left", color=TEXT)
 
     numbers = data["classes of the ratio at equal raw error"]
     classes.bar(numbers["class"], numbers["normal flagged %"], width=0.72, color=ORANGE)
@@ -394,7 +394,7 @@ def dropout_types_figure():
     across.set_xticks([-6, -4, -2, 2, 4, 6], ["6", "4", "2", "2", "4", "6"])
     across.set_xlabel("celle dal bordo: dentro | fuori", fontsize=TICKS)
     across.set_ylabel("rapporto (%)", fontsize=TICKS)
-    across.set_title("Il rapporto attraverso gli eventi", fontsize=9, loc="left", color=TEXT)
+    across.set_title("Il rapporto attraverso i cluster", fontsize=9, loc="left", color=TEXT)
 
     # Classes 1, 4 and 5: the share rises from class 1 to class 3 or 4 in every type, and in most types falls in class 5.
     table = classes.pivot(index="type", columns="class", values="normal flagged %")
@@ -492,7 +492,7 @@ def case_figure(number, data, coastline):
     bar = figure.colorbar(mesh, ax=right, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, ticks=[0, 25, 50, 75, 95])
     bar.set_label("percentile (95 circa = soglia)", fontsize=TICKS)
     bar.ax.tick_params(labelsize=TICKS)
-    right.set_title("G con normalizzazione", fontsize=9, loc="left", color=TEXT)
+    right.set_title(r"$G_\mathrm{n}$", fontsize=9, loc="left", color=TEXT)
     for axis in (left, right):
         axis.contour(longitudes, latitudes[::-1], picture[::-1], levels=[0.5], colors=TEXT, linewidths=0.6)
 
@@ -515,7 +515,7 @@ def case_figure(number, data, coastline):
     gap.set_ylabel("scarto", fontsize=TICKS, color=GREEN_TEXT)
     gap.tick_params(labelsize=TICKS, length=2, colors=GREEN_TEXT)
     gap.spines["top"].set_visible(False)
-    keys = (Line2D([], [], color=BLUE, linewidth=1.6, label="G con normalizzazione"), Patch(color="#cde2fb", linewidth=0, label="cella nell'evento"),
+    keys = (Line2D([], [], color=BLUE, linewidth=1.6, label=r"$G_\mathrm{n}$"), Patch(color="#cde2fb", linewidth=0, label="cella nel cluster"),
             Line2D([], [], color=ORANGE, linewidth=1.6, label="distanza dal normale"), Line2D([], [], color=TEXT, linewidth=0.8, label="istante delle mappe"),
             Line2D([], [], color=GREEN, linewidth=1.1, label="scarto (asse destro)"))
     cell.legend(handles=keys, frameon=False, fontsize=7, loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=2, columnspacing=1.2)
@@ -536,8 +536,8 @@ def case_figure(number, data, coastline):
     chain.fill_between(event_times, data["event_cells"], step="mid", color=BLUE, linewidth=0)
     chain.axvline(moment, color=TEXT, linewidth=0.8)
     hours = record.get("hours", (event_times[-1] - event_times[0]) / pd.Timedelta(hours=1))
-    chain.set_title(f"L'evento dura {hours:.0f} ore", fontsize=9, loc="left", color=TEXT)
-    chain.set_ylabel("celle dell'evento", fontsize=TICKS)
+    chain.set_title(f"Il cluster dura {hours:.0f} ore", fontsize=9, loc="left", color=TEXT)
+    chain.set_ylabel("celle del cluster", fontsize=TICKS)
     chain.set_ylim(0, None)
     chain.margins(x=0)
     chain.tick_params(labelsize=TICKS, length=2)

@@ -1,5 +1,5 @@
 metodo,eventi,valori,eventi sotto 20 %,valori in eventi da 1000 %,percentile a 1 fuori,percentile a 2 fuori,percentile a 3 fuori,percentile a 6 fuori,lontano,tipo 1,tipo 2,tipo 3
-G con normalizzazione,794206,36093783,90.6,75.5,90.0,79.0,68.0,50.0,39.0,vertical_velocity 33.8,total_precipitation 27.2,total_cloud_cover 7.2
+$G_\mathrm{n}$,794206,36093783,90.6,75.5,90.0,79.0,68.0,50.0,39.0,vertical_velocity 33.8,total_precipitation 27.2,total_cloud_cover 7.2
 Distanza dal normale,768299,36618161,95.1,85.6,87.0,73.0,63.0,47.0,40.0,volumetric_soil_water_layer_1 64.3,total_precipitation 7.0,vertical_velocity 5.3
 Variazione in tre ore,2798206,35661562,96.5,60.2,84.0,64.0,54.0,41.0,38.0,vertical_velocity 38.7,total_precipitation 25.9,total_cloud_cover 6.0
 PCA,1159266,34592530,95.8,79.4,88.0,75.0,65.0,47.0,40.0,total_precipitation 19.0,vertical_velocity 18.9,boundary_layer_height 16.4
