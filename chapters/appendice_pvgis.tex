@@ -1,7 +1,7 @@
 \chapter{Lavoro preliminare sui dati PVGIS}
 \label{app:pvgis}
 
-Il lavoro è partito, nell'ambito della previsione della produzione fotovoltaica, dalle serie orarie PVGIS descritte nella Sezione~\ref{sec:dati-pvgis}. Su questi dati sono stati esplorati un previsore probabilistico della produzione, con diversi metodi per associare un intervallo alla previsione, un primo criterio per individuare condizioni insolite basato su soglie climatologiche e due detector appresi, MTGFlow e STGAN. Questa appendice ne descrive i metodi; il corpo della tesi riguarda soltanto il detector applicato ai campi ERA5.
+Il lavoro è partito, nell'ambito della previsione della produzione fotovoltaica, dalle serie orarie PVGIS descritte nella Sezione~\ref{sec:dati-pvgis}. Su questi dati sono stati esplorati un previsore probabilistico della produzione, con diversi metodi per associare un intervallo alla previsione, un primo criterio per individuare condizioni insolite basato su soglie climatologiche e due rilevatori appresi, MTGFlow e STGAN. Questa appendice ne descrive i metodi; il corpo della tesi riguarda soltanto il rilevatore applicato ai campi ERA5.
 
 \section{Previsore probabilistico della produzione}
 \label{app:pvgis-previsore}
@@ -40,10 +40,10 @@ Nel previsore della produzione ne sono stati ripresi l'allineamento fra passi st
 
 Come primo criterio per individuare condizioni insolite, un'osservazione è segnalata quando esce dalla banda fra i quantili 0.025 e 0.975 della distribuzione della stessa località e della stessa ora negli anni precedenti, entro quindici giorni di calendario. Le soglie segnalano i valori estremi di ciascuna variabile presa da sola; sono servite a esaminare il previsore nelle condizioni insolite e ad addestrarlo sulle sole finestre normali, secondo il protocollo di SDE U-Net.
 
-\section{Detector appresi: MTGFlow e STGAN}
-\label{app:pvgis-detector}
+\section{Rilevatore appresi: MTGFlow e STGAN}
+\label{app:pvgis-rilevatore}
 
-Per individuare anomalie diverse dai valori estremi di una variabile sono stati applicati due detector appresi. Di MTGFlow~\cite{zhou2023labelfree} è stata implementata la versione base, senza l'estensione a gruppi, applicata alle tre variabili meteorologiche di ogni località, trattate come entità, con la soglia interquartile dell'articolo. Poiché il metodo non rappresenta il contesto geografico, è addestrato un modello indipendente per località: gli score possono essere confrontati sulla mappa, ma il modello non apprende relazioni fra località. Per introdurre una componente spaziale il lavoro è passato a STGAN~\cite{deng2022stgan}.
+Per individuare anomalie diverse dai valori estremi di una variabile sono stati applicati due rilevatori appresi. Di MTGFlow~\cite{zhou2023labelfree} è stata implementata la versione base, senza l'estensione a gruppi, applicata alle tre variabili meteorologiche di ogni località, trattate come entità, con la soglia interquartile dell'articolo. Poiché il metodo non rappresenta il contesto geografico, è addestrato un modello indipendente per località: gli score possono essere confrontati sulla mappa, ma il modello non apprende relazioni fra località. Per introdurre una componente spaziale il lavoro è passato a STGAN~\cite{deng2022stgan}.
 
 STGAN è stato applicato alle stesse serie, con irradianza globale, temperatura a due metri e velocità del vento a dieci metri, addestramento sugli anni 2005--2018 e test sul 2019. Accanto alla versione su grafo dell'articolo è stata provata una variante a griglia, perché anche le località PVGIS sono disposte su un reticolo regolare e le posizioni dei vicini sono quindi definite: la convoluzione su grafo è sostituita da una ConvGRU sulla patch $3\times3$ di ogni località. Nella variante a griglia con kernel di lato 3 il 75.5\% dell'errore di ricostruzione delle osservazioni segnalate è dovuto all'irradianza, il 15.8\% alla temperatura e l'8.6\% al vento. I dati PVGIS contengono soltanto le grandezze da cui dipende la produzione fotovoltaica, e un'osservazione segnalata non può essere ricondotta a una condizione meteorologica più generale. Per individuare condizioni insolite di tipo più generale il lavoro è passato ai campi ERA5 del Capitolo~\ref{chap:dati}.
 % Fonti: run_metadata.json delle run pvgis_stgan/paper_reference e

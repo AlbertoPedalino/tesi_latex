@@ -1,5 +1,5 @@
 {
- "source": "reconstruction_feature_weights in outputs/stgan_good_sweep_2_scored/metadata.json on newzealand, read on 22 October 2026",
+ "source": "reconstruction_feature_weights in the run metadata on newzealand, read on 22 October 2026; computed without a seed from the training years only (_daily_change_weights in physiq_pv/anomaly_detection/stgan/pipeline.py), so the same for every run with the same data and normalization, optuna-27 included",
  "note": "w_f = mean(m) / m_f, with m_f the mean squared change over 24 hours on the training data after the seasonal normalization and the min-max; the share of m_f is (1 / w_f) / 15",
  "weights": {
   "2m_temperature": 1.6879808189839476,

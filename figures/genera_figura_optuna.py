@@ -31,7 +31,7 @@ TRIALS = HERE / "dati" / "era5_optuna_prove.csv"
 # One hue, dark for the lowest MMD (the best), light for the highest.
 RAMP = LinearSegmentedColormap.from_list("mmd", ("#0d366b", "#184f95", "#256abf", "#3987e5", "#6da7ec", "#9ec5f4", "#cde2fb"))
 BEST_REGION = ("serene-sweep-14", "optuna-26", "optuna-27")  # lr G 6-8e-4, lr D 1.5-3e-3, weight 60-170, 1:1
-LABELS = ("lr G", "lr D", r"peso $\lambda$", "agg. D:G")
+LABELS = ("lr gen.", "lr discr.", r"peso $\lambda$", "agg. discr.:gen.")
 HALO = [effects.withStroke(linewidth=2.5, foreground="white")]
 REGION = "#e8a33d"
 UPDATES = {"1:2": -1.0, "1:1": 0.0, "2:1": 1.0}

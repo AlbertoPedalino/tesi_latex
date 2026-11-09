@@ -274,7 +274,7 @@ def profile_figure():
                    label=r"$G_\mathrm{n}$"),
             Line2D([], [], color=ORANGE, linewidth=1.6, label="distanza dal normale, sui propri cluster"),
             Line2D([], [], color=PURPLE, linewidth=1.6, linestyle=(0, (4, 2)),
-                   label="distanza dal normale, sui cluster di G"),
+                   label=r"distanza dal normale, sui cluster di $G_\mathrm{n}$"),
             Line2D([], [], color=GREEN, linewidth=1.6, label="variazione in tre ore"),
             Line2D([], [], color=SHALLOW_GREY, linewidth=0.9, label="sei modelli shallow")]
     copod = method_tables()[list(BASELINES).index("copod") + 1][3]

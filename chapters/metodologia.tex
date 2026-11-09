@@ -1,15 +1,15 @@
 \chapter{Metodologia}
 \label{chap:metodologia}
 
-Il capitolo descrive il detector nella forma usata sui campi ERA5. La Sezione~\ref{sec:formulazione} formula il problema: che cosa entra nel detector, che cosa ne esce e quando un valore è segnalato. Seguono l'architettura del generatore e del discriminatore con gli obiettivi dell'addestramento avversario (Sezione~\ref{sec:stgan}), l'ingresso del modello (Sezione~\ref{sec:ingresso-normalizzazione-era5}), i pesi delle variabili nell'errore di ricostruzione, i valori esclusi dalle misure sulla validazione, le componenti dello score con il dropout Monte Carlo, la normalizzazione climatologica dello score e la misura con cui si confrontano le configurazioni. Il capitolo si ferma allo score: ciò che se ne ricava, come il raggruppamento delle segnalazioni in cluster di valori segnalati vicini, è descritto nel Capitolo~\ref{chap:risultati}.
+Il capitolo descrive il rilevatore nella forma usata sui campi ERA5. La Sezione~\ref{sec:formulazione} formula il problema: che cosa entra nel rilevatore, che cosa ne esce e quando un valore è segnalato. Seguono l'architettura del generatore e del discriminatore con gli obiettivi dell'addestramento avversario (Sezione~\ref{sec:stgan}), l'ingresso del modello (Sezione~\ref{sec:ingresso-normalizzazione-era5}), i pesi delle variabili nell'errore di ricostruzione, i valori esclusi dalle misure sulla validazione, le componenti dello score con il dropout Monte Carlo, la normalizzazione climatologica dello score e la misura con cui si confrontano le configurazioni. Il capitolo si ferma allo score: ciò che se ne ricava, come il raggruppamento delle segnalazioni in cluster di valori segnalati vicini, è descritto nel Capitolo~\ref{chap:risultati}.
 
-La Figura~\ref{fig:catena-detector} riporta l'ordine in cui questi passaggi agiscono su un istante, e per ogni quantità stimata gli anni su cui è stimata: normalizzazione stagionale e pesi sugli anni di addestramento, prima di addestrare il modello; climatologia e soglia sugli anni di validazione, dopo l'addestramento. Il discriminatore non compare nella catena: serve all'addestramento del generatore.
+La Figura~\ref{fig:catena-rilevatore} riporta l'ordine in cui questi passaggi agiscono su un istante, e per ogni quantità stimata gli anni su cui è stimata: normalizzazione stagionale e pesi sugli anni di addestramento, prima di addestrare il modello; climatologia e soglia sugli anni di validazione, dopo l'addestramento. Il discriminatore non compare nella catena: serve all'addestramento del generatore.
 
 \begin{figure}[htbp]
     \centering
     \input{figures/schema_catena_detector}
-    \caption{Ordine dei passaggi del detector su un istante, dai campi ERA5 alla segnalazione. In corsivo, gli anni su cui è stimata ciascuna quantità: le scale della normalizzazione stagionale e i pesi sugli anni di addestramento, la climatologia dello score e la soglia sugli anni di validazione.}
-    \label{fig:catena-detector}
+    \caption{Ordine dei passaggi del rilevatore su un istante, dai campi ERA5 alla segnalazione. In corsivo, gli anni su cui è stimata ciascuna quantità: le scale della normalizzazione stagionale e i pesi sugli anni di addestramento, la climatologia dello score e la soglia sugli anni di validazione.}
+    \label{fig:catena-rilevatore}
 \end{figure}
 
 \section{Formulazione del problema}
@@ -20,7 +20,7 @@ I dati sono una sequenza di campi $X_t$, uno per istante $t$, su un reticolo di 
 \section{Architettura e addestramento avversario}
 \label{sec:stgan}
 
-Il detector segue lo schema di STGAN~\cite{deng2022stgan} descritto nella Sezione~\ref{sec:rw-stgan}: un generatore stima il campo dell'istante successivo a partire dagli istanti precedenti, e un discriminatore giudica se il campo di un istante, insieme alla sua storia recente, è osservato o generato. Il generatore stima le quindici variabili della Tabella~\ref{tab:variabili-era5}, su una griglia con passo di $0.5^\circ$ e con una cadenza di tre ore. La Figura~\ref{fig:architettura-stgan} riporta la struttura delle due reti, descritta nelle sottosezioni seguenti.
+Il rilevatore segue lo schema di STGAN~\cite{deng2022stgan} descritto nella Sezione~\ref{sec:rw-stgan}: un generatore stima il campo dell'istante successivo a partire dagli istanti precedenti, e un discriminatore giudica se il campo di un istante, insieme alla sua storia recente, è osservato o generato. Il generatore stima le quindici variabili della Tabella~\ref{tab:variabili-era5}, su una griglia con passo di $0.5^\circ$ e con una cadenza di tre ore. La Figura~\ref{fig:architettura-stgan} riporta la struttura delle due reti, descritta nelle sottosezioni seguenti.
 
 \begin{figure}[htbp]
     \centering
@@ -76,7 +76,7 @@ Un'epoca comprende $\lceil T_{\mathrm{a}}/b\rceil$ batch, con $T_{\mathrm{a}}$ i
 
 \subsection{Finestra recente e trend}
 
-La finestra recente contiene gli $R$ istanti che precedono quello da stimare. L'unità ricorrente spaziale la percorre in ordine: parte da uno stato nullo ed esegue un aggiornamento per ogni istante, sicché lo stato finale riassume gli $R$ campi osservati. Con $R=1$ il ramo recente vede soltanto l'ultimo istante e la ricorrenza si riduce a un solo aggiornamento. Con $R>1$ il modello riceve anche l'evoluzione del campo negli istanti precedenti, e l'area che può influenzare una cella cresce con $R$, perché a ogni aggiornamento lo stato si propaga alle celle vicine. Il detector usa $R=16$ passi, cioè 48 ore; il trend comprende 56 passi, cioè 168 ore, la stessa durata dell'articolo.
+La finestra recente contiene gli $R$ istanti che precedono quello da stimare. L'unità ricorrente spaziale la percorre in ordine: parte da uno stato nullo ed esegue un aggiornamento per ogni istante, sicché lo stato finale riassume gli $R$ campi osservati. Con $R=1$ il ramo recente vede soltanto l'ultimo istante e la ricorrenza si riduce a un solo aggiornamento. Con $R>1$ il modello riceve anche l'evoluzione del campo negli istanti precedenti, e l'area che può influenzare una cella cresce con $R$, perché a ogni aggiornamento lo stato si propaga alle celle vicine. Il rilevatore usa $R=16$ passi, cioè 48 ore; il trend comprende 56 passi, cioè 168 ore, la stessa durata dell'articolo.
 
 \subsection{Codifica temporale ciclica}
 
@@ -145,7 +145,7 @@ La retta è una per variabile, uguale per tutte le celle: passa per le medie ann
 % del clima. Conferma in deriva_clima_1994.log: con la norma 1980-1994 la
 % precipitazione salta a +0.28 nel 1995, il primo anno fuori, e resta fra +0.14
 % e +0.38; l'umidità specifica resta fra -0.06 e +0.09 fino al 2009 e sale dopo.
-% Il detector usa la radice quarta e una soglia minima di 0.1 per la
+% Il rilevatore usa la radice quarta e una soglia minima di 0.1 per la
 % deviazione standard della precipitazione.
 
 Dopo questi passaggi è applicato un min--max per variabile, stimato sugli anni di addestramento, che riporta i valori nell'intervallo $[-1,1]$ dell'uscita del generatore. Negli anni successivi, i valori esterni all'intervallo degli anni di addestramento possono superare questi estremi, perché la trasformazione non applica un clipping. Nel seguito $x_{tnf}$ indica il valore dopo tutti questi passaggi e $\hat{x}_{tnf}$ la sua stima da parte del generatore.
@@ -153,7 +153,7 @@ Dopo questi passaggi è applicato un min--max per variabile, stimato sugli anni 
 \section{Pesi delle variabili nell'errore di ricostruzione}
 \label{sec:pesi-variabili-ricostruzione}
 
-Nell'articolo tutte le variabili contano allo stesso modo nell'errore di ricostruzione. Il detector pesa invece l'errore per variabile, in modo che ciascuna sia misurata in rapporto a quanto cambia abitualmente. Dopo la normalizzazione stagionale le variabili hanno già variazioni dello stesso ordine, ma non uguali: le loro quote della variazione su 24 ore vanno dallo 0.9\% al 16.6\% (Figura~\ref{fig:era5-variazione}). I pesi correggono queste differenze. Indicando con $m_f$ il quadrato medio della variazione della variabile $f$ su 24 ore, calcolato sui dati di addestramento normalizzati, il peso è
+Nell'articolo tutte le variabili contano allo stesso modo nell'errore di ricostruzione. Il rilevatore pesa invece l'errore per variabile, in modo che ciascuna sia misurata in rapporto a quanto cambia abitualmente. Dopo la normalizzazione stagionale le variabili hanno già variazioni dello stesso ordine, ma non uguali: le loro quote della variazione su 24 ore vanno dallo 0.9\% al 16.6\% (Figura~\ref{fig:era5-variazione}). I pesi correggono queste differenze. Indicando con $m_f$ il quadrato medio della variazione della variabile $f$ su 24 ore, calcolato sui dati di addestramento normalizzati, il peso è
 \begin{equation}
 w_f=\frac{\bar{m}}{m_f},
 \qquad
@@ -188,9 +188,10 @@ Il discriminatore riceve il campo generato senza il dropout del generatore: nell
 
 \subsection{Estrazioni Monte Carlo e componenti dello score}
 
-Durante il calcolo degli score il modello è in modalità di valutazione, con l'eccezione dei dropout, che restano attivi. Per ogni istante sono fatte $J=20$ estrazioni, un valore fissato e non ottimizzato.
-% Fonte per J=20 da indicare: l'autore lo ha scelto come valore standard in
-% letteratura (29 ottobre 2026). Citare solo dopo aver letto la fonte.
+Durante il calcolo degli score il modello è in modalità di valutazione, con l'eccezione dei dropout, che restano attivi. Per ogni istante sono fatte $J=20$ estrazioni, come le 20 previsioni campionate con cui Monaco et al.~\cite{monaco2025sdeunet} valutano la loro U-Net con dropout Monte Carlo; il valore è fissato e non ottimizzato.
+% Fonte J=20: Monaco et al. 2025, Computers & Geosciences 205, p. 7 ("We compute all metrics
+% using 20 sampled predictions for MCD U-Net"). Anche Kong et al. 2020 (SDE-Net), appendice,
+% compito di regressione: "20 posterior samples are used for MC-dropout ... at test time".
 Nell'estrazione $j$ il generatore ricostruisce il campo con una propria maschera di dropout, e il discriminatore giudica l'osservazione e il campo generato senza dropout con una propria maschera, la stessa per i due giudizi.
 
 Per la coppia istante--cella $(t,n)$ e l'estrazione $j$, la ricostruzione $\hat{x}^{(j)}$ dà l'errore di ricostruzione
@@ -218,7 +219,7 @@ La componente cresce quindi sia quando la ricostruzione si allontana dall'osserv
 
 \subsection{Score combinato e score di ricostruzione}
 
-Dalla stessa esecuzione sono ricavati due score. Lo \emph{score combinato} è quello dell'articolo; non è usato come score del detector, ed è confrontato con le due componenti (Sezione~\ref{sec:ris-conferma}). Le due componenti sono riportate su una scala comune con un min--max e sommate con peso unitario, estrazione per estrazione:
+Dalla stessa esecuzione sono ricavati due score. Lo \emph{score combinato} è quello dell'articolo; non è usato come score del rilevatore, ed è confrontato con le due componenti (Sezione~\ref{sec:ris-conferma}). Le due componenti sono riportate su una scala comune con un min--max e sommate con peso unitario, estrazione per estrazione:
 \begin{equation}
 a^{(j)}_{tn}=
 \frac{s^{(j)}_{G,tn}-r_{\min}}{r_{\max}-r_{\min}}
@@ -241,7 +242,7 @@ dove $s_{tn}$ è lo score da trasformare, la componente di ricostruzione $\bar{s
 
 Gli score di validazione da cui sono stimate queste quantità sono calcolati con la storia reale degli istanti di validazione, come quelli del test. La sostituzione dei valori esclusi nella storia (Sezione~\ref{sec:maschere-validazione}) serve alla misura con cui si confrontano le configurazioni durante l'addestramento e al passaggio di validazione che chiude l'addestramento, da cui vengono gli estremi dello score combinato; non entra nella climatologia. Una climatologia stimata su errori calcolati da una storia ripulita descriverebbe un errore più basso di quello che il modello commette sul test, dove la storia contiene anche i valori che sulla validazione sono esclusi.
 
-Lo scopo è rendere confrontabili celle e stagioni in cui l'errore di ricostruzione ha una grandezza tipica diversa: senza questo passaggio, le segnalazioni si concentrerebbero dove l'errore è grande per natura. La trasformazione applica la stessa idea della normalizzazione stagionale, cioè esprimere un valore rispetto a ciò che è abituale per quella cella, quel periodo dell'anno e quell'ora, ma a un oggetto diverso. La normalizzazione stagionale agisce sui campi in ingresso, prima del modello, ed è stimata sugli anni di addestramento: toglie il ciclo stagionale e giornaliero dei dati, ma non la differenza di prevedibilità fra celle e stagioni. Dove il tempo cambia più rapidamente il generatore sbaglia di più anche su dati standardizzati. La normalizzazione climatologica agisce sull'errore del generatore, dopo l'addestramento, è stimata sugli anni di validazione e toglie questa seconda differenza senza modificare il detector.
+Lo scopo è rendere confrontabili celle e stagioni in cui l'errore di ricostruzione ha una grandezza tipica diversa: senza questo passaggio, le segnalazioni si concentrerebbero dove l'errore è grande per natura. La trasformazione applica la stessa idea della normalizzazione stagionale, cioè esprimere un valore rispetto a ciò che è abituale per quella cella, quel periodo dell'anno e quell'ora, ma a un oggetto diverso. La normalizzazione stagionale agisce sui campi in ingresso, prima del modello, ed è stimata sugli anni di addestramento: toglie il ciclo stagionale e giornaliero dei dati, ma non la differenza di prevedibilità fra celle e stagioni. Dove il tempo cambia più rapidamente il generatore sbaglia di più anche su dati standardizzati. La normalizzazione climatologica agisce sull'errore del generatore, dopo l'addestramento, è stimata sugli anni di validazione e toglie questa seconda differenza senza modificare il rilevatore.
 
 \paragraph{Score finale.} Riassumendo, lo score usato nei risultati è lo score di ricostruzione
 \begin{equation}
@@ -253,24 +254,16 @@ con $\bar{s}_{G,tn}$ dell'equazione~\eqref{eq:componente-g-media}: l'errore pesa
 % excluded (validazione, lasciando fuori l'anno) in physiq_pv/era5/seasonality.py;
 % comando climatology --reference validation --reference-run-dir --normal-masks-dir
 % --period day --window-days 15 (commit 2e65045c, ramo CNN).
-% Dal 28 ottobre 2026 il Capitolo 6 usa la climatologia qui descritta (giorno +-15):
-% outputs/good2v/val_gen_clim_day (validazione, un anno fuori) e
-% test_generator_clim_day (test, dalla validazione); i rilevatori di confronto con
-% scripts/run_era5_comparisons.sh. Le vecchie cartelle *_clim per mese non entrano.
-% Prova sulla validazione 2000-2004 (outputs/good2v/val_gen_clim_day, log
-% analisi_good2/luogo_mese_vs_giorno_val.log): quote per latitudine x mese al 5%
-% fra 4.0 e 6.3% per mese, fra 3.6 e 6.3% per giorno, differenza media fra le
-% due tabelle 0.12 punti (massima 0.4).
-% Score di validazione con la storia reale: scripts/score_era5_stgan_run.py
-% --period validation (outputs/stgan_good_sweep_2_validation). Con la climatologia
-% stimata dagli errori a storia ripulita le quote per luogo erano disuguali
-% (1.5-12.5%), con la storia reale piatte (3.3-6.7%), sulla validazione e con la
-% climatologia per mese. Nella Sezione 6.3 la verifica è rifatta sul test.
+% Il Capitolo 6 usa la climatologia qui descritta (giorno +-15) di optuna-27:
+% outputs/comportamento_optuna27 (validazione, un anno fuori) e
+% outputs/optuna27/test_generator_clim_day (test, dalla validazione); i rilevatori
+% di confronto con scripts/run_era5_comparisons.sh. Score di validazione con la
+% storia reale: scripts/score_era5_stgan_run.py --period validation.
 
 \section{Validazione senza etichette}
 \label{sec:monitoraggio-senza-etichette}
 
-Gli anni di validazione servono a confrontare configurazioni del detector senza usare il test e senza etichette. Il confronto deve misurare quanto bene il modello ricostruisce il tempo normale: i valori esclusi degli anni di validazione (Sezione~\ref{sec:maschere-validazione}) sono tenuti fuori dalle misure.
+Gli anni di validazione servono a confrontare configurazioni del rilevatore senza usare il test e senza etichette. Il confronto deve misurare quanto bene il modello ricostruisce il tempo normale: i valori esclusi degli anni di validazione (Sezione~\ref{sec:maschere-validazione}) sono tenuti fuori dalle misure.
 
 \subsection{Distanza fra campi osservati e ricostruiti nello spazio delle componenti principali}
 

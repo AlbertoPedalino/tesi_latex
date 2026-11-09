@@ -1,17 +1,17 @@
 \chapter{Esperimenti}
 \label{chap:esperimenti}
 
-Il capitolo descrive come il detector del Capitolo~\ref{chap:metodologia} è addestrato e valutato sui campi ERA5. La Sezione~\ref{sec:exp-configurazioni} riporta la configurazione fissata e la ricerca dei quattro iperparametri che regolano l'equilibrio fra generatore e discriminatore; la Sezione~\ref{sec:exp-protocollo} descrive il protocollo di valutazione: che cosa si stima sugli anni di validazione e che cosa si valuta sul test. I risultati, compresi quelli della ricerca, sono nel Capitolo~\ref{chap:risultati}.
+Il capitolo descrive come il rilevatore del Capitolo~\ref{chap:metodologia} è addestrato e valutato sui campi ERA5. La Sezione~\ref{sec:exp-configurazioni} riporta la configurazione fissata e la ricerca dei quattro iperparametri che regolano l'equilibrio fra generatore e discriminatore; la Sezione~\ref{sec:exp-protocollo} descrive il protocollo di valutazione: che cosa si stima sugli anni di validazione e che cosa si valuta sul test. I risultati, compresi quelli della ricerca, sono nel Capitolo~\ref{chap:risultati}.
 
 \section{Configurazione e ricerca degli iperparametri}
 \label{sec:exp-configurazioni}
 
-La configurazione del detector è fissata, a eccezione di quattro iperparametri che regolano l'equilibrio fra generatore e discriminatore, scelti con una ricerca bayesiana. La Tabella~\ref{tab:configurazioni} riporta i valori fissati e gli iperparametri cercati, con la sezione del Capitolo~\ref{chap:metodologia} che li descrive.
+La configurazione del rilevatore è fissata, a eccezione di quattro iperparametri che regolano l'equilibrio fra generatore e discriminatore, scelti con una ricerca bayesiana. La Tabella~\ref{tab:configurazioni} riporta i valori fissati e gli iperparametri cercati, con la sezione del Capitolo~\ref{chap:metodologia} che li descrive.
 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Configurazione del detector su ERA5. Nella parte superiore i valori fissati, nella parte inferiore gli iperparametri della ricerca, con l'intervallo esplorato e il valore della configurazione scelta. In scala logaritmica, per esempio, i valori 50 e 200 sono equidistanti da 100.}
+    \caption{Configurazione del rilevatore su ERA5. Nella parte superiore i valori fissati, nella parte inferiore gli iperparametri della ricerca, con l'intervallo esplorato e il valore della configurazione scelta. In scala logaritmica, per esempio, i valori 50 e 200 sono equidistanti da 100.}
     \label{tab:configurazioni}
     \vspace{0.6em}
     \begin{tabular}{@{}L{0.36}L{0.48}L{0.09}@{}}
@@ -82,4 +82,4 @@ calcolato su un istante ogni dieci degli anni di validazione e su tutte le celle
 % tutte le celle, senza escludere i valori segnati come insoliti. Verificato il 29
 % ottobre 2026.
 
-\paragraph{Score usato e baseline.} Lo score del detector è lo score di ricostruzione $\zeta$ dell'equazione~\eqref{eq:score-finale}, che nel Capitolo~\ref{chap:risultati} è indicato con $G_{\mathrm{n}}$, cioè G con la normalizzazione climatologica. Lo score combinato dell'articolo, che somma la componente di ricostruzione e quella del discriminatore, non è usato: la scelta di $\zeta$ è motivata nella Sezione~\ref{sec:ris-conferma}: le due componenti non concordano sugli anni di validazione, e la componente di ricostruzione ha un significato chiaro. Non esistono etichette di anomalia. Gli anni di test non intervengono né nell'addestramento né nella scelta della configurazione; il comportamento degli score e il loro confronto con otto baseline, metodi più semplici (Sezione~\ref{sec:ris-confronti}), sono descritti nel Capitolo~\ref{chap:risultati}.
+\paragraph{Score usato e baseline.} Lo score del rilevatore è lo score di ricostruzione $\zeta$ dell'equazione~\eqref{eq:score-finale}, che nel Capitolo~\ref{chap:risultati} è indicato con $G_{\mathrm{n}}$, cioè G con la normalizzazione climatologica. Lo score combinato dell'articolo, che somma la componente di ricostruzione e quella del discriminatore, non è usato: la scelta di $\zeta$ è motivata nella Sezione~\ref{sec:ris-conferma}: le due componenti non concordano sugli anni di validazione, e la componente di ricostruzione ha un significato chiaro. Non esistono etichette di anomalia. Gli anni di test non intervengono né nell'addestramento né nella scelta della configurazione; il comportamento degli score e il loro confronto con otto baseline, metodi più semplici (Sezione~\ref{sec:ris-confronti}), sono descritti nel Capitolo~\ref{chap:risultati}.

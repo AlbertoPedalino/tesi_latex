@@ -1,7 +1,7 @@
 \chapter{Dati e preprocessing}
 \label{chap:dati}
 
-Il capitolo descrive i campi meteorologici su cui il detector è addestrato e valutato: le variabili della rianalisi ERA5, il dominio e la cadenza temporale, la preparazione dei dati e la loro suddivisione in anni di addestramento, di validazione e di test. L'ultima sezione descrive i dati PVGIS da cui il lavoro è partito: serie orarie di poche località, con irradianza, temperatura e vento soltanto, che non permettono di risalire alla condizione meteorologica che le ha prodotte, e per questo il lavoro è passato ai campi ERA5. Le trasformazioni che dipendono dal modello, come la normalizzazione stagionale, sono descritte nel Capitolo~\ref{chap:metodologia}.
+Il capitolo descrive i campi meteorologici su cui il rilevatore è addestrato e valutato: le variabili della rianalisi ERA5, il dominio e la cadenza temporale, la preparazione dei dati e la loro suddivisione in anni di addestramento, di validazione e di test. L'ultima sezione descrive i dati PVGIS da cui il lavoro è partito: serie orarie di poche località, con irradianza, temperatura e vento soltanto, che non permettono di risalire alla condizione meteorologica che le ha prodotte, e per questo il lavoro è passato ai campi ERA5. Le trasformazioni che dipendono dal modello, come la normalizzazione stagionale, sono descritte nel Capitolo~\ref{chap:metodologia}.
 
 \section{Campi ERA5 e dominio}
 \label{sec:dati-era5}
@@ -94,13 +94,12 @@ Il modello legge, per ogni istante, fino a 56 istanti precedenti, cioè sette gi
 % 61360 istanti di test e 10611 celle anche dalle dimensioni degli score di una
 % run completa. Il numero di aggiornamenti per epoca dello sweep (58384) è
 % 58440 meno i 56 istanti di contesto del trend.
-% La run della tesi è good-sweep-2 (sweep 913ez3rt, W&B 5qlj2lwg), con la suddivisione
-% qui descritta.
+% La run della tesi è optuna-27, con la suddivisione qui descritta.
 
 \section{Caratteristiche dei campi}
 \label{sec:dati-caratteristiche}
 
-Tre proprietà dei campi motivano altrettante scelte del Capitolo~\ref{chap:metodologia}. Sono misurate sugli anni di addestramento, senza il detector; solo il confronto della Figura~\ref{fig:era5-variazione} anticipa i pesi del Capitolo~\ref{chap:metodologia}.
+Tre proprietà dei campi motivano altrettante scelte del Capitolo~\ref{chap:metodologia}. Sono misurate sugli anni di addestramento, senza il rilevatore; solo il confronto della Figura~\ref{fig:era5-variazione} anticipa i pesi del Capitolo~\ref{chap:metodologia}.
 
 \paragraph{Cicli diversi da luogo a luogo.} La temperatura a due metri e la copertura nuvolosa hanno un ciclo stagionale e uno giornaliero, con livello e ampiezza diversi da una cella all'altra (Figura~\ref{fig:era5-cicli}). La media mensile della temperatura va da 1 a 17~°C in una cella dell'Europa settentrionale, da 2 a 24~°C nella Pianura Padana e da 11 a 32~°C nel Sahara; la copertura nuvolosa media sta fra 0.60 e 0.78 nella prima cella e fra 0.04 e 0.29 nell'ultima. Lo stesso valore è quindi abituale in un luogo e in una stagione e insolito in altri. Per questo i valori in ingresso sono riferiti al normale stagionale della propria cella, del giorno e dell'ora (Sezione~\ref{sec:ingresso-normalizzazione-era5}), e gli score alla climatologia della propria cella (Sezione~\ref{sec:normalizzazione-climatologica-score}).
 
@@ -116,16 +115,16 @@ Tre proprietà dei campi motivano altrettante scelte del Capitolo~\ref{chap:meto
     m_f=\frac{1}{TN}\sum_{t,n}\bigl(\tilde{x}_{t,n,f}-\tilde{x}_{t-8,n,f}\bigr)^2,
     \label{eq:variazione-24h}
 \end{equation}
-dove $\tilde{x}$ è il valore dopo la trasformazione considerata e $t-8$ l'istante di 24 ore prima; la quota di $f$ è $m_f/\sum_{f'}m_{f'}$. Le 24 ore confrontano istanti alla stessa ora e non contengono quindi il ciclo giornaliero. La quota dice quanto ciascuna variabile pesa in un errore di ricostruzione che somma le variabili con lo stesso peso. Con il min--max di STGAN, che riporta ogni variabile fra il minimo e il massimo degli anni di addestramento, la copertura nuvolosa produce l'84.1\% della variazione quadratica media su 24 ore delle quindici variabili, e nessuna delle altre supera il 3.3\% (Figura~\ref{fig:era5-variazione}). La copertura nuvolosa passa spesso da sereno a coperto nel corso di un giorno e attraversa quasi tutto il proprio intervallo; la temperatura cambia di pochi gradi, in un intervallo che comprende tutte le celle e tutte le stagioni. Un errore di ricostruzione che somma le variabili con lo stesso peso sarebbe quindi in gran parte un errore sulla copertura nuvolosa. Dopo la normalizzazione stagionale e il min--max del detector le quote vanno dallo 0.9\% dell'umidità del suolo al 16.6\% dell'umidità specifica, e la copertura nuvolosa ha il 6.7\%, la quota di una variabile media: la normalizzazione stagionale rende confrontabili anche le variabili fra loro. Le differenze che restano sono corrette dai pesi della Sezione~\ref{sec:pesi-variabili-ricostruzione}.
+dove $\tilde{x}$ è il valore dopo la trasformazione considerata e $t-8$ l'istante di 24 ore prima; la quota di $f$ è $m_f/\sum_{f'}m_{f'}$. Le 24 ore confrontano istanti alla stessa ora e non contengono quindi il ciclo giornaliero. La quota dice quanto ciascuna variabile pesa in un errore di ricostruzione che somma le variabili con lo stesso peso. Con il min--max di STGAN, che riporta ogni variabile fra il minimo e il massimo degli anni di addestramento, la copertura nuvolosa produce l'84.1\% della variazione quadratica media su 24 ore delle quindici variabili, e nessuna delle altre supera il 3.3\% (Figura~\ref{fig:era5-variazione}). La copertura nuvolosa passa spesso da sereno a coperto nel corso di un giorno e attraversa quasi tutto il proprio intervallo; la temperatura cambia di pochi gradi, in un intervallo che comprende tutte le celle e tutte le stagioni. Un errore di ricostruzione che somma le variabili con lo stesso peso sarebbe quindi in gran parte un errore sulla copertura nuvolosa. Dopo la normalizzazione stagionale e il min--max del rilevatore le quote vanno dallo 0.9\% dell'umidità del suolo al 16.6\% dell'umidità specifica, e la copertura nuvolosa ha il 6.7\%, la quota di una variabile media: la normalizzazione stagionale rende confrontabili anche le variabili fra loro. Le differenze che restano sono corrette dai pesi della Sezione~\ref{sec:pesi-variabili-ricostruzione}.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_variazione_24h}
-    \caption{Quota di ciascuna variabile nella variazione quadratica media su 24 ore (equazione~\eqref{eq:variazione-24h}), dopo il min--max di STGAN e dopo la normalizzazione stagionale e il min--max del detector, in scala logaritmica. Anni 1980--1999; la seconda quota è ricavata dai pesi della Sezione~\ref{sec:pesi-variabili-ricostruzione}, che sono proporzionali all'inverso di $m_f$. La linea tratteggiata indica la quota uguale per tutte le variabili, un quindicesimo. Con il min--max di STGAN la copertura nuvolosa domina; dopo la normalizzazione stagionale le quote sono dello stesso ordine.}
+    \caption{Quota di ciascuna variabile nella variazione quadratica media su 24 ore (equazione~\eqref{eq:variazione-24h}), dopo il min--max di STGAN e dopo la normalizzazione stagionale e il min--max del rilevatore, in scala logaritmica. Anni 1980--1999; la seconda quota è ricavata dai pesi della Sezione~\ref{sec:pesi-variabili-ricostruzione}, che sono proporzionali all'inverso di $m_f$. La linea tratteggiata indica la quota uguale per tutte le variabili, un quindicesimo. Con il min--max di STGAN la copertura nuvolosa domina; dopo la normalizzazione stagionale le quote sono dello stesso ordine.}
     \label{fig:era5-variazione}
 \end{figure}
 
-\paragraph{Legame spaziale a corto raggio.} Gli scarti dalla media climatologica di due celle, cioè le differenze fra il valore e la media della propria cella, del mese e dell'ora, sono tanto meno correlati quanto più le celle sono lontane (Figura~\ref{fig:era5-correlazione}). Qui la media è per mese, una stima più semplice di quella per giorno usata nel Capitolo~\ref{chap:metodologia}. Sono confrontate due variabili di grande scala, pressione e temperatura, e due legate alle perturbazioni, copertura nuvolosa e precipitazione; la distanza è misurata lungo la superficie terrestre. La correlazione mediana scende sotto 0.5 oltre circa 1300~km per la pressione al livello del mare e 900~km per la temperatura a due metri, ma già oltre 200~km per la copertura nuvolosa e 100~km per la precipitazione. Le variabili legate alle perturbazioni dipendono quindi dalle celle vicine, entro poche celle di $0.5^\circ$: è il contesto che il detector rappresenta con la ConvGRU del generatore e con la patch del discriminatore (Sezione~\ref{sec:stgan}). Una cella misura circa 55~km in latitudine: la patch $3\times3$ del discriminatore copre le celle entro circa 55~km, e la ConvGRU allarga il raggio di alcune celle a ogni passo della finestra recente.
+\paragraph{Legame spaziale a corto raggio.} Gli scarti dalla media climatologica di due celle, cioè le differenze fra il valore e la media della propria cella, del mese e dell'ora, sono tanto meno correlati quanto più le celle sono lontane (Figura~\ref{fig:era5-correlazione}). Qui la media è per mese, una stima più semplice di quella per giorno usata nel Capitolo~\ref{chap:metodologia}. Sono confrontate due variabili di grande scala, pressione e temperatura, e due legate alle perturbazioni, copertura nuvolosa e precipitazione; la distanza è misurata lungo la superficie terrestre. La correlazione mediana scende sotto 0.5 oltre circa 1300~km per la pressione al livello del mare e 900~km per la temperatura a due metri, ma già oltre 200~km per la copertura nuvolosa e 100~km per la precipitazione. Le variabili legate alle perturbazioni dipendono quindi dalle celle vicine, entro poche celle di $0.5^\circ$: è il contesto che il rilevatore rappresenta con la ConvGRU del generatore e con la patch del discriminatore (Sezione~\ref{sec:stgan}). Una cella misura circa 55~km in latitudine: la patch $3\times3$ del discriminatore copre le celle entro circa 55~km, e la ConvGRU allarga il raggio di alcune celle a ogni passo della finestra recente.
 
 \begin{figure}[htbp]
     \centering
@@ -135,8 +134,10 @@ dove $\tilde{x}$ è il valore dopo la trasformazione considerata e $t-8$ l'istan
 \end{figure}
 % Numeri da figure_dati.log e figures/dati/era5_dati.json (22 ottobre 2026,
 % scripts/summarize_era5_data_figures.py --train-end-year 1999 del repository del
-% codice); quote del detector da figures/dati/era5_pesi_good2.json (pesi salvati
-% nei metadati di good-sweep-2, stimati su 720 istanti). Figure generate da
+% codice); quote del rilevatore da figures/dati/era5_pesi.json (pesi stimati su 720
+% istanti dei soli anni di addestramento, senza seme: _daily_change_weights in
+% physiq_pv/anomaly_detection/stgan/pipeline.py; uguali per ogni run con gli stessi
+% dati e la stessa normalizzazione, quindi anche per optuna-27). Figure generate da
 % figures/genera_figure_dati.py.
 
 \section{Qualità e limiti dei dati}
@@ -146,7 +147,12 @@ ERA5 è una rianalisi: i campi sono stime di un modello vincolato dalle osservaz
 
 \paragraph{Variabili lontane da una distribuzione gaussiana.} La precipitazione è nulla nella maggior parte degli istanti e assume di rado valori molto alti; la copertura nuvolosa è limitata fra 0 e 1. Il Capitolo~\ref{chap:metodologia} tratta la precipitazione con una radice quarta prima della standardizzazione (Sezione~\ref{sec:ingresso-normalizzazione-era5}).
 
-\paragraph{Cambiamenti dopo gli anni di addestramento.} Riferite al normale stagionale degli anni 1980--1999, le medie annuali delle variabili sull'intero dominio non restano costanti negli anni successivi. Per l'umidità specifica a 850~hPa la media resta fra $-0.13$ e $+0.06$ deviazioni standard negli anni di addestramento e sale a $+0.17$ negli ultimi cinque anni: è una deriva reale, che la normalizzazione del Capitolo~\ref{chap:metodologia} non toglie. Per la precipitazione totale la media passa da circa 0 a valori fra $+0.09$ e $+0.26$ dal 2000 in poi; nei dati grezzi non c'è alcun salto, e lo spostamento è un effetto della standardizzazione di una variabile molto asimmetrica fuori dagli anni su cui è stimata, non un cambiamento del clima. In entrambi i casi gli anni di test si allontanano da quelli di addestramento, e un detector unsupervised può segnalare in parte questa distanza invece di anomalie meteorologiche di un singolo istante. La quota segnalata sul test è riportata nella Sezione~\ref{sec:ris-conferma}.
+\paragraph{Cambiamenti dopo gli anni di addestramento.} Riferite al normale stagionale degli anni 1980--1999, per mese e ora, le medie annuali delle variabili sull'intero dominio non restano costanti negli anni successivi. Per l'umidità specifica a 850~hPa la media resta fra $-0.13$ e $+0.06$ deviazioni standard negli anni di addestramento e sale a $+0.17$ negli ultimi cinque anni: è una deriva reale, che la normalizzazione del Capitolo~\ref{chap:metodologia} non toglie. Per la precipitazione totale, standardizzata senza la radice quarta, la media passa da circa 0 a valori fra $+0.09$ e $+0.26$ dal 2000 in poi; nei dati grezzi non c'è alcun salto, e lo spostamento è un effetto della standardizzazione di una variabile molto asimmetrica fuori dagli anni su cui è stimata, non un cambiamento del clima. La radice quarta usata dal rilevatore riduce questa asimmetria; quanto dello spostamento resti nei suoi ingressi non è stato misurato.
+% Numeri da scripts/check_era5_climate_drift.py --train-end-year 1999: valori grezzi, norma per
+% mese e ora, soglia minima della deviazione standard all'1% di quella complessiva. Il rilevatore usa
+% invece radice quarta, soglia 0.1 e norma per giorno +-15 e ora: la misura sui suoi ingressi
+% richiede i dati preparati sul server (aperto, 8 novembre 2026).
+In entrambi i casi gli anni di test si allontanano da quelli di addestramento, e un rilevatore unsupervised può segnalare in parte questa distanza invece di anomalie meteorologiche di un singolo istante. La quota segnalata sul test è riportata nella Sezione~\ref{sec:ris-conferma}.
 % Numeri dai commenti della Sezione 4.2.3 (deriva_clima_1999.log e
 % gradino_precipitazione.log, 21 ottobre 2026, scripts/check_era5_climate_drift.py e
 % scripts/check_era5_precipitation_step.py del repository del codice).
@@ -199,4 +205,4 @@ Per ogni località e ogni istante sono disponibili l'irradianza globale con le s
     \end{tabular}
 \end{table}
 
-Queste sono le sole grandezze disponibili, e sono quelle che determinano la produzione fotovoltaica. Un valore segnalato su questi dati non può essere ricondotto a una condizione meteorologica più generale: per rilevare anomalie meteorologiche di tipo diverso e descriverne l'origine il lavoro è passato ai campi ERA5 descritti nelle sezioni precedenti. Su questi dati il lavoro preliminare ha sviluppato un previsore della produzione e i primi detector, che la tesi non riporta.
+Queste sono le sole grandezze disponibili, e sono quelle che determinano la produzione fotovoltaica. Un valore segnalato su questi dati non può essere ricondotto a una condizione meteorologica più generale: per rilevare anomalie meteorologiche di tipo diverso e descriverne l'origine il lavoro è passato ai campi ERA5 descritti nelle sezioni precedenti. Su questi dati il lavoro preliminare ha sviluppato un previsore della produzione e i primi rilevatori, che la tesi non riporta.

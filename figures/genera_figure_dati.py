@@ -124,7 +124,7 @@ def change_figure(data, weights):
     figure, axis = plt.subplots(figsize=(9.0 / 2.54, 8.0 / 2.54))
     axis.barh(rows + 0.19, article[order], height=0.36, color=ORANGE, label="min–max di STGAN")
     axis.barh(rows - 0.19, detector[order], height=0.36, color=BLUE,
-              label="normalizzazione stagionale e min–max del detector")
+              label="normalizzazione stagionale e min–max del rilevatore")
     axis.set_yticks(rows, [NAMES.get(features[i], features[i]) for i in order])
     # A logarithmic axis: on a linear one the cloud cover (84%) hides every other bar.
     axis.set_xscale("log")
@@ -173,7 +173,7 @@ def correlation_figure(data):
 
 def main():
     data = json.loads((HERE / "dati" / "era5_dati.json").read_text(encoding="utf-8"))
-    weights = json.loads((HERE / "dati" / "era5_pesi_good2.json").read_text(encoding="utf-8"))["weights"]
+    weights = json.loads((HERE / "dati" / "era5_pesi.json").read_text(encoding="utf-8"))["weights"]
     cycles_figure(data)
     change_figure(data, weights)
     correlation_figure(data)
