@@ -170,37 +170,37 @@ def table_axes(axis, order):
         side.set_visible(False)
 
 
+TYPE_COLUMNS = ("vertical_velocity", "total_precipitation", "total_cloud_cover", "volumetric_soil_water_layer_1",
+                "friction_velocity", "boundary_layer_height")
+
+
 def types_figure(zones):
-    """Which variables dominate, and at which size, for G and for every baseline: the values flagged by type and size."""
-    order = type_order(zones)
-    norm = LogNorm(vmin=5e3, vmax=2.5e7)
-    figure, axes = plt.subplots(3, 3, figsize=size(1.18), sharex=True, sharey=True, constrained_layout=True)
-    for axis, (label, key, table, _) in zip(axes.flat, method_tables()):
-        table = table.set_index(["type", "size"])
-        grid = np.full((len(order), len(SIZES)), np.nan)
-        for row, name in enumerate(order):
-            for column, band in enumerate(SIZES):
-                if (name, band) in table.index:
-                    grid[row, column] = table.loc[(name, band), f"{key} core values"]
-        axis.set_facecolor(EMPTY)  # a size with no event of that type
-        mesh = axis.imshow(grid, cmap=RAMP, norm=norm, aspect="auto", interpolation="nearest")
-        # The two long names on two lines: on one line they would run into the title of the next panel.
-        title = {"Distanza dal normale": "Distanza\ndal normale", "Variazione in tre ore": "Variazione\nin tre ore"}.get(label, label)
-        axis.set_title("G" if key == SCORE else title, fontsize=8.5, loc="left", color=BLUE if key == SCORE else TEXT,
-                       fontweight="bold" if key == SCORE else "normal")
-        axis.tick_params(length=0, labelsize=7.5)
-        for side in axis.spines.values():
-            side.set_visible(key == SCORE)
-            side.set_color(BLUE)
-    for axis in axes[-1]:
-        axis.set_xticks(range(len(SIZES)), ("1", "2–4", "5–19", "20–99", "100–999", "1000–9999", "oltre 9999"),
-                        fontsize=7.5, rotation=90)
-    for axis in axes[:, 0]:
-        axis.set_yticks(range(len(order)), [TYPES[name] for name in order], fontsize=7.5)
-    figure.supxlabel("numero di valori del cluster", fontsize=TICKS)
-    bar = figure.colorbar(mesh, ax=axes, shrink=0.5, pad=0.01, aspect=30)
-    bar.set_label("valori segnalati (scala logaritmica)", fontsize=TICKS)
-    bar.ax.tick_params(labelsize=TICKS)
+    """Which variables dominate for G_n and for every baseline: the share of the flagged values by type of cluster."""
+    rows, labels = [], []
+    for label, key, table, _ in method_tables():
+        table = table[(table["type"] != "all") & ~table["type"].str.startswith("far") & table["size"].isin(SIZES)]
+        shares = table.groupby("type")[f"{key} core values"].sum()
+        shares = 100 * shares / shares.sum()
+        row = [shares.get(name, 0.0) for name in TYPE_COLUMNS]
+        rows.append(row + [100 - sum(row)])
+        labels.append(label)
+    grid = np.array(rows)
+    names = [TYPES[name] for name in TYPE_COLUMNS] + ["Altri tipi"]
+    figure, axis = plt.subplots(figsize=size(0.5), constrained_layout=True)
+    axis.imshow(grid, cmap=RAMP, vmin=0, vmax=70, aspect="auto", interpolation="nearest")
+    for (row, column), value in np.ndenumerate(grid):
+        axis.text(column, row, f"{value:.0f}", ha="center", va="center", fontsize=7.5,
+                  color="white" if value > 35 else TEXT)
+    heads = {"Precipitazione": "Precipi-\ntazione"}
+    axis.set_xticks(range(len(names)), [heads.get(name, name.replace(" ", "\n", 1)) for name in names], fontsize=7)
+    axis.xaxis.tick_top()
+    axis.set_yticks(range(len(labels)), labels, fontsize=7.5)
+    axis.get_yticklabels()[0].set_color(BLUE)
+    axis.get_yticklabels()[0].set_fontweight("bold")
+    axis.axhline(0.5, color="white", linewidth=3)  # G_n apart from the baselines
+    axis.tick_params(length=0)
+    for side in axis.spines.values():
+        side.set_visible(False)
     figure.savefig(HERE / "era5_eventi_tipo.pdf")
     plt.close(figure)
 
@@ -250,33 +250,41 @@ def profile_figure():
     axis.text(-8.2, 50, "valore tipico", fontsize=TICKS, color=MUTED, va="bottom")
     axis.axhline(95, color=MUTED, linewidth=0.8, linestyle=":")
     axis.text(8.2, 96, "soglia", fontsize=TICKS, color=MUTED, va="bottom", ha="right")
+    shallow = []
     for label, key, _, table in reversed(method_tables()):  # G last, on top
         table = table[table["type"] == "all"].sort_values("position")
         joined = table["position"].abs() < 8  # the last points gather all the cells beyond: not joined to the others
         if key == SCORE:
-            style = dict(color=BLUE, linewidth=2.2, marker="o", markersize=5, markeredgecolor="white", zorder=4)
+            style = dict(color=BLUE, linewidth=2.6, marker="o", markersize=3.5, markeredgewidth=0, zorder=4)
         elif key in SIMPLE:
             style = dict(color=SIMPLE[key], linewidth=1.6, marker="o", markersize=3.5, markeredgecolor="white", zorder=3)
         else:
-            style = dict(color=SHALLOW_GREY, linewidth=0.9, marker="o", markersize=2, zorder=2)
+            shallow.append(table.set_index("position")[f"{key} percentile"])
+            if key == "copod":  # the only shallow model named in the text
+                axis.plot(table["position"][joined], table[f"{key} percentile"][joined], color="#8a8880", linewidth=1.0,
+                          linestyle=(0, (1, 1.5)), zorder=2)
+            continue
         axis.plot(table["position"][joined], table[f"{key} percentile"][joined], **style)
         axis.plot(table["position"][~joined], table[f"{key} percentile"][~joined], **{**style, "linewidth": 0})
+    band = pd.concat(shallow, axis=1)
+    band = band[band.index.to_series().abs() < 8]
+    axis.fill_between(band.index, band.min(axis=1), band.max(axis=1), color=SHALLOW_GREY, alpha=0.45, linewidth=0, zorder=1)
     # The distance from normal read on the events of G (the text of Section 6.7), not on its own events.
     table = pd.read_csv(PROFILE)
     table = table[table["type"] == "all"].sort_values("position")
     joined = table["position"].abs() < 8
-    style = dict(color=PURPLE, linewidth=1.6, linestyle=(0, (4, 2)), marker="o", markersize=3.5, markeredgecolor="white",
+    style = dict(color=PURPLE, linewidth=1.4, linestyle=(0, (1, 1.2)), marker="o", markersize=2.5, markeredgecolor="white",
                  zorder=3.5)
     axis.plot(table["position"][joined], table[f"{NORMAL} percentile"][joined], **style)
     axis.plot(table["position"][~joined], table[f"{NORMAL} percentile"][~joined], **{**style, "linestyle": "none"})
     axis.text(0.15, 3, "bordo del cluster", fontsize=TICKS, color=TEXT)
-    keys = [Line2D([], [], color=BLUE, linewidth=2.2, marker="o", markersize=5, markeredgecolor="white",
+    keys = [Line2D([], [], color=BLUE, linewidth=2.6, marker="o", markersize=3.5, markeredgewidth=0,
                    label=r"$G_\mathrm{n}$"),
             Line2D([], [], color=ORANGE, linewidth=1.6, label="distanza dal normale, sui propri cluster"),
-            Line2D([], [], color=PURPLE, linewidth=1.6, linestyle=(0, (4, 2)),
+            Line2D([], [], color=PURPLE, linewidth=1.4, linestyle=(0, (1, 1.2)),
                    label=r"distanza dal normale, sui cluster di $G_\mathrm{n}$"),
             Line2D([], [], color=GREEN, linewidth=1.6, label="variazione in tre ore"),
-            Line2D([], [], color=SHALLOW_GREY, linewidth=0.9, label="sei modelli shallow")]
+            Patch(color=SHALLOW_GREY, alpha=0.45, label="sei modelli shallow (dal più basso al più alto)")]
     copod = method_tables()[list(BASELINES).index("copod") + 1][3]
     copod = copod[copod["type"] == "all"].set_index("position")["copod percentile"]
     axis.annotate("COPOD", (3, copod[3]), xytext=(4, 5), textcoords="offset points", fontsize=TICKS - 1, color=MUTED)
@@ -346,8 +354,8 @@ def dropout_figure():
     across.set_xticks([-8, -4, -1, 1, 4, 8], ["8+", "4", "1", "1", "4", "8+"])
     across.set_xlabel("celle dal bordo: dentro | fuori", fontsize=TICKS)
     across.set_ylabel("rapporto (%)", fontsize=TICKS)
-    across.set_ylim(9, 11.5)
-    across.set_yticks([9, 10, 11])
+    across.set_ylim(0, 13)  # from 0: the differences across the clusters are small, and must look small
+    across.set_yticks([0, 5, 10])
     across.set_title("Attraverso i cluster", fontsize=8.5, loc="left", color=TEXT)
 
     numbers = data["classes of the ratio at equal raw error"]
@@ -400,10 +408,10 @@ def dropout_types_figure():
     table = classes.pivot(index="type", columns="class", values="normal flagged %")
     table = table.loc[table[4].sort_values().index]
     place = np.arange(len(table))
-    gap.hlines(place, table[[1, 4, 5]].min(axis=1), table[[1, 4, 5]].max(axis=1), color=GRID, linewidth=1.5, zorder=1)
-    gap.scatter(table[1], place, s=26, color=BLUE, edgecolor="white", linewidth=0.6, zorder=2, label="classe 1 (concordi)")
-    gap.scatter(table[4], place, s=26, color=MUTED, edgecolor="white", linewidth=0.6, zorder=2, label="classe 4")
-    gap.scatter(table[5], place, s=26, color=ORANGE, edgecolor="white", linewidth=0.6, zorder=3, label="classe 5 (discordi)")
+    gap.hlines(place, table[[1, 4, 5]].min(axis=1), table[[1, 4, 5]].max(axis=1), color=GRID, linewidth=6, zorder=1)
+    gap.scatter(table[1], place - 0.22, s=24, color=BLUE, edgecolor="white", linewidth=0.6, zorder=2, label="classe 1 (concordi)")
+    gap.scatter(table[4], place, s=24, color=MUTED, edgecolor="white", linewidth=0.6, zorder=2, label="classe 4")
+    gap.scatter(table[5], place + 0.22, s=24, color=ORANGE, edgecolor="white", linewidth=0.6, zorder=3, label="classe 5 (discordi)")
     gap.set_yticks(place, [TYPES[name] for name in table.index], fontsize=7)
     gap.set_xlim(0, 100)
     gap.set_xlabel("oltre la soglia della distanza\ndal normale (%)", fontsize=TICKS)
