@@ -20,7 +20,7 @@ HERE = pathlib.Path(__file__).parent
 DATA = HERE / "dati" / "era5_confronti.json"
 WIDTH_CM = 12.0
 TEXT, MUTED = "#0b0b0b", "#52514e"
-LABELS = {"G+clim": r"$G_\mathrm{n}$", "change_3h": "Variazione 3 ore", "normal": "Distanza dal normale", "cblof": "CBLOF",
+LABELS = {"G+clim": r"$G_\mathrm{n}$", "change_3h": "Variazione in tre ore", "normal": "Distanza dal normale", "cblof": "CBLOF",
           "mcd": "MCD", "pca": "PCA", "iforest": "Isolation Forest", "copod": "COPOD", "hbos": "HBOS"}
 
 plt.rcParams.update({

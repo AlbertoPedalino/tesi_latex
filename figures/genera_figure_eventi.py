@@ -321,7 +321,7 @@ def profile_types_figure():
     axis.annotate("altri tipi", (6.2, 1.62), fontsize=TICKS, color=MUTED)
     axis.text(0.15, 0.08, "bordo del cluster", fontsize=TICKS, color=TEXT)
     axis.set_ylim(0, 3.5)
-    axis.set_ylabel("scarto della variabile (0 = normale)", fontsize=TICKS)
+    axis.set_ylabel("|scarto| della variabile (0 = normale)", fontsize=TICKS)
     position_axis(axis)
     figure.savefig(HERE / "era5_eventi_profilo_tipi.pdf")
     plt.close(figure)
