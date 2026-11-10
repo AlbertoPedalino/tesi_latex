@@ -158,7 +158,10 @@ def spatial_figure(data):
     axis.tick_params(labelsize=TICKS)
     axis.grid(axis="y", color=GRID, linewidth=0.5)
     axis.spines[["top", "right"]].set_visible(False)
-    axis.legend(loc="upper left", ncols=2, frameon=False, fontsize=8)
+    # The names in the free band at the top, each in the colour of its line, instead of a legend.
+    first = axis.text(0.01, 0.97, "Spearman", transform=axis.transAxes, fontsize=8, color=BLUE, va="top")
+    axis.annotate("Pearson", (1, 0), xycoords=first, xytext=(8, 0), textcoords="offset points", fontsize=8,
+                  color=ORANGE, va="bottom")
     figure.savefig(HERE / "era5_g_d_correlazione_spaziale.pdf")
     plt.close(figure)
 
@@ -197,6 +200,9 @@ def zones_figure(data):
         values = data["zones"][:, index]
         bars = axis.bar(positions + (index - 1) * width, values, width - 0.03, color=shade, label=zone)
         axis.bar_label(bars, labels=[f"{value:.0f}" for value in values], fontsize=7, color=TEXT, padding=1)
+        # The name of the zone inside the bar of the first group, read from bottom to top.
+        axis.text(positions[0] + (index - 1) * width, 3, zone, rotation=90, fontsize=7, ha="center", va="bottom",
+                  color="white" if index < 2 else TEXT)
     axis.axhline(50, color=MUTED, linewidth=0.7, linestyle=(0, (3, 2)))
     axis.text(positions[-1] - 0.13, 51, "valore tipico", fontsize=7, color=MUTED, ha="center", va="bottom")
     axis.set_xticks(positions, [labels[str(name)] for name in data["zone_scores"]])
@@ -204,7 +210,6 @@ def zones_figure(data):
     axis.set_ylim(0, 108)
     axis.set_ylabel("percentile mediano")
     axis.spines[["top", "right"]].set_visible(False)
-    axis.legend(loc="upper right", ncols=3, frameon=False, fontsize=8)
     figure.savefig(HERE / "era5_d_termini_zone.pdf")
     plt.close(figure)
 
@@ -242,27 +247,25 @@ def zones_scheme_figure():
 
 
 def terms_map_figure(data, coastline):
-    """G and the terms of D at the timestamp with the highest mean G; each panel has its own scale (1st-99th
-    percentile), and the orange line encloses the 1% of the cells with the highest G at that timestamp."""
+    """G and D at the timestamp with the highest mean G, both as percentile within that timestamp, so that the two maps
+    share one scale; the line encloses the 1% of the cells with the highest G at that timestamp."""
     row = 1  # the highest mean G of the period
-    fields = (("G: errore di ricostruzione", "alto = più insolito", data["G"][row]),
-              (f"{REAL}: giudizio sull'osservazione", "alto = giudicata generata", data["Dreale"][row]),
-              (f"{GENERATED}: giudizio sulla ricostruzione", "alto = giudicata generata",
-               data["Dreale"][row] - data["D"][row]),
-              (f"D = {REAL} $-$ {GENERATED}", "alto = più insolito", data["D"][row]))
     top = data["G"][row] >= np.nanpercentile(data["G"][row], 99)
     outline = np.nan_to_num(image(data, top.astype(float)), nan=0.0)
-    figure, axes = plt.subplots(2, 2, figsize=size(1.0), constrained_layout=True)
-    for index, (axis, (title, label, values)) in enumerate(zip(axes.ravel(), fields)):
-        low, high = np.nanpercentile(values, (1, 99))
-        mesh = draw_map(axis, data, values, coastline, left=index % 2 == 0, bottom=index >= 2, cmap="viridis",
-                        vmin=low, vmax=high)
-        axis.contour(data["longitudes"], data["latitudes"], outline, levels=[0.5], colors=ORANGE, linewidths=1.0)
-        axis.set_title(title, fontsize=9)
-        bar = figure.colorbar(mesh, ax=axis, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30)
-        bar.set_label(label, fontsize=TICKS)
-        bar.ax.tick_params(labelsize=TICKS - 1)
-        bar.ax.locator_params(nbins=5)
+    figure, axes = plt.subplots(1, 2, figsize=size(0.56), constrained_layout=True)
+    for index, (axis, (title, values)) in enumerate(zip(axes, (("G: errore di ricostruzione", data["G"][row]),
+                                                             ("D: giudizio del discriminatore", data["D"][row])))):
+        valid = np.isfinite(values)
+        rank = np.full(values.shape, np.nan)
+        rank[valid] = 100 * (np.argsort(np.argsort(values[valid])) + 0.5) / valid.sum()
+        mesh = draw_map(axis, data, rank, coastline, left=index == 0, cmap="viridis", vmin=0, vmax=100)
+        # A white halo under the line keeps it visible on the yellow of G and on the dark of D.
+        axis.contour(data["longitudes"], data["latitudes"], outline, levels=[0.5], colors="white", linewidths=3.2)
+        axis.contour(data["longitudes"], data["latitudes"], outline, levels=[0.5], colors=ORANGE, linewidths=1.8)
+        axis.set_title(title, fontsize=9, loc="left", color=TEXT)
+    bar = figure.colorbar(mesh, ax=axes, orientation="horizontal", shrink=0.5, pad=0.02, aspect=40, ticks=[0, 25, 50, 75, 100])
+    bar.set_label("percentile nell'istante (alto = più insolito)", fontsize=TICKS)
+    bar.ax.tick_params(labelsize=TICKS)
     figure.savefig(HERE / "era5_d_termini_mappa.pdf", dpi=300)
     plt.close(figure)
 

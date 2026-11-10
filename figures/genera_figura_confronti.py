@@ -38,7 +38,10 @@ plt.rcParams.update({
 def main():
     data = json.loads(DATA.read_text(encoding="utf-8"))
     values = np.array(data["jaccard_5pc"], dtype=float)
-    names = [LABELS[name] for name in data["detectors"]]
+    keys = list(data["detectors"])
+    names = [LABELS[name] for name in keys]
+    values[np.triu_indices_from(values)] = np.nan  # each pair once
+    values, rows, columns = values[1:, :-1], names[1:], names[:-1]
     width = WIDTH_CM / 2.54
     figure, axis = plt.subplots(figsize=(width, 0.8 * width), constrained_layout=True)
     mesh = axis.imshow(values, cmap="viridis", vmin=10, vmax=70)
@@ -46,8 +49,15 @@ def main():
         if np.isfinite(value):
             axis.text(column, row, f"{np.floor(value + 0.5):.0f}", ha="center", va="center", fontsize=7.5,
                       color="white" if value < 45 else TEXT)
-    axis.set_xticks(range(len(names)), names, rotation=40, ha="right")
-    axis.set_yticks(range(len(names)), names)
+    axis.set_xticks(range(len(columns)), columns, rotation=40, ha="right")
+    axis.set_yticks(range(len(rows)), rows)
+    # The methods that read the point (all but G_n and the change in three hours): one box around their pairs.
+    first = keys.index("normal")
+    assert keys[:2] == ["G+clim", "change_3h"] and first == 2
+    axis.add_patch(plt.Rectangle((first - 0.5, first - 0.5), len(columns) - first, len(rows) - first, fill=False,
+                                 edgecolor=TEXT, linewidth=1.4, zorder=3))
+    axis.text(len(columns) - 0.55, first - 0.3, "metodi che\nleggono il punto", ha="right", va="top", fontsize=8,
+              color=TEXT)
     axis.tick_params(length=0)
     for side in axis.spines.values():
         side.set_visible(False)

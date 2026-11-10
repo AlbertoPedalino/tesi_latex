@@ -22,7 +22,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap, Normalize
-from matplotlib.lines import Line2D
 
 from genera_figure_g_d import MUTED, TEXT, TICKS, size
 
@@ -98,16 +97,18 @@ def main():
     bar = figure.colorbar(mesh, ax=axis, shrink=0.85, pad=0.02, extend="max")
     bar.set_label("MMD sulla validazione (più scuro = migliore)", fontsize=TICKS)
     bar.ax.tick_params(labelsize=TICKS)
-    keys = [Line2D([], [], marker="o", linestyle="", color="#3987e5", markeredgecolor="white", markersize=6.5,
-                   label="prova"),
-            Line2D([], [], marker="x", linestyle="", color=MUTED, markersize=6, label="loss non finita")]
-    if running.any():  # the key only while a trial is still running
-        keys.append(Line2D([], [], marker="o", linestyle="", markerfacecolor="none", markeredgecolor=TEXT,
-                           markersize=6.5, label="in corso"))
-    keys.append(Line2D([], [], marker="o", linestyle="", markerfacecolor="none", markeredgecolor=REGION,
-                       markeredgewidth=1.6, markersize=10, label="regione migliore"))
-    axis.legend(handles=keys, frameon=False, fontsize=7, loc="upper center", bbox_to_anchor=(0.5, -0.13), ncol=len(keys),
-                handletextpad=0.3, columnspacing=1.0)
+    # The names on the figure, not in a legend: the trials stopped by a non-finite loss, next to the leftmost one;
+    # the best region, under its lowest trial.
+    if failed.any():
+        first = np.flatnonzero(failed)[np.argmin(coords[failed, 0])]
+        axis.annotate("loss non finita", coords[first], xytext=(-8, 0), textcoords="offset points", fontsize=7.5,
+                      color=MUTED, ha="right", va="center", path_effects=HALO, zorder=4)
+    lowest = np.flatnonzero(region)[np.argmin(coords[region, 1])]
+    axis.annotate("regione migliore", coords[lowest], xytext=(0, -11), textcoords="offset points", fontsize=7.5,
+                  color="#a86a10", ha="center", va="top", path_effects=HALO, zorder=4)
+    if running.any():
+        axis.annotate("in corso", coords[np.flatnonzero(running)[0]], xytext=(8, 0), textcoords="offset points",
+                      fontsize=7.5, color=TEXT, va="center")
     axis.set_xlabel(f"prima componente principale ({100 * variance[0]:.0f}\\%)".replace("\\%", "%"), fontsize=TICKS)
     axis.set_ylabel(f"seconda componente ({100 * variance[1]:.0f}%)", fontsize=TICKS)
     axis.tick_params(labelsize=TICKS, length=2)
