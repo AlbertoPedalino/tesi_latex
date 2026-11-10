@@ -17,7 +17,7 @@
     \node[ingresso] (gr) at (0,1.6) {Finestra recente\\\scriptsize $R=16$ campi};
     \node[ingresso] (gt) at (0,0) {Trend per cella\\\scriptsize 56 passi};
     \node[ingresso] (gc) at (0,-1.6) {Calendario\\\scriptsize 4 valori per cella};
-    \node[modulo] (gconv) at (3.3,1.6) {ConvGRU\\\scriptsize 2 strati, 32 canali,\\maschera $M$};
+    \node[modulo] (gconv) at (3.3,1.6) {ConvGRU\\\scriptsize 2 strati, 32 canali};
     \node[modulo] (glstm) at (3.3,0) {LSTM\\\scriptsize 2 strati, 64};
     \node[modulo] (glin) at (3.3,-1.6) {Lineare e ReLU\\\scriptsize 64};
     \node[unione,minimum height=4.3cm] (gcat) at (6.6,0) {};
@@ -35,12 +35,12 @@
         \node[anchor=west,font=\small\bfseries] at (-1.45,1.95) {(b) Discriminatore};
         \node[ingresso] (dh) at (0,0.85) {Storia della patch\\\scriptsize $3\times3$ celle, $R$ campi};
         \node[ingresso] (dc) at (0,-0.85) {Patch corrente\\\scriptsize osservata o generata};
-        \node[modulo] (dconv) at (3.3,0.85) {ConvGRU\\\scriptsize poi lineare e ReLU};
+        \node[modulo] (dconv) at (3.3,0.85) {ConvGRU\\\scriptsize maschera $M$,\\poi lineare e ReLU};
         \node[modulo] (dproj) at (3.3,-0.85) {$1\times1$ e sigmoide\\\scriptsize massimo sulle celle};
         \node[unione,minimum height=2.8cm] (dcat) at (6.6,0) {};
         \node[rotate=90,font=\scriptsize] at (dcat) {concatenazione};
-        \node[blocco,text width=1.7cm] (dhid) at (8.2,0) {Strato\\nascosto\\\scriptsize ReLU};
-        \node[blocco,text width=1.6cm] (dout) at (11.2,0) {Sigmoide\\\scriptsize un valore\\per cella};
+        \node[blocco,text width=1.7cm] (dhid) at (7.95,0) {Strato\\nascosto\\\scriptsize ReLU};
+        \node[blocco,text width=1.6cm] (dout) at (11.4,0) {Sigmoide\\\scriptsize un valore\\per cella};
         \draw[freccia] (dh) -- (dconv);
         \draw[freccia] (dc) -- (dproj);
         \draw[freccia] (dconv) -- node[drop] {dropout} (dconv-|dcat.west);
@@ -49,6 +49,6 @@
         \draw[freccia] (dhid) -- node[drop] {dropout} (dout);
     \end{scope}
     % The estimated field reaches the current patch of the discriminator, without the dropout of G.
-    \draw[freccia,dashed] (gout.south) -- ++(0,-2.75) -| (-1.62,-6.45) -- (dc.west);
-    \node[font=\scriptsize,above] at (5.5,-2.75) {campo stimato, senza dropout};
+    \draw[freccia,dashed] (gout.south) -- ++(0,-2.35) coordinate (bend) -| (-1.62,-6.45) -- (dc.west);
+    \node[font=\scriptsize,above] at (5.5,0 |- bend) {campo stimato, senza dropout};
 \end{tikzpicture}

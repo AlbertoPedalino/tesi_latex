@@ -1,9 +1,9 @@
 \chapter{Metodologia}
 \label{chap:metodologia}
 
-Il capitolo descrive il rilevatore nella forma usata sui campi ERA5. La Sezione~\ref{sec:formulazione} formula il problema: che cosa entra nel rilevatore, che cosa ne esce e quando un valore è segnalato. Seguono l'architettura del generatore e del discriminatore con gli obiettivi dell'addestramento avversario (Sezione~\ref{sec:stgan}), l'ingresso del modello (Sezione~\ref{sec:ingresso-normalizzazione-era5}), i pesi delle variabili nell'errore di ricostruzione, i valori esclusi dalle misure sulla validazione, le componenti dello score con il dropout Monte Carlo, la normalizzazione climatologica dello score e la misura con cui si confrontano le configurazioni. Il capitolo si ferma allo score: ciò che se ne ricava, come il raggruppamento delle segnalazioni in cluster di valori segnalati vicini, è descritto nel Capitolo~\ref{chap:risultati}.
+Il capitolo descrive il rilevatore nella forma usata sui campi ERA5. La Sezione~\ref{sec:formulazione} formula il problema: che cosa entra nel rilevatore, che cosa ne esce e quando un valore è segnalato. Seguono l'architettura del generatore e del discriminatore con gli obiettivi dell'addestramento avversario (Sezione~\ref{sec:stgan}), l'ingresso del modello (Sezione~\ref{sec:ingresso-normalizzazione-era5}), i pesi delle variabili nell'errore di ricostruzione, i valori esclusi dalle misure sulla validazione, le componenti dello score con il dropout Monte Carlo e la normalizzazione climatologica dello score. Il capitolo si ferma allo score: la misura con cui si confrontano le configurazioni è descritta nel Capitolo~\ref{chap:esperimenti}, e ciò che si ricava dallo score, come il raggruppamento delle segnalazioni in cluster di segnalazioni, nel Capitolo~\ref{chap:risultati}.
 
-La Figura~\ref{fig:catena-rilevatore} riporta l'ordine in cui questi passaggi agiscono su un istante, e per ogni quantità stimata gli anni su cui è stimata: normalizzazione stagionale e pesi sugli anni di addestramento, prima di addestrare il modello; climatologia e soglia sugli anni di validazione, dopo l'addestramento. Il discriminatore non compare nella catena: serve all'addestramento del generatore.
+La Figura~\ref{fig:catena-rilevatore} riporta l'ordine in cui questi passaggi agiscono su un istante, e per ogni quantità stimata gli anni su cui è stimata: normalizzazione stagionale e pesi sugli anni di addestramento, prima di addestrare il modello; climatologia e soglia sugli anni di validazione, dopo l'addestramento. Il discriminatore non compare nella catena: serve all'addestramento del generatore e allo score combinato, calcolato solo per confronto.
 
 \begin{figure}[htbp]
     \centering
@@ -15,7 +15,7 @@ La Figura~\ref{fig:catena-rilevatore} riporta l'ordine in cui questi passaggi ag
 \section{Formulazione del problema}
 \label{sec:formulazione}
 
-I dati sono una sequenza di campi $X_t$, uno per istante $t$, su un reticolo di $N_y=81$ righe e $N_x=131$ colonne, cioè $N=10611$ celle, con $F=15$ variabili (Capitolo~\ref{chap:dati}); $x_{tnf}$ indica il valore della variabile $f$ nella cella $n$. Per ogni istante il generatore riceve il contesto che lo precede, cioè gli $R$ campi più recenti, una serie più lunga di ciascuna cella per il trend e la codifica temporale, e restituisce una stima $\hat{X}_t$ del campo, con valori $\hat{x}_{tnf}$. Lo scarto fra stima e osservazione, pesato per variabile e mediato sulla patch $3\times3$ di ogni cella e su più estrazioni Monte Carlo, è la \emph{componente di ricostruzione} $\bar{s}_{G,tn}$ (Sezione~\ref{sec:score-dropout-montecarlo}). Espressa rispetto ai valori abituali di questo stesso errore nella cella, nel periodo dell'anno e nell'ora, diventa lo \emph{score di ricostruzione} $\zeta_{tn}$ (Sezione~\ref{sec:normalizzazione-climatologica-score}). Una coppia istante--cella è \emph{segnalata} quando $\zeta_{tn}>\tau$, con la soglia $\tau$ pari al 95-esimo percentile di $\zeta$ sugli anni di validazione. Lo score misura quindi la distanza da ciò che il modello ha appreso negli anni di addestramento (Sezione~\ref{sec:rw-da-stgan}), e una segnalazione indica una possibile anomalia meteorologica, non un'anomalia accertata. Il discriminatore serve all'addestramento del generatore e allo score combinato dell'articolo, calcolato dalla stessa esecuzione per confronto.
+I dati sono una sequenza di campi $X_t$, uno per istante $t$, su un reticolo di $N_y=81$ righe e $N_x=131$ colonne, cioè $N=10611$ celle, con $F=15$ variabili (Capitolo~\ref{chap:dati}); $x_{tnf}$ indica il valore della variabile $f$ nella cella $n$. Per ogni istante il generatore riceve il contesto che lo precede, cioè gli $R$ campi più recenti, una serie più lunga di ciascuna cella per il trend e la codifica temporale, e restituisce una stima $\hat{X}_t$ del campo, con valori $\hat{x}_{tnf}$. L'errore quadratico fra stima e osservazione, pesato per variabile e mediato sulla patch $3\times3$ di ogni cella e su più estrazioni Monte Carlo, è la \emph{componente di ricostruzione} $\bar{s}_{G,tn}$ (Sezione~\ref{sec:score-dropout-montecarlo}). Espressa rispetto ai valori abituali di questo stesso errore nella cella, nel periodo dell'anno e nell'ora, diventa lo \emph{score di ricostruzione} $\zeta_{tn}$ (Sezione~\ref{sec:normalizzazione-climatologica-score}). Una coppia istante--cella è \emph{segnalata} quando $\zeta_{tn}>\tau$, con la soglia $\tau$ pari al 95-esimo percentile di $\zeta$ sugli anni di validazione (Sezione~\ref{sec:exp-protocollo}). Lo score misura quindi la distanza da ciò che il modello ha appreso negli anni di addestramento (Sezione~\ref{sec:rw-da-stgan}), e una segnalazione indica una possibile anomalia meteorologica, non un'anomalia accertata. Il discriminatore serve all'addestramento del generatore e allo score combinato dell'articolo, calcolato dalla stessa esecuzione per confronto.
 
 \section{Architettura e addestramento avversario}
 \label{sec:stgan}
@@ -35,7 +35,7 @@ Il rilevatore segue lo schema di STGAN~\cite{deng2022stgan} descritto nella Sezi
 
 Un campione di addestramento è il campo completo di un istante, disposto sul reticolo $N_y\times N_x$ della Sezione~\ref{sec:dati-era5}. Il generatore ha tre rami. Il ramo recente elabora gli $R$ campi che precedono l'istante da stimare con una ConvGRU~\cite{shi2015convlstm,ballas2016convgru}, l'unità ricorrente convoluzionale delle equazioni~\eqref{eq:convgru-reset}--\eqref{eq:convgru-stato}, che sostituisce la convoluzione su grafo dell'articolo. Il ramo del trend elabora con una LSTM~\cite{hochreiter1997lstm} la serie di ciascuna cella su un periodo più lungo. Il ramo del calendario proietta la codifica temporale con uno strato lineare seguito da una ReLU. Con $b$ istanti per batch, $R$ passi recenti, $L$ passi di trend e $F$ variabili, gli ingressi hanno forma $[b,R,F,N_y,N_x]$ per il ramo recente e $[b,L,N,F]$ per il trend; l'uscita ha forma $[b,F,N_y,N_x]$.
 
-Le convoluzioni scorrono sull'intero reticolo: il campo ricettivo non è troncato al bordo di una regione e ogni cella viene ricostruita una sola volta. La LSTM del trend e la codifica temporale sono calcolate per cella e disposte sul reticolo. Le rappresentazioni dei tre rami sono concatenate cella per cella; una proiezione $1\times1$ seguita da tanh produce il campo stimato.
+Le convoluzioni scorrono sull'intero reticolo: il campo ricettivo non è limitato a una parte del dominio e ogni cella viene ricostruita una sola volta. La LSTM del trend e la codifica temporale sono calcolate per cella e disposte sul reticolo. Le rappresentazioni dei tre rami sono concatenate cella per cella; una proiezione $1\times1$ seguita da tanh produce il campo stimato.
 
 Lo stato ricorrente è inizializzato a zero per ogni finestra. Il modello ha due strati ConvGRU da 32 canali con kernel $3\times3$, e una LSTM del trend a due strati con stato nascosto di dimensione 64.
 
@@ -67,7 +67,7 @@ dove $\operatorname{MSE}_w$ è l'errore quadratico medio sulle celle valide e su
 
 Generatore e discriminatore vengono aggiornati con ottimizzatori Adam~\cite{kingma2015adam} separati. Nel passo del generatore, i parametri del discriminatore sono congelati ma viene mantenuto il gradiente rispetto al campo generato; la storia della patch è ricalcolata con i pesi aggiornati del discriminatore. Il peso di ricostruzione $\lambda_G$, che nell'articolo vale 500, è un parametro. I tassi di apprendimento dei due ottimizzatori sono distinti e fissati separatamente. Il coefficiente $\beta_1$ degli ottimizzatori vale 0.9, il valore del codice degli autori. Con rapporto $n_D{:}n_G$, sullo stesso batch vengono eseguiti prima $n_D$ aggiornamenti del discriminatore e poi $n_G$ del generatore, ciascuno con un proprio passaggio in avanti. Il rapporto è un conteggio di aggiornamenti e non va confuso con il rapporto fra i tassi di apprendimento. Tassi, rapporto e peso di ricostruzione sono gli strumenti con cui si regola l'equilibrio fra le due reti; i valori usati sono scelti nel Capitolo~\ref{chap:esperimenti}.
 
-Un'epoca comprende $\lceil T_{\mathrm{a}}/b\rceil$ batch, con $T_{\mathrm{a}}$ istanti di addestramento utili e $b$ istanti per batch, e ogni gradiente è mediato su tutte le celle di un istante.
+Ogni batch contiene un istante, e ogni gradiente è mediato su tutte le celle dell'istante.
 
 \paragraph{In sintesi.} Il generatore stima il campo di un istante su tutto il reticolo, a partire dai campi recenti, dal trend di ogni cella e dal calendario; il discriminatore giudica ogni cella sulla propria patch $3\times3$. Le due reti sono addestrate con gli obiettivi dell'articolo, nella forma del codice degli autori.
 
@@ -76,11 +76,11 @@ Un'epoca comprende $\lceil T_{\mathrm{a}}/b\rceil$ batch, con $T_{\mathrm{a}}$ i
 
 \subsection{Finestra recente e trend}
 
-La finestra recente contiene gli $R$ istanti che precedono quello da stimare. L'unità ricorrente spaziale la percorre in ordine: parte da uno stato nullo ed esegue un aggiornamento per ogni istante, sicché lo stato finale riassume gli $R$ campi osservati. Con $R=1$ il ramo recente vede soltanto l'ultimo istante e la ricorrenza si riduce a un solo aggiornamento. Con $R>1$ il modello riceve anche l'evoluzione del campo negli istanti precedenti, e l'area che può influenzare una cella cresce con $R$, perché a ogni aggiornamento lo stato si propaga alle celle vicine. Il rilevatore usa $R=16$ passi, cioè 48 ore; il trend comprende 56 passi, cioè 168 ore, la stessa durata dell'articolo.
+La finestra recente contiene gli $R$ istanti che precedono quello da stimare. L'unità ricorrente spaziale la percorre in ordine: parte da uno stato nullo ed esegue un aggiornamento per ogni istante, sicché lo stato finale riassume gli $R$ campi osservati. Con $R>1$ il modello riceve anche l'evoluzione del campo negli istanti precedenti, e l'area che può influenzare una cella cresce con $R$, perché a ogni aggiornamento lo stato si propaga alle celle vicine. Il rilevatore usa $R=16$ passi, cioè 48 ore; il trend comprende 56 passi, cioè 168 ore, la stessa durata dell'articolo.
 
 \subsection{Codifica temporale ciclica}
 
-La codifica temporale dell'articolo, a 31 elementi, è composta dal giorno della settimana e dall'ora UTC. È pensata per il traffico e su ERA5 è poco adatta, per due motivi. Il primo è che il vettore è lo stesso per tutte le celle, mentre il dominio si estende per 65 gradi di longitudine: alla stessa ora UTC, l'ora solare delle celle più a ovest e quella delle celle più a est differiscono di oltre quattro ore. Il secondo è che non contiene la posizione nell'anno, e non distingue quindi le stagioni. È perciò sostituita da una codifica ciclica a quattro elementi, diversa per cella. Indicando con $h_t$ l'ora UTC, con $\ell_n$ la longitudine in gradi, con $g_t$ il giorno frazionario dell'anno e con $G_t$ il numero di giorni dell'anno corrispondente, la codifica è
+La codifica temporale dell'articolo, a 31 elementi, è composta dal giorno della settimana e dall'ora UTC. È pensata per il traffico e su ERA5 è poco adatta, per due motivi. Il primo è che il vettore è lo stesso per tutte le celle, mentre il dominio si estende per 65 gradi di longitudine: alla stessa ora UTC, l'ora solare delle celle più a ovest e quella delle celle più a est differiscono di oltre quattro ore. Il secondo è che non contiene la posizione nell'anno, e non distingue quindi le stagioni. È perciò sostituita da una codifica ciclica a quattro elementi, diversa per cella. Indicando con $h_t$ l'ora UTC, con $\ell_n$ la longitudine in gradi, con $g_t$ il giorno frazionario dell'anno e con $A_t$ il numero di giorni dell'anno corrispondente, la codifica è
 \begin{equation}
 \begin{gathered}
 c_{tn}=\left[
@@ -89,7 +89,7 @@ c_{tn}=\left[
 \\
 \phi_{tn}=\frac{2\pi}{24}\left(h_t+\frac{\ell_n}{15}\right),
 \qquad
-\psi_t=\frac{2\pi g_t}{G_t},
+\psi_t=\frac{2\pi g_t}{A_t},
 \end{gathered}
 \end{equation}
 Il primo angolo rappresenta l'ora solare locale, ottenuta dalla sola longitudine senza fusi orari; il secondo la posizione nell'anno. Seno e coseno rendono vicini gli istanti vicini nel ciclo, come le ore 23 e le ore 1 oppure la fine di dicembre e l'inizio di gennaio. La codifica ciclica non contiene il giorno della settimana.
@@ -100,9 +100,9 @@ Il primo angolo rappresenta l'ora solare locale, ottenuta dalla sola longitudine
 
 La normalizzazione dell'articolo è un min--max per variabile stimato sui dati di addestramento. Usa un solo intervallo per variabile, valido per tutte le celle e per tutto l'anno. Su un dominio che va dal Sahara all'Europa settentrionale questo ha un limite: lo stesso valore riceve la stessa scala ovunque e in ogni stagione. Una temperatura di 20~°C, per esempio, è insolitamente alta a gennaio in Europa settentrionale e insolitamente bassa a luglio nel Sahara (Sezione~\ref{sec:dati-caratteristiche}), ma con un solo min--max per variabile riceve in entrambi i casi lo stesso valore normalizzato. La normalizzazione stagionale riferisce invece ogni valore a ciò che è abituale nella stessa cella, nello stesso periodo dell'anno e alla stessa ora (Figura~\ref{fig:era5-cicli}). Per ogni cella $n$, variabile $f$, ora del giorno $o$ e giorno dell'anno $g$ il valore è standardizzato,
 \begin{equation}
-z_{tnf}=\frac{x_{tnf}-\mu_{nfog}}{\sigma_{nfog}},
+u_{tnf}=\frac{x_{tnf}-\mu_{nfog}}{\sigma_{nfog}},
 \end{equation}
-con otto ore del giorno e 366 giorni dell'anno. Media e deviazione standard sono quindi due tensori di forma $[8,366,N,F]$, con una voce per ogni ora, giorno, cella e variabile, e la standardizzazione è un unico passaggio: ogni valore è confrontato direttamente con la media e la deviazione della propria ora, del proprio giorno, della propria cella e della propria variabile, senza una normalizzazione nel tempo seguita da una nello spazio. Media e deviazione standard sono stimate sui soli anni di addestramento, raccogliendo i quindici giorni che precedono $g$ e i quindici che lo seguono. La deviazione standard è calcolata attorno alla media lisciata di ciascun giorno, in modo che la variazione del ciclo stagionale all'interno della finestra non venga contata come variabilità. Espresse in deviazioni standard del proprio normale, le variabili diventano confrontabili anche fra loro: la copertura nuvolosa, che con il solo min--max produce l'84.1\% della variazione su 24 ore, ne produce il 6.7\% (Sezione~\ref{sec:dati-caratteristiche}).
+con otto ore del giorno e 366 giorni dell'anno. Media e deviazione standard sono quindi due tensori di forma $[8,366,N,F]$, con una voce per ogni ora, giorno, cella e variabile, e la standardizzazione è un unico passaggio: ogni valore è confrontato direttamente con la media e la deviazione della propria ora, del proprio giorno, della propria cella e della propria variabile. Media e deviazione standard sono stimate sui soli anni di addestramento, raccogliendo i quindici giorni che precedono $g$ e i quindici che lo seguono. La deviazione standard è calcolata attorno alla media lisciata di ciascun giorno, in modo che la variazione del ciclo stagionale all'interno della finestra non venga contata come variabilità. Espresse in deviazioni standard del proprio normale, le variabili diventano confrontabili anche fra loro: la copertura nuvolosa, che con il solo min--max produce l'84.1\% della variazione su 24 ore, ne produce il 6.7\% (Sezione~\ref{sec:dati-caratteristiche}).
 
 La precipitazione richiede un passaggio in più. È nulla nella maggior parte degli istanti e assume di rado valori molto alti: media e deviazione standard dei valori originali sono determinate in larga parte da questi pochi valori. Prima della standardizzazione la precipitazione è quindi sostituita dalla sua radice quarta, che comprime i valori alti e lascia nullo ciò che è nullo; media e deviazione standard descrivono la radice e non il valore originale. A differenza del logaritmo, la radice è definita anche per i valori nulli e non richiede una costante aggiuntiva.
 % Confronto con radice quadrata e logaritmo: fatto sui dati senza modello
@@ -159,7 +159,7 @@ w_f=\frac{\bar{m}}{m_f},
 \qquad
 \bar{m}=\frac{1}{F}\sum_{f=1}^{F}m_f,
 \end{equation}
-con $F=15$. La differenza a 24 ore confronta istanti alla stessa ora del giorno e non contiene quindi il ciclo giornaliero. Con il fattore $\bar{m}$, un errore quadratico pari a $m_f$ in ogni variabile dà la stessa loss con e senza pesi. Il peso non misura la difficoltà del modello su una variabile: è una misura di quanto la variabile cambia, fissata prima dell'addestramento e senza usare il modello. Nella configurazione scelta vanno da 0.40 per l'umidità specifica a 7.14 per l'umidità del primo strato del suolo, che cambia lentamente. I pesi moltiplicano l'errore quadratico di ciascuna variabile nel termine di ricostruzione della loss del generatore e nell'errore di ricostruzione da cui sono calcolati gli score.
+con $F=15$. La differenza a 24 ore confronta istanti alla stessa ora del giorno e non contiene quindi il ciclo giornaliero. Con il fattore $\bar{m}$, un errore quadratico pari a $m_f$ in ogni variabile dà la stessa loss con e senza pesi. Il peso non misura la difficoltà del modello su una variabile: è una misura di quanto la variabile cambia, fissata prima dell'addestramento e senza usare il modello. I pesi vanno da 0.40 per l'umidità specifica a 7.14 per l'umidità del primo strato del suolo, che cambia lentamente. I pesi moltiplicano l'errore quadratico di ciascuna variabile nel termine di ricostruzione della loss del generatore e nell'errore di ricostruzione da cui sono calcolati gli score.
 
 \paragraph{In sintesi.} Ogni valore entra nel modello riferito al normale stagionale della propria cella, giorno e ora, con la codifica dell'ora solare locale e del periodo dell'anno, e l'errore di ciascuna variabile pesa in proporzione inversa a quanto la variabile cambia abitualmente.
 
@@ -168,21 +168,39 @@ con $F=15$. La differenza a 24 ore confronta istanti alla stessa ora del giorno 
 
 Gli anni di validazione servono a confrontare configurazioni e a stimare le quantità dello score prima di valutare il test. Perché queste misure dipendano soprattutto dal tempo ordinario, i valori più insoliti della validazione sono individuati prima, con un criterio che non usa il modello.
 
-Un valore, cioè una coppia istante--cella, è detto \emph{escluso} in base a due distanze calcolate sui dati standardizzati della Sezione~\ref{sec:ingresso-normalizzazione-era5}. La prima è la distanza dal normale stagionale: la media sulle variabili del quadrato dei valori standardizzati, con i pesi delle variabili della Sezione~\ref{sec:pesi-variabili-ricostruzione}, che dice quanto il valore è lontano dal normale della propria cella, giorno e ora. La seconda è la variazione dall'istante precedente: la stessa media pesata sul quadrato della differenza rispetto a tre ore prima, che coglie i cambiamenti rapidi anche quando il valore resta vicino al normale. Ciascuna distanza è standardizzata con la media e la deviazione standard della stessa cella, dello stesso mese e della stessa ora negli anni di addestramento, così che un luogo o una stagione più variabili non concentrino i valori esclusi. Un valore è escluso quando almeno una delle due distanze standardizzate supera il livello oltrepassato dal 5\% dei valori di addestramento. Medie, deviazioni standard e livelli sono stimati sui soli anni di addestramento; la validazione riceve soltanto l'indicazione di quali valori sono esclusi. Il criterio è approssimato: non pretende di individuare tutte le anomalie meteorologiche, ma di togliere le più evidenti, così che le misure dipendano soprattutto dal tempo ordinario. La soglia del 5\% è una scelta, ed esclude il 9.75\% dei valori di validazione.
+Un valore, cioè una coppia istante--cella, è detto \emph{escluso} in base a due distanze calcolate sui dati standardizzati della Sezione~\ref{sec:ingresso-normalizzazione-era5}. La prima è la distanza dal normale stagionale: la media sulle variabili del quadrato dei valori standardizzati, con i pesi delle variabili della Sezione~\ref{sec:pesi-variabili-ricostruzione}, che dice quanto il valore è lontano dal normale della propria cella, giorno e ora. La seconda è la variazione in tre ore: la stessa media pesata sul quadrato della differenza rispetto a tre ore prima, che coglie i cambiamenti rapidi anche quando il valore resta vicino al normale. Ciascuna distanza è standardizzata con la media e la deviazione standard della stessa cella, dello stesso mese e della stessa ora negli anni di addestramento, così che un luogo o una stagione più variabili non concentrino i valori esclusi. Un valore è escluso quando almeno una delle due distanze standardizzate supera il livello oltrepassato dal 5\% dei valori di addestramento. Medie, deviazioni standard e livelli sono stimati sui soli anni di addestramento; la validazione riceve soltanto l'indicazione di quali valori sono esclusi. La stessa indicazione è calcolata sugli anni di addestramento, dove esclude l'8.62\% dei valori e serve a scegliere i campi della misura di scelta della configurazione (Sezione~\ref{sec:distanza-mmd}). Il criterio è approssimato: non pretende di individuare tutte le anomalie meteorologiche, ma di togliere le più evidenti, così che le misure dipendano soprattutto dal tempo ordinario. La soglia del 5\% è una scelta, ed esclude il 9.75\% dei valori di validazione.
 % Fonte: physiq_pv/anomaly_detection/stgan/normal_masks.py. Quote misurate alla
 % preparazione dello sweep (14 ottobre 2026, outputs/era5_sweep_1999/normal_masks):
 % addestramento 8.62%, validazione 9.75% (distanza dal normale 5.9%, variazione
 % 5.3%). Pesi delle due distanze: quelli dello sweep attuale (variazione su 24
 % ore), indicazione dell'autore del 16 ottobre 2026.
 
-I valori esclusi sono trattati in due modi. Come valori da valutare, non entrano nella misura con cui si confrontano le configurazioni, negli estremi dello score combinato e nella climatologia degli score; entrano invece nella soglia (Sezione~\ref{sec:exp-protocollo}). Come storia recente da cui il modello parte, nelle finestre di ingresso degli istanti di validazione sono sostituiti dal normale stagionale, cioè dal valore standardizzato nullo, solo per la misura con cui si confrontano le configurazioni e per il passaggio che chiude l'addestramento; climatologia e soglia usano la storia reale (Sezione~\ref{sec:normalizzazione-climatologica-score}). In questo modo, nella misura con cui si confrontano le configurazioni, né il bersaglio né la storia recente da cui il modello parte contengono i valori esclusi.
+I valori esclusi entrano in modo diverso nelle quantità stimate sulla validazione (Tabella~\ref{tab:valori-esclusi}). Come storia recente da cui il modello parte sono sostituiti dal normale stagionale, cioè dal valore standardizzato nullo, solo per la misura con cui si confrontano le configurazioni e per il passaggio che chiude l'addestramento; climatologia e soglia usano la storia reale, come il test (Sezione~\ref{sec:normalizzazione-climatologica-score}).
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Come entrano i valori esclusi nelle quantità stimate sugli anni di validazione: come valore da valutare e nella storia recente da cui il modello parte.}
+    \label{tab:valori-esclusi}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.40}L{0.33}L{0.18}@{}}
+        \toprule
+        Quantità & Valori esclusi da valutare & Storia recente \\
+        \midrule
+        Misura di scelta della configurazione (Sezione~\ref{sec:distanza-mmd}) & campi interi con pochi valori esclusi & ripulita \\
+        Estremi dello score combinato (Sezione~\ref{sec:score-dropout-montecarlo}) & tolti & ripulita \\
+        Climatologia degli score (Sezione~\ref{sec:normalizzazione-climatologica-score}) & tolti & reale \\
+        Soglia (Sezione~\ref{sec:exp-protocollo}) & inclusi & reale \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 \section{Componenti dello score e dropout Monte Carlo}
 \label{sec:score-dropout-montecarlo}
 
 \subsection{Dropout nel generatore e nel discriminatore}
 
-Lo score è calcolato più volte con il dropout Monte Carlo~\cite{gal2016dropout}, nella forma che pone il dropout dopo gli encoder e prima degli strati di uscita. Il generatore riceve tre strati di dropout: sulla rappresentazione spaziale del ramo recente, sulla rappresentazione del trend e sulla loro concatenazione con la codifica temporale, prima della proiezione di uscita. Il discriminatore ne riceve altrettanti, nelle posizioni corrispondenti: sulla storia codificata, sul campo corrente codificato e sullo strato nascosto che precede l'uscita. La probabilità è 0.2 in entrambe le reti, un valore fissato e non ottimizzato. I dropout sono attivi nell'addestramento e nel calcolo degli score. L'articolo e il codice degli autori non usano il dropout: è un'aggiunta di questo lavoro.
+Lo score è calcolato più volte con il dropout Monte Carlo~\cite{gal2016dropout}. Gli strati di dropout sono posti dopo gli encoder e prima degli strati di uscita, una forma più semplice di quella con il dropout prima di ogni strato con pesi. Il generatore riceve tre strati di dropout: sulla rappresentazione spaziale del ramo recente, sulla rappresentazione del trend e sulla loro concatenazione con la codifica temporale, prima della proiezione di uscita. Il discriminatore ne riceve altrettanti, nelle posizioni corrispondenti: sulla storia codificata, sul campo corrente codificato e sullo strato nascosto che precede l'uscita. La probabilità è 0.2 in entrambe le reti, un valore fissato e non ottimizzato. I dropout sono attivi nell'addestramento e nel calcolo degli score. L'articolo e il codice degli autori non usano il dropout: la sua aggiunta, come la sua posizione, è una scelta di questo lavoro.
 
 Il discriminatore riceve il campo generato senza il dropout del generatore: nell'addestramento, sia nel proprio aggiornamento sia nel termine avversario del generatore, e nel calcolo degli score. Se ricevesse il campo con il dropout, potrebbe distinguere i campi generati da quelli osservati per il rumore che il dropout vi introduce, e non per il loro contenuto. Il dropout del generatore agisce quindi sull'errore di ricostruzione, quello del discriminatore sul suo giudizio.
 
@@ -192,7 +210,7 @@ Durante il calcolo degli score il modello è in modalità di valutazione, con l'
 % Fonte J=20: Monaco et al. 2025, Computers & Geosciences 205, p. 7 ("We compute all metrics
 % using 20 sampled predictions for MCD U-Net"). Anche Kong et al. 2020 (SDE-Net), appendice,
 % compito di regressione: "20 posterior samples are used for MC-dropout ... at test time".
-Nell'estrazione $j$ il generatore ricostruisce il campo con una propria maschera di dropout, e il discriminatore giudica l'osservazione e il campo generato senza dropout con una propria maschera, la stessa per i due giudizi.
+Nell'estrazione $j$ il generatore ricostruisce il campo con una propria maschera di dropout, e il discriminatore, con una propria maschera, la stessa per i due giudizi, giudica l'osservazione e la ricostruzione del generatore a dropout spento, come in addestramento.
 
 Per la coppia istante--cella $(t,n)$ e l'estrazione $j$, la ricostruzione $\hat{x}^{(j)}$ dà l'errore di ricostruzione
 \begin{equation}
@@ -227,18 +245,18 @@ a^{(j)}_{tn}=
 \qquad
 \bar{a}_{tn}=\frac{1}{J}\sum_{j=1}^{J}a^{(j)}_{tn}.
 \end{equation}
-L'articolo indica che le due componenti sono normalizzate prima della somma, senza specificare come, e il codice degli autori salva le componenti senza combinarle: il min--max è quindi una scelta di questo lavoro. Gli estremi $r_{\min}$, $r_{\max}$, $d_{\min}$ e $d_{\max}$ sono quelli delle due componenti medie sulle estrazioni negli anni di validazione, senza i valori esclusi (Sezione~\ref{sec:maschere-validazione}), e restano fissi per il test: nessuna quantità dello score è stimata sugli anni valutati. I valori del test possono uscire dall'intervallo $[0,1]$ di ciascuna componente, perché non è applicato un clipping.
+L'articolo indica che le due componenti sono normalizzate prima della somma, senza specificare come, e il codice degli autori salva le componenti senza combinarle: il min--max è quindi una scelta di questo lavoro. Gli estremi $r_{\min}$, $r_{\max}$, $d_{\min}$ e $d_{\max}$ sono quelli delle due componenti medie sulle estrazioni negli anni di validazione, senza i valori esclusi (Sezione~\ref{sec:maschere-validazione}), e restano fissi per il test: quindi nessuna quantità dello score è stimata sugli anni di test. A differenza della climatologia della Sezione~\ref{sec:normalizzazione-climatologica-score}, vengono dalla storia ripulita (Tabella~\ref{tab:valori-esclusi}): la differenza riguarda soltanto il peso delle due componenti nello score combinato, che non è lo score del rilevatore. I valori del test possono uscire dall'intervallo $[0,1]$ di ciascuna componente, perché non è applicato un clipping.
 
-Lo \emph{score di ricostruzione} $\zeta_{tn}$ è la sola componente $\bar{s}_{G,tn}$, espressa rispetto alla propria climatologia (Sezione~\ref{sec:normalizzazione-climatologica-score}). Quale dei due score usare è discusso nel Capitolo~\ref{chap:risultati}.
+Lo \emph{score di ricostruzione} $\zeta_{tn}$ è la sola componente $\bar{s}_{G,tn}$, espressa rispetto alla propria climatologia (Sezione~\ref{sec:normalizzazione-climatologica-score}). Quale dei due score usare è discusso nel Capitolo~\ref{chap:risultati}, dove la componente di ricostruzione $\bar{s}_{G,tn}$ è indicata con G, quella del discriminatore con D e lo score di ricostruzione $\zeta_{tn}$ con $G_{\mathrm{n}}$.
 
 \section{Normalizzazione climatologica degli score}
 \label{sec:normalizzazione-climatologica-score}
 
 Una trasformazione successiva al calcolo degli score esprime ogni score rispetto alla climatologia della stessa cella. Per la cella $n$, il giorno dell'anno $g$ e l'ora UTC $o$ dell'istante $t$,
 \begin{equation}
-\zeta_{tn}=\frac{s_{tn}-\mu^{s}_{nog}}{\sigma^{s}_{nog}},
+z_{tn}=\frac{s_{tn}-\mu^{s}_{nog}}{\sigma^{s}_{nog}},
 \end{equation}
-dove $s_{tn}$ è lo score da trasformare: la componente di ricostruzione $\bar{s}_{G,tn}$, quella del discriminatore, media sulle estrazioni, o lo score combinato $\bar{a}_{tn}$. Media e deviazione standard sono calcolate con la stessa ricetta della normalizzazione stagionale della Sezione~\ref{sec:ingresso-normalizzazione-era5}: sugli score della stessa cella e della stessa ora nei quindici giorni che precedono $g$ e nei quindici che lo seguono, con una finestra che scavalca la fine dell'anno, e con la deviazione standard calcolata attorno alla media lisciata di ciascun giorno. Lo score è uno per cella e non ha la dimensione delle variabili: media e deviazione standard sono due tensori di forma $[8,366,N]$. Sono stimate negli anni di validazione, senza i valori esclusi (Sezione~\ref{sec:maschere-validazione}), e restano fisse per il test. Non possono essere stimate sugli anni di addestramento, perché su quegli anni il modello ha già visto i dati e il suo errore è più basso di quello su anni nuovi. Quando lo score trasformato serve sugli anni di validazione stessi, per le scelte e per fissare le soglie, media e deviazione standard di un anno $y$ sono calcolate sugli altri quattro anni di validazione, $\mu^{s,(-y)}_{nog}$ e $\sigma^{s,(-y)}_{nog}$: nessun valore entra nella propria climatologia. I gruppi con meno di trenta valori di riferimento o con varianza nulla non ricevono uno score.
+dove $s_{tn}$ è lo score da trasformare: la componente di ricostruzione $\bar{s}_{G,tn}$, quella del discriminatore, media sulle estrazioni, o lo score combinato $\bar{a}_{tn}$; la stessa trasformazione è applicata agli score delle baseline (Sezione~\ref{sec:ris-confronti}). Media e deviazione standard sono calcolate con la stessa ricetta della normalizzazione stagionale della Sezione~\ref{sec:ingresso-normalizzazione-era5}: sugli score della stessa cella e della stessa ora nei quindici giorni che precedono $g$ e nei quindici che lo seguono, con una finestra che scavalca la fine dell'anno, e con la deviazione standard calcolata attorno alla media lisciata di ciascun giorno. Lo score è uno per cella e non ha la dimensione delle variabili: media e deviazione standard sono due tensori di forma $[8,366,N]$. Sono stimate negli anni di validazione, senza i valori esclusi (Sezione~\ref{sec:maschere-validazione}), e restano fisse per il test. Non possono essere stimate sugli anni di addestramento, perché su quegli anni il modello ha già visto i dati e il suo errore è più basso di quello su anni nuovi. Quando lo score trasformato serve sugli anni di validazione stessi, per le scelte e per fissare le soglie, media e deviazione standard di un anno $y$ sono calcolate sugli altri quattro anni di validazione, $\mu^{s,(-y)}_{nog}$ e $\sigma^{s,(-y)}_{nog}$: nessun valore entra nella propria climatologia. I gruppi con meno di trenta valori di riferimento o con varianza nulla non ricevono uno score.
 
 Gli score di validazione da cui sono stimate queste quantità sono calcolati con la storia reale degli istanti di validazione, come quelli del test. La sostituzione dei valori esclusi nella storia (Sezione~\ref{sec:maschere-validazione}) serve alla misura con cui si confrontano le configurazioni durante l'addestramento e al passaggio di validazione che chiude l'addestramento, da cui vengono gli estremi dello score combinato; non entra nella climatologia. Una climatologia stimata su errori calcolati da una storia ripulita descriverebbe un errore più basso di quello che il modello commette sul test, dove la storia contiene anche i valori che sulla validazione sono esclusi.
 
@@ -249,7 +267,7 @@ Lo scopo è rendere confrontabili celle e stagioni in cui l'errore di ricostruzi
 \zeta_{tn}=\frac{\bar{s}_{G,tn}-\mu^{s}_{nog}}{\sigma^{s}_{nog}},
 \label{eq:score-finale}
 \end{equation}
-con $\bar{s}_{G,tn}$ dell'equazione~\eqref{eq:componente-g-media}: l'errore pesato del generatore, medio sulla patch $3\times3$ della cella e sulle 20 estrazioni Monte Carlo, riferito ai valori abituali dello stesso errore nella cella, nel periodo dell'anno e nell'ora. Una coppia istante--cella è segnalata quando $\zeta_{tn}$ supera la soglia $\tau$, il 95-esimo percentile di $\zeta$ sugli anni di validazione.
+con $\bar{s}_{G,tn}$ dell'equazione~\eqref{eq:componente-g-media}: l'errore pesato del generatore, medio sulla patch $3\times3$ della cella e sulle 20 estrazioni Monte Carlo, riferito ai valori abituali dello stesso errore nella cella, nel periodo dell'anno e nell'ora. La soglia con cui un valore è segnalato è definita nella Sezione~\ref{sec:exp-protocollo}.
 % Codice: reference_zscores (validazione -> test) e climatology_zscores con
 % excluded (validazione, lasciando fuori l'anno) in physiq_pv/era5/seasonality.py;
 % comando climatology --reference validation --reference-run-dir --normal-masks-dir
@@ -259,41 +277,5 @@ con $\bar{s}_{G,tn}$ dell'equazione~\eqref{eq:componente-g-media}: l'errore pesa
 % outputs/optuna27/test_generator_clim_day (test, dalla validazione); i rilevatori
 % di confronto con scripts/run_era5_comparisons.sh. Score di validazione con la
 % storia reale: scripts/score_era5_stgan_run.py --period validation.
-
-\section{Validazione senza etichette}
-\label{sec:monitoraggio-senza-etichette}
-
-Gli anni di validazione servono a confrontare configurazioni del rilevatore senza usare il test e senza etichette. Il confronto deve misurare quanto bene il modello ricostruisce il tempo normale: i valori esclusi degli anni di validazione (Sezione~\ref{sec:maschere-validazione}) sono tenuti fuori dalle misure.
-
-\subsection{Distanza fra campi osservati e ricostruiti nello spazio delle componenti principali}
-\label{sec:distanza-mmd}
-
-La misura usata per confrontare le configurazioni confronta osservazioni e ricostruzioni in uno spazio indipendente dal modello. Lo spazio è ottenuto da un'analisi delle componenti principali dei campi di addestramento: ogni campione è il campo completo di un istante, normalizzato e appiattito su celle e variabili. Sono usati i campi con la quota più bassa di valori esclusi, nello stesso numero per ogni mese, e sono conservate 300 componenti principali: oltre questo numero la varianza spiegata cresce poco, e 300 componenti ne spiegano il 78.8\%, contro il 67.4\% di 100 componenti. Lo spazio è costruito una sola volta, prima delle esecuzioni, e successivamente soltanto caricato.
-
-I campi di tempo normale sono scelti, non corretti. Sostituire i valori esclusi con il normale stagionale darebbe campi più lisci di qualunque campo osservato, e una distanza calcolata su di essi premierebbe un generatore che ricostruisce campi lisci. Un campo scelto può contenere ancora qualche valore escluso, entro la quota che lo fa rientrare fra i campi normali del suo mese. Per lo stesso motivo il valore da ricostruire, quando è fra quelli esclusi, non è sostituito ma tenuto fuori dalle misure: si sostituisce soltanto la storia da cui il modello parte.
-
-Su questo spazio viene definito un riferimento per la validazione. È formato da $S=5$ sottoinsiemi fissi e disgiunti di 512 campi normali degli anni di validazione, scelti con lo stesso criterio, dalle coordinate delle loro osservazioni nello spazio e da una banda $h$ pari alla distanza euclidea mediana fra tali coordinate. Anche questo riferimento è fissato prima delle esecuzioni. La Maximum Mean Discrepancy (MMD) misura quanto differiscono due insiemi di campioni: è vicina a zero quando seguono la stessa distribuzione. A ogni epoca, per ciascun sottoinsieme, si calcola la stima non distorta della MMD~\cite{gretton2012mmd}
-\begin{equation}
-\widehat{\mathrm{MMD}}^{2}=
-\frac{1}{n(n-1)}\sum_{i\neq i'}k(x_i,x_{i'})
-+\frac{1}{n(n-1)}\sum_{i\neq i'}k(y_i,y_{i'})
--\frac{2}{n^{2}}\sum_{i,i'}k(x_i,y_{i'}),
-\end{equation}
-dove $x_i$ sono le coordinate delle osservazioni, $y_i$ quelle delle ricostruzioni del generatore e il kernel è la media di tre RBF,
-\begin{equation}
-k(a,b)=\frac{1}{3}\sum_{c\in\{0.5,\,1,\,2\}}
-\exp\!\left(-\frac{\lVert a-b\rVert^{2}}{2(ch)^{2}}\right).
-\end{equation}
-Vengono registrate media e varianza della stima sui sottoinsiemi e la media delle ultime cinque epoche, che è la quantità usata per scegliere fra configurazioni. La stima non distorta può assumere valori leggermente negativi. Poiché tutte le esecuzioni confrontate caricano gli stessi riferimenti, le differenze nella misura non dipendono da una nuova stima dello spazio o della banda. Una MMD più bassa indica ricostruzioni più vicine alle osservazioni nello spazio considerato; non misura direttamente la qualità del rilevamento delle anomalie meteorologiche.
-% Riferimenti usati dallo sweep: pca_reference_300 e mmd_reference_300
-% (outputs/era5_sweep_1999), 300 componenti = 78.8% della varianza (100
-% componenti = 67.4%), banda 36.46. La ricetta di Simone indicava 50-100
-% componenti: scelta di 300 da dichiarare.
-
-\subsection{Diagnostiche per epoca e misure finali}
-
-Al termine di ogni epoca un sottoinsieme fisso della validazione, 32 istanti equispaziati con tutte le celle, viene elaborato con un passaggio deterministico, a dropout spento. Vengono registrate due quantità: la differenza assoluta media fra le attivazioni del penultimo strato del discriminatore sull'osservazione e sulla ricostruzione, e la variazione dello score fra epoche consecutive sulle stesse celle. Queste quantità e la MMD non entrano in una loss, in un aggiornamento dei pesi o negli score; sono calcolate senza gradiente e ripristinando gli stati dei generatori di numeri casuali, così da non alterare la traiettoria dell'addestramento.
-
-Dopo l'ultima epoca, su tutti i valori validi e non esclusi della validazione, viene calcolata la componente di ricostruzione media sulle estrazioni Monte Carlo, riassunta da media, deviazione standard, mediana e 95-esimo percentile. Le stesse estrazioni danno gli estremi delle due componenti usati dallo score combinato.
 
 Il Capitolo~\ref{chap:esperimenti} riporta i valori scelti e il protocollo con cui lo score è valutato.

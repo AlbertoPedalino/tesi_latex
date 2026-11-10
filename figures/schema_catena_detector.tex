@@ -19,5 +19,7 @@
     \draw[freccia] (generatore) -- (errore);
     \draw[freccia] (errore) -- (score);
     \draw[freccia] (score) -- (climatologia);
+    \node[fase] (segnalazione) at (0,-2.6) {\textbf{Segnalazione}\\[2pt]\scriptsize il valore è segnalato\\se $\zeta_{tn}>\tau$};
     \draw[freccia] (climatologia) -- (soglia);
+    \draw[freccia] (soglia) -- (segnalazione);
 \end{tikzpicture}

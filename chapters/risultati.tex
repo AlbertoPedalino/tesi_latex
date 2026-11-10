@@ -13,7 +13,7 @@
 
 Il capitolo riporta e discute i risultati del rilevatore sui campi ERA5, nella configurazione scelta dalla ricerca degli iperparametri. Senza etichette, una segnalazione indica dove lo score è alto, non che lì ci sia davvero un'anomalia meteorologica: questo vale per tutto il capitolo. Nel capitolo un valore è una coppia di cella e istante; salvo dove indicato, è segnalato quando supera il 95-esimo percentile del proprio score sugli anni di validazione.
 
-Il capitolo ha tre parti. La Sezione~\ref{sec:ris-ricerca} fissa la configurazione; le Sezioni~\ref{sec:ris-correlazione-spaziale}--\ref{sec:ris-conferma} scelgono quale parte dello score di STGAN usare: il legame fra la componente del generatore e quella del discriminatore, la normalizzazione climatologica, che cosa giudica il discriminatore e la conferma sugli anni di test, che fissa lo score in $G_{\mathrm{n}}$, l'errore del generatore con la normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}). Le Sezioni~\ref{sec:ris-confronti}--\ref{sec:ris-dropout} descrivono che cosa segnala $G_{\mathrm{n}}$: il confronto con otto metodi più semplici, le baseline, i cluster di segnalazioni per tipo e dimensione e la dispersione del dropout. Le Sezioni~\ref{sec:ris-casi} e~\ref{sec:ris-soglia} verificano i risultati, con anomalie meteorologiche note e al variare della soglia.
+Il capitolo ha tre parti. La Sezione~\ref{sec:ris-ricerca} fissa la configurazione; le Sezioni~\ref{sec:ris-correlazione-spaziale}--\ref{sec:ris-conferma} scelgono quale parte dello score di STGAN usare: il legame fra la componente del generatore e quella del discriminatore, la normalizzazione climatologica, che cosa giudica il discriminatore e la conferma sugli anni di test. Lo score scelto è $G_{\mathrm{n}}$, l'errore del generatore con la normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}). Le Sezioni~\ref{sec:ris-confronti}--\ref{sec:ris-dropout} descrivono che cosa segnala $G_{\mathrm{n}}$: il confronto con otto metodi più semplici, le baseline, i cluster di segnalazioni per tipo e dimensione e la dispersione del dropout. Le Sezioni~\ref{sec:ris-casi} e~\ref{sec:ris-soglia} verificano i risultati, con anomalie meteorologiche note e al variare della soglia.
 
 \section{Ricerca degli iperparametri}
 \label{sec:ris-ricerca}
@@ -411,7 +411,7 @@ Le sezioni precedenti scelgono lo score del rilevatore, $G_{\mathrm{n}}$; questa
 
 \paragraph{Il confronto.} Ogni metodo è trattato come il rilevatore: il suo score è espresso rispetto alla propria climatologia per cella, giorno dell'anno e ora (Sezione~\ref{sec:normalizzazione-climatologica-score}), e la sua soglia è il 95-esimo percentile dello stesso score sugli anni di validazione. Il confronto non serve a scegliere lo score, e riguarda gli anni di test 2005--2025: 651 milioni di valori, con ogni metodo che ne segnala fra il 5.1\% e il 5.6\% (Tabella~\ref{tab:ris-confronti}). Se due metodi segnalano gli insiemi di valori $A$ e $B$, la quota delle segnalazioni di $A$ condivise con $B$ è $|A\cap B|/|A|$; l'indice di Jaccard,
 \begin{equation}
-J(A,B)=\frac{|A\cap B|}{|A\cup B|},
+\mathrm{Jac}(A,B)=\frac{|A\cap B|}{|A\cup B|},
 \end{equation}
 vale 1 quando i due insiemi coincidono e 0 quando sono disgiunti. Due metodi indipendenti condividerebbero circa il 5\% delle segnalazioni, con un indice di Jaccard di circa il 3\%.
 

@@ -26,7 +26,7 @@ Il rilevatore parte da STGAN~\cite{deng2022stgan}, una rete avversaria proposta 
     \item un generatore che opera sul campo intero con un'unità ricorrente convoluzionale, la ConvGRU~\cite{shi2015convlstm,ballas2016convgru}, mentre il discriminatore resta locale e giudica ogni cella sulla sua patch $3\times3$;
     \item un ingresso riferito al clima di ogni cella, con una normalizzazione stagionale, e un errore di ricostruzione in cui ogni variabile pesa in rapporto a quanto essa cambia abitualmente;
     \item uno score riferito alla climatologia di ogni cella e il dropout Monte Carlo~\cite{gal2016dropout} nelle due reti, che associa a ogni score una misura di dispersione;
-    \item una validazione senza etichette, in cui i valori più insoliti, individuati con un criterio che non usa il modello, sono esclusi dalle misure con cui si scelgono gli iperparametri dell'addestramento avversario, senza usare gli anni di test.
+    \item una validazione senza etichette, in cui i valori più insoliti, individuati con un criterio che non usa il modello, sono trattati a parte nella misura con cui si scelgono gli iperparametri dell'addestramento avversario e nella climatologia dello score, senza usare gli anni di test.
 \end{enumerate}
 
 \section{Obiettivi e contributi della tesi}
@@ -39,8 +39,8 @@ Il resto della tesi è organizzato come segue.
 \begin{itemize}
     \item \textbf{Capitolo~\ref{chap:stato-arte} (Fondamenti teorici e stato dell'arte):} presenta i lavori su cui la tesi è costruita, per temi e in ordine cronologico all'interno di ciascun tema, e si chiude con il modo in cui la tesi adatta STGAN e con la sua posizione rispetto ai lavori esaminati.
     \item \textbf{Capitolo~\ref{chap:dati} (Dati e preprocessing):} descrive i campi ERA5, il dominio, la loro preparazione e la divisione in anni di addestramento, di validazione e di test, e i dati PVGIS da cui il lavoro è partito.
-    \item \textbf{Capitolo~\ref{chap:metodologia} (Metodologia):} descrive il rilevatore: l'architettura e l'addestramento avversario, l'ingresso con la normalizzazione stagionale, i pesi delle variabili, i valori esclusi dalle misure sulla validazione, lo score con il dropout Monte Carlo, la normalizzazione climatologica e la misura usata per validare senza etichette.
-    \item \textbf{Capitolo~\ref{chap:esperimenti} (Esperimenti):} descrive la configurazione, la ricerca degli iperparametri e il protocollo di valutazione.
+    \item \textbf{Capitolo~\ref{chap:metodologia} (Metodologia):} descrive il rilevatore: l'architettura e l'addestramento avversario, l'ingresso con la normalizzazione stagionale, i pesi delle variabili, i valori esclusi dalle misure sulla validazione, lo score con il dropout Monte Carlo e la normalizzazione climatologica.
+    \item \textbf{Capitolo~\ref{chap:esperimenti} (Esperimenti):} descrive la misura usata per scegliere la configurazione senza etichette, la configurazione, la ricerca degli iperparametri e il protocollo di valutazione.
     \item \textbf{Capitolo~\ref{chap:risultati} (Risultati e discussione):} riporta l'esito della ricerca degli iperparametri, studia le componenti dello score e sceglie quella da usare, confronta le segnalazioni con le otto baseline, descrive i cluster di segnalazioni per tipo e dimensione con un esempio per ciascuno dei tre tipi principali, ed esamina la dispersione del dropout e la dipendenza dalla soglia.
     % \provv: aggiungere il confronto con anomalie meteorologiche note quando la Sezione 6.9 sarà scritta.
     \item \textbf{Capitolo~\ref{chap:conclusioni} (Conclusioni e sviluppi futuri):} riassume il lavoro e ne indica gli sviluppi futuri.
