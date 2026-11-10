@@ -40,6 +40,7 @@ Le convoluzioni scorrono sull'intero reticolo: il campo ricettivo non è limitat
 Lo stato ricorrente è inizializzato a zero per ogni finestra. Il modello ha due strati ConvGRU da 32 canali con kernel $3\times3$, e una LSTM del trend a due strati con stato nascosto di dimensione 64.
 
 \subsection{Discriminatore locale}
+\label{sec:stgan-discriminatore}
 
 Il discriminatore giudica ogni cella sulla propria patch $P\times P$, con $P=3$, così come nell'articolo giudica ogni nodo sul proprio sottografo: la patch comprende la cella e le sue otto vicine dirette, così che il giudizio tenga conto dell'intorno immediato. La patch di ogni cella è estratta dal campo. Sul margine del dominio la patch è incompleta: le celle della patch esterne al reticolo sono azzerate dopo la normalizzazione, e una maschera binaria $M$ è fornita come canale aggiuntivo a ogni strato ConvGRU. Rispetto alle equazioni~\eqref{eq:convgru-reset}--\eqref{eq:convgru-stato} cambiano l'ingresso e l'ultimo passaggio. I gate e lo stato candidato sono calcolati su $X'_s$, la concatenazione dei valori mascherati e di $M$, al posto di $X_s$; lo stato precedente $H_{s-1}$ è già mascherato e lo stato aggiornato viene moltiplicato per la maschera, replicata sui canali:
 \begin{equation}
@@ -52,6 +53,7 @@ Una ConvGRU codifica la storia recente della patch; la storia codificata è appi
 Le patch di tutte le celle sono valutate in un'unica passata, con le stesse maschere e gli stessi azzeramenti. L'uscita relativa a una cella è quella che il discriminatore produrrebbe sulla sua patch isolata.
 
 \subsection{Obiettivi di addestramento}
+\label{sec:stgan-obiettivi}
 
 Il discriminatore viene addestrato con etichetta zero per il campo reale e uno per il campo generato, come nell'articolo. Indicando con $D_{\mathrm{reale}}$ e $D_{\mathrm{generato}}$ le uscite sulle patch con il campo osservato e con il campo generato, cioè le $D_\phi(S_{v,t})$ e $D_\phi(\hat{S}_{v,t})$ dell'articolo (Sezione~\ref{sec:rw-stgan}), gli obiettivi sono
 \begin{align}
