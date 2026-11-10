@@ -100,7 +100,7 @@ def main():
     bar.ax.tick_params(labelsize=TICKS)
     keys = [Line2D([], [], marker="o", linestyle="", color="#3987e5", markeredgecolor="white", markersize=6.5,
                    label="prova"),
-            Line2D([], [], marker="x", linestyle="", color=MUTED, markersize=6, label="perdita non finita")]
+            Line2D([], [], marker="x", linestyle="", color=MUTED, markersize=6, label="loss non finita")]
     if running.any():  # the key only while a trial is still running
         keys.append(Line2D([], [], marker="o", linestyle="", markerfacecolor="none", markeredgecolor=TEXT,
                            markersize=6.5, label="in corso"))
