@@ -111,7 +111,7 @@ Le due componenti sono confrontate con due correlazioni. Quella di Spearman è c
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_g_d_correlazione_temporale}
-    \caption{Correlazione temporale di Spearman fra G e D in ogni cella, sugli anni di validazione. Il blu indica che D scende quando G sale, il rosso che i due salgono insieme; la scala va da $-0.3$ a $0.3$, e la freccia indica che alcune celle superano $0.3$. La correlazione è vicina a zero quasi ovunque: è negativa in due celle su tre, soprattutto a sud, e positiva in molte celle fra 35$^\circ$ e 50$^\circ$N. La cornice rossa lungo il margine del dominio è probabilmente un effetto del modello. Linee di costa da Natural Earth.}
+    \caption{La correlazione nel tempo fra G e D è vicina a zero quasi ovunque: è negativa in due celle su tre, soprattutto a sud, e positiva in molte celle fra 35$^\circ$ e 50$^\circ$N. Correlazione temporale di Spearman fra G e D in ogni cella, sugli anni di validazione. Il blu indica che D scende quando G sale, il rosso che i due salgono insieme; la scala va da $-0.3$ a $0.3$, e la freccia indica che alcune celle superano $0.3$. La cornice rossa lungo il margine del dominio è probabilmente un effetto del modello. Linee di costa da Natural Earth.}
     \label{fig:ris-g-d-temporale}
 \end{figure}
 
@@ -159,7 +159,7 @@ Il valore di G dipende anche da dove e quando è calcolato: dove l'errore è gra
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_g_luogo}
-    \caption{Quota dei valori segnalati, per fascia di latitudine e mese, sugli anni di validazione: G senza (in alto) e con (in basso) la normalizzazione climatologica, calcolata per cella, giorno dell'anno, con una finestra di $\pm15$ giorni, e ora. La soglia di ciascuno score è il suo 95-esimo percentile sugli stessi anni. La scala dei colori non è lineare: il bianco corrisponde al 5\%, il blu a quote minori, il rosso a quote maggiori. Senza normalizzazione le segnalazioni si concentrano a sud e in estate, con la normalizzazione sono distribuite in modo quasi uniforme.}
+    \caption{Senza normalizzazione le segnalazioni si concentrano a sud e in estate, con la normalizzazione sono distribuite in modo quasi uniforme. Quota dei valori segnalati, per fascia di latitudine e mese, sugli anni di validazione: G senza (in alto) e con (in basso) la normalizzazione climatologica, calcolata per cella, giorno dell'anno, con una finestra di $\pm15$ giorni, e ora. La soglia di ciascuno score è il suo 95-esimo percentile sugli stessi anni. La scala dei colori non è lineare: il bianco corrisponde al 5\%, il blu a quote minori, il rosso a quote maggiori.}
     \label{fig:ris-g-luogo}
 \end{figure}
 % Numeri (5 novembre 2026, outputs/comportamento_optuna27): correlazioni con G+clim e
@@ -191,7 +191,7 @@ Le sezioni precedenti mostrano che G e D sono quasi indipendenti, con un solo le
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_d_termini_correlazione_temporale}
-    \caption{Correlazione temporale di Spearman, in ogni cella, fra G e il giudizio del discriminatore sull'osservazione, $D_{\mathrm{reale}}$ (a sinistra), e sulla ricostruzione, $D_{\mathrm{generato}}$ (a destra), sugli anni di validazione, su una scala da $-1$ a $1$. Tutte le celle sono blu, con valori intorno a $-0.7$: in ogni luogo entrambi i giudizi scendono quando G sale. Linee di costa da Natural Earth.}
+    \caption{In ogni luogo entrambi i giudizi del discriminatore scendono quando G sale: tutte le celle sono blu, con valori intorno a $-0.7$. Correlazione temporale di Spearman, in ogni cella, fra G e il giudizio del discriminatore sull'osservazione, $D_{\mathrm{reale}}$ (a sinistra), e sulla ricostruzione, $D_{\mathrm{generato}}$ (a destra), sugli anni di validazione, su una scala da $-1$ a $1$. Linee di costa da Natural Earth.}
     \label{fig:ris-d-termini-temporale}
 \end{figure}
 
@@ -490,7 +490,7 @@ Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi i clus
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_eventi_dimensione}
-    \caption{I cluster di $G_{\mathrm{n}}$ sugli anni di test, per numero di valori: quota dei cluster (a sinistra) e quota dei valori segnalati che contengono (a destra). I cluster sono quasi tutti piccoli, ma circa tre quarti dei valori stanno in pochi cluster enormi.}
+    \caption{I cluster sono quasi tutti piccoli, ma circa tre quarti dei valori stanno in pochi cluster enormi. I cluster di $G_{\mathrm{n}}$ sugli anni di test, per numero di valori: quota dei cluster (a sinistra) e quota dei valori segnalati che contengono (a destra).}
     \label{fig:ris-eventi-dimensione}
 \end{figure}
 
@@ -525,7 +525,7 @@ Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi i clus
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_eventi_tipo}
-    \caption{Quota dei valori segnalati per tipo di cluster, in percentuale, sugli anni di test: nei cluster di $G_{\mathrm{n}}$ (prima riga) e in quelli di ciascuna baseline, ognuno formato dalle proprie segnalazioni. Sono mostrati i sei tipi principali, gli altri sono riuniti in ``Altri tipi''; ogni riga somma a 100, e più il colore è scuro, più la quota è alta. In $G_{\mathrm{n}}$ e nella variazione in tre ore dominano velocità verticale e precipitazione, nella distanza dal normale e in CBLOF l'umidità del suolo, in COPOD e HBOS la velocità d'attrito.}
+    \caption{Il tipo dominante dipende dal metodo: in $G_{\mathrm{n}}$ e nella variazione in tre ore dominano velocità verticale e precipitazione, nella distanza dal normale e in CBLOF l'umidità del suolo, in COPOD e HBOS la velocità d'attrito. Quota dei valori segnalati per tipo di cluster, in percentuale, sugli anni di test: nei cluster di $G_{\mathrm{n}}$ (prima riga) e in quelli di ciascuna baseline, ognuno formato dalle proprie segnalazioni. Sono mostrati i sei tipi principali, gli altri sono riuniti in ``Altri tipi''; ogni riga somma a 100, e più il colore è scuro, più la quota è alta.}
     \label{fig:ris-eventi-tipo}
 \end{figure}
 
@@ -595,7 +595,7 @@ Il risultato è coerente con il modo in cui queste variabili cambiano nello spaz
 
 Fin qui i cluster sono descritti tutti insieme e per tipo; resta da vedere un cluster per ciascuno dei tre tipi principali, per vedere su una mappa che cosa riassumono i numeri. Gli esempi sono scelti con una regola fissata prima di esaminarli, così che nessuno sia preso per il suo aspetto: i tipi sono i tre con più valori nei cluster di almeno 20 valori, cioè velocità verticale, precipitazione e copertura nuvolosa; per ciascuno l'esempio è il cluster con più valori fra quelli che durano al massimo tre giorni, letto nell'istante in cui conta più celle. Il limite di durata esclude le catene descritte sopra, che difficilmente corrispondono a un'unica anomalia. Gli esempi non sono quindi i casi più importanti né i più tipici: mostrano come appare un cluster compatto di ciascun tipo.
 
-\paragraph{Come leggere le figure.} Le Figure~\ref{fig:ris-caso-velocita}--\ref{fig:ris-caso-nuvole} hanno la stessa struttura. In alto a sinistra c'è lo scarto della variabile del tipo, qui con il suo segno (nel profilo per tipo è in valore assoluto): bianco vuol dire normale, rosso sopra il normale, blu sotto. In alto a destra c'è $G_{\mathrm{n}}$ in percentile, con la stessa scala in tutti gli esempi: il giallo è oltre la soglia. La linea nera nelle due mappe racchiude il nucleo di questo cluster in quell'istante; fuori possono esserci celle gialle di altri cluster. In basso a sinistra si segue nel tempo la cella del nucleo con $G_{\mathrm{n}}$ più alto nell'istante delle mappe, cerchiata nelle mappe, da tre giorni prima a tre giorni dopo: sopra $G_{\mathrm{n}}$ e la distanza dal normale di tutte le variabili, in percentile, sotto lo scarto della variabile del tipo. La linea tratteggiata è la soglia di $G_{\mathrm{n}}$, le bande azzurre sono gli istanti in cui la cella fa parte del cluster. In basso a destra c'è il numero di celle del cluster in ogni istante; la linea verticale, anche a sinistra, segna l'istante delle mappe. La Tabella~\ref{tab:ris-casi} riassume le tre zone. I luoghi del nucleo nominati nel testo sono letti sulla mappa.
+\paragraph{Come leggere le figure.} Le Figure~\ref{fig:ris-caso-velocita}--\ref{fig:ris-caso-nuvole} hanno la stessa struttura. In alto a sinistra c'è lo scarto della variabile del tipo, qui con il suo segno (nel profilo per tipo è in valore assoluto): bianco vuol dire normale, rosso sopra il normale, blu sotto. In alto a destra c'è $G_{\mathrm{n}}$ in percentile, con la stessa scala in tutti gli esempi: il giallo è oltre la soglia. La linea arancione nelle due mappe racchiude il nucleo di questo cluster in quell'istante; fuori possono esserci celle gialle di altri cluster. In basso a sinistra si segue nel tempo la cella del nucleo con $G_{\mathrm{n}}$ più alto nell'istante delle mappe, cerchiata nelle mappe, da tre giorni prima a tre giorni dopo: sopra $G_{\mathrm{n}}$ e la distanza dal normale di tutte le variabili, in percentile, sotto lo scarto della variabile del tipo. La linea tratteggiata è la soglia di $G_{\mathrm{n}}$, le bande azzurre sono gli istanti in cui la cella fa parte del cluster. In basso a destra c'è il numero di celle del cluster in ogni istante; la linea verticale, anche a sinistra, segna l'istante delle mappe. La Tabella~\ref{tab:ris-casi} riassume le tre zone. I luoghi del nucleo nominati nel testo sono letti sulla mappa.
 
 \begin{table}[htbp]
     \centering
@@ -619,7 +619,7 @@ Fin qui i cluster sono descritti tutti insieme e per tipo; resta da vedere un cl
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_caso_00}
-    \caption{Velocità verticale, 23 novembre 2017 alle 00~UTC. Il nucleo è una fascia stretta in cui la velocità verticale è per lo più sotto il normale; nella cella cerchiata $G_{\mathrm{n}}$ resta oltre la soglia, salvo una breve pausa, per circa un giorno e mezzo, e la distanza dal normale sale e scende insieme a $G_{\mathrm{n}}$; il cluster dura 63 ore, dal 21 al 24 novembre 2017, con il massimo nell'istante delle mappe. Linee di costa da Natural Earth.}
+    \caption{Il nucleo è una fascia stretta in cui la velocità verticale è per lo più sotto il normale; nella cella cerchiata $G_{\mathrm{n}}$ resta oltre la soglia, salvo una breve pausa, per circa un giorno e mezzo, e la distanza dal normale sale e scende insieme a $G_{\mathrm{n}}$. Velocità verticale, 23 novembre 2017 alle 00~UTC; il cluster dura 63 ore, dal 21 al 24 novembre 2017, con il massimo nell'istante delle mappe. Linee di costa da Natural Earth.}
     \label{fig:ris-caso-velocita}
 \end{figure}
 
@@ -628,7 +628,7 @@ Fin qui i cluster sono descritti tutti insieme e per tipo; resta da vedere un cl
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_caso_01}
-    \caption{Precipitazione, 19 maggio 2006 alle 03~UTC. Il nucleo è diviso in più parti, in cui la precipitazione è quasi ovunque sopra il normale; nella cella cerchiata la distanza dal normale è alta già nei giorni prima, e $G_{\mathrm{n}}$ supera la soglia solo quando arriva la precipitazione; il cluster dura 72 ore, dal 16 al 19 maggio 2006, e finisce poche ore dopo il massimo. Linee di costa da Natural Earth.}
+    \caption{Il nucleo è diviso in più parti, in cui la precipitazione è quasi ovunque sopra il normale; nella cella cerchiata la distanza dal normale è alta già nei giorni prima, e $G_{\mathrm{n}}$ supera la soglia solo quando arriva la precipitazione. Precipitazione, 19 maggio 2006 alle 03~UTC; il cluster dura 72 ore, dal 16 al 19 maggio 2006, e finisce poche ore dopo il massimo. Linee di costa da Natural Earth.}
     \label{fig:ris-caso-precipitazione}
 \end{figure}
 
@@ -637,7 +637,7 @@ Fin qui i cluster sono descritti tutti insieme e per tipo; resta da vedere un cl
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_caso_02}
-    \caption{Copertura nuvolosa, 15 giugno 2024 alle 12~UTC. Il nucleo è una fascia stretta sull'Africa nord-occidentale in cui la copertura nuvolosa è quasi ovunque sopra il normale; nella cella cerchiata $G_{\mathrm{n}}$ e la distanza dal normale salgono e scendono insieme, e $G_{\mathrm{n}}$ resta oltre la soglia per dodici ore; il cluster dura 66 ore, dal 14 al 17 giugno 2024. Linee di costa da Natural Earth.}
+    \caption{Il nucleo è una fascia stretta sull'Africa nord-occidentale in cui la copertura nuvolosa è quasi ovunque sopra il normale; nella cella cerchiata $G_{\mathrm{n}}$ e la distanza dal normale salgono e scendono insieme, e $G_{\mathrm{n}}$ resta oltre la soglia per dodici ore. Copertura nuvolosa, 15 giugno 2024 alle 12~UTC; il cluster dura 66 ore, dal 14 al 17 giugno 2024. Linee di costa da Natural Earth.}
     \label{fig:ris-caso-nuvole}
 \end{figure}
 

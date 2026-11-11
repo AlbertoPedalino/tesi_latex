@@ -29,7 +29,8 @@ import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap, ListedColormap, LogNorm
 from scipy import ndimage
 
-from genera_figure_g_d import BLUE, GRID, MUTED, ORANGE, TEXT, TICKS, YELLOW, coastline_of, draw_map, size
+from genera_figure_g_d import (BLUE, GRID, MUTED, ORANGE, TEXT, TICKS, VARIABLE_COLOURS, coastline_of, draw_map,
+                               size)
 
 HERE = pathlib.Path(__file__).parent
 ZONES = HERE / "dati" / "era5_eventi_zone.csv"
@@ -268,9 +269,9 @@ def profile_types_figure():
     """One cell out of the core some variables are back to normal, others are not: the variable of each type."""
     table = pd.read_csv(PROFILE)
     table = table[(table["type"] != "all") & (table["values"] >= MIN_VALUES)]
-    chosen = {"total_precipitation": (BLUE, BLUE, 3.6, 0.42, -12), "vertical_velocity": (GREEN, GREEN_TEXT, -7.0, 1.62, 0),
-              "total_cloud_cover": (ORANGE, ORANGE, -5.3, 3.3, 0),
-              "2m_temperature": (YELLOW, "#a87300", 0.3, 2.4, 0)}
+    places = {"total_precipitation": (3.6, 0.42, -12), "vertical_velocity": (-7.0, 1.62, 0),
+              "total_cloud_cover": (-5.3, 3.3, 0), "2m_temperature": (0.3, 2.4, 0)}
+    chosen = {name: (*VARIABLE_COLOURS[name], *place) for name, place in places.items()}
     figure, axis = plt.subplots(figsize=size(0.56), constrained_layout=True)
     for name, group in table.groupby("type"):
         group = group.sort_values("position")
@@ -410,7 +411,9 @@ def case_figure(number, data, coastline):
     bar.ax.tick_params(labelsize=TICKS)
     right.set_title(r"$G_\mathrm{n}$", fontsize=9, loc="left", color=TEXT)
     for axis in (left, right):
-        axis.contour(longitudes, latitudes[::-1], picture[::-1], levels=[0.5], colors=TEXT, linewidths=0.6)
+        # The core as in Figure 6.8: orange over a white halo, apart from the dark coastlines.
+        axis.contour(longitudes, latitudes[::-1], picture[::-1], levels=[0.5], colors="white", linewidths=2.4)
+        axis.contour(longitudes, latitudes[::-1], picture[::-1], levels=[0.5], colors=ORANGE, linewidths=1.2)
         # The cell of the series below: a ring with a white halo, visible on every colour of the maps.
         axis.plot(record["cell longitude"], record["cell latitude"], marker="o", markersize=9, markerfacecolor="none",
                   markeredgecolor="white", markeredgewidth=2.6, zorder=5)
@@ -447,7 +450,8 @@ def case_figure(number, data, coastline):
     where = f"{east:g}°E" if east >= 0 else f"{-east:g}°W"
     cell.set_title(f"La cella cerchiata ({record['cell latitude']:g}°N, {where})", fontsize=9, loc="left", color=TEXT)
     gap.axhline(0, color=MUTED, linewidth=0.8)
-    gap.plot(times, data["series_input"], color=GREEN, linewidth=1.4)
+    variable, variable_text = VARIABLE_COLOURS.get(record["type"], (MUTED, TEXT))
+    gap.plot(times, data["series_input"], color=variable, linewidth=1.4)
     reach = max(3.0, float(np.ceil(np.nanmax(np.abs(data["series_input"])))))
     gap.set_ylim(-reach, 1.4 * reach)  # free room at the top for "nel cluster"
     gap.set_yticks([-reach, 0, reach], [f"{-reach:g}", "0", f"+{reach:g}"])
@@ -458,9 +462,13 @@ def case_figure(number, data, coastline):
     middle = times[widest[0]] + (times[widest[1]] - times[widest[0]]) / 2
     # The names of the lines at their right end; "nel cluster" over the widest band, at the top of the lower panel.
     end_labels(cell, ((level[-1], r"$G_\mathrm{n}$", BLUE), (normal[-1], "distanza\ndal normale", ORANGE)))
-    end_labels(gap, ((data["series_input"][-1], TYPES[record["type"]].lower().replace(" ", "\n", 1), GREEN_TEXT),))
-    gap.annotate("nel cluster", (middle, 1), xycoords=("data", "axes fraction"), xytext=(0, -1), textcoords="offset points",
-                 fontsize=6.5, color="#3d6fa8", ha="center", va="top", path_effects=HALO, zorder=5)
+    end_labels(gap, ((data["series_input"][-1], TYPES[record["type"]].lower().replace(" ", "\n", 1), variable_text),))
+    # "nel cluster" away from the line of the instant of the maps: beside it when the line falls in the band.
+    inside = times[widest[0]] - half <= moment <= times[widest[1]] + half
+    anchor, shift, side = (moment, -3, "right") if inside and moment >= middle else \
+        ((moment, 3, "left") if inside else (middle, 0, "center"))
+    gap.annotate("nel cluster", (anchor, 1), xycoords=("data", "axes fraction"), xytext=(shift, -1),
+                 textcoords="offset points", fontsize=6.5, color="#3d6fa8", ha=side, va="top", path_effects=HALO, zorder=5)
 
     chain = figure.add_subplot(panels[1, 1])
     event_times = pd.DatetimeIndex(data["event_times"])
@@ -469,8 +477,8 @@ def case_figure(number, data, coastline):
     chain.annotate("istante\ndelle mappe", (moment, 1), xycoords=("data", "axes fraction"), xytext=(3, -2),
                    textcoords="offset points", fontsize=6.5, color=TEXT, ha="left", va="top", path_effects=HALO)
     hours = record.get("hours", (event_times[-1] - event_times[0]) / pd.Timedelta(hours=1))
-    chain.set_title(f"Il cluster dura {hours:.0f} ore", fontsize=9, loc="left", color=TEXT)
-    chain.set_ylabel("celle del cluster", fontsize=TICKS)
+    chain.set_title("Celle del cluster per istante", fontsize=9, loc="left", color=TEXT)
+    chain.set_ylabel("celle", fontsize=TICKS)
     chain.set_ylim(0, 1.3 * float(np.max(data["event_cells"])))  # room for the name of the line over the bars
     chain.margins(x=0)
     chain.tick_params(labelsize=TICKS, length=2)

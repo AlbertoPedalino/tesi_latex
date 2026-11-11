@@ -21,6 +21,11 @@ WIDTH_CM = 13.2
 BLUE, ORANGE, AQUA, PURPLE = "#2a78d6", "#eb6834", "#1baf7a", "#8a5cc2"
 TEXT, MUTED, GRID = "#0b0b0b", "#52514e", "#e2e1dc"
 CELL_COLORS = (BLUE, ORANGE, AQUA)
+# The variables have colours of their own, never the blue, orange and green of the methods (G_n, distance from normal,
+# change in three hours): the same in Figures 3.5, 6.13 and in the cases. Line colour, then a darker one for text.
+VARIABLE_COLOURS = {"total_precipitation": ("#7b4fb3", "#6a3fa3"), "total_cloud_cover": ("#55534e", "#3f3d39"),
+                    "vertical_velocity": ("#c2408f", "#a8307a"), "2m_temperature": ("#c08a00", "#946a00"),
+                    "mean_sea_level_pressure": ("#13867f", "#0f6f69")}
 NAMES = {
     "2m_temperature": "Temperatura a 2 m",
     "10m_u_component_of_wind": "Vento zonale a 10 m",
@@ -85,10 +90,10 @@ def cycles_figure(data):
             std = np.asarray(series["monthly_std"])
             months = np.arange(1, 13)
             axes[row, 0].plot(months, mean, color=color, linewidth=1.5, label=cell)
-            # One standard deviation of the 3-hourly values of the month as thin dotted lines: shaded bands of the
-            # three cells overlap and hide each other.
-            for bound in (np.maximum(mean - std, lowest), np.minimum(mean + std, highest)):
-                axes[row, 0].plot(months, bound, color=color, linewidth=0.7, linestyle=":")
+            # One standard deviation of the 3-hourly values of the month as a light band: the dashed line is only
+            # January, in the panel of the daily cycle.
+            axes[row, 0].fill_between(months, np.maximum(mean - std, lowest), np.minimum(mean + std, highest),
+                                      color=color, alpha=0.10, linewidth=0)
             for month, style in (("1", "--"), ("7", "-")):
                 axes[row, 1].plot(part["hours"], convert(series["hourly_mean"][month]), style, color=color,
                                   linewidth=1.2)
@@ -153,7 +158,11 @@ def correlation_figure(data):
     edges = np.asarray(part["edges_km"], dtype=float)
     centres = (edges[:-1] + edges[1:]) / 2
     figure, axis = plt.subplots(figsize=(WIDTH_CM / 2.54, 6.0 / 2.54))
-    for color, feature in zip((ORANGE, BLUE, AQUA, PURPLE), part["features"]):
+    # The legend lists the curves from the top down, as they are drawn: pressure, temperature, cloud cover, rain.
+    order = ("mean_sea_level_pressure", "2m_temperature", "total_cloud_cover", "total_precipitation")
+    assert sorted(order) == sorted(part["features"])
+    for feature in order:
+        color = VARIABLE_COLOURS[feature][0]
         rows = part["bins"][feature]
         keep = np.array([row[0] is not None for row in rows])
         median = np.array([row[0] for row in rows], dtype=float)
@@ -167,7 +176,7 @@ def correlation_figure(data):
     axis.set_xlabel("Distanza fra le celle (km)")
     axis.set_ylabel("Correlazione delle differenze\ndalla media climatologica")
     tidy(axis)
-    axis.legend(fontsize=8, loc="upper right")
+    axis.legend(fontsize=8, loc="upper right", labelcolor="linecolor")
     save(figure, "era5_correlazione_distanza.pdf")
 
 

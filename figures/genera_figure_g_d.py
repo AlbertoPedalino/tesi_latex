@@ -36,6 +36,12 @@ WIDTH_CM = 14.0
 BLUE, ORANGE, AQUA, YELLOW = "#2a78d6", "#eb6834", "#1baf7a", "#eda100"
 TEXT, MUTED, GRID = "#0b0b0b", "#52514e", "#e2e1dc"
 COAST = "#3d3c39"
+ZONE_SHADES = ("#184f95", "#5598e7", "#b7d3f6")  # core, edge, far: one hue, darker at the core
+# The variables have colours of their own, never the blue, orange and green of the methods (G_n, distance from normal,
+# change in three hours): the same in Figures 3.5, 6.13 and in the cases. Line colour, then a darker one for text.
+VARIABLE_COLOURS = {"total_precipitation": ("#7b4fb3", "#6a3fa3"), "total_cloud_cover": ("#55534e", "#3f3d39"),
+                    "vertical_velocity": ("#c2408f", "#a8307a"), "2m_temperature": ("#c08a00", "#946a00"),
+                    "mean_sea_level_pressure": ("#13867f", "#0f6f69")}
 ROLLING_DAYS = 30
 LIMIT_G_D = 0.3    # the G-D temporal correlation, symmetric; the frame near the border goes beyond (arrow)
 LIMIT_TERMS = 1.0  # G against the two terms of D: the full range of a correlation
@@ -193,7 +199,7 @@ def zones_figure(data):
     figure, axis = plt.subplots(figsize=size(0.42), constrained_layout=True)
     labels = {"G": "G senza normalizzazione", "Dreale": REAL, "Dricostruito": GENERATED, "D": "D"}
     zones = ("nucleo", "contorno", "lontana")
-    shades = ("#184f95", "#5598e7", "#b7d3f6")  # one hue, darker at the core
+    shades = ZONE_SHADES
     positions = np.arange(len(data["zone_scores"]))
     width = 0.26
     for index, (zone, shade) in enumerate(zip(zones, shades)):
@@ -229,7 +235,7 @@ def zones_scheme_figure():
     edge = ndimage.binary_dilation(core, square) & ~core
     near = ndimage.binary_dilation(core, square, iterations=3)
     zone = np.where(core, 0, np.where(edge, 1, np.where(near, 2, 3)))
-    colours = (BLUE, ORANGE, "#cfcdc6", "#f4f3ef")  # as in the map of the zones
+    colours = (ZONE_SHADES[0], ZONE_SHADES[1], "#e4e3de", ZONE_SHADES[2])  # as the bars of the zones
     figure, axis = plt.subplots(figsize=size(0.36), constrained_layout=True)
     axis.imshow(zone, cmap=ListedColormap(colours), vmin=-0.5, vmax=3.5)
     axis.set_xticks(np.arange(-0.5, side), minor=True)
