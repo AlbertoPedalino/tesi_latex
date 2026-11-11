@@ -378,7 +378,7 @@ def types_spread_figure():
             tick.set_color(BLUE)
             tick.set_fontweight("bold")
     axis.invert_yaxis()  # the most uniform on top
-    axis.text(SPREAD_COLUMN, -0.95, "differenza fra\nil tipo più alto\ne il più basso", ha="center", va="bottom",
+    axis.text(SPREAD_COLUMN, -0.95, "differenza fra\nil tipo più alto\ne il più basso\n(su 100)", ha="center", va="bottom",
               fontsize=6.5, color=MUTED, linespacing=1.0)
     axis.axvline(SPREAD_COLUMN - 2.2, color=GRID, linewidth=0.8)
     axis.set_xlim(56, SPREAD_COLUMN + 2.5)
