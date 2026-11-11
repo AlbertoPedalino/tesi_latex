@@ -11,7 +11,7 @@ Le configurazioni del rilevatore sono confrontate sugli anni di validazione, sen
 
 I campi di tempo ordinario sono scelti, non corretti. Sostituire i valori esclusi con il normale stagionale darebbe campi più lisci di qualunque campo osservato, e una distanza calcolata su di essi premierebbe un generatore che ricostruisce campi lisci. Un campo scelto può quindi contenere ancora qualche valore escluso, entro la mediana del suo mese: dei valori esclusi si sostituisce soltanto la storia da cui il modello parte (Tabella~\ref{tab:valori-esclusi}).
 
-Su questo spazio viene definito un riferimento per la validazione, fissato anch'esso prima delle esecuzioni: $S=5$ sottoinsiemi fissi e disgiunti di $m=512$ campi di tempo ordinario degli anni di validazione, scelti con lo stesso criterio, con le coordinate delle loro osservazioni nello spazio. La banda $\gamma$ del kernel è la distanza euclidea mediana fra tali coordinate. La Maximum Mean Discrepancy (MMD) misura quanto differiscono due insiemi di campioni: è vicina a zero quando seguono la stessa distribuzione. A ogni epoca il generatore, a dropout spento, ricostruisce i campi di ciascun sottoinsieme, e si calcola la stima non distorta della MMD~\cite{gretton2012mmd}
+Su questo spazio viene definito un riferimento per la validazione, fissato anch'esso prima delle esecuzioni: $S=5$ sottoinsiemi fissi e disgiunti di $m=512$ campi di tempo ordinario degli anni di validazione, scelti con lo stesso criterio, con le coordinate delle loro osservazioni nello spazio. La Maximum Mean Discrepancy (MMD) misura quanto differiscono due insiemi di campioni: è vicina a zero quando seguono la stessa distribuzione. La banda $\gamma$ del kernel è la distanza euclidea mediana fra tali coordinate. A ogni epoca il generatore, a dropout spento, ricostruisce i campi di ciascun sottoinsieme, e si calcola la stima non distorta della MMD~\cite{gretton2012mmd}
 \begin{equation}
 \widehat{\mathrm{MMD}}^{2}=
 \frac{1}{m(m-1)}\sum_{i\neq i'}k(x_i,x_{i'})
@@ -47,7 +47,7 @@ La configurazione del rilevatore è fissata, a eccezione di quattro iperparametr
         Anni di addestramento, validazione, test & 1980--1999, 2000--2004, 2005--2025 & \ref{sec:dati-split} \\
         Unità del campione e batch & Campo intero, un istante per batch & \ref{sec:stgan-convgru} \\
         Generatore & ConvGRU a due strati da 32 canali, kernel $3\times3$; LSTM del trend a due strati da 64 & \ref{sec:stgan-convgru} \\
-        Discriminatore & Patch $3\times3$; ConvGRU a due strati da 32 canali; strato nascosto da 64 & \ref{sec:stgan} \\
+        Discriminatore & Patch $3\times3$; ConvGRU a due strati da 32 canali; strato nascosto da 64 & \ref{sec:stgan-discriminatore} \\
         Finestra recente e trend & 16 e 56 passi, cioè 48 e 168 ore & \ref{sec:ingresso-normalizzazione-era5} \\
         Codifica temporale & Ora solare locale e posizione nell'anno, per cella & \ref{sec:ingresso-normalizzazione-era5} \\
         Normalizzazione dell'ingresso & Rispetto al normale di cella, giorno e ora; retta nel tempo tolta a tre variabili; poi min--max & \ref{sec:ingresso-normalizzazione-era5} \\
