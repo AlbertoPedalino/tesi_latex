@@ -30,11 +30,11 @@
 
 \section{Introduzione e motivazione}
 
-Le condizioni meteorologiche insolite, come tempeste, ondate di calore o piogge eccezionali, hanno forti conseguenze sulla società e sui sistemi energetici. I modelli che prevedono la produzione fotovoltaica, punto di partenza di questo lavoro, sbagliano di più proprio in queste condizioni. Riconoscerle in modo automatico è un compito a sé, il rilevamento di anomalie. La rianalisi ERA5, una ricostruzione dell'atmosfera passata ottenuta da un modello vincolato dalle osservazioni, ne offre una base sistematica: campi meteorologici completi, su una griglia regolare, per oltre quarant'anni.
+Le anomalie meteorologiche, cioè le condizioni dell'atmosfera lontane da quelle abituali per il luogo e il periodo dell'anno, sono i casi in cui i modelli addestrati su dati storici, come i previsori della produzione fotovoltaica da cui il lavoro è partito, tendono a sbagliare di più. La rianalisi ERA5 offre campi meteorologici completi, su una griglia regolare, per oltre quarant'anni, ma non contiene etichette di anomalia.
 
-Il compito presenta tre difficoltà. Mancano etichette complete, quindi il rilevamento deve essere \emph{unsupervised} e la valutazione indiretta. Gli anni di addestramento non sono privi di anomalie, quindi l'obiettivo diventa riconoscere le condizioni nuove rispetto al periodo di addestramento; un evento estremo ne è un caso particolare. Infine i dati hanno una struttura spaziale, su una griglia che, a differenza di una rete stradale, non dice quali punti siano collegati, e ciò che è normale cambia con il luogo e la stagione.
+Il compito ha tre difficoltà. Senza etichette il rilevamento è \emph{unsupervised} e la valutazione indiretta. Gli anni di addestramento contengono anch'essi anomalie, quindi si cercano le condizioni nuove rispetto a quel periodo. Infine ciò che è normale cambia con il luogo e la stagione, e una griglia, a differenza di una rete stradale, non dice quali punti siano collegati.
 
-La tesi parte da STGAN, una rete generativa avversaria spazio-temporale proposta per il rilevamento di anomalie nel traffico stradale, e la adatta ai campi ERA5. In STGAN un generatore ricostruisce ogni istante a partire dai precedenti, un discriminatore giudica se una sequenza è osservata o generata, e lo score di anomalia somma le due parti. La tesi non propone un nuovo algoritmo: si chiede come si comportino le due parti, se abbia senso sommarle, quale usare e come rendere lo score confrontabile fra luoghi e stagioni, senza usare etichette.
+La tesi parte da STGAN, una rete generativa avversaria spazio-temporale proposta per il traffico, il cui score somma l'errore del generatore e il giudizio del discriminatore. Non propone un algoritmo nuovo: adatta STGAN ai campi ERA5 e si chiede se le due componenti segnalino gli stessi valori, e quale delle due usare.
 
 \section{Metodologia}
 
@@ -42,50 +42,64 @@ Il rilevatore ricostruisce ogni istante del campo a partire dalle ore precedenti
 
 \subsection{Adattamento di STGAN ai campi su griglia}
 
-Il generatore lavora sull'intero campo in un solo passaggio e ha tre rami, uniti cella per cella: un ramo recente, una rete ricorrente convoluzionale (ConvGRU) a due strati sulle ultime 48 ore, che sostituisce la convoluzione su grafo dell'articolo originale; un ramo di tendenza, una LSTM per cella sulla settimana precedente; un ramo di calendario, che riceve l'ora solare locale e il periodo dell'anno. Il discriminatore giudica invece piccole porzioni $3\times3$ attorno a ogni cella, leggendone la storia e il campo corrente, osservato o ricostruito.
-
-Le funzioni di perdita seguono il codice degli autori: errore quadratico pesato più termine avversario per il generatore, entropia incrociata per il discriminatore. Il dropout Monte Carlo ($p=0.2$) resta attivo in entrambe le reti anche durante il calcolo dello score: il calcolo è ripetuto 20 volte con maschere di dropout diverse (\emph{estrazioni}); la media dà l'errore da cui nasce lo score, la deviazione standard ne misura la dispersione.
+Il generatore stima l'intero campo in un solo passaggio, con tre rami uniti cella per cella: un ramo recente, una ConvGRU a due strati sulle ultime 48 ore, al posto della convoluzione su grafo dell'articolo; un ramo del trend, una LSTM per cella sulla settimana precedente; un ramo del calendario, con l'ora solare locale e il periodo dell'anno. Il discriminatore giudica la patch $3\times3$ di ogni cella, osservata o ricostruita. Le loss seguono il codice degli autori. Il dropout Monte Carlo resta attivo nelle due reti anche nel calcolo dello score, ripetuto 20 volte: la media delle estrazioni dà l'errore, la deviazione standard la sua dispersione.
 
 \subsection{Normalizzazione stagionale e pesi delle variabili}
 
-Ogni variabile è standardizzata per cella, giorno dell'anno e ora rispetto agli anni di addestramento, con una finestra di $\pm15$ giorni: il modello legge così scarti dal valore abituale invece del ciclo stagionale e diurno. Con il solo min--max dell'articolo la copertura nuvolosa produrrebbe l'84\% della variazione in 24 ore delle quindici variabili e dominerebbe l'errore; dopo la normalizzazione stagionale ne produce il 6.7\%. Ogni variabile riceve poi nell'errore un peso inverso alla sua variazione tipica in 24 ore (da 0.40 a 7.14), perché tutte contino in modo comparabile.
+Ogni variabile è standardizzata per cella, giorno dell'anno ($\pm15$ giorni) e ora sugli anni di addestramento: il modello legge lo scarto dal valore abituale invece del ciclo stagionale e giornaliero. Con il solo min--max dell'articolo la copertura nuvolosa produrrebbe l'84\% della variazione su 24 ore di tutte le variabili e dominerebbe l'errore; dopo la normalizzazione stagionale ne produce il 6.7\%. Nell'errore ogni variabile pesa in proporzione inversa alla sua variazione abituale su 24 ore, con pesi da 0.40 a 7.14.
 
-\subsection{Score climatologico e soglia}
+\subsection{Score del rilevatore e soglia}
 
-L'errore di ricostruzione del generatore non è confrontabile fra luoghi e stagioni: al sud e d'estate è alto per natura. Lo score finale, $\zeta$, dice di quante deviazioni standard l'errore supera il suo valore abituale nella stessa cella, alla stessa ora e nello stesso periodo dell'anno ($\pm15$ giorni). Media e deviazione standard sono stimate sugli anni di validazione e restano fisse per il test. A differenza della normalizzazione stagionale, che agisce sui dati in ingresso, questa agisce sull'errore del modello. Un valore è segnalato quando $\zeta$ supera il 95-esimo percentile degli anni di validazione. Lo score combinato dell'articolo, somma delle due parti riportate su una scala comune (qui con un min--max, che l'articolo non specifica), è calcolato solo per confronto.
+L'errore del generatore, G, non è confrontabile fra luoghi e stagioni: a sud e d'estate è alto per natura. Lo score del rilevatore, $G_{\mathrm{n}}$, dice di quante deviazioni standard G supera il suo valore abituale nella stessa cella, alla stessa ora e nello stesso periodo dell'anno. Questa normalizzazione climatologica è stimata sugli anni di validazione e resta fissa per gli anni di test. Un valore è segnalato quando $G_{\mathrm{n}}$ supera il 95-esimo percentile degli anni di validazione. Lo score combinato dell'articolo, somma delle due componenti riportate su una scala comune, è calcolato solo per confronto.
 
 \section{Impostazione sperimentale}
 
-Il rilevatore è applicato a ERA5 con 15 variabili al suolo e a 850\,hPa (temperatura, vento, pressione, precipitazione, nuvolosità, radiazione solare, umidità del suolo e dell'aria, altezza dello strato limite, velocità verticale e di attrito), ogni 3 ore, su una griglia di $0.5^\circ$ che copre Europa, Mediterraneo e Nord Africa (20--60$^\circ$N, 15$^\circ$O--50$^\circ$E): 10\,611 celle e 15 variabili dal 1980 al 2025, circa $2.1\times10^{10}$ numeri. Gli anni 1980--1999 servono all'addestramento, i 2000--2004 alla validazione; gli anni di test, 2005--2025, non sono mai usati né per addestrare né per scegliere il modello.
+I dati sono 15 variabili ERA5 in superficie e a 850\,hPa, ogni 3 ore, su 10\,611 celle di $0.5^\circ$ fra 20 e 60$^\circ$N e fra 15$^\circ$O e 50$^\circ$E: l'Europa, il Mediterraneo e parte dell'Africa settentrionale e del Medio Oriente. Gli anni 1980--1999 servono all'addestramento, i 2000--2004 alla validazione; gli anni di test, 2005--2025, non entrano in nessuna scelta.
 
-Senza etichette, la configurazione è scelta confrontando la distribuzione dei campi ricostruiti con quella dei campi osservati. La distanza usata è la Maximum Mean Discrepancy (MMD), vicina a zero quando le due distribuzioni coincidono, calcolata in uno spazio di 300 componenti principali su campi di validazione di tempo normale: questi sono scelti fra quelli con meno valori insoliti, secondo un criterio che non usa il modello e che segna come insoliti il 9.75\% dei valori di validazione. Un'ottimizzazione bayesiana con processo gaussiano ha cercato i due tassi di apprendimento, il peso della ricostruzione e il rapporto fra gli aggiornamenti delle due reti: su 29 prove, la configurazione scelta ha la distanza più bassa, \textbf{0.00259}. L'addestramento dura 6 epoche; nella configurazione scelta, poco più di 14 ore su una GPU NVIDIA RTX PRO 6000 Blackwell.
+Senza etichette, la configurazione è scelta confrontando campi ricostruiti e osservati di tempo ordinario degli anni di validazione con la distanza MMD, che vale zero quando le due distribuzioni coincidono. Su 29 prove di un'ottimizzazione bayesiana dei due tassi di apprendimento, del peso della ricostruzione e del rapporto fra gli aggiornamenti delle due reti, la configurazione scelta ha la distanza più bassa, 0.00259.
 
-Il comportamento dello score è confrontato, a parità di quota segnalata, con otto rilevatori più semplici: due senza modello (distanza dal valore normale e variazione in tre ore) e sei modelli statistici classici (\emph{shallow}: PCA, CBLOF, MCD, HBOS, COPOD, Isolation Forest), che leggono una cella alla volta senza le vicine. Ciascuno ha la propria normalizzazione climatologica e la propria soglia. Le analisi principali sono ripetute con la soglia al 99-esimo percentile.
+$G_{\mathrm{n}}$ è confrontato con otto baseline, ciascuna con la propria normalizzazione climatologica e la propria soglia: due senza modello, la distanza dal normale e la variazione in tre ore, e sei modelli shallow (PCA, CBLOF, MCD, HBOS, COPOD, Isolation Forest). Nessuna legge le celle vicine.
 
 \section{Risultati e discussione}
 
 \subsection{Generatore e discriminatore non concordano}
 
-Sugli anni di validazione l'errore del generatore e il giudizio del discriminatore sono quasi indipendenti: la loro correlazione di Spearman (sui ranghi: 0 indica nessun legame), calcolata in ogni istante sulle celle, vale in media \textbf{0.015} ed è negativa nel 44\% degli istanti. Le segnalazioni vicine nello spazio o in istanti consecutivi formano \emph{eventi}; il \emph{nucleo} di un evento sono le sue celle segnalate. Nel nucleo il discriminatore giudica l'osservazione e la ricostruzione più reali del consueto, anche se di poco: il giudizio sull'osservazione ha un percentile mediano di 5, contro 58 lontano dagli eventi.
+Sugli anni di validazione G e D ordinano i luoghi quasi senza legame: la correlazione di Spearman, calcolata in ogni istante sulle celle, vale in media 0.015 ed è negativa nel 44\% degli istanti. Le segnalazioni a contatto nello spazio e nel tempo formano cluster di segnalazioni; il \emph{nucleo} sono le celle del cluster in un istante. Nel nucleo il discriminatore giudica reali sia l'osservazione sia la ricostruzione: il percentile mediano del giudizio sull'osservazione, $D_{\mathrm{reale}}$, è 5, contro 58 nella zona lontana dai cluster, dove 50 è il valore tipico. D supera la propria soglia solo nel \textbf{25\%} dei valori del nucleo: dove l'errore del generatore segnala, D in genere non segnala.
 
-Le ricostruzioni non sono più lisce delle osservazioni: la loro rugosità, cioè la differenza fra celle vicine, è simile. Una lettura possibile è che il discriminatore giudichi reali i campi irregolari. Lisciando un'osservazione, la giudica più generata nel 99\% delle celle; le celle più rugose, dove anche il generatore tende a sbagliare di più, sono giudicate più reali. È una lettura di correlazioni, non una prova. Lo score combinato dell'articolo ordina i valori quasi come il solo discriminatore (Spearman \textbf{0.99}, contro 0.13 con il generatore): sommare le due parti equivale, di fatto, a usare il solo discriminatore. Il rilevatore usa quindi il solo errore del generatore riferito alla sua climatologia, $\zeta$, che ha un significato chiaro: quanto un campo si allontana da ciò che il modello si aspetta. Sugli anni di test i risultati si confermano: le correlazioni cambiano di al più tre centesimi.
+Lo score combinato dell'articolo ordina i valori quasi come D (Spearman \textbf{0.99}, contro 0.13 con G): sommare le due componenti mescola due segnali in disaccordo e, di fatto, equivale a usare D. Poiché G ha un significato chiaro, quanto un campo si allontana da ciò che il modello si aspetta, mentre D si spiega solo in parte, il rilevatore usa $G_{\mathrm{n}}$. Una lettura possibile del comportamento di D: le ricostruzioni non sono più lisce delle osservazioni, e le celle più rugose sono giudicate più reali; lisciare un'osservazione la fa giudicare appena più generata nel 99.6\% delle celle del 5\% più alto di G. È una lettura di correlazioni, non una prova. Sugli anni di test le correlazioni cambiano di al più tre centesimi.
 
-\subsection{Che cosa segnala lo score}
+\subsection{Confronto con le baseline}
 
-La normalizzazione climatologica rende le segnalazioni quasi uniformi. Sugli anni di validazione, senza di essa la quota segnalata va dall'1.6\% (50--60$^\circ$N, dicembre) all'11.1\% (20--30$^\circ$N, agosto); con essa resta fra il \textbf{3.7\%} e il \textbf{6.3\%} in ogni fascia e in ogni mese.
+Sugli anni di test, con la soglia di ciascun metodo allo stesso percentile, $G_{\mathrm{n}}$ si sovrappone sia ai metodi che leggono il punto sia alla variazione in tre ore, senza coincidere con nessuno: la variazione in tre ore segnala il \textbf{54\%} dei valori segnalati da $G_{\mathrm{n}}$, ciascuno dei metodi che leggono il punto fra il 39\% e il 52\%, contro il 5\% atteso fra metodi indipendenti. Il \textbf{18.1\%} delle segnalazioni di $G_{\mathrm{n}}$, circa l'1\% dei valori, non è segnalato da nessuna baseline. Nel nucleo solo il 41\% dei valori supera la soglia della distanza dal normale: $G_{\mathrm{n}}$ segnala anche valori che, presi uno per uno, non sono estremi. È un controllo di coerenza, non una misura di accuratezza.
 
-Sugli anni di test, l'\textbf{81.9\%} delle segnalazioni di $\zeta$ è condiviso con almeno uno degli otto rilevatori semplici, contro circa il 14\% atteso se fossero indipendenti; il restante 18.1\%, circa l'1\% delle coppie cella--istante, è segnalato solo da $\zeta$. Attorno agli eventi $\zeta$ cala in modo graduale dal nucleo verso l'esterno e torna a un valore tipico dopo circa 300\,km, mentre quasi tutti i metodi semplici scendono più in fretta; in parte questo dipende dalla porzione $3\times3$ su cui l'errore è mediato. La dispersione delle estrazioni di dropout cresce con l'errore (Spearman 0.86) e ne vale circa l'11\%; il 75\% delle segnalazioni resta tale anche togliendo una deviazione standard.
+\subsection{Normalizzazione, cluster e dispersione}
 
-\subsection{Eventi noti}
+La normalizzazione climatologica rende le segnalazioni quasi uniformi: sugli anni di validazione la quota segnalata va, senza di essa, dall'1.6\% (50--60$^\circ$N, dicembre) all'11.1\% (20--30$^\circ$N, agosto); con essa resta fra il \textbf{3.7\%} e il \textbf{6.3\%}. Sugli anni di test lo 0.5\% dei cluster, quelli con almeno 1000 valori, contiene il 75.5\% dei valori segnalati: sono per lo più catene di segnalazioni a contatto più che singole anomalie, e accade con tutti i metodi (fra il 60\% e l'86\%). Velocità verticale e precipitazione sono il tipo del 61\% dei valori segnalati. Attorno ai cluster $G_{\mathrm{n}}$ cala gradualmente e torna a un valore tipico dopo circa 300\,km, più lentamente di quasi tutte le baseline. La dispersione delle estrazioni vale circa l'11\% dell'errore, quasi costante, e il 75\% dei valori segnalati resta sopra la soglia togliendo allo score una deviazione standard delle estrazioni. Con la soglia al 99-esimo percentile le conclusioni sul discriminatore diventano più nette e il confronto con le baseline non cambia.
+
+\subsection{Anomalie meteorologiche note}
+
+% Da scrivere quando la Sezione 6.9 della tesi sarà scritta con il relatore.
 
 \section{Conclusioni}
 
 \subsection{Sintesi dei risultati}
 
+% Da scrivere con il Capitolo 7 della tesi.
+
 \subsection{Limiti}
+
+% Da scrivere con il Capitolo 7 della tesi.
 
 \subsection{Sviluppi futuri}
 
-Il primo sviluppo è ripetere la configurazione scelta con più semi, per avere un riferimento con cui leggere le differenze fra configurazioni. Aggiornare periodicamente soglie e normalizzazione climatologica su anni recenti ridurrebbe l'effetto della deriva del clima sulla quota segnalata. Un catalogo esterno di eventi su tutto il dominio, o anomalie inserite in posizioni note, darebbe una misura del richiamo, cioè di quante condizioni insolite il rilevatore trova, che in questa tesi manca; resta inoltre da verificare se la dispersione del dropout possa essere usata come misura di incertezza. Infine il rilevatore può essere riportato alla previsione fotovoltaica da cui il lavoro è partito: valutando il previsore separatamente nelle condizioni normali e in quelle segnalate, o usando lo score per escludere o pesare le finestre insolite.
+% Da scrivere con il Capitolo 7 della tesi. Testo della versione del 6 novembre 2026, da rivedere:
+% Il primo sviluppo è ripetere la configurazione scelta con più semi, per avere un riferimento con cui leggere le
+% differenze fra configurazioni. Aggiornare periodicamente soglie e normalizzazione climatologica su anni recenti
+% ridurrebbe l'effetto della deriva del clima sulla quota segnalata. Un catalogo esterno di eventi su tutto il
+% dominio, o anomalie inserite in posizioni note, darebbe una misura del richiamo, cioè di quante condizioni insolite
+% il rilevatore trova, che in questa tesi manca; resta inoltre da verificare se la dispersione del dropout possa
+% essere usata come misura di incertezza. Infine il rilevatore può essere riportato alla previsione fotovoltaica da
+% cui il lavoro è partito: valutando il previsore separatamente nelle condizioni normali e in quelle segnalate, o
+% usando lo score per escludere o pesare le finestre insolite.
 
 \end{document}
