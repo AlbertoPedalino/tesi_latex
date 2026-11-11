@@ -401,7 +401,7 @@ def case_figure(number, data, coastline):
     limit = 4
     mesh = draw_map(left, grid, data["input"], coastline, cmap="RdBu_r", vmin=-limit, vmax=limit)
     bar = figure.colorbar(mesh, ax=left, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, extend="both")
-    bar.set_label("scarto (0 = normale, 1 = variabilità abituale)", fontsize=TICKS)
+    bar.set_label("scarto dal normale\n(0 = normale, 1 = variabilità abituale)", fontsize=TICKS)
     bar.ax.tick_params(labelsize=TICKS)
     left.set_title(f"{TYPES[record['type']]}: scarto", fontsize=9, loc="left", color=TEXT)
     mesh = draw_map(right, grid, percentile(data[f"score_{SCORE}"], data[f"quantiles_{SCORE}"]), coastline, left=False,
@@ -456,8 +456,11 @@ def case_figure(number, data, coastline):
     gap.set_ylim(-reach, 1.4 * reach)  # free room at the top for "nel cluster"
     gap.set_yticks([-reach, 0, reach], [f"{-reach:g}", "0", f"+{reach:g}"])
     gap.set_ylabel("scarto", fontsize=TICKS)
-    gap.xaxis.set_major_locator(dates.DayLocator(interval=2))
+    gap.xaxis.set_major_locator(dates.AutoDateLocator(minticks=3, maxticks=4))
     gap.xaxis.set_major_formatter(dates.DateFormatter("%d/%m"))
+    gap.tick_params(axis="x", labelrotation=25)
+    for label in gap.get_xticklabels():
+        label.set_horizontalalignment("right")
     widest = max(bands, key=lambda band: band[1] - band[0])
     middle = times[widest[0]] + (times[widest[1]] - times[widest[0]]) / 2
     # The names of the lines at their right end; "nel cluster" over the widest band, at the top of the lower panel.
@@ -470,22 +473,45 @@ def case_figure(number, data, coastline):
     gap.annotate("nel cluster", (anchor, 1), xycoords=("data", "axes fraction"), xytext=(shift, -1),
                  textcoords="offset points", fontsize=6.5, color="#3d6fa8", ha=side, va="top", path_effects=HALO, zorder=5)
 
-    chain = figure.add_subplot(panels[1, 1])
-    event_times = pd.DatetimeIndex(data["event_times"])
-    chain.fill_between(event_times, data["event_cells"], step="mid", color=BLUE, linewidth=0)
-    chain.axvline(moment, color=TEXT, linewidth=0.8)
-    chain.annotate("istante\ndelle mappe", (moment, 1), xycoords=("data", "axes fraction"), xytext=(3, -2),
-                   textcoords="offset points", fontsize=6.5, color=TEXT, ha="left", va="top", path_effects=HALO)
-    hours = record.get("hours", (event_times[-1] - event_times[0]) / pd.Timedelta(hours=1))
-    chain.set_title("Celle del cluster per istante", fontsize=9, loc="left", color=TEXT)
-    chain.set_ylabel("celle", fontsize=TICKS)
-    chain.set_ylim(0, 1.3 * float(np.max(data["event_cells"])))  # room for the name of the line over the bars
-    chain.margins(x=0)
-    chain.tick_params(labelsize=TICKS, length=2)
-    # A tick at 00 UTC of every day, so that the date under it is the day it marks.
-    chain.xaxis.set_major_locator(dates.DayLocator(interval=max(1, len(event_times) // 40)))
-    chain.xaxis.set_major_formatter(dates.DateFormatter("%d/%m"))
-    clean(chain, "top", "right")
+    # The profile of this cluster at the timestamp of the maps, as in Figure 6.12: every cell has its position from the
+    # border of the core (negative inside, positive outside, chessboard distance as in check_era5_event_profile.py);
+    # outside, only the cells whose nearest flagged cell is in this core, so that other clusters do not count here.
+    profile = figure.add_subplot(panels[1, 1])
+    shape_grid = (len(latitudes), len(longitudes))
+    flagged = np.zeros(shape_grid, dtype=bool)
+    flagged[data["rows"], data["cols"]] = data[f"score_{SCORE}"] > float(data[f"limit_{SCORE}"])
+    own = np.zeros(shape_grid, dtype=bool)
+    own[data["rows"], data["cols"]] = data["core"].astype(bool)
+    flagged |= own
+    inside = ndimage.distance_transform_cdt(own, metric="chessboard")
+    outside, nearest = ndimage.distance_transform_cdt(~flagged, metric="chessboard", return_indices=True)
+    position = np.where(own, -inside, outside)[data["rows"], data["cols"]]
+    mine = (own | own[nearest[0], nearest[1]])[data["rows"], data["cols"]]
+    level_map = percentile(data[f"score_{SCORE}"], data[f"quantiles_{SCORE}"])
+    normal_map = percentile(data[f"score_{NORMAL}"], data[f"quantiles_{NORMAL}"])
+    steps = [k for k in range(-7, 8) if k != 0]
+    medians = {}
+    for name, values in ((SCORE, level_map), (NORMAL, normal_map)):
+        medians[name] = [np.nanmedian(values[mine & (position == k)]) if (mine & (position == k)).sum() >= 5
+                         else np.nan for k in steps]
+    for name, colour, width in ((NORMAL, ORANGE, 1.6), (SCORE, BLUE, 2.2)):
+        profile.plot(steps, medians[name], color=colour, linewidth=width, marker="o", markersize=2.5)
+    profile.axhline(50, color=MUTED, linewidth=0.8, linestyle="--")
+    profile.axhline(95, color=MUTED, linewidth=0.8, linestyle=":")
+    profile.axvline(0, color=TEXT, linewidth=0.8)
+    profile.text(0.15, 3, "bordo", fontsize=TICKS - 1, color=TEXT)
+    profile.set_xlim(-5.5, 7.5)
+    profile.set_xticks([-4, -2, 2, 4, 6], ["4", "2", "2", "4", "6"])
+    profile.set_xlabel("celle dal bordo: dentro | fuori", fontsize=TICKS)
+    profile.set_ylim(0, 104)
+    profile.set_yticks([0, 50, 95], ["0", "50", "soglia"])
+    profile.set_ylabel("percentile mediano", fontsize=TICKS)
+    profile.tick_params(labelsize=TICKS, length=2)
+    profile.set_title("Dal nucleo verso l'esterno", fontsize=9, loc="left", color=TEXT)
+    clean(profile, "top", "right")
+    last = lambda values: next((v for v in reversed(values) if np.isfinite(v)), 50.0)
+    end_labels(profile, ((last(medians[SCORE]), r"$G_\mathrm{n}$", BLUE),
+                         (last(medians[NORMAL]), "distanza\ndal normale", ORANGE)))
     figure.savefig(HERE / f"era5_caso_{number:02d}.pdf", dpi=300)
     plt.close(figure)
 
