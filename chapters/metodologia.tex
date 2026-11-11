@@ -155,7 +155,7 @@ Dopo questi passaggi è applicato un min--max per variabile, stimato sugli anni 
 \section{Pesi delle variabili nell'errore di ricostruzione}
 \label{sec:pesi-variabili-ricostruzione}
 
-Nell'articolo tutte le variabili contano allo stesso modo nell'errore di ricostruzione. Il rilevatore pesa invece l'errore per variabile, in modo che ciascuna sia misurata in rapporto a quanto cambia abitualmente. Dopo la normalizzazione stagionale le variabili hanno variazioni più vicine fra loro, ma non uguali: le loro quote della variazione su 24 ore vanno dallo 0.9\% al 16.6\% (Figura~\ref{fig:era5-variazione}). I pesi correggono queste differenze. Indicando con $m_f$ il quadrato medio della variazione della variabile $f$ su 24 ore, calcolato sui dati di addestramento normalizzati, il peso è
+Nell'articolo tutte le variabili contano allo stesso modo nell'errore di ricostruzione. Il rilevatore pesa invece l'errore per variabile, in modo che ciascuna sia misurata in rapporto a quanto cambia abitualmente. Dopo la normalizzazione stagionale le variabili hanno variazioni più vicine fra loro, ma non uguali: le loro percentuali della variazione su 24 ore vanno dallo 0.9\% al 16.6\% (Figura~\ref{fig:era5-variazione}). I pesi correggono queste differenze. Indicando con $m_f$ il quadrato medio della variazione della variabile $f$ su 24 ore, calcolato sui dati di addestramento normalizzati, il peso è
 \begin{equation}
 w_f=\frac{\bar{m}}{m_f},
 \qquad

@@ -29,12 +29,15 @@ import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap, ListedColormap, LogNorm
 from scipy import ndimage
 
+from pannelli import save_panels
+
 from genera_figure_g_d import (BLUE, GRID, MUTED, ORANGE, TEXT, TICKS, VARIABLE_COLOURS, coastline_of, draw_map,
                                size)
 
 HERE = pathlib.Path(__file__).parent
 ZONES = HERE / "dati" / "era5_eventi_zone.csv"
 PROFILE = HERE / "dati" / "era5_eventi_profilo.csv"
+PROFILE_ALL = HERE / "dati" / "era5_eventi_profilo_tutti.csv"  # every score on the clusters of G_n, all types
 SIZES = ("1", "2-4", "5-19", "20-99", "100-999", "1000-9999", ">9999")
 SIZE_LABELS = ("1", "2–4", "5–19", "20–99", "100–999", "1000–\n9999", "oltre\n9999")
 TYPES = {"vertical_velocity": "Velocità verticale", "total_precipitation": "Precipitazione",
@@ -130,24 +133,38 @@ def clean(axis, *sides):
 
 
 def sizes_figure(zones):
-    """Almost all the events are small, almost all the values are in a few huge events."""
+    """Almost all the clusters are small, almost all the flagged values are in a few huge clusters: two bars of 100,
+    the clusters and the flagged values, cut in three bands of size (number of flagged values of the cluster)."""
     rows = [zones.loc[("all", name)] for name in SIZES]
     events = np.array([row["events"] for row in rows], dtype=float)
     values = np.array([row[f"{SCORE} {CORE} values"] for row in rows], dtype=float)
-    figure, axes = plt.subplots(1, 2, figsize=size(0.42), sharey=True, constrained_layout=True)
-    place = np.arange(len(SIZES))[::-1]
-    for axis, shares, title in ((axes[0], 100 * events / events.sum(), "Quota dei cluster"),
-                                (axes[1], 100 * values / values.sum(), "Quota dei valori segnalati")):
-        axis.barh(place, shares, height=0.72, color=BLUE)
-        for y, share in zip(place, shares):
-            axis.text(share + 1, y, f"{share:.1f}%", va="center", fontsize=TICKS, color=TEXT)
-        axis.set_xlim(0, 62)
-        axis.set_xticks([])
-        axis.set_title(title, fontsize=9, loc="left", color=TEXT)
-        axis.tick_params(length=0, labelsize=TICKS)
-        clean(axis, "top", "right", "bottom")
-    axes[0].set_yticks(place, [label.replace("\n", "") if "–" in label else label.replace("\n", " ") for label in SIZE_LABELS])
-    axes[0].set_ylabel("numero di valori del cluster", fontsize=TICKS)
+    bands = (("piccoli", "meno di 20 valori", (0, 1, 2), "#b7d3f6", TEXT),
+             ("medi", "da 20 a 999 valori", (3, 4), "#5598e7", "white"),
+             ("enormi", "1000 valori o più", (5, 6), "#184f95", "white"))
+    figure, axis = plt.subplots(figsize=size(0.34), constrained_layout=True)
+    for y, counts in ((1, events), (0, values)):
+        shares = [100 * counts[list(index)].sum() / counts.sum() for _, _, index, _, _ in bands]
+        left = 0.0
+        for share, (name, _, _, colour, ink) in zip(shares, bands):
+            axis.barh(y, share, left=left, height=0.62, color=colour, edgecolor="white", linewidth=0.8)
+            text = f"{share:.0f}%" if share >= 1 else "<1%"
+            if share >= 6:
+                axis.text(left + share / 2, y, text, ha="center", va="center", fontsize=8, color=ink)
+            else:  # too thin for its number: just after the end of the bar
+                axis.text(101, y, text, ha="left", va="center", fontsize=8, color=colour if colour != "#b7d3f6" else TEXT)
+            left += share
+    axis.set_yticks([1, 0], ["% dei cluster", "% dei valori segnalati"])
+    axis.set_xlim(0, 108)
+    axis.set_ylim(-0.55, 2.05)
+    axis.set_xticks([])
+    axis.tick_params(length=0, labelsize=TICKS)
+    clean(axis, "top", "right", "bottom", "left")
+    # The names of the bands, in their colours, above the bars.
+    x = 0.0
+    for name, detail, _, colour, _ in bands:
+        axis.text(x, 1.62, f"\u25a0 {name}\n    {detail}", fontsize=7.5, linespacing=1.1,
+                  color=colour if colour != "#b7d3f6" else "#5f8fc9", ha="left", va="center")
+        x += 36
     figure.savefig(HERE / "era5_eventi_dimensione.pdf")
     plt.close(figure)
 
@@ -174,35 +191,42 @@ TYPE_COLUMNS = ("vertical_velocity", "total_precipitation", "total_cloud_cover",
 
 
 def types_figure(zones):
-    """Which variables dominate for G_n and for every baseline: the share of the flagged values by type of cluster."""
-    rows, labels = [], []
+    """Which variables dominate for G_n and for every baseline: the share of the flagged values by type of cluster, for
+    all the types, on the rows in the order of G_n; the methods on the columns, G_n first."""
+    columns, labels = [], []
     for label, key, table, _ in method_tables():
         table = table[(table["type"] != "all") & ~table["type"].str.startswith("far") & table["size"].isin(SIZES)]
         shares = table.groupby("type")[f"{key} core values"].sum()
-        shares = 100 * shares / shares.sum()
-        row = [shares.get(name, 0.0) for name in TYPE_COLUMNS]
-        rows.append(row + [100 - sum(row)])
+        columns.append(100 * shares / shares.sum())
         labels.append(label)
-    grid = np.array(rows)
-    names = [TYPES[name] for name in TYPE_COLUMNS] + ["Altri tipi"]
-    figure, axis = plt.subplots(figsize=size(0.5), constrained_layout=True)
+    order = columns[0].reindex(list(TYPES)).fillna(0).sort_values(ascending=False).index  # by the share in G_n
+    grid = np.array([[column.get(name, 0.0) for column in columns] for name in order])
+    figure, axis = plt.subplots(figsize=size(0.92), constrained_layout=True)
     axis.imshow(grid, cmap=RAMP, vmin=0, vmax=70, aspect="auto", interpolation="nearest")
     for (row, column), value in np.ndenumerate(grid):
-        axis.text(column, row, f"{value:.0f}", ha="center", va="center", fontsize=7.5,
-                  color="white" if value > 35 else TEXT)
-    heads = {"Precipitazione": "Precipi-\ntazione"}
-    axis.set_xticks(range(len(names)), [heads.get(name, name.replace(" ", "\n", 1)) for name in names], fontsize=7)
+        text = f"{value:.0f}%" if value >= 0.5 else "<1%"
+        axis.text(column, row, text, ha="center", va="center", fontsize=6.5, color="white" if value > 35 else TEXT)
+    heads = {}  # one line each, slanted
+    axis.set_xticks(range(len(labels)), [heads.get(label, label) for label in labels], fontsize=7)
     axis.xaxis.tick_top()
-    axis.set_yticks(range(len(labels)), labels, fontsize=7.5)
-    axis.get_yticklabels()[0].set_color(BLUE)
-    axis.get_yticklabels()[0].set_fontweight("bold")
-    axis.axhline(0.5, color="white", linewidth=3)  # G_n apart from the baselines
+    plt.setp(axis.get_xticklabels(), rotation=30, ha="left", rotation_mode="anchor")
+    axis.get_xticklabels()[0].set_color(BLUE)
+    axis.get_xticklabels()[0].set_fontweight("bold")
+    axis.set_yticks(range(len(order)), [TYPES[name] for name in order], fontsize=7)
+    axis.axvline(0.5, color="white", linewidth=3)  # G_n apart from the baselines
     axis.tick_params(length=0)
     for side in axis.spines.values():
         side.set_visible(False)
     figure.savefig(HERE / "era5_eventi_tipo.pdf")
     plt.close(figure)
 
+
+
+def spaced(figure, wspace=0.14):
+    """More room between side-by-side panels, so that the names at the end of the lines of one panel do not seem to
+    belong to the next."""
+    figure.get_layout_engine().set(w_pad=0.08, h_pad=0.06, wspace=wspace)
+    return figure
 
 def position_axis(axis):
     """The horizontal axis of a profile: cells from the border of the event, inside on the left, outside on the right."""
@@ -219,7 +243,8 @@ def position_axis(axis):
 def profile_figure():
     """Left: each method across its own clusters, G falls more slowly than most baselines. Right: on the clusters of G,
     the distance from normal has the same profile as G. Only the positions up to 7 cells, joined by a line."""
-    figure, (own, same) = plt.subplots(1, 2, figsize=size(0.5), sharey=True, constrained_layout=True)
+    figure, (own, same) = plt.subplots(1, 2, figsize=size(0.56), constrained_layout=True)  # each panel stands alone
+    spaced(figure, 0.18)
     for axis in (own, same):
         axis.axhline(50, color=MUTED, linewidth=0.8, linestyle="--")
         axis.axhline(95, color=MUTED, linewidth=0.8, linestyle=":")
@@ -227,8 +252,9 @@ def profile_figure():
         axis.set_xlim(-7.3, 7.3)
         axis.set_xticks([-6, -4, -2, 2, 4, 6], ["6", "4", "2", "2", "4", "6"])
         axis.set_xlabel("celle dal bordo: dentro | fuori", fontsize=TICKS)
-    own.text(-7.1, 51, "valore tipico", fontsize=TICKS - 1, color=MUTED, va="bottom")
-    own.text(-7.1, 92, "soglia", fontsize=TICKS - 1, color=MUTED, va="top")
+    for axis in (own, same):
+        axis.text(-7.1, 51, "valore tipico", fontsize=TICKS - 1, color=MUTED, va="bottom")
+        axis.text(-7.1, 92, "soglia", fontsize=TICKS - 1, color=MUTED, va="top")
     shown = lambda table: table[(table["type"] == "all") & (table["position"].abs() < 8)].sort_values("position")
     labels, shallow = [], []
     for label, key, _, table in reversed(method_tables()):  # G last, on top
@@ -247,57 +273,82 @@ def profile_figure():
     own.fill_between(band.index, band.min(axis=1), band.max(axis=1), color=SHALLOW_GREY, alpha=0.55, linewidth=0, zorder=1)
     labels.append((band.iloc[-1].mean(), "sei modelli\nshallow", "#8a8880"))
     own.set_title("Ogni metodo sui propri cluster", fontsize=9, loc="left", color=TEXT)
-    own.set_ylim(0, 104)
-    own.set_yticks([0, 25, 50, 75, 100])
-    own.set_ylabel("percentile mediano", fontsize=TICKS)
+    for axis in (own, same):
+        axis.set_ylim(0, 104)
+        axis.set_yticks([0, 25, 50, 75, 100])
+        axis.set_ylabel("percentile mediano", fontsize=TICKS)
     end_labels(own, labels)
 
-    table = shown(pd.read_csv(PROFILE))
-    for column, colour, width in ((f"{NORMAL} percentile", ORANGE, 1.6), (f"{SCORE} percentile", BLUE, 2.6)):
-        same.plot(table["position"], table[column], color=colour, linewidth=width)
-    same.set_title(r"Sui cluster di $G_\mathrm{n}$", fontsize=9, loc="left", color=TEXT)
+    # Right: all the methods measured on the clusters of G_n (check_era5_event_profile.py, every score on G's events).
+    table = pd.read_csv(PROFILE_ALL)
+    table = table[table["position"].abs() < 8].set_index("position")
+    band = table[[f"{key} percentile" for key in ("pca", "mcd", "cblof", "copod", "hbos", "iforest")]]
+    same.fill_between(band.index, band.min(axis=1), band.max(axis=1), color=SHALLOW_GREY, alpha=0.55, linewidth=0,
+                      zorder=1)
+    for column, colour, width in (("change_3h percentile", GREEN, 1.6), (f"{NORMAL} percentile", ORANGE, 1.6),
+                                  (f"{SCORE} percentile", BLUE, 2.6)):
+        same.plot(table.index, table[column], color=colour, linewidth=width, zorder=3)
+    same.set_title(r"Tutti i metodi sui cluster di $G_\mathrm{n}$", fontsize=9, loc="left", color=TEXT)
     last = table.iloc[-1]
     end_labels(same, ((last[f"{SCORE} percentile"], r"$G_\mathrm{n}$", BLUE),
-                      (last[f"{NORMAL} percentile"], "distanza\ndal normale", ORANGE)))
+                      (last[f"{NORMAL} percentile"], "distanza\ndal normale", ORANGE),
+                      (last["change_3h percentile"], "variazione\nin tre ore", GREEN_TEXT),
+                      (band.iloc[-1].mean(), "sei modelli\nshallow", "#8a8880")))
     for axis in (own, same):
         axis.text(0.15, 3, "bordo", fontsize=TICKS - 1, color=TEXT)
-    figure.savefig(HERE / "era5_eventi_profilo.pdf")
+    save_panels(figure, [[own], [same]], HERE, "era5_eventi_profilo")
     plt.close(figure)
 
 
 def profile_types_figure():
-    """One cell out of the core some variables are back to normal, others are not: the variable of each type."""
+    """G_n falls in the same way for every type of cluster (left), the variable of the type does not (right): some are
+    back to normal one cell out of the core, others stay far from normal. Positions up to 7 cells, joined by a line."""
     table = pd.read_csv(PROFILE)
     table = table[(table["type"] != "all") & (table["values"] >= MIN_VALUES)]
     places = {"total_precipitation": (3.6, 0.42, -12), "vertical_velocity": (-7.0, 1.62, 0),
               "total_cloud_cover": (-5.3, 3.3, 0), "2m_temperature": (0.3, 2.4, 0)}
     chosen = {name: (*VARIABLE_COLOURS[name], *place) for name, place in places.items()}
-    figure, axis = plt.subplots(figsize=size(0.56), constrained_layout=True)
+    figure, (score, scarto) = plt.subplots(1, 2, figsize=size(0.56), constrained_layout=True)
+    spaced(figure, 0.16)
     for name, group in table.groupby("type"):
         group = group.sort_values("position")
-        if name not in chosen:
-            joined = group["position"].abs() < 8
-            axis.plot(group["position"][joined], group["variable distance"][joined], color="#c8c6bf", linewidth=0.9, zorder=1)
-    for name, (colour, label, x, y, shift) in chosen.items():
-        group = table[table["type"] == name].sort_values("position")
         joined = group["position"].abs() < 8
-        axis.plot(group["position"][joined], group["variable distance"][joined], color=colour, linewidth=2, zorder=2)
-        axis.annotate(TYPES[name], (x, y), xytext=(0, shift), textcoords="offset points", fontsize=TICKS, color=label, zorder=3, path_effects=HALO)
-    axis.annotate("altri tipi", (6.2, 1.62), fontsize=TICKS, color=MUTED)
-    axis.text(0.15, 0.08, "bordo del cluster", fontsize=TICKS, color=TEXT)
-    axis.set_ylim(0, 3.5)
-    axis.set_ylabel("|scarto| della variabile (0 = normale)", fontsize=TICKS)
-    position_axis(axis)
-    axis.set_xlim(-7.3, 7.3)
-    axis.set_xticks([-6, -4, -2, -1, 1, 2, 4, 6], ["6", "4", "2", "1", "1", "2", "4", "6"])
-    figure.savefig(HERE / "era5_eventi_profilo_tipi.pdf")
+        colour, width, order = (chosen[name][0], 1.8, 2) if name in chosen else ("#c8c6bf", 0.9, 1)
+        score.plot(group["position"][joined], group[f"{SCORE} percentile"][joined], color=colour, linewidth=width,
+                   zorder=order)
+        scarto.plot(group["position"][joined], group["variable distance"][joined], color=colour, linewidth=width + 0.2,
+                    zorder=order)
+    for name, (colour, label, x, y, shift) in chosen.items():
+        scarto.annotate(TYPES[name], (x, y), xytext=(0, shift), textcoords="offset points", fontsize=TICKS - 0.5,
+                        color=label, zorder=3, path_effects=HALO)
+    scarto.annotate("altri tipi", (5.0, 1.75), fontsize=TICKS - 0.5, color=MUTED)
+    score.annotate("le curve di tutti\ni tipi quasi coincidono", (-7.0, 72), fontsize=TICKS - 0.5, color=TEXT,
+                   path_effects=HALO)
+    score.axhline(50, color=MUTED, linewidth=0.8, linestyle="--")
+    score.axhline(95, color=MUTED, linewidth=0.8, linestyle=":")
+    score.set_ylim(0, 104)
+    score.set_yticks([0, 50, 95], ["0", "50", "soglia"])
+    score.set_ylabel(r"percentile mediano di $G_\mathrm{n}$", fontsize=TICKS)
+    score.set_title(r"$G_\mathrm{n}$ per tipo di cluster", fontsize=9, loc="left", color=TEXT)
+    scarto.set_ylim(0, 3.5)
+    scarto.set_ylabel("|scarto| della variabile (0 = normale)", fontsize=TICKS)
+    scarto.set_title("La variabile del tipo", fontsize=9, loc="left", color=TEXT)
+    for axis in (score, scarto):
+        position_axis(axis)
+        axis.set_xlim(-7.3, 7.3)
+        axis.set_xticks([-6, -4, -2, 2, 4, 6], ["6", "4", "2", "2", "4", "6"])
+        axis.set_xlabel("celle dal bordo: dentro | fuori", fontsize=TICKS)
+    scarto.text(0.15, 0.08, "bordo", fontsize=TICKS - 1, color=TEXT)
+    score.text(0.15, 3, "bordo", fontsize=TICKS - 1, color=TEXT)
+    save_panels(figure, [[score], [scarto]], HERE, "era5_eventi_profilo_tipi")
     plt.close(figure)
 
 
 def dropout_figure():
     """The dispersion in proportion to the error: by size of the error, across the events, at equal error."""
     data = json.loads((HERE / "dati" / "era5_dropout.json").read_text(encoding="utf-8"))
-    figure, (bands, across, classes) = plt.subplots(1, 3, figsize=size(0.46), constrained_layout=True, width_ratios=(1.3, 1.2, 0.95))
+    figure, (bands, across, classes) = plt.subplots(1, 3, figsize=size(0.5), constrained_layout=True, width_ratios=(1.3, 1.2, 0.95))
+    spaced(figure, 0.12)
     numbers = data["ratio by band of the raw error"]
     place = np.arange(len(numbers["band"]))
     bands.bar(place, 100 * np.array(numbers["ratio"]), width=0.72, color=BLUE)
@@ -337,7 +388,7 @@ def dropout_figure():
     classes.set_ylabel("oltre la soglia della\ndistanza dal normale", fontsize=TICKS)
     classes.set_title("A parità di errore", fontsize=8.5, loc="left", color=TEXT)
     clean(classes, "top", "right", "left")
-    figure.savefig(HERE / "era5_dropout.pdf")
+    save_panels(figure, [[bands], [across], [classes]], HERE, "era5_dropout")
     plt.close(figure)
 
 
@@ -347,6 +398,7 @@ def dropout_maps_figure(coastline_path):
     grid = {key: maps[key] for key in ("rows", "cols", "latitudes", "longitudes")}
     coastline = coastline_of(coastline_path, grid)
     figure, axes = plt.subplots(1, 2, figsize=size(0.56), constrained_layout=True)
+    groups = []
     for axis, key, title, label, scale in ((axes[0], "mean grezza", "Deviazione standard, media", r"deviazione standard dell'errore, $\times 10^{-4}$", 1e4),
                                            (axes[1], "mean ratio", "Rapporto, medio", "rapporto (%)", 100)):
         values = maps[key] * scale
@@ -356,7 +408,8 @@ def dropout_maps_figure(coastline_path):
         bar = figure.colorbar(mesh, ax=axis, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30)
         bar.set_label(label, fontsize=TICKS)
         bar.ax.tick_params(labelsize=TICKS)
-    figure.savefig(HERE / "era5_dropout_mappe.pdf", dpi=300)
+        groups.append([axis, bar.ax])
+    save_panels(figure, groups, HERE, "era5_dropout_mappe", dpi=300)
     plt.close(figure)
 
 
@@ -395,20 +448,23 @@ def case_figure(number, data, coastline):
     longitudes, latitudes = data["longitudes"], data["latitudes"]
     picture = np.zeros((len(latitudes), len(longitudes)))
     picture[data["rows"], data["cols"]] = data["core"]
-    figure = plt.figure(figsize=size(0.9), constrained_layout=True)
-    panels = figure.add_gridspec(2, 2, height_ratios=(1.55, 1.2))
+    figure = plt.figure(figsize=size(0.98), constrained_layout=True)
+    # More room between the four panels, so that each reads on its own: maps above, time and profile below.
+    figure.get_layout_engine().set(w_pad=0.08, h_pad=0.08, wspace=0.22, hspace=0.1)
+    panels = figure.add_gridspec(2, 2, height_ratios=(1.35, 1.25))
     left, right = figure.add_subplot(panels[0, 0]), figure.add_subplot(panels[0, 1])
     limit = 4
     mesh = draw_map(left, grid, data["input"], coastline, cmap="RdBu_r", vmin=-limit, vmax=limit)
-    bar = figure.colorbar(mesh, ax=left, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, extend="both")
-    bar.set_label("scarto dal normale\n(0 = normale, 1 = variabilità abituale)", fontsize=TICKS)
-    bar.ax.tick_params(labelsize=TICKS)
+    left_bar = figure.colorbar(mesh, ax=left, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, extend="both")
+    left_bar.set_label("scarto dal normale\n(0 = normale, 1 = variabilità abituale)", fontsize=TICKS)
+    left_bar.ax.tick_params(labelsize=TICKS)
     left.set_title(f"{TYPES[record['type']]}: scarto", fontsize=9, loc="left", color=TEXT)
     mesh = draw_map(right, grid, percentile(data[f"score_{SCORE}"], data[f"quantiles_{SCORE}"]), coastline, left=False,
                     cmap="viridis", vmin=0, vmax=100)
-    bar = figure.colorbar(mesh, ax=right, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, ticks=[0, 25, 50, 75, 95])
-    bar.set_label("percentile (95 circa = soglia)", fontsize=TICKS)
-    bar.ax.tick_params(labelsize=TICKS)
+    right_bar = figure.colorbar(mesh, ax=right, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30,
+                                ticks=[0, 25, 50, 75, 95])
+    right_bar.set_label("percentile (95 circa = soglia)", fontsize=TICKS)
+    right_bar.ax.tick_params(labelsize=TICKS)
     right.set_title(r"$G_\mathrm{n}$", fontsize=9, loc="left", color=TEXT)
     for axis in (left, right):
         # The core as in Figure 6.8: orange over a white halo, apart from the dark coastlines.
@@ -448,7 +504,7 @@ def case_figure(number, data, coastline):
     cell.tick_params(labelbottom=False)
     east = record["cell longitude"]
     where = f"{east:g}°E" if east >= 0 else f"{-east:g}°W"
-    cell.set_title(f"La cella cerchiata ({record['cell latitude']:g}°N, {where})", fontsize=9, loc="left", color=TEXT)
+    cell.set_title(f"Cella cerchiata, {record['cell latitude']:g}°N {where}", fontsize=9, loc="left", color=TEXT)
     gap.axhline(0, color=MUTED, linewidth=0.8)
     variable, variable_text = VARIABLE_COLOURS.get(record["type"], (MUTED, TEXT))
     gap.plot(times, data["series_input"], color=variable, linewidth=1.4)
@@ -512,7 +568,8 @@ def case_figure(number, data, coastline):
     last = lambda values: next((v for v in reversed(values) if np.isfinite(v)), 50.0)
     end_labels(profile, ((last(medians[SCORE]), r"$G_\mathrm{n}$", BLUE),
                          (last(medians[NORMAL]), "distanza\ndal normale", ORANGE)))
-    figure.savefig(HERE / f"era5_caso_{number:02d}.pdf", dpi=300)
+    save_panels(figure, [[left, left_bar.ax], [right, right_bar.ax], [cell, gap], [profile]], HERE,
+                f"era5_caso_{number:02d}", dpi=300)
     plt.close(figure)
 
 

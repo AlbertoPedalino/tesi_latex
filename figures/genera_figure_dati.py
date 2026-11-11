@@ -16,6 +16,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
+from pannelli import save_panels
+
 HERE = pathlib.Path(__file__).parent
 WIDTH_CM = 13.2
 BLUE, ORANGE, AQUA, PURPLE = "#2a78d6", "#eb6834", "#1baf7a", "#8a5cc2"
@@ -98,6 +100,7 @@ def cycles_figure(data):
                 axes[row, 1].plot(part["hours"], convert(series["hourly_mean"][month]), style, color=color,
                                   linewidth=1.2)
         axes[row, 0].set_ylabel(label)
+        axes[row, 1].set_ylabel(label)  # the right column stands alone as its own subfigure
         for axis in axes[row]:
             tidy(axis)
     axes[1, 0].set_xticks(np.arange(1, 13), MONTHS)
@@ -107,13 +110,18 @@ def cycles_figure(data):
     axes[0, 0].set_title("Ciclo stagionale", fontsize=9, color=TEXT)
     axes[0, 1].set_title("Ciclo giornaliero", fontsize=9, color=TEXT)
     handles, labels = axes[0, 0].get_legend_handles_labels()
-    handles += [plt.Line2D([], [], color=MUTED, linestyle="--"), plt.Line2D([], [], color=MUTED, linestyle="-")]
-    labels += ["gennaio", "luglio"]
-    figure.legend(handles, labels, loc="lower center", ncol=5, bbox_to_anchor=(0.5, -0.06), fontsize=7.5,
-                  columnspacing=1.0, handlelength=1.6)
-    figure.tight_layout(rect=(0, 0.04, 1, 1))
+    cells = axes[1, 0].legend(handles, labels, loc="upper center", ncol=2, bbox_to_anchor=(0.5, -0.32),
+                              fontsize=7.5, columnspacing=1.0, handlelength=1.6)
+    months = axes[1, 1].legend([plt.Line2D([], [], color=MUTED, linestyle="--"),
+                                plt.Line2D([], [], color=MUTED, linestyle="-")], ["gennaio", "luglio"],
+                               loc="upper center", ncol=2, bbox_to_anchor=(0.5, -0.32), fontsize=7.5,
+                               columnspacing=1.0, handlelength=1.6)
+    figure.tight_layout(rect=(0, 0.04, 1, 1), w_pad=2.0)
     figure.align_ylabels(axes[:, 0])
-    save(figure, "era5_cicli.pdf")
+    save_panels(figure, [[axes[0, 0], axes[1, 0], cells], [axes[0, 1], axes[1, 1], months]], HERE, "era5_cicli",
+                pad=0.02)
+    plt.close(figure)
+    print("written era5_cicli_a.pdf, era5_cicli_b.pdf")
 
 
 def change_figure(data, weights):
@@ -136,14 +144,14 @@ def change_figure(data, weights):
     axis.set_xlim(0.02, 150)
     axis.set_xticks([0.1, 1, 10, 100], ["0.1", "1", "10", "100"])
     axis.axvline(100 / len(features), color=MUTED, linestyle="--", linewidth=0.8)
-    axis.text(100 / len(features) * 1.08, -1.25, "quote uguali", color=MUTED, fontsize=8, va="center")
+    axis.text(100 / len(features) * 1.08, -1.25, "percentuali uguali", color=MUTED, fontsize=8, va="center")
     axis.set_ylim(-1.6, len(features) - 0.2)
     top = order[-1]
     axis.text(article[top] * 1.08, top_row := len(order) - 1 + 0.19, f"{article[top]:.1f}%", color=TEXT, fontsize=8,
               va="center", ha="left")
     axis.text(detector[top] * 1.15, top_row - 0.36, f"{detector[top]:.1f}%", color=TEXT, fontsize=8, va="center",
               bbox=dict(facecolor="white", edgecolor="none", pad=0.6))
-    axis.set_xlabel("Quota della variazione quadratica media su 24 ore (%)")
+    axis.set_xlabel("Percentuale della variazione quadratica media su 24 ore (%)")
     axis.spines[["top", "right"]].set_visible(False)
     axis.grid(axis="x", color=GRID, linewidth=0.5)
     axis.set_axisbelow(True)

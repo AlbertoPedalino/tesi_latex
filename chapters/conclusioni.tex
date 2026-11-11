@@ -31,7 +31,7 @@
 
 \paragraph{Score e dispersione.} La dispersione dello score dipende dal dropout delle due reti e non è calibrata come misura di incertezza.
 
-\paragraph{Validazione breve e clima che cambia.} Soglie e normalizzazione climatologica sono stimate su cinque anni di validazione e applicate a un periodo di test di ventuno anni. Con la deriva del clima, la quota di osservazioni segnalate negli anni più lontani può scostarsi da quella prevista. La ricostruzione dei cluster, inoltre, unifica a posteriori le identità che si fondono, e non descrive un utilizzo in tempo reale.
+\paragraph{Validazione breve e clima che cambia.} Soglie e normalizzazione climatologica sono stimate su cinque anni di validazione e applicate a un periodo di test di ventuno anni. Con la deriva del clima, la percentuale di osservazioni segnalate negli anni più lontani può scostarsi da quella prevista. La ricostruzione dei cluster, inoltre, unifica a posteriori le identità che si fondono, e non descrive un utilizzo in tempo reale.
 \fi
 
 \section{Sviluppi futuri}
@@ -40,7 +40,7 @@
 
 Il primo sviluppo è ripetere la configurazione scelta con più semi, per avere un riferimento con cui leggere le differenze fra configurazioni.
 
-Il secondo riguarda il protocollo: aggiornare periodicamente soglie e normalizzazione climatologica su una finestra di anni recenti, invece di tenerle fisse dalla validazione, ridurrebbe l'effetto della deriva del clima sulla quota di osservazioni segnalate.
+Il secondo riguarda il protocollo: aggiornare periodicamente soglie e normalizzazione climatologica su una finestra di anni recenti, invece di tenerle fisse dalla validazione, ridurrebbe l'effetto della deriva del clima sulla percentuale di osservazioni segnalate.
 
 Il terzo riguarda la valutazione. Il confronto con le anomalie meteorologiche note della Sezione~\ref{sec:ris-casi} si limita a pochi casi; un catalogo esterno di anomalie su tutto il dominio, o anomalie artificiali inserite in posizioni note, darebbe una misura del richiamo, che in questa tesi manca.
 

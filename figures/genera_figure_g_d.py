@@ -30,6 +30,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from pannelli import save_panels
+
 HERE = pathlib.Path(__file__).parent
 DATA = HERE / "dati" / "era5_g_d.npz"
 WIDTH_CM = 14.0
@@ -184,14 +186,18 @@ def temporal_figure(data, coastline):
 
 
 def terms_temporal_figure(data, coastline):
-    figure, axes = plt.subplots(1, 2, figsize=size(0.42), constrained_layout=True)
+    figure, axes = plt.subplots(1, 2, figsize=size(0.5), constrained_layout=True)
+    groups = []
     for column, (axis, key, title) in enumerate(zip(axes, ("temporal_g_real", "temporal_g_generated"),
                                                     (f"Spearman fra G e {REAL}", f"Spearman fra G e {GENERATED}"))):
         mesh = draw_map(axis, data, data[key], coastline, left=column == 0, cmap="RdBu_r", vmin=-LIMIT_TERMS,
                         vmax=LIMIT_TERMS)
         axis.set_title(title, fontsize=9)
-    colour_bar(figure, mesh, list(axes), "correlazione temporale (Spearman)")
-    figure.savefig(HERE / "era5_d_termini_correlazione_temporale.pdf", dpi=300)
+        bar = figure.colorbar(mesh, ax=axis, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30)
+        bar.set_label("correlazione temporale (Spearman)", fontsize=TICKS)
+        bar.ax.tick_params(labelsize=TICKS)
+        groups.append([axis, bar.ax])
+    save_panels(figure, groups, HERE, "era5_d_termini_correlazione_temporale", dpi=300)
     plt.close(figure)
 
 
@@ -259,6 +265,7 @@ def terms_map_figure(data, coastline):
     top = data["G"][row] >= np.nanpercentile(data["G"][row], 99)
     outline = np.nan_to_num(image(data, top.astype(float)), nan=0.0)
     figure, axes = plt.subplots(1, 2, figsize=size(0.56), constrained_layout=True)
+    groups = []
     for index, (axis, (title, values)) in enumerate(zip(axes, (("G: errore di ricostruzione", data["G"][row]),
                                                              ("D: componente del discriminatore", data["D"][row])))):
         valid = np.isfinite(values)
@@ -269,10 +276,12 @@ def terms_map_figure(data, coastline):
         axis.contour(data["longitudes"], data["latitudes"], outline, levels=[0.5], colors="white", linewidths=3.2)
         axis.contour(data["longitudes"], data["latitudes"], outline, levels=[0.5], colors=ORANGE, linewidths=1.8)
         axis.set_title(title, fontsize=9, loc="left", color=TEXT)
-    bar = figure.colorbar(mesh, ax=axes, orientation="horizontal", shrink=0.5, pad=0.02, aspect=40, ticks=[0, 25, 50, 75, 100])
-    bar.set_label("percentile nell'istante (alto = più insolito)", fontsize=TICKS)
-    bar.ax.tick_params(labelsize=TICKS)
-    figure.savefig(HERE / "era5_d_termini_mappa.pdf", dpi=300)
+        bar = figure.colorbar(mesh, ax=axis, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30,
+                              ticks=[0, 25, 50, 75, 100])
+        bar.set_label("percentile nell'istante (alto = più insolito)", fontsize=TICKS)
+        bar.ax.tick_params(labelsize=TICKS)
+        groups.append([axis, bar.ax])
+    save_panels(figure, groups, HERE, "era5_d_termini_mappa", dpi=300)
     plt.close(figure)
 
 

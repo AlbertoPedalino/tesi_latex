@@ -24,6 +24,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import TwoSlopeNorm
 
+from pannelli import save_panels
+
 HERE = pathlib.Path(__file__).parent
 DATA = HERE / "dati" / "era5_g_luogo.json"
 WIDTH_CM = 14.0
@@ -83,6 +85,7 @@ def main():
     norm = TwoSlopeNorm(vmin=0, vcenter=top, vmax=15)
     width = WIDTH_CM / 2.54
     figure, axes = plt.subplots(2, 1, figsize=(width, 0.62 * width), constrained_layout=True)
+    groups = []
     for axis, (key, title) in zip(axes, panels):
         values = np.array(data[key])
         mesh = axis.imshow(values, cmap="RdBu_r", norm=norm, aspect="auto")
@@ -94,11 +97,12 @@ def main():
         axis.set_yticks(range(len(data["bands"])), [band.replace("N", "°N") for band in data["bands"]])
         axis.tick_params(length=0)
         axis.set_title(title, fontsize=9, loc="left", color=TEXT)
-    bar = figure.colorbar(mesh, ax=axes, shrink=0.9, ticks=[0, top, 10, 15])
-    bar.set_label("valori segnalati (%)")
-    bar.outline.set_edgecolor(MUTED)
-    figure.savefig(HERE / "era5_g_luogo.pdf")
-    print(f"written {HERE / 'era5_g_luogo.pdf'}")
+        bar = figure.colorbar(mesh, ax=axis, shrink=0.9, ticks=[0, top, 10, 15])  # one per panel, same scale
+        bar.set_label("valori segnalati (%)")
+        bar.outline.set_edgecolor(MUTED)
+        groups.append([axis, bar.ax])
+    names = save_panels(figure, groups, HERE, "era5_g_luogo")
+    print(f"written {names} in {HERE}")
 
 
 if __name__ == "__main__":

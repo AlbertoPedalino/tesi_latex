@@ -6,6 +6,13 @@
 \usepackage{lmodern}
 \usepackage{microtype}
 \usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+% Images of one figure, each with its own caption "Figura 6.16a: ..." and its own entry in the list of figures.
+\DeclareCaptionLabelFormat{sottofigura}{\figurename~\thefigure#2}
+\DeclareCaptionListFormat{sottolista}{\thefigure#2}
+\captionsetup[sub]{font=small, labelformat=sottofigura, labelsep=colon, list=true, listformat=sottolista}
+\makeatletter\renewcommand*\l@subfigure{\@dottedtocline{1}{1.5em}{2.6em}}\makeatother  % room for "6.12b"
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,fit}
 \usepackage{booktabs}
