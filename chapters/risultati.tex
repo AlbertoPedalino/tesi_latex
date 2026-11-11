@@ -86,7 +86,7 @@ Il discriminatore è addestrato a dare 1 al campo generato e 0 a quello osservat
         Grandezza & Che cosa misura & Valore alto \\
         \midrule
         G ($\bar{s}_G$) & errore di ricostruzione del generatore, medio sulla patch $3\times3$ della cella & osservazione più insolita \\
-        $G_{\mathrm{n}}$ ($\zeta$) & lo score del rilevatore (Sezione~\ref{sec:normalizzazione-climatologica-score}): G rispetto a ciò che è abituale per quella cella, periodo dell'anno e ora & osservazione più insolita per quel luogo e periodo \\
+        $G_{\mathrm{n}}$ & lo score del rilevatore (Sezione~\ref{sec:normalizzazione-climatologica-score}): G rispetto a ciò che è abituale per quella cella, periodo dell'anno e ora & osservazione più insolita per quel luogo e periodo \\
         $D_{\mathrm{reale}}$ & giudizio del discriminatore sull'osservazione, fra 0 e 1 & osservazione giudicata generata \\
         $D_{\mathrm{generato}}$ & giudizio del discriminatore sulla ricostruzione, fra 0 e 1 & ricostruzione giudicata generata \\
         D & $D_{\mathrm{reale}}-D_{\mathrm{generato}}$, la componente del discriminatore & osservazione più insolita \\
@@ -414,7 +414,7 @@ Le Sezioni~\ref{sec:ris-correlazione-spaziale}--\ref{sec:ris-g-d} riguardano gli
 % stessa; nel log lo score è combinato+clim, verificato il 10 novembre 2026): quota delle segnalazioni del combinato segnalate anche da D+clim 93.9% (1%: 93.4%), da G+clim 31.7%
 % (19.1%); Jaccard combinato-D 88.4% (87.5%), combinato-G 18.8% (10.6%).
 
-\paragraph{Lo score del rilevatore è $G_{\mathrm{n}}$.} La scelta poggia sul significato delle due componenti. G ha un significato chiaro: misura quanto un campo si allontana da ciò che il modello si aspetta. D dipende anche dal giudizio sulla ricostruzione, e il suo comportamento si spiega solo in parte. Sommarle, come nel metodo originale, darebbe di fatto D, come mostra il paragrafo precedente. Il rilevatore usa quindi $G_{\mathrm{n}}$, lo score del rilevatore $\zeta$ della Sezione~\ref{sec:normalizzazione-climatologica-score}, che distribuisce le segnalazioni in modo quasi uniforme fra luoghi e stagioni (Sezione~\ref{sec:ris-climatologia}).
+\paragraph{Lo score del rilevatore è $G_{\mathrm{n}}$.} La scelta poggia sul significato delle due componenti. G ha un significato chiaro: misura quanto un campo si allontana da ciò che il modello si aspetta. D dipende anche dal giudizio sulla ricostruzione, e il suo comportamento si spiega solo in parte. Sommarle, come nel metodo originale, darebbe di fatto D, come mostra il paragrafo precedente. Il rilevatore usa quindi $G_{\mathrm{n}}$, lo score del rilevatore della Sezione~\ref{sec:normalizzazione-climatologica-score}, che distribuisce le segnalazioni in modo quasi uniforme fra luoghi e stagioni (Sezione~\ref{sec:ris-climatologia}).
 
 
 \section{Confronto con le baseline}
