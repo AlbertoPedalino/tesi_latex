@@ -26,7 +26,7 @@ Il rilevatore parte da STGAN~\cite{deng2022stgan}, una rete avversaria proposta 
     \item un generatore che opera sul campo intero con un'unità ricorrente convoluzionale, la ConvGRU~\cite{shi2015convlstm,ballas2016convgru}, mentre il discriminatore resta locale e giudica ogni cella sulla sua patch $3\times3$;
     \item un ingresso riferito al clima di ogni cella, con una normalizzazione stagionale, e un errore di ricostruzione in cui ogni variabile pesa in proporzione inversa a quanto essa cambia abitualmente;
     \item uno score riferito alla climatologia di ogni cella e il dropout Monte Carlo~\cite{gal2016dropout} nelle due reti, che associa a ogni score una misura di dispersione;
-    \item una validazione senza etichette, in cui i valori più insoliti, individuati con un criterio che non usa il modello, sono trattati a parte nella misura con cui si scelgono gli iperparametri dell'addestramento avversario e nella climatologia dello score, senza usare gli anni di test.
+    \item una validazione senza etichette, in cui i valori più insoliti, individuati con un criterio che non usa il modello, sono in gran parte tenuti fuori dalla misura con cui si scelgono gli iperparametri dell'addestramento avversario e tolti dalla climatologia dello score; gli anni di test non sono mai usati.
 \end{enumerate}
 
 \section{Obiettivi e contributi della tesi}
