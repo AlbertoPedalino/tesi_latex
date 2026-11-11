@@ -75,8 +75,9 @@ def prepare(folder):
         zones = pd.read_csv(folder / "zone_g_dterms_5pc.csv")
         everything = zones[(zones["type"] == "all") & (zones["size"] == "all")].iloc[0]
         far = zones[zones["type"].str.startswith("far")].iloc[0]
-        names = ("G", "Dreale", "Dricostruito", "D")
-        written = {"G": "G", "Dreale": "D_reale", "Dricostruito": "D_generato", "D": "D"}  # names in the files
+        names = ("Gn", "G", "Dreale", "Dricostruito", "D")
+        written = {"Gn": "G+clim", "G": "G", "Dreale": "D_reale", "Dricostruito": "D_generato",
+                   "D": "D"}  # names in the files
         zone_table = np.array([[everything[f"{written[name]} core percentile"],
                                 everything[f"{written[name]} edge percentile"],
                                 far[f"{written[name]} core percentile"]] for name in names])
@@ -203,7 +204,7 @@ def terms_temporal_figure(data, coastline):
 
 def zones_figure(data):
     figure, axis = plt.subplots(figsize=size(0.42), constrained_layout=True)
-    labels = {"G": "G senza normalizzazione", "Dreale": REAL, "Dricostruito": GENERATED, "D": "D"}
+    labels = {"Gn": r"$G_{\mathrm{n}}$", "G": "G", "Dreale": REAL, "Dricostruito": GENERATED, "D": "D"}
     zones = ("nucleo", "contorno", "lontana")
     shades = ZONE_SHADES
     positions = np.arange(len(data["zone_scores"]))
@@ -216,7 +217,8 @@ def zones_figure(data):
         axis.text(positions[0] + (index - 1) * width, 3, zone, rotation=90, fontsize=7, ha="center", va="bottom",
                   color="white" if index < 2 else TEXT)
     axis.axhline(50, color=MUTED, linewidth=0.7, linestyle=(0, (3, 2)))
-    axis.text(positions[-1] - 0.13, 51, "valore tipico", fontsize=7, color=MUTED, ha="center", va="bottom")
+    # In the gap between G and D(real), where no bar reaches 50.
+    axis.text(positions[1] + 0.5, 51, "valore tipico", fontsize=7, color=MUTED, ha="center", va="bottom")
     axis.set_xticks(positions, [labels[str(name)] for name in data["zone_scores"]])
     axis.tick_params(labelsize=TICKS)
     axis.set_ylim(0, 108)

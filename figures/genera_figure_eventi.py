@@ -65,6 +65,7 @@ EMPTY = "#d9d8d4"  # cells of the type tables with no event
 BAND = "#cde2fb"  # the timestamps in which the cell of a case is in its cluster
 FLAGGED = "#fbe1d8"  # above the threshold
 SHALLOW_KEYS = ("pca", "mcd", "cblof", "copod", "hbos", "iforest")
+SPREAD_COLUMN = 90.5  # Figure 6.13c: the x of the column of the differences
 MONTHS_SHORT = ("gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic")
 
 
@@ -346,6 +347,58 @@ def profile_types_figure():
     save_panels(figure, [[score], [scarto]], HERE, "era5_eventi_profilo_tipi")
     plt.close(figure)
 
+
+
+def types_spread_figure():
+    """Figure 6.13c: does every method fall in the same way for every type of cluster? For each method on its own
+    clusters, the median percentile two cells out of the border for every type (a point per type), from the lowest
+    type to the highest; the methods from the most uniform to the least."""
+    rows = []
+    for label, key, _, profile in method_tables():
+        table = profile[(profile["type"] != "all") & (profile["position"] == 2) & (profile["values"] >= MIN_VALUES)]
+        rows.append((label, key, table.set_index("type")[f"{key} percentile"]))
+    rows.sort(key=lambda row: row[2].max() - row[2].min())
+    coloured = ("vertical_velocity", "total_precipitation", "total_cloud_cover", "2m_temperature")  # as in 6.13a
+    figure, axis = plt.subplots(figsize=size(0.42), constrained_layout=True)
+    for y, (label, key, values) in enumerate(rows):
+        mine = key == SCORE
+        axis.plot([values.min(), values.max()], [y, y], color=BLUE if mine else "#d6d4cd", linewidth=6,
+                  solid_capstyle="round", alpha=0.35 if mine else 1.0, zorder=1)
+        others = values[[name for name in values.index if name not in coloured]]
+        axis.scatter(others, np.full(len(others), y), s=11, color="#9a988f", linewidths=0, zorder=2)
+        for name in coloured:
+            if name in values.index:
+                axis.scatter(values[name], y, s=24, color=VARIABLE_COLOURS[name][0], edgecolors="white",
+                             linewidths=0.6, zorder=3)
+        axis.text(SPREAD_COLUMN, y, f"{values.max() - values.min():.0f}", ha="center", va="center", fontsize=7.5,
+                  color=BLUE if mine else TEXT)
+    axis.set_yticks(range(len(rows)), [label for label, _, _ in rows], fontsize=TICKS)
+    for tick, (_, key, _) in zip(axis.get_yticklabels(), rows):
+        if key == SCORE:
+            tick.set_color(BLUE)
+            tick.set_fontweight("bold")
+    axis.invert_yaxis()  # the most uniform on top
+    axis.text(SPREAD_COLUMN, -0.95, "differenza fra\nil tipo più alto\ne il più basso", ha="center", va="bottom",
+              fontsize=6.5, color=MUTED, linespacing=1.0)
+    axis.axvline(SPREAD_COLUMN - 2.2, color=GRID, linewidth=0.8)
+    axis.set_xlim(56, SPREAD_COLUMN + 2.5)
+    axis.set_xticks([60, 65, 70, 75, 80, 85])
+    axis.set_ylim(len(rows) - 0.4, -0.6)
+    axis.set_xlabel("percentile mediano dello score a due celle fuori dal bordo (50 = valore tipico, 95 = soglia)",
+                    fontsize=TICKS)
+    axis.tick_params(labelsize=TICKS, length=0)
+    axis.grid(axis="x", color=GRID, linewidth=0.5)
+    axis.set_axisbelow(True)
+    clean(axis, "top", "right", "left")
+    handles = [plt.Line2D([], [], linestyle="", marker="o", markersize=5, color=VARIABLE_COLOURS[name][0],
+                          markeredgecolor="white") for name in coloured]
+    handles.append(plt.Line2D([], [], linestyle="", marker="o", markersize=3.5, color="#9a988f"))
+    legend = axis.legend(handles, [TYPES[name] for name in coloured] + ["altri tipi"], loc="center left",
+                         bbox_to_anchor=(1.01, 0.5), frameon=False, fontsize=6.5, handletextpad=0.3, labelspacing=0.5,
+                         title="ogni pallino\nè un tipo di cluster", title_fontsize=6.5)
+    legend._legend_box.align = "left"
+    figure.savefig(HERE / "era5_eventi_profilo_tipi_c.pdf")
+    plt.close(figure)
 
 def dropout_figure():
     """The dispersion in proportion to the error: by size of the error, across the events, at equal error."""
@@ -640,6 +693,7 @@ def main():
     types_figure(zones)
     profile_figure()
     profile_types_figure()
+    types_spread_figure()
     dropout_figure()
     dropout_maps_figure(args.coastline)
     medians = {}

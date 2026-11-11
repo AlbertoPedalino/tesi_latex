@@ -56,7 +56,7 @@ def main():
     assert keys[:2] == ["G+clim", "change_3h"] and first == 2
     axis.add_patch(plt.Rectangle((first - 0.5, first - 0.5), len(columns) - first, len(rows) - first, fill=False,
                                  edgecolor=TEXT, linewidth=1.4, zorder=3))
-    axis.text(len(columns) - 0.55, first - 0.3, "metodi che\nleggono il punto", ha="right", va="top", fontsize=8,
+    axis.text(len(columns) - 0.55, first - 0.3, "metodi che leggono\nuna cella in un istante", ha="right", va="top", fontsize=8,
               color=TEXT)
     axis.tick_params(length=0)
     for side in axis.spines.values():
