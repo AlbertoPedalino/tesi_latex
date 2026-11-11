@@ -25,6 +25,13 @@ def save_panels(figure, groups, folder, stem, pad=0.04, letters="abcdefgh", **op
                         boxes.append(text.get_window_extent(renderer))
         box = Bbox.union([b for b in boxes if b is not None]).transformed(inches).padded(pad)
         name = f"{stem}_{letter}.pdf"
+        # The other panels are hidden while this one is saved: a crop only hides them from view, and their text
+        # would stay in the PDF, found by a search or copied with the page.
+        hidden = [axis for axis in figure.axes if axis not in group and axis.get_visible()]
+        for axis in hidden:
+            axis.set_visible(False)
         figure.savefig(pathlib.Path(folder) / name, bbox_inches=box, **options)
+        for axis in hidden:
+            axis.set_visible(True)
         names.append(name)
     return names

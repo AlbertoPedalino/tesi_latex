@@ -441,7 +441,7 @@ def dropout_figure():
     classes.set_xticks(numbers["class"], ["1", "2", "3", "4", "5"])
     classes.tick_params(labelsize=TICKS, length=0)
     classes.set_xlabel("classi, dalle estrazioni\nconcordi alle discordi", fontsize=TICKS)
-    classes.set_ylabel("oltre la soglia della\ndistanza dal normale", fontsize=TICKS)
+    classes.set_ylabel("oltre la soglia della\ndistanza dal normale (%)", fontsize=TICKS)
     classes.set_title("A parità di errore", fontsize=8.5, loc="left", color=TEXT)
     clean(classes, "top", "right", "left")
     save_panels(figure, [[bands], [across], [classes]], HERE, "era5_dropout")
