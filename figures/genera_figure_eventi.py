@@ -63,6 +63,9 @@ SIMPLE = {"normal": ORANGE, "change_3h": GREEN}  # drawn in colour; the shallow 
 SHALLOW_GREY = "#b9b7b0"
 EMPTY = "#d9d8d4"  # cells of the type tables with no event
 BAND = "#cde2fb"  # the timestamps in which the cell of a case is in its cluster
+FLAGGED = "#fbe1d8"  # above the threshold
+SHALLOW_KEYS = ("pca", "mcd", "cblof", "copod", "hbos", "iforest")
+MONTHS_SHORT = ("gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic")
 
 
 def prepare(folder):
@@ -281,7 +284,7 @@ def profile_figure():
 
     # Right: all the methods measured on the clusters of G_n (check_era5_event_profile.py, every score on G's events).
     table = pd.read_csv(PROFILE_ALL)
-    table = table[table["position"].abs() < 8].set_index("position")
+    table = table[(table["type"] == "all") & (table["position"].abs() < 8)].set_index("position")
     band = table[[f"{key} percentile" for key in ("pca", "mcd", "cblof", "copod", "hbos", "iforest")]]
     same.fill_between(band.index, band.min(axis=1), band.max(axis=1), color=SHALLOW_GREY, alpha=0.55, linewidth=0,
                       zorder=1)
@@ -331,7 +334,7 @@ def profile_types_figure():
     score.set_ylabel(r"percentile mediano di $G_\mathrm{n}$", fontsize=TICKS)
     score.set_title(r"$G_\mathrm{n}$ per tipo di cluster", fontsize=9, loc="left", color=TEXT)
     scarto.set_ylim(0, 3.5)
-    scarto.set_ylabel("|scarto| della variabile (0 = normale)", fontsize=TICKS)
+    scarto.set_ylabel("|scarto standardizzato| (dev. std.)", fontsize=TICKS)
     scarto.set_title("La variabile del tipo", fontsize=9, loc="left", color=TEXT)
     for axis in (score, scarto):
         position_axis(axis)
@@ -456,9 +459,9 @@ def case_figure(number, data, coastline):
     limit = 4
     mesh = draw_map(left, grid, data["input"], coastline, cmap="RdBu_r", vmin=-limit, vmax=limit)
     left_bar = figure.colorbar(mesh, ax=left, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, extend="both")
-    left_bar.set_label("scarto dal normale\n(0 = normale, 1 = variabilità abituale)", fontsize=TICKS)
+    left_bar.set_label("scarto standardizzato\n(deviazioni standard dal normale)", fontsize=TICKS)
     left_bar.ax.tick_params(labelsize=TICKS)
-    left.set_title(f"{TYPES[record['type']]}: scarto", fontsize=9, loc="left", color=TEXT)
+    left.set_title(TYPES[record['type']], fontsize=9, loc="left", color=TEXT)
     mesh = draw_map(right, grid, percentile(data[f"score_{SCORE}"], data[f"quantiles_{SCORE}"]), coastline, left=False,
                     cmap="viridis", vmin=0, vmax=100)
     right_bar = figure.colorbar(mesh, ax=right, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30,
@@ -475,59 +478,6 @@ def case_figure(number, data, coastline):
                   markeredgecolor="white", markeredgewidth=2.6, zorder=5)
         axis.plot(record["cell longitude"], record["cell latitude"], marker="o", markersize=9, markerfacecolor="none",
                   markeredgecolor=TEXT, markeredgewidth=1.2, zorder=6)
-
-    # The followed cell in two panels with the same time axis: the percentiles of the two scores, and the scarto of the
-    # variable of the type, which the text uses to say when the variable leaves its normal.
-    times = pd.DatetimeIndex(data["series_times"])
-    rows = panels[1, 0].subgridspec(2, 1, height_ratios=(1.5, 1), hspace=0.08)
-    cell = figure.add_subplot(rows[0])
-    gap = figure.add_subplot(rows[1], sharex=cell)
-    flagged = data["series_core"]
-    bands = list(zip(np.nonzero(np.diff(np.r_[0, flagged.astype(int)]) == 1)[0],
-                     np.nonzero(np.diff(np.r_[flagged.astype(int), 0]) == -1)[0]))
-    half = pd.Timedelta(hours=1.5)  # a band of one timestamp would have no width
-    for axis in (cell, gap):
-        for begin, end in bands:
-            axis.axvspan(times[begin] - half, times[end] + half, color=BAND, linewidth=0)
-        axis.axvline(moment, color=TEXT, linewidth=0.8)
-        axis.margins(x=0)
-        axis.tick_params(labelsize=TICKS, length=2)
-        clean(axis, "top", "right")
-    cell.axhline(95, color=MUTED, linewidth=0.8, linestyle="--")
-    level = percentile(data[f"series_{SCORE}"], data[f"quantiles_{SCORE}"])
-    normal = percentile(data[f"series_{NORMAL}"], data[f"quantiles_{NORMAL}"])
-    cell.plot(times, normal, color=ORANGE, linewidth=1.6, zorder=2)
-    cell.plot(times, level, color=BLUE, linewidth=1.6, zorder=3)
-    cell.set_ylim(0, 104)
-    cell.set_yticks([0, 50, 95], ["0", "50", "soglia"])
-    cell.set_ylabel("percentile", fontsize=TICKS)
-    cell.tick_params(labelbottom=False)
-    east = record["cell longitude"]
-    where = f"{east:g}°E" if east >= 0 else f"{-east:g}°W"
-    cell.set_title(f"Cella cerchiata, {record['cell latitude']:g}°N {where}", fontsize=9, loc="left", color=TEXT)
-    gap.axhline(0, color=MUTED, linewidth=0.8)
-    variable, variable_text = VARIABLE_COLOURS.get(record["type"], (MUTED, TEXT))
-    gap.plot(times, data["series_input"], color=variable, linewidth=1.4)
-    reach = max(3.0, float(np.ceil(np.nanmax(np.abs(data["series_input"])))))
-    gap.set_ylim(-reach, 1.4 * reach)  # free room at the top for "nel cluster"
-    gap.set_yticks([-reach, 0, reach], [f"{-reach:g}", "0", f"+{reach:g}"])
-    gap.set_ylabel("scarto", fontsize=TICKS)
-    gap.xaxis.set_major_locator(dates.AutoDateLocator(minticks=3, maxticks=4))
-    gap.xaxis.set_major_formatter(dates.DateFormatter("%d/%m"))
-    gap.tick_params(axis="x", labelrotation=25)
-    for label in gap.get_xticklabels():
-        label.set_horizontalalignment("right")
-    widest = max(bands, key=lambda band: band[1] - band[0])
-    middle = times[widest[0]] + (times[widest[1]] - times[widest[0]]) / 2
-    # The names of the lines at their right end; "nel cluster" over the widest band, at the top of the lower panel.
-    end_labels(cell, ((level[-1], r"$G_\mathrm{n}$", BLUE), (normal[-1], "distanza\ndal normale", ORANGE)))
-    end_labels(gap, ((data["series_input"][-1], TYPES[record["type"]].lower().replace(" ", "\n", 1), variable_text),))
-    # "nel cluster" away from the line of the instant of the maps: beside it when the line falls in the band.
-    inside = times[widest[0]] - half <= moment <= times[widest[1]] + half
-    anchor, shift, side = (moment, -3, "right") if inside and moment >= middle else \
-        ((moment, 3, "left") if inside else (middle, 0, "center"))
-    gap.annotate("nel cluster", (anchor, 1), xycoords=("data", "axes fraction"), xytext=(shift, -1),
-                 textcoords="offset points", fontsize=6.5, color="#3d6fa8", ha=side, va="top", path_effects=HALO, zorder=5)
 
     # The profile of this cluster at the timestamp of the maps, as in Figure 6.12: every cell has its position from the
     # border of the core (negative inside, positive outside, chessboard distance as in check_era5_event_profile.py);
@@ -547,11 +497,16 @@ def case_figure(number, data, coastline):
     normal_map = percentile(data[f"score_{NORMAL}"], data[f"quantiles_{NORMAL}"])
     steps = [k for k in range(-7, 8) if k != 0]
     medians = {}
-    for name, values in ((SCORE, level_map), (NORMAL, normal_map)):
+    maps = {name: percentile(data[f"score_{name}"], data[f"quantiles_{name}"])
+            for name in (SCORE, NORMAL, "change_3h", *SHALLOW_KEYS)}
+    for name, values in maps.items():
         medians[name] = [np.nanmedian(values[mine & (position == k)]) if (mine & (position == k)).sum() >= 5
                          else np.nan for k in steps]
-    for name, colour, width in ((NORMAL, ORANGE, 1.6), (SCORE, BLUE, 2.2)):
-        profile.plot(steps, medians[name], color=colour, linewidth=width, marker="o", markersize=2.5)
+    shallow = np.array([medians[name] for name in SHALLOW_KEYS])
+    profile.fill_between(steps, np.nanmin(shallow, axis=0), np.nanmax(shallow, axis=0), color=SHALLOW_GREY, alpha=0.55,
+                         linewidth=0, zorder=1)
+    for name, colour, width in (("change_3h", GREEN, 1.4), (NORMAL, ORANGE, 1.6), (SCORE, BLUE, 2.2)):
+        profile.plot(steps, medians[name], color=colour, linewidth=width, marker="o", markersize=2.5, zorder=3)
     profile.axhline(50, color=MUTED, linewidth=0.8, linestyle="--")
     profile.axhline(95, color=MUTED, linewidth=0.8, linestyle=":")
     profile.axvline(0, color=TEXT, linewidth=0.8)
@@ -567,9 +522,98 @@ def case_figure(number, data, coastline):
     clean(profile, "top", "right")
     last = lambda values: next((v for v in reversed(values) if np.isfinite(v)), 50.0)
     end_labels(profile, ((last(medians[SCORE]), r"$G_\mathrm{n}$", BLUE),
-                         (last(medians[NORMAL]), "distanza\ndal normale", ORANGE)))
-    save_panels(figure, [[left, left_bar.ax], [right, right_bar.ax], [cell, gap], [profile]], HERE,
-                f"era5_caso_{number:02d}", dpi=300)
+                         (last(medians[NORMAL]), "distanza\ndal normale", ORANGE),
+                         (last(medians["change_3h"]), "variazione\nin tre ore", GREEN_TEXT),
+                         (float(np.nanmean([last(medians[name]) for name in SHALLOW_KEYS])), "sei modelli\nshallow",
+                          "#8a8880")))
+    save_panels(figure, [[left, left_bar.ax], [right, right_bar.ax], [profile]], HERE, f"era5_caso_{number:02d}",
+                letters="abd", dpi=300)
+    plt.close(figure)
+    case_series_figure(number, data)
+
+
+def case_series_figure(number, data):
+    """The circled cell in time, full width, on the days around the maps: above the percentiles of the scores, which
+    read all the variables of the cell, with the flagged zone shaded; below the scarto of the variable of the type
+    alone. The light blue bands are the timestamps in which the cell is in the cluster."""
+    record = json.loads(str(data["case"]))
+    moment = pd.Timestamp(record["timestamp"])
+    times = pd.DatetimeIndex(data["series_times"])
+    figure = plt.figure(figsize=size(0.48), constrained_layout=True)
+    rows = figure.add_gridspec(2, 1, height_ratios=(1.9, 1))
+    scores = figure.add_subplot(rows[0])
+    alone = figure.add_subplot(rows[1], sharex=scores)
+    flagged = data["series_core"]
+    bands = list(zip(np.nonzero(np.diff(np.r_[0, flagged.astype(int)]) == 1)[0],
+                     np.nonzero(np.diff(np.r_[flagged.astype(int), 0]) == -1)[0]))
+    half = pd.Timedelta(hours=1.5)  # a band of one timestamp would have no width
+    for axis in (scores, alone):
+        for begin, end in bands:
+            axis.axvspan(times[begin] - half, times[end] + half, color=BAND, linewidth=0, zorder=0)
+        axis.axvline(moment, color=TEXT, linewidth=0.9, zorder=5)
+        axis.margins(x=0)
+        axis.tick_params(labelsize=TICKS, length=2)
+        clean(axis, "top", "right")
+
+    # Above: the scores, as percentiles of their validation values; above 95 the cell is flagged.
+    scores.axhspan(95, 100, color=FLAGGED, linewidth=0, zorder=0.5)
+    scores.axhline(95, color="#c8553d", linewidth=0.7, linestyle="--", zorder=0.6)
+    scores.text(0.006, 97.5, "segnalato", transform=scores.get_yaxis_transform(), fontsize=TICKS - 1, color="#b3462a",
+                va="center", zorder=6, path_effects=HALO)
+    series = {name: percentile(data[f"series_{name}"], data[f"quantiles_{name}"])
+              for name in (SCORE, NORMAL, "change_3h", *SHALLOW_KEYS)}
+    shallow = np.array([series[name] for name in SHALLOW_KEYS])
+    scores.fill_between(times, shallow.min(axis=0), shallow.max(axis=0), color=SHALLOW_GREY, alpha=0.55, linewidth=0,
+                        zorder=1)
+    for name, colour, width in (("change_3h", GREEN, 1.2), (NORMAL, ORANGE, 1.5), (SCORE, BLUE, 2.0)):
+        scores.plot(times, series[name], color=colour, linewidth=width, zorder=3)
+    scores.set_ylim(0, 100)
+    scores.set_yticks([0, 50, 95], ["0", "50", "95"])
+    scores.set_ylabel("percentile\ndello score", fontsize=TICKS)
+    scores.tick_params(labelbottom=False)
+    scores.set_title("Score della cella (tutte le variabili)", fontsize=8.5, loc="left", color=TEXT, pad=7)
+    # A legend beside the panel: four names at the end of lines that cross each other would overlap.
+    handles = [plt.Line2D([], [], color=BLUE, linewidth=2.0), plt.Line2D([], [], color=ORANGE, linewidth=1.5),
+               plt.Line2D([], [], color=GREEN, linewidth=1.2),
+               plt.Rectangle((0, 0), 1, 1, color=SHALLOW_GREY, alpha=0.55, linewidth=0)]
+    scores.legend(handles, [r"$G_\mathrm{n}$", "distanza dal normale", "variazione in tre ore", "sei modelli shallow"],
+                  loc="center left", bbox_to_anchor=(1.01, 0.5), frameon=False, fontsize=6.5, handlelength=1.4,
+                  labelspacing=0.5)
+
+    # Below: the variable of the type alone, in standard deviations from its seasonal normal.
+    variable, variable_text = VARIABLE_COLOURS.get(record["type"], (MUTED, TEXT))
+    alone.axhline(0, color=MUTED, linewidth=0.8)
+    alone.annotate("normale", (1, 0), xycoords=("axes fraction", "data"), xytext=(3, 0), textcoords="offset points",
+                   fontsize=6.5, color=MUTED, ha="left", va="center", annotation_clip=False)
+    alone.plot(times, data["series_input"], color=variable, linewidth=1.5, zorder=3)
+    reach = max(3.0, float(np.ceil(np.nanmax(np.abs(data["series_input"])))))
+    alone.set_ylim(-reach, reach)
+    alone.set_yticks([-reach, 0, reach], [f"{-reach:g}", "0", f"+{reach:g}"])
+    alone.set_ylabel("scarto stand.\n(dev. std.)", fontsize=TICKS)
+    # In ERA5 the vertical velocity is in Pa/s, negative when the air rises.
+    note = " (negativo: l'aria sale più del solito)" if record["type"] == "vertical_velocity" else ""
+    alone.set_title(f"{TYPES[record['type']]} da sola: scarto standardizzato{note}", fontsize=8, loc="left", color=TEXT,
+                    pad=7)
+    alone.annotate("istante delle mappe", (moment, 0.0), xycoords=("data", "axes fraction"), xytext=(3, 2),
+                   textcoords="offset points", fontsize=TICKS - 1, color=TEXT, ha="left", va="bottom",
+                   path_effects=HALO, zorder=6)
+    widest = max(bands, key=lambda band: band[1] - band[0])
+    middle = times[widest[0]] + (times[widest[1]] - times[widest[0]]) / 2
+    inside = times[widest[0]] - half <= moment <= times[widest[1]] + half
+    anchor, shift, side = (moment, -3, "right") if inside and moment >= middle else \
+        ((moment, 3, "left") if inside else (middle, 0, "center"))
+    alone.annotate("la cella è nel cluster", (anchor, 1), xycoords=("data", "axes fraction"), xytext=(shift, -1),
+                   textcoords="offset points", fontsize=6.5, color="#3d6fa8", ha=side, va="top", path_effects=HALO,
+                   zorder=6)
+    alone.xaxis.set_major_locator(dates.DayLocator())
+    alone.xaxis.set_major_formatter(lambda value, _: f"{dates.num2date(value).day} "
+                                                     f"{MONTHS_SHORT[dates.num2date(value).month - 1]}")
+    alone.set_xlabel(f"{moment.year}, tacche a mezzanotte UTC", fontsize=TICKS)
+    east = record["cell longitude"]
+    where = f"{east:g}°E" if east >= 0 else f"{-east:g}°W"
+    figure.suptitle(f"La cella cerchiata nel tempo ({record['cell latitude']:g}°N, {where})", x=0.01, ha="left",
+                    fontsize=9, color=TEXT)
+    figure.savefig(HERE / f"era5_caso_{number:02d}_c.pdf")
     plt.close(figure)
 
 

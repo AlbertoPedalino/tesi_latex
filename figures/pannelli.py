@@ -6,7 +6,7 @@ import pathlib
 from matplotlib.transforms import Bbox
 
 
-def save_panels(figure, groups, folder, stem, pad=0.04, **options):
+def save_panels(figure, groups, folder, stem, pad=0.04, letters="abcdefgh", **options):
     """groups: one list of artists per panel (its axes, colour bar, legend...), in the order of the letters."""
     figure.canvas.draw()
     # Freeze the layout: the constrained layout depends a little on the dpi, and savefig draws again at another dpi,
@@ -16,7 +16,7 @@ def save_panels(figure, groups, folder, stem, pad=0.04, **options):
     renderer = figure.canvas.get_renderer()
     inches = figure.dpi_scale_trans.inverted()
     names = []
-    for letter, group in zip("abcdefgh", groups):
+    for letter, group in zip(letters, groups):
         boxes = [artist.get_tightbbox(renderer) for artist in group]
         for artist in group:  # the axis labels whole: the tight box of an axes may trim a label wider than the axes
             if hasattr(artist, "xaxis"):

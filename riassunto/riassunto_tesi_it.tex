@@ -46,7 +46,7 @@ Il generatore stima l'intero campo in un solo passaggio e unisce cella per cella
 
 \subsection{Normalizzazione stagionale e pesi delle variabili}
 
-Ogni variabile è standardizzata con media e deviazione standard della stessa cella e ora, stimate sugli anni di addestramento nei 15 giorni prima e dopo ogni giorno dell'anno: il modello legge così lo scarto dal valore abituale, non il ciclo stagionale e giornaliero. Con il solo min--max dell'articolo, la copertura nuvolosa produrrebbe l'84\% della variazione su 24 ore di tutte le variabili e dominerebbe l'errore. Nell'errore di ricostruzione, inoltre, ogni variabile pesa in proporzione inversa alla sua variazione abituale su 24 ore, così che ciascuna sia misurata in rapporto a quanto cambia.
+Ogni variabile è standardizzata con media e deviazione standard della stessa cella e ora, stimate sugli anni di addestramento nei 15 giorni prima e dopo ogni giorno dell'anno: il modello legge così lo scarto standardizzato, cioè di quante deviazioni standard ogni valore si allontana dal suo normale, non il ciclo stagionale e giornaliero. Con il solo min--max dell'articolo, la copertura nuvolosa produrrebbe l'84\% della variazione su 24 ore di tutte le variabili e dominerebbe l'errore. Nell'errore di ricostruzione, inoltre, ogni variabile pesa in proporzione inversa alla sua variazione abituale su 24 ore, così che ciascuna sia misurata in rapporto a quanto cambia.
 
 \subsection{Score del rilevatore e soglia}
 
