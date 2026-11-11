@@ -177,7 +177,7 @@ Un valore, cioè una coppia cella--istante, è detto \emph{escluso} in base a du
 % 5.3%). Pesi delle due distanze: quelli dello sweep attuale (variazione su 24
 % ore), indicazione dell'autore del 16 ottobre 2026.
 
-I valori esclusi entrano in modo diverso nelle quantità stimate sugli anni di validazione (Tabella~\ref{tab:valori-esclusi}). Come storia recente da cui il modello parte sono sostituiti dal normale stagionale, cioè dallo scarto standardizzato nullo, solo per la misura con cui si confrontano le configurazioni e per il calcolo degli score sugli anni di validazione eseguito al termine dell'addestramento, da cui vengono gli estremi dello score combinato; climatologia e soglia usano la storia reale, come sugli anni di test (Sezione~\ref{sec:normalizzazione-climatologica-score}).
+I valori esclusi entrano in modo diverso nelle quantità stimate sugli anni di validazione (Tabella~\ref{tab:valori-esclusi}). Nella storia recente che il modello legge possono essere sostituiti dal normale stagionale, cioè dallo scarto standardizzato nullo: è la \emph{storia ripulita}. Si usa in due casi: la misura con cui si confrontano le configurazioni e il calcolo degli score sugli anni di validazione eseguito al termine dell'addestramento, da cui vengono gli estremi dello score combinato. Climatologia e soglia usano invece la storia reale, come sugli anni di test (Sezione~\ref{sec:normalizzazione-climatologica-score}).
 
 \begin{table}[htbp]
     \centering
@@ -212,7 +212,8 @@ Durante il calcolo degli score il modello è in modalità di valutazione, con l'
 % Fonte J=20: Monaco et al. 2025, Computers & Geosciences 205, p. 7 ("We compute all metrics
 % using 20 sampled predictions for MCD U-Net"). Anche Kong et al. 2020 (SDE-Net), appendice,
 % compito di regressione: "20 posterior samples are used for MC-dropout ... at test time".
-Nell'estrazione $j$ il generatore ricostruisce il campo con una propria maschera di dropout, e il discriminatore, con una propria maschera, la stessa per i due giudizi, giudica l'osservazione e la ricostruzione del generatore a dropout spento, come in addestramento.
+Nell'estrazione $j$ il generatore ricostruisce il campo con una propria maschera di dropout, e da questa ricostruzione si calcola G. Al discriminatore va invece la ricostruzione a dropout spento, come in addestramento, uguale in tutte le estrazioni: con una propria maschera, la stessa per i due giudizi, il discriminatore giudica l'osservazione e questa ricostruzione.
+% Verificato in physiq_pv/anomaly_detection/stgan/model.py, score_draws: errori dalla ricostruzione con dropout di ogni estrazione; D sulla ricostruzione 'clean' (dropout_disabled) e sull'osservazione con le stesse maschere di D (discriminator_input_dropout falso, valore predefinito).
 
 Per la coppia cella--istante $(t,n)$ e l'estrazione $j$, la ricostruzione $\hat{x}^{(j)}$ dà l'errore di ricostruzione
 \begin{equation}
