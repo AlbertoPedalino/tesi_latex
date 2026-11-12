@@ -15,7 +15,7 @@
     % ---- (a) generatore ------------------------------------------------------
     \node[anchor=west,font=\small\bfseries] at (-1.45,2.6) {(a) Generatore};
     \node[ingresso] (gr) at (0,1.6) {Storia recente\\\scriptsize $R=16$ campi};
-    \node[ingresso] (gt) at (0,0) {Trend per cella\\\scriptsize 56 passi};
+    \node[ingresso] (gt) at (0,0) {Trend per cella\\\scriptsize 56 istanti};
     \node[ingresso] (gc) at (0,-1.6) {Codifica temporale\\\scriptsize 4 valori per cella};
     \node[modulo] (gconv) at (3.3,1.6) {ConvGRU\\\scriptsize 2 strati, 32 canali};
     \node[modulo] (glstm) at (3.3,0) {LSTM\\\scriptsize 2 strati, 64};
@@ -40,7 +40,7 @@
         \node[unione,minimum height=2.8cm] (dcat) at (6.6,0) {};
         \node[rotate=90,font=\scriptsize] at (dcat) {concatenazione};
         \node[blocco,text width=1.7cm] (dhid) at (7.95,0) {Strato\\nascosto\\\scriptsize ReLU};
-        \node[blocco,text width=1.6cm] (dout) at (11.4,0) {Sigmoide\\\scriptsize un valore\\per cella};
+        \node[blocco,text width=1.6cm] (dout) at (11.4,0) {Sigmoide\\\scriptsize un giudizio\\per cella};
         \draw[freccia] (dh) -- (dconv);
         \draw[freccia] (dc) -- (dproj);
         \draw[freccia] (dconv) -- node[drop] {dropout} (dconv-|dcat.west);

@@ -117,6 +117,16 @@ RULES = [
     (r'tipo dominante', '"tipo principale"', ()),
     (r'\bencoder\b(?!--decoder)|\bclipping\b', 'termine inglese non definito', ('stato_arte.tex', 'risultati.tex')),
     (r'(?<!celle e )\b15 (variabili|giorni)\b|\b3 ore\b', '"quindici variabili", "quindici giorni", "tre ore"', ()),
+    (r'quale dei due (score )?usare|e quale delle due usare', 'la domanda della tesi è quella dell\'abstract (tre domande)',
+     ()),
+    (r'storia reale|& reale \\\\|quella reale', '"storia non ripulita"', ()),
+    (r'\d+ passi\b|\$[RL]\$ passi|R=16\$ passi|al passo \$s\$|a ogni passo|passi (temporali|successivi)|nei passi|'
+     r'[Nn]el passo del', '"passo" solo per la griglia; i passi nel tempo sono "istanti"', ()),
+    (r'stima da parte del generatore', '"ricostruzione"', ()),
+    (r'10\^\{10\}\$ valori|un valore per cella|valore fra 0 \(reale\)|valori mascherati|valori predefiniti|'
+     r'indica valori oltre|un valore fissato|valore unico per osservazione|ogni valore si allontana|il valore dopo tutti|'
+     r'il valore è standardizzato|il valore è fissato|valore ordinario preso|calcolata sui valori, e|dà il valore usato',
+     '"valore" è una coppia cella–istante; gli altri valori vanno qualificati', ()),
 ]
 RULES = [(re.compile(p, re.I), what, allowed) for p, what, allowed in RULES]
 

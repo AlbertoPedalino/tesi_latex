@@ -48,7 +48,7 @@ La configurazione del rilevatore è fissata, a eccezione di quattro iperparametr
         Unità del campione e batch & Campo intero, un istante per batch & \ref{sec:stgan-convgru} \\
         Generatore & ConvGRU a due strati da 32 canali, kernel $3\times3$; LSTM del trend a due strati da 64 & \ref{sec:stgan-convgru} \\
         Discriminatore & Patch $3\times3$; ConvGRU a due strati da 32 canali; strato nascosto da 64 & \ref{sec:stgan-discriminatore} \\
-        Storia recente e trend & 16 e 56 passi, cioè 48 e 168 ore & \ref{sec:ingresso-normalizzazione-era5} \\
+        Storia recente e trend & 16 e 56 istanti, cioè 48 e 168 ore & \ref{sec:ingresso-normalizzazione-era5} \\
         Codifica temporale & Ora solare locale e posizione nell'anno, per cella & \ref{sec:ingresso-normalizzazione-era5} \\
         Ingresso del modello & Rispetto al normale di cella, giorno e ora; tendenza lineare tolta a tre variabili; poi min--max & \ref{sec:ingresso-normalizzazione-era5} \\
         Pesi delle variabili & Inversi della variazione quadratica media su 24 ore & \ref{sec:pesi-variabili-ricostruzione} \\
@@ -95,7 +95,7 @@ La configurazione del rilevatore è fissata, a eccezione di quattro iperparametr
 \section{Protocollo di valutazione}
 \label{sec:exp-protocollo}
 
-\paragraph{Che cosa si calcola.} Gli score della configurazione scelta sono calcolati sugli anni di validazione 2000--2004 e di test 2005--2025, su tutti gli istanti e tutte le celle: $14616\times10611$ coppie cella--istante sugli anni di validazione e $61360\times10611$ sugli anni di test, ciascuna con le 20 estrazioni Monte Carlo della Sezione~\ref{sec:score-dropout-montecarlo}. In entrambi i periodi la storia recente è quella reale, compresi i valori esclusi, e per i primi istanti viene dal periodo precedente (Sezione~\ref{sec:dati-split}).
+\paragraph{Che cosa si calcola.} Gli score della configurazione scelta sono calcolati sugli anni di validazione 2000--2004 e di test 2005--2025, su tutti gli istanti e tutte le celle: $14616\times10611$ coppie cella--istante sugli anni di validazione e $61360\times10611$ sugli anni di test, ciascuna con le 20 estrazioni Monte Carlo della Sezione~\ref{sec:score-dropout-montecarlo}. In entrambi i periodi la storia recente non è ripulita e comprende i valori esclusi, e per i primi istanti viene dal periodo precedente (Sezione~\ref{sec:dati-split}).
 
 \paragraph{Che cosa si stima sugli anni di validazione.} Le quantità che descrivono il comportamento abituale degli score sono stimate sugli anni di validazione e restano fisse per gli anni di test: la climatologia degli score (Sezione~\ref{sec:normalizzazione-climatologica-score}) e la soglia. La soglia di uno score è il 95-esimo percentile dello stesso score sugli anni di validazione,
 \begin{equation}
