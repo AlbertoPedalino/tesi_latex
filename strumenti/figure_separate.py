@@ -33,23 +33,29 @@ def first_sentence(text):
     return text
 
 
-def block(stem, label, rows, captions, natural=False, shrink=1.0):
-    """Images side by side aligned at their bottom edge, so that their captions start at the same height."""
-    centimetres = {letter: width_cm(f'{stem}_{letter}') for row in rows if row != '|' for letter in row}
-    widths = {letter: cm / DRAWN_CM for letter, cm in centimetres.items()}
-    scale = shrink * min(1.0, min(0.97 / sum(widths[l] for l in row) for row in rows if row != '|'))
+def block(stem, label, rows, captions, names=None):
+    """Two images in a row share one scale, so that their text has the same size, and fill 0.96 of the text width
+    (about 0.48 each), aligned at their bottom edge so that their captions start at the same height; an image alone
+    keeps the size at which it is drawn. The figure scripts draw every image of a
+    pair at about half the text width, so that the text inside the figures has the same size everywhere."""
+    names = names or {}
+    image = lambda letter: names.get(letter, f'{stem}_{letter}')
     lines = ['\\begin{figure}[htbp]', '    \\centering', '    \\phantomcaption', f'    \\label{{{label}}}']
     for number, row in enumerate(rows):
         if row == '|':  # the rest on the next float, as the same figure
             lines += ['\\end{figure}', '', '\\begin{figure}[htbp]', '    \\ContinuedFloat', '    \\centering']
             continue
+        assert len(row) <= 2, 'at most two images in a row'
         parts = []
         for letter in row:
-            width = f'{centimetres[letter]:.2f}cm' if natural else f'{scale * widths[letter]:.3f}\\textwidth'
+            fraction = min(0.97, width_cm(image(letter)) / DRAWN_CM)
+            if len(row) == 2:  # one scale for the pair: the same size of text, about 0.48 each
+                fraction = width_cm(image(letter)) / DRAWN_CM * min(1.1, 0.96 * DRAWN_CM / sum(
+                    width_cm(image(other)) for other in row))
             text = captions[letter]
-            parts.append(f'    \\begin{{subfigure}}[t]{{{width}}}\n'
+            parts.append(f'    \\begin{{subfigure}}[t]{{{fraction:.3f}\\textwidth}}\n'
                          f'        \\centering\n'
-                         f'        \\includegraphics[width=\\linewidth]{{{stem}_{letter}}}\n'
+                         f'        \\includegraphics[width=\\linewidth]{{{image(letter)}}}\n'
                          f'        \\caption[{first_sentence(text)}]{{{text}}}\n'
                          f'        \\label{{{label}-{letter}}}\n'
                          f'    \\end{{subfigure}}')
@@ -75,18 +81,19 @@ def ref(label, letter):
     return f'Figura~\\ref{{{label}-{letter}}}'
 
 
-def case(label, the_variable, moment, place, core, cell):
-    """The four images of an example; the durations and the zones are in the table of the examples."""
+def case(label, the_variable, moment, place, core, cell, note=''):
+    """The three images of an example; the durations and the zones are in the table of the examples."""
     return {
         'a': f"Scarto standardizzato {the_variable} {moment}, con il nucleo del cluster in arancione e la cella seguita "
              f"nel cerchio. {core} {NE}",
         'b': f"$G_{{\\mathrm{{n}}}}$ come percentile {moment}, con il nucleo del cluster in arancione e la cella seguita "
              f"nel cerchio. {NE}",
-        'c': f"Percentile di ogni score nella cella seguita ({place}), in alto, e scarto standardizzato {the_variable} "
-             f"da sola, in basso; in azzurro gli istanti in cui la cella fa parte del cluster. {cell}",
-        'd': f"Percentile mediano di ogni score secondo la distanza in celle dal bordo del cluster, {moment}; fuori dal "
-             f"bordo, solo le celle più vicine a questo nucleo che ad altre segnalazioni.",
+        'c': f"Percentile di ogni score nella cella seguita ({place}), in alto, e scarto standardizzato {the_variable}"
+             f"{note}, in basso; in azzurro gli istanti in cui la cella è nel cluster. {cell}",
     }
+
+
+PROFILE = "percentile mediano di ogni score secondo la distanza in celle dal bordo del cluster"
 
 
 L = {'cicli': 'fig:era5-cicli', 'luogo': 'fig:ris-g-luogo', 'temp': 'fig:ris-d-termini-temporale',
@@ -101,7 +108,7 @@ FIGURES = {
                  r"cambiano da una cella all'altra.",
             'b': r"Ciclo giornaliero della temperatura a due metri e della copertura nuvolosa in Europa settentrionale "
                  r"(blu), Pianura Padana (arancio) e Sahara (verde): media per ora UTC in gennaio (tratteggio) e in "
-                 r"luglio (linea continua). Anni 1980--1999. Il ciclo cambia con il luogo e con la stagione."}, True),
+                 r"luglio (linea continua). Anni 1980--1999. Il ciclo cambia con il luogo e con la stagione."}),
     ],
     'chapters/risultati.tex': [
         ('era5_g_luogo', L['luogo'], ['a', 'b'], {
@@ -131,17 +138,17 @@ FIGURES = {
                  r"tutti i metodi sui cluster di $G_{\mathrm{n}}$, sugli anni di test; " + SHALLOW + r". Tutte le "
                  r"baseline calano allo stesso modo di $G_{\mathrm{n}}$."}),
         ('era5_eventi_profilo_tipi', L['tipi'], ['ab', '|', 'c'], {
-            'a': r"Percentile mediano di $G_{\mathrm{n}}$ secondo la distanza in celle dal bordo del cluster, per ogni "
-                 r"tipo di cluster, sugli anni di test: in colore velocità verticale (rosa), precipitazione (viola), "
-                 r"copertura nuvolosa (grigio scuro) e temperatura a due metri (ocra), in grigio chiaro gli altri "
-                 r"tipi. Le curve di tutti i tipi quasi coincidono.",
+            'a': r"Percentile mediano di $G_{\mathrm{n}}$ secondo la distanza in celle dal bordo del cluster, per tipo "
+                 r"di cluster, sugli anni di test: velocità verticale (rosa), precipitazione (viola), copertura "
+                 r"nuvolosa (grigio scuro), temperatura a due metri (ocra), altri tipi in grigio chiaro. Le curve "
+                 r"quasi coincidono.",
             'b': r"Scarto standardizzato mediano, in valore assoluto, della variabile del tipo, secondo la distanza in "
                  r"celle dal bordo del cluster, per ogni tipo di cluster, sugli anni di test. Alcune variabili tornano "
                  r"ai livelli di fondo entro due celle, altre restano a lungo lontane dal normale.",
             'c': r"Percentile mediano di ogni score a due celle fuori dal bordo dei propri cluster, un pallino per tipo "
                  r"di cluster, sugli anni di test; il segmento va dal tipo più basso al più alto e il numero a destra è "
                  r"la loro differenza. $G_{\mathrm{n}}$ è fra i metodi più uniformi."}),
-        ('era5_dropout', L['drop'], ['abc'], {
+        ('era5_dropout', L['drop'], ['ab', 'c'], {
             'a': r"Dispersione media divisa per G medio, per fascia di percentile di G, sugli anni di test. In "
                  r"proporzione a G la dispersione è quasi costante, e cala solo sui valori di G più alti.",
             'b': r"Mediana del rapporto fra dispersione e G secondo la distanza in celle dal bordo del cluster di "
@@ -155,34 +162,39 @@ FIGURES = {
             'a': r"Dispersione di G fra le 20 estrazioni in ogni cella, in media sugli anni di test. È più alta a sud e "
                  r"lungo il margine del dominio. " + NE,
             'b': r"Rapporto medio fra dispersione e G in ogni cella, sugli anni di test. Varia poco nel dominio. " + NE}),
-        ('era5_caso_00', 'fig:ris-caso-velocita', ['ab', 'c', '|', 'd'], case(
+        ('era5_caso_00', 'fig:ris-caso-velocita', ['ab', 'c'], case(
             'fig:ris-caso-velocita', 'della velocità verticale', 'il 23 novembre 2017 alle 00~UTC',
             r"$58.5^\circ$N, $8.5^\circ$E",
             "Il nucleo è una fascia stretta in cui la velocità verticale è per lo più sotto il normale.",
-            r"$G_{\mathrm{n}}$ resta oltre la soglia, salvo una breve pausa, per circa un giorno e mezzo, e la distanza "
-            r"dal normale sale e scende insieme a $G_{\mathrm{n}}$.")),
-        ('era5_caso_01', 'fig:ris-caso-precipitazione', ['ab', 'c', '|', 'd'], case(
+            r"$G_{\mathrm{n}}$ resta oltre la soglia per circa un giorno e mezzo, e la distanza dal normale sale e "
+            r"scende con esso.", note=" (negativo se l'aria sale)")),
+        ('era5_caso_01', 'fig:ris-caso-precipitazione', ['ab', 'c'], case(
             'fig:ris-caso-precipitazione', 'della precipitazione', 'il 19 maggio 2006 alle 03~UTC',
             r"$56.5^\circ$N, $23^\circ$E",
             "Il nucleo è diviso in più parti, in cui la precipitazione è quasi ovunque sopra il normale.",
-            r"La distanza dal normale è alta già nei giorni prima, e $G_{\mathrm{n}}$ supera la soglia solo quando "
-            r"arriva la precipitazione.")),
-        ('era5_caso_02', 'fig:ris-caso-nuvole', ['ab', 'c', '|', 'd'], case(
+            r"La distanza dal normale è alta già nei giorni prima; $G_{\mathrm{n}}$ supera la soglia solo con la "
+            r"precipitazione.")),
+        ('era5_caso_02', 'fig:ris-caso-nuvole', ['ab', 'c'], case(
             'fig:ris-caso-nuvole', 'della copertura nuvolosa', 'il 15 giugno 2024 alle 12~UTC',
             r"$23.5^\circ$N, $13^\circ$W",
             "Il nucleo è una fascia stretta sull'Africa nord-occidentale in cui la copertura nuvolosa è quasi ovunque "
             "sopra il normale.",
-            r"$G_{\mathrm{n}}$ e la distanza dal normale salgono e scendono insieme, e $G_{\mathrm{n}}$ resta oltre la "
-            r"soglia per dodici ore.")),
+            r"$G_{\mathrm{n}}$ e la distanza dal normale salgono e scendono insieme.")),
+        ('era5_caso', 'fig:ris-casi-profili', ['ab', 'c'], {
+            'a': r"Velocità verticale, 23 novembre 2017 alle 00~UTC: " + PROFILE + r". $G_{\mathrm{n}}$ cala "
+                 r"gradualmente.",
+            'b': r"Precipitazione, 19 maggio 2006 alle 03~UTC: " + PROFILE + r". $G_{\mathrm{n}}$ cala gradualmente.",
+            'c': r"Copertura nuvolosa, 15 giugno 2024 alle 12~UTC: " + PROFILE + r". La distanza dal normale cala più in "
+                 r"fretta di $G_{\mathrm{n}}$."},
+         {'a': 'era5_caso_00_d', 'b': 'era5_caso_01_d', 'c': 'era5_caso_02_d'}),
     ],
 }
 
 for name, figures in FIGURES.items():
     path = ROOT / name
     text = path.read_text(encoding='utf-8').replace('\r\n', '\n')
-    for stem, label, rows, captions, *natural in figures:
-        shrink = 1.0  # four images and four captions on one page
-        text = replace_figure(text, label, block(stem, label, rows, captions, bool(natural and natural[0]), shrink))
+    for stem, label, rows, captions, *names in figures:
+        text = replace_figure(text, label, block(stem, label, rows, captions, names[0] if names else None))
     path.write_text(text, encoding='utf-8', newline='\n')
 
 tesi = ROOT / 'tesi.tex'

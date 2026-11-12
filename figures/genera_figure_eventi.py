@@ -399,7 +399,8 @@ def types_spread_figure():
 def dropout_figure():
     """The dispersion in proportion to the error: by size of the error, across the events, at equal error."""
     data = json.loads((HERE / "dati" / "era5_dropout.json").read_text(encoding="utf-8"))
-    figure, (bands, across, classes) = plt.subplots(1, 3, figsize=size(0.5), constrained_layout=True, width_ratios=(1.3, 1.2, 0.95))
+    width, height = size(0.42)
+    figure, (bands, across, classes) = plt.subplots(1, 3, figsize=(1.5 * width, height), constrained_layout=True)
     spaced(figure, 0.12)
     numbers = data["ratio by band of the raw error"]
     place = np.arange(len(numbers["band"]))
@@ -506,7 +507,7 @@ def case_figure(number, data, coastline):
     left_bar = figure.colorbar(mesh, ax=left, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, extend="both")
     left_bar.set_label(f"{TYPES[record['type']]}: scarto standardizzato\n(deviazioni standard dal normale)", fontsize=TICKS)
     left_bar.ax.tick_params(labelsize=TICKS)
-    mesh = draw_map(right, grid, percentile(data[f"score_{SCORE}"], data[f"quantiles_{SCORE}"]), coastline, left=False,
+    mesh = draw_map(right, grid, percentile(data[f"score_{SCORE}"], data[f"quantiles_{SCORE}"]), coastline, left=True,
                     cmap="viridis", vmin=0, vmax=100)
     right_bar = figure.colorbar(mesh, ax=right, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30,
                                 ticks=[0, 25, 50, 75, 95])
@@ -611,9 +612,8 @@ def case_series_figure(number, data):
         scores.plot(times, series[name], color=colour, linewidth=width, zorder=3)
     scores.set_ylim(0, 100)
     scores.set_yticks([0, 50, 95], ["0", "50", "95"])
-    scores.set_ylabel("percentile\ndello score", fontsize=TICKS)
+    scores.set_ylabel("percentile dello score\n(tutte le variabili)", fontsize=TICKS)
     scores.tick_params(labelbottom=False)
-    scores.set_title("Score della cella (tutte le variabili)", fontsize=8.5, loc="left", color=TEXT, pad=7)
     # A legend beside the panel: four names at the end of lines that cross each other would overlap.
     handles = [plt.Line2D([], [], color=BLUE, linewidth=2.0), plt.Line2D([], [], color=ORANGE, linewidth=1.5),
                plt.Line2D([], [], color=GREEN, linewidth=1.2),
@@ -631,11 +631,7 @@ def case_series_figure(number, data):
     reach = max(3.0, float(np.ceil(np.nanmax(np.abs(data["series_input"])))))
     alone.set_ylim(-reach, reach)
     alone.set_yticks([-reach, 0, reach], [f"{-reach:g}", "0", f"+{reach:g}"])
-    alone.set_ylabel("deviazioni\nstandard", fontsize=TICKS)
-    # In ERA5 the vertical velocity is in Pa/s, negative when the air rises.
-    note = " (negativo: l'aria sale più del solito)" if record["type"] == "vertical_velocity" else ""
-    alone.set_title(f"{TYPES[record['type']]} da sola: scarto standardizzato{note}", fontsize=8, loc="left", color=TEXT,
-                    pad=7)
+    alone.set_ylabel(f"{TYPES[record['type']].lower()}:\nscarto standardizzato", fontsize=TICKS)
     alone.annotate("istante delle mappe", (moment, 0.0), xycoords=("data", "axes fraction"), xytext=(3, 2),
                    textcoords="offset points", fontsize=TICKS - 1, color=TEXT, ha="left", va="bottom",
                    path_effects=HALO, zorder=6)

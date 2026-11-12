@@ -13,8 +13,9 @@ The glossary (one term per concept; the rules forbid the variants found while wr
   the two "giudizi" of the discriminator; G and D together: "componenti"; their sum: "score combinato".
 - The output of the generator: "ricostruzione". The draws of the Monte Carlo dropout: "estrazioni"; their standard
   deviation: "dispersione"; dispersione divided by G: "rapporto". n_D:n_G: "aggiornamenti D:G".
-- "valore" = cell-instant pair ("coppia cella--istante"); "valore segnalato", "segnalazione"; "cluster (di
-  segnalazioni)"; zones "nucleo", "contorno", "zona lontana"; "bordo del cluster"; "margine del dominio".
+- "valore" = cell-instant pair ("coppia cella--istante"); "valore segnalato", "segnalazione"; "segnalazioni
+  esclusive" (not flagged by any other method); "cella seguita" (examples of 6.7.1); "cluster (di segnalazioni)";
+  zones "nucleo", "contorno", "zona lontana"; "bordo del cluster"; "margine del dominio".
 - "scarto standardizzato" (Section 4.3); "percentuale"; "anni di addestramento / di validazione / di test";
   "storia ripulita"; "anomalia meteorologica" only for real phenomena; short names of the variables after Tab. 3.1.
 Words of the article (STGAN's "campo generato", "errore di previsione") may appear where the article is described.
@@ -55,6 +56,8 @@ RULES = [
     (r'umidità del primo strato|precipitazione totale|copertura nuvolosa totale|altezza dello strato limite',
      'nomi lunghi delle variabili dopo la Tab. 3.1', ('dati.tex',)),
     (r'A parità di errore|percentile dell\'errore|Secondo l\'errore', 'nella 6.8 G si chiama G', ()),
+    (r'cell[ae] cerchiat', 'negli esempi della 6.7.1 è la "cella seguita" (nel cerchio sulle mappe)', ()),
+    (r'segnalazioni (del solo|di nessun altro)','"segnalazioni esclusive" (definite nella 6.6)', ()),
 ]
 RULES = [(re.compile(p, re.I), what, allowed) for p, what, allowed in RULES]
 

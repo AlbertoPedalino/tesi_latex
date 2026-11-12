@@ -82,8 +82,8 @@ def cycles_figure(data):
     part = data["cycles"]
     units = {"2m_temperature": ("Temperatura (°C)", lambda v: np.asarray(v) - 273.15, (-np.inf, np.inf)),
              "total_cloud_cover": ("Copertura\nnuvolosa (0–1)", np.asarray, (0.0, 1.0))}
-    figure, axes = plt.subplots(2, 2, figsize=(11.8 / 2.54, 8.4 / 2.54), sharex="col",
-                                gridspec_kw={"width_ratios": [1.5, 1]})
+    figure, axes = plt.subplots(2, 2, figsize=(14.0 / 2.54, 8.4 / 2.54), sharex="col",
+                                gridspec_kw={"width_ratios": [1, 1]})
     for row, feature in enumerate(part["features"]):
         label, convert, (lowest, highest) = units[feature]
         for color, (cell, values) in zip(CELL_COLORS, part["cells"].items()):

@@ -110,7 +110,7 @@ def main():
         axis.annotate("in corso", coords[np.flatnonzero(running)[0]], xytext=(8, 0), textcoords="offset points",
                       fontsize=7.5, color=TEXT, va="center")
     axis.set_xlabel(f"prima componente principale ({100 * variance[0]:.0f}\\%)".replace("\\%", "%"), fontsize=TICKS)
-    axis.set_ylabel(f"seconda componente ({100 * variance[1]:.0f}%)", fontsize=TICKS)
+    axis.set_ylabel(f"seconda componente principale ({100 * variance[1]:.0f}%)", fontsize=TICKS)
     axis.tick_params(labelsize=TICKS, length=2)
     axis.set_aspect("equal", adjustable="datalim")
     for side in ("top", "right"):

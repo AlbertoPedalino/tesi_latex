@@ -172,11 +172,7 @@ Gli anni di validazione servono a confrontare configurazioni e a stimare le quan
 
 Un valore, cioè una coppia cella--istante, è detto \emph{escluso} in base a due distanze calcolate sugli scarti standardizzati della Sezione~\ref{sec:ingresso-normalizzazione-era5}. La prima è la \emph{distanza dal normale}: la media sulle variabili del quadrato degli scarti standardizzati, con i pesi delle variabili della Sezione~\ref{sec:pesi-variabili-ricostruzione}, che dice quanto il valore è lontano dal normale della propria cella, giorno e ora. La seconda è la variazione in tre ore: la stessa media pesata sul quadrato della differenza rispetto a tre ore prima, che coglie i cambiamenti rapidi anche quando il valore resta vicino al normale.
 
-\paragraph{Il criterio.}
-
 \paragraph{Il criterio.} Ciascuna distanza è standardizzata con la media e la deviazione standard della stessa cella, dello stesso mese e della stessa ora negli anni di addestramento, così che un luogo o una stagione più variabili non concentrino i valori esclusi. Un valore è escluso quando almeno una delle due distanze standardizzate supera il livello oltrepassato dal 5\% dei valori di addestramento. Medie, deviazioni standard e livelli sono stimati sui soli anni di addestramento; la validazione riceve soltanto l'indicazione di quali valori sono esclusi.
-
-\paragraph{Quanti valori esclude.}
 
 \paragraph{Quanti valori esclude.} La stessa indicazione è calcolata sugli anni di addestramento, dove esclude l'8.62\% dei valori e serve a scegliere i campi della misura di scelta della configurazione (Sezione~\ref{sec:distanza-mmd}). Il criterio è approssimato: non pretende di individuare tutte le anomalie meteorologiche, ma di togliere le più evidenti, così che le misure dipendano soprattutto dal tempo ordinario. La soglia del 5\% è una scelta, ed esclude il 9.75\% dei valori di validazione: più del 5\%, perché basta che una delle due distanze superi il proprio livello.
 % Fonte: physiq_pv/anomaly_detection/stgan/normal_masks.py. Quote misurate alla
