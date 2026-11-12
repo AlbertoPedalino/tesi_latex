@@ -190,12 +190,11 @@ def terms_temporal_figure(data, coastline):
     figure, axes = plt.subplots(1, 2, figsize=size(0.5), constrained_layout=True)
     groups = []
     for column, (axis, key, title) in enumerate(zip(axes, ("temporal_g_real", "temporal_g_generated"),
-                                                    (f"Spearman fra G e {REAL}", f"Spearman fra G e {GENERATED}"))):
+                                                    (REAL, GENERATED))):
         mesh = draw_map(axis, data, data[key], coastline, left=column == 0, cmap="RdBu_r", vmin=-LIMIT_TERMS,
                         vmax=LIMIT_TERMS)
-        axis.set_title(title, fontsize=9)
         bar = figure.colorbar(mesh, ax=axis, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30)
-        bar.set_label("correlazione temporale (Spearman)", fontsize=TICKS)
+        bar.set_label(f"correlazione temporale fra G e {title} (Spearman)", fontsize=TICKS)
         bar.ax.tick_params(labelsize=TICKS)
         groups.append([axis, bar.ax])
     save_panels(figure, groups, HERE, "era5_d_termini_correlazione_temporale", dpi=300)
@@ -268,8 +267,7 @@ def terms_map_figure(data, coastline):
     outline = np.nan_to_num(image(data, top.astype(float)), nan=0.0)
     figure, axes = plt.subplots(1, 2, figsize=size(0.56), constrained_layout=True)
     groups = []
-    for index, (axis, (title, values)) in enumerate(zip(axes, (("G: errore di ricostruzione del generatore", data["G"][row]),
-                                                             ("D: componente del discriminatore", data["D"][row])))):
+    for index, (axis, (title, values)) in enumerate(zip(axes, (("G", data["G"][row]), ("D", data["D"][row])))):
         valid = np.isfinite(values)
         rank = np.full(values.shape, np.nan)
         rank[valid] = 100 * (np.argsort(np.argsort(values[valid])) + 0.5) / valid.sum()
@@ -277,10 +275,9 @@ def terms_map_figure(data, coastline):
         # A white halo under the line keeps it visible on the yellow of G and on the dark of D.
         axis.contour(data["longitudes"], data["latitudes"], outline, levels=[0.5], colors="white", linewidths=3.2)
         axis.contour(data["longitudes"], data["latitudes"], outline, levels=[0.5], colors=ORANGE, linewidths=1.8)
-        axis.set_title(title, fontsize=9, loc="left", color=TEXT)
         bar = figure.colorbar(mesh, ax=axis, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30,
                               ticks=[0, 25, 50, 75, 100])
-        bar.set_label("percentile nell'istante (alto = più insolito)", fontsize=TICKS)
+        bar.set_label(f"{title}: percentile nell'istante (alto = più insolito)", fontsize=TICKS)
         bar.ax.tick_params(labelsize=TICKS)
         groups.append([axis, bar.ax])
     save_panels(figure, groups, HERE, "era5_d_termini_mappa", dpi=300)

@@ -59,7 +59,7 @@ Deng et al.~\cite{deng2022stgan} propongono una rete avversaria per il rilevamen
 \begin{figure}[htbp]
     \centering
     \input{figures/schema_stgan}
-    \caption{Schema di STGAN. Il generatore combina tre rami e produce la stima $\hat{X}_{v,t}=G_\theta(v,t)$, che sostituisce l'ultimo elemento della sequenza reale; il discriminatore valuta entrambe le sequenze. Lo score somma l'errore di previsione e la differenza fra le due uscite del discriminatore. Ridisegnato a partire da Deng et al.~\cite{deng2022stgan}.}
+    \caption{Schema di STGAN. Il generatore combina tre rami e produce la stima $\hat{X}_{v,t}$, che sostituisce l'ultimo elemento della sequenza reale; il discriminatore valuta le due sequenze. Ridisegnato a partire da Deng et al.~\cite{deng2022stgan}.}
     \label{fig:schema-stgan}
 \end{figure}
 
@@ -185,12 +185,12 @@ La Tabella~\ref{tab:confronto-rilevatore} riassume i quattro candidati considera
     \centering
     \footnotesize
     \setlength{\tabcolsep}{3pt}
-    \caption{Candidati considerati per il rilevatore e percorso della tesi a confronto. La colonna sulle anomalie nell'addestramento indica come ciascun lavoro tratta la presenza di osservazioni anomale nei dati di addestramento; la colonna sulla valutazione indica i dati e il riferimento con cui il lavoro misura il rilevamento.}
+    \caption{Candidati considerati per il rilevatore e percorso della tesi a confronto.}
     \label{tab:confronto-rilevatore}
     \vspace{0.6em}
     \begin{tabular}{@{}L{0.12}L{0.16}L{0.16}L{0.14}L{0.19}L{0.13}@{}}
         \toprule
-        Lavoro & Segnale dello score & Anomalie nei dati di addestramento & Contesto spaziale & Valutazione & Dispersione \\
+        Lavoro & Segnale dello score & Anomalie nei dati di addestramento & Contesto spaziale & Dati e riferimento della valutazione & Dispersione \\
         \midrule
         STGAN \cite{deng2022stgan} & Errore di previsione e discriminatore & Non trattate: dati reali considerati normali & Sì: grafo da topologia fisica & Traffico; richiamo su eventi documentati & Non prevista \\
         \addlinespace

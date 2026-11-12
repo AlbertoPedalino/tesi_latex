@@ -81,7 +81,8 @@ def main():
         return
     data = json.loads(DATA.read_text(encoding="utf-8"))
     top = data["top_percent"]
-    panels = (("G", "G senza normalizzazione"), ("G_clim", r"$G_\mathrm{n}$, con la normalizzazione climatologica"))
+    # No title on the image (the caption says which score): the colour bar names it.
+    panels = (("G", "valori segnalati da G (%)"), ("G_clim", r"valori segnalati da $G_\mathrm{n}$ (%)"))
     norm = TwoSlopeNorm(vmin=0, vcenter=top, vmax=15)
     width = WIDTH_CM / 2.54
     figure, axes = plt.subplots(2, 1, figsize=(width, 0.62 * width), constrained_layout=True)
@@ -96,9 +97,8 @@ def main():
         axis.set_xticks(range(12), MONTHS)
         axis.set_yticks(range(len(data["bands"])), [band.replace("N", "°N") for band in data["bands"]])
         axis.tick_params(length=0)
-        axis.set_title(title, fontsize=9, loc="left", color=TEXT)
         bar = figure.colorbar(mesh, ax=axis, shrink=0.9, ticks=[0, top, 10, 15])  # one per panel, same scale
-        bar.set_label("valori segnalati (%)")
+        bar.set_label(title)
         bar.outline.set_edgecolor(MUTED)
         groups.append([axis, bar.ax])
     names = save_panels(figure, groups, HERE, "era5_g_luogo")

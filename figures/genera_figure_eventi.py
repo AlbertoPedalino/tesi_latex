@@ -276,7 +276,6 @@ def profile_figure():
     band = pd.concat(shallow, axis=1)
     own.fill_between(band.index, band.min(axis=1), band.max(axis=1), color=SHALLOW_GREY, alpha=0.55, linewidth=0, zorder=1)
     labels.append((band.iloc[-1].mean(), "sei modelli\nshallow", "#8a8880"))
-    own.set_title("Ogni metodo sui propri cluster", fontsize=9, loc="left", color=TEXT)
     for axis in (own, same):
         axis.set_ylim(0, 104)
         axis.set_yticks([0, 25, 50, 75, 100])
@@ -292,7 +291,6 @@ def profile_figure():
     for column, colour, width in (("change_3h percentile", GREEN, 1.6), (f"{NORMAL} percentile", ORANGE, 1.6),
                                   (f"{SCORE} percentile", BLUE, 2.6)):
         same.plot(table.index, table[column], color=colour, linewidth=width, zorder=3)
-    same.set_title(r"Tutti i metodi sui cluster di $G_\mathrm{n}$", fontsize=9, loc="left", color=TEXT)
     last = table.iloc[-1]
     end_labels(same, ((last[f"{SCORE} percentile"], r"$G_\mathrm{n}$", BLUE),
                       (last[f"{NORMAL} percentile"], "distanza\ndal normale", ORANGE),
@@ -333,10 +331,8 @@ def profile_types_figure():
     score.set_ylim(0, 104)
     score.set_yticks([0, 50, 95], ["0", "50", "soglia"])
     score.set_ylabel(r"percentile mediano di $G_\mathrm{n}$", fontsize=TICKS)
-    score.set_title(r"$G_\mathrm{n}$ per tipo di cluster", fontsize=9, loc="left", color=TEXT)
     scarto.set_ylim(0, 3.5)
-    scarto.set_ylabel("|scarto standardizzato| (dev. std.)", fontsize=TICKS)
-    scarto.set_title("La variabile del tipo", fontsize=9, loc="left", color=TEXT)
+    scarto.set_ylabel("|scarto standardizzato| della\nvariabile del tipo (dev. std.)", fontsize=TICKS)
     for axis in (score, scarto):
         position_axis(axis)
         axis.set_xlim(-7.3, 7.3)
@@ -414,9 +410,8 @@ def dropout_figure():
     bands.set_yticks([])
     bands.set_xticks(place, ["<50", "50–90", "90–95", "95–99", "99–99.9", ">99.9"], rotation=35, ha="right", rotation_mode="anchor")
     bands.tick_params(labelsize=6.5, length=0)
-    bands.set_ylabel("rapporto (%)", fontsize=TICKS)
+    bands.set_ylabel("dispersione media / G medio (%)", fontsize=TICKS)
     bands.set_xlabel("percentile di G", fontsize=TICKS)
-    bands.set_title("Secondo G", fontsize=8.5, loc="left", color=TEXT)
     clean(bands, "top", "right", "left")
 
     position = np.array(data["positions"]["position"])
@@ -427,10 +422,9 @@ def dropout_figure():
     position_axis(across)
     across.set_xticks([-8, -4, -1, 1, 4, 8], ["8+", "4", "1", "1", "4", "8+"])
     across.set_xlabel("celle dal bordo: dentro | fuori", fontsize=TICKS)
-    across.set_ylabel("rapporto (%)", fontsize=TICKS)
+    across.set_ylabel("rapporto dispersione / G (%)", fontsize=TICKS)
     across.set_ylim(0, 13)  # from 0: the differences across the clusters are small, and must look small
     across.set_yticks([0, 5, 10])
-    across.set_title("Attraverso i cluster", fontsize=8.5, loc="left", color=TEXT)
 
     numbers = data["classes of the ratio at equal raw error"]
     classes.bar(numbers["class"], numbers["normal flagged %"], width=0.72, color=ORANGE)
@@ -442,7 +436,6 @@ def dropout_figure():
     classes.tick_params(labelsize=TICKS, length=0)
     classes.set_xlabel("classi, dalle estrazioni\nconcordi alle discordi", fontsize=TICKS)
     classes.set_ylabel("oltre la soglia della\ndistanza dal normale (%)", fontsize=TICKS)
-    classes.set_title("A parità di G", fontsize=8.5, loc="left", color=TEXT)
     clean(classes, "top", "right", "left")
     save_panels(figure, [[bands], [across], [classes]], HERE, "era5_dropout")
     plt.close(figure)
@@ -456,11 +449,10 @@ def dropout_maps_figure(coastline_path):
     figure, axes = plt.subplots(1, 2, figsize=size(0.56), constrained_layout=True)
     groups = []
     for axis, key, title, label, scale in ((axes[0], "mean grezza", "Dispersione di G, media", r"dispersione di G fra le estrazioni, $\times 10^{-4}$", 1e4),
-                                           (axes[1], "mean ratio", "Rapporto fra dispersione e G, medio", "rapporto (%)", 100)):
+                                           (axes[1], "mean ratio", "Rapporto fra dispersione e G, medio", "rapporto fra dispersione e G, medio (%)", 100)):
         values = maps[key] * scale
         low, high = np.nanpercentile(values, (1, 99))
         mesh = draw_map(axis, grid, values, coastline, left=axis is axes[0], cmap="viridis", vmin=low, vmax=high)
-        axis.set_title(title, fontsize=9, loc="left", color=TEXT)
         bar = figure.colorbar(mesh, ax=axis, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30)
         bar.set_label(label, fontsize=TICKS)
         bar.ax.tick_params(labelsize=TICKS)
@@ -512,16 +504,14 @@ def case_figure(number, data, coastline):
     limit = 4
     mesh = draw_map(left, grid, data["input"], coastline, cmap="RdBu_r", vmin=-limit, vmax=limit)
     left_bar = figure.colorbar(mesh, ax=left, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, extend="both")
-    left_bar.set_label("scarto standardizzato\n(deviazioni standard dal normale)", fontsize=TICKS)
+    left_bar.set_label(f"{TYPES[record['type']]}: scarto standardizzato\n(deviazioni standard dal normale)", fontsize=TICKS)
     left_bar.ax.tick_params(labelsize=TICKS)
-    left.set_title(TYPES[record['type']], fontsize=9, loc="left", color=TEXT)
     mesh = draw_map(right, grid, percentile(data[f"score_{SCORE}"], data[f"quantiles_{SCORE}"]), coastline, left=False,
                     cmap="viridis", vmin=0, vmax=100)
     right_bar = figure.colorbar(mesh, ax=right, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30,
                                 ticks=[0, 25, 50, 75, 95])
-    right_bar.set_label("percentile (95 circa = soglia)", fontsize=TICKS)
+    right_bar.set_label(r"$G_\mathrm{n}$: percentile (95 circa = soglia)", fontsize=TICKS)
     right_bar.ax.tick_params(labelsize=TICKS)
-    right.set_title(r"$G_\mathrm{n}$", fontsize=9, loc="left", color=TEXT)
     for axis in (left, right):
         # The core as in Figure 6.8: orange over a white halo, apart from the dark coastlines.
         axis.contour(longitudes, latitudes[::-1], picture[::-1], levels=[0.5], colors="white", linewidths=2.4)
@@ -571,7 +561,6 @@ def case_figure(number, data, coastline):
     profile.set_yticks([0, 50, 95], ["0", "50", "soglia"])
     profile.set_ylabel("percentile mediano", fontsize=TICKS)
     profile.tick_params(labelsize=TICKS, length=2)
-    profile.set_title("Dal nucleo verso l'esterno", fontsize=9, loc="left", color=TEXT)
     clean(profile, "top", "right")
     last = lambda values: next((v for v in reversed(values) if np.isfinite(v)), 50.0)
     end_labels(profile, ((last(medians[SCORE]), r"$G_\mathrm{n}$", BLUE),
@@ -662,10 +651,6 @@ def case_series_figure(number, data):
     alone.xaxis.set_major_formatter(lambda value, _: f"{dates.num2date(value).day} "
                                                      f"{MONTHS_SHORT[dates.num2date(value).month - 1]}")
     alone.set_xlabel(f"{moment.year}, tacche a mezzanotte UTC", fontsize=TICKS)
-    east = record["cell longitude"]
-    where = f"{east:g}°E" if east >= 0 else f"{-east:g}°W"
-    figure.suptitle(f"La cella cerchiata nel tempo ({record['cell latitude']:g}°N, {where})", x=0.01, ha="left",
-                    fontsize=9, color=TEXT)
     figure.savefig(HERE / f"era5_caso_{number:02d}_c.pdf")
     plt.close(figure)
 

@@ -107,8 +107,6 @@ def cycles_figure(data):
     axes[1, 0].set_xlabel("Mese")
     axes[1, 1].set_xticks([0, 6, 12, 18])
     axes[1, 1].set_xlabel("Ora UTC")
-    axes[0, 0].set_title("Ciclo stagionale", fontsize=9, color=TEXT)
-    axes[0, 1].set_title("Ciclo giornaliero", fontsize=9, color=TEXT)
     handles, labels = axes[0, 0].get_legend_handles_labels()
     cells = axes[1, 0].legend(handles, labels, loc="upper center", ncol=2, bbox_to_anchor=(0.5, -0.32),
                               fontsize=7.5, columnspacing=1.0, handlelength=1.6)

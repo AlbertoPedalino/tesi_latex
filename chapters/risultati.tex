@@ -28,7 +28,7 @@ La ricerca della Sezione~\ref{sec:exp-configurazioni} conta 29 prove, quattro de
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_optuna_pca}
-    \caption{La configurazione scelta è la prova con la distanza MMD più bassa. Le prove della ricerca degli iperparametri nel piano delle prime due componenti principali dei quattro iperparametri (71\% della varianza). Il colore è la distanza MMD sugli anni di validazione, più scuro dove è più bassa; i cerchi arancioni indicano le tre prove della regione migliore. Nel riquadro, la direzione in cui cresce ciascun iperparametro: ``tasso di appr.'' G e D sono i tassi di apprendimento del generatore e del discriminatore, peso $\lambda_G$ il peso di ricostruzione, ``aggiornamenti D:G'' gli aggiornamenti del discriminatore e del generatore per batch. La figura non mostra l'ordine delle prove, discusso nel testo.}
+    \caption{Le prove della ricerca degli iperparametri nel piano delle prime due componenti principali dei quattro iperparametri, colorate secondo la distanza MMD sugli anni di validazione, più scura dove è più bassa. I cerchi arancioni indicano le tre prove della regione migliore, il riquadro la direzione in cui cresce ciascun iperparametro.}
     \label{fig:ris-ricerca}
 \end{figure}
 
@@ -101,7 +101,7 @@ Le due componenti sono confrontate con due correlazioni. Quella di Spearman è c
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_g_d_correlazione_spaziale}
-    \caption{Nello spazio G e D sono poco legati, e il legame cambia con la stagione: la correlazione di Spearman oscilla attorno a zero, quella di Pearson è negativa in circa due giorni su tre, soprattutto in estate. Correlazione spaziale fra G e D in ogni istante degli anni di validazione, calcolata sulle 10611 celle: media giornaliera (linea sottile) e media mobile su 30 giorni (linea spessa).}
+    \caption{Correlazione spaziale fra G e D in ogni istante degli anni di validazione, calcolata sulle 10611 celle: media giornaliera (linea sottile) e media mobile su 30 giorni (linea spessa). Le due correlazioni restano vicine a zero; quella di Pearson è più negativa in estate.}
     \label{fig:ris-g-d-spaziale}
 \end{figure}
 
@@ -111,7 +111,7 @@ Le due componenti sono confrontate con due correlazioni. Quella di Spearman è c
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_g_d_correlazione_temporale}
-    \caption{La correlazione nel tempo fra G e D è vicina a zero quasi ovunque: è negativa in due celle su tre, soprattutto a sud, e positiva in molte celle fra 35$^\circ$ e 50$^\circ$N. Correlazione temporale di Spearman fra G e D in ogni cella, sugli anni di validazione. Il blu indica che D scende quando G sale, il rosso che i due salgono insieme; la scala va da $-0.3$ a $0.3$, e la freccia indica che alcune celle superano $0.3$. La cornice rossa lungo il margine del dominio è probabilmente un effetto del modello. Linee di costa da Natural Earth.}
+    \caption{Correlazione temporale di Spearman fra G e D in ogni cella, sugli anni di validazione: blu dove D scende quando G sale, rosso dove salgono insieme; la freccia indica valori oltre $0.3$. Il legame è debole quasi ovunque. Linee di costa da Natural Earth.}
     \label{fig:ris-g-d-temporale}
 \end{figure}
 
@@ -160,17 +160,17 @@ Il valore di G dipende anche da dove e quando è calcolato: dove G è grande per
     \centering
     \phantomcaption
     \label{fig:ris-g-luogo}
-    \begin{subfigure}[t]{0.970\textwidth}
+    \begin{subfigure}[t]{0.963\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_g_luogo_a}
-        \caption[Senza normalizzazione le segnalazioni di G si concentrano a sud e in estate.]{Senza normalizzazione le segnalazioni di G si concentrano a sud e in estate. Percentuale dei valori segnalati da G, per fascia di latitudine e mese, sugli anni di validazione, con la soglia al 95-esimo percentile dello score sugli stessi anni. La scala dei colori non è lineare: il bianco corrisponde al 5\%, il blu a percentuali minori, il rosso a percentuali maggiori.}
+        \caption[Percentuale dei valori segnalati da G, senza normalizzazione, per fascia di latitudine e mese, sugli anni di validazione; il bianco corrisponde al 5\%.]{Percentuale dei valori segnalati da G, senza normalizzazione, per fascia di latitudine e mese, sugli anni di validazione; il bianco corrisponde al 5\%. Le segnalazioni si concentrano a sud e in estate.}
         \label{fig:ris-g-luogo-a}
     \end{subfigure}
     \par\bigskip
     \begin{subfigure}[t]{0.970\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_g_luogo_b}
-        \caption[Con la normalizzazione climatologica le segnalazioni sono distribuite in modo quasi uniforme.]{Con la normalizzazione climatologica le segnalazioni sono distribuite in modo quasi uniforme. Come la Figura~\ref{fig:ris-g-luogo-a}, per $G_{\mathrm{n}}$: G con la normalizzazione climatologica per cella, ora e giorno dell'anno (finestra di $\pm15$ giorni).}
+        \caption[Percentuale dei valori segnalati da $G_{\mathrm{n}}$, con la normalizzazione climatologica, per fascia di latitudine e mese, sugli anni di validazione; il bianco corrisponde al 5\%.]{Percentuale dei valori segnalati da $G_{\mathrm{n}}$, con la normalizzazione climatologica, per fascia di latitudine e mese, sugli anni di validazione; il bianco corrisponde al 5\%. Le segnalazioni sono distribuite in modo quasi uniforme.}
         \label{fig:ris-g-luogo-b}
     \end{subfigure}
 \end{figure}
@@ -204,17 +204,17 @@ Le sezioni precedenti mostrano che G e D sono quasi indipendenti, con un solo le
     \centering
     \phantomcaption
     \label{fig:ris-d-termini-temporale}
-    \begin{subfigure}[t]{0.489\textwidth}
+    \begin{subfigure}[t]{0.488\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_d_termini_correlazione_temporale_a}
-        \caption[In ogni luogo il giudizio del discriminatore sull'osservazione scende quando G sale: tutte le celle sono blu, con correlazioni intorno a $-0.7$.]{In ogni luogo il giudizio del discriminatore sull'osservazione scende quando G sale: tutte le celle sono blu, con correlazioni intorno a $-0.7$. Correlazione temporale di Spearman, in ogni cella, fra G e $D_{\mathrm{reale}}$, sugli anni di validazione, su una scala da $-1$ a $1$. Linee di costa da Natural Earth.}
+        \caption[Correlazione temporale di Spearman fra G e $D_{\mathrm{reale}}$, il giudizio del discriminatore sull'osservazione, in ogni cella, sugli anni di validazione.]{Correlazione temporale di Spearman fra G e $D_{\mathrm{reale}}$, il giudizio del discriminatore sull'osservazione, in ogni cella, sugli anni di validazione. È negativa in tutte le celle, intorno a $-0.7$. Linee di costa da Natural Earth.}
         \label{fig:ris-d-termini-temporale-a}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[t]{0.460\textwidth}
+    \begin{subfigure}[t]{0.482\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_d_termini_correlazione_temporale_b}
-        \caption[Lo stesso vale per il giudizio sulla ricostruzione.]{Lo stesso vale per il giudizio sulla ricostruzione. Correlazione temporale di Spearman, in ogni cella, fra G e $D_{\mathrm{generato}}$, come nella Figura~\ref{fig:ris-d-termini-temporale-a}. Linee di costa da Natural Earth.}
+        \caption[Correlazione temporale di Spearman fra G e $D_{\mathrm{generato}}$, il giudizio del discriminatore sulla ricostruzione, in ogni cella, sugli anni di validazione.]{Correlazione temporale di Spearman fra G e $D_{\mathrm{generato}}$, il giudizio del discriminatore sulla ricostruzione, in ogni cella, sugli anni di validazione. È negativa in tutte le celle, intorno a $-0.7$. Linee di costa da Natural Earth.}
         \label{fig:ris-d-termini-temporale-b}
     \end{subfigure}
 \end{figure}
@@ -228,7 +228,7 @@ Le sezioni precedenti mostrano che G e D sono quasi indipendenti, con un solo le
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_zone_schema}
-    \caption{Le tre zone attorno a un cluster, in un istante, su una porzione della griglia: il nucleo, il contorno e la zona lontana; le celle intermedie non rientrano in nessuna. Ogni quadrato è una cella.}
+    \caption{Le tre zone attorno a un cluster in un istante, su una porzione della griglia. Ogni quadrato è una cella; le celle intermedie non rientrano in nessuna zona.}
     \label{fig:ris-zone-schema}
 \end{figure}
 
@@ -239,7 +239,7 @@ $D_{\mathrm{reale}}$ e $D_{\mathrm{generato}}$ fanno il contrario, e questo non 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_d_termini_zone}
-    \caption{Nel nucleo dei cluster di $G_{\mathrm{n}}$ il discriminatore giudica reali sia l'osservazione sia la ricostruzione, e D, la differenza dei due giudizi, è al percentile 27. Percentile mediano di $G_{\mathrm{n}}$, di G, di $D_{\mathrm{reale}}$, di $D_{\mathrm{generato}}$ e di D nel nucleo dei cluster di $G_{\mathrm{n}}$, nel loro contorno e nella zona lontana, sugli anni di validazione. La linea tratteggiata indica 50, il valore atteso senza legame con i cluster. $G_{\mathrm{n}}$, che definisce i cluster, e G, l'errore di ricostruzione del generatore senza normalizzazione come nello score combinato, sono alti nel nucleo quasi per costruzione e servono da riferimento.}
+    \caption{Percentile mediano di $G_{\mathrm{n}}$, G, $D_{\mathrm{reale}}$, $D_{\mathrm{generato}}$ e D nel nucleo dei cluster di $G_{\mathrm{n}}$, nel contorno e nella zona lontana, sugli anni di validazione; il tratteggio indica 50, il valore tipico. Nel nucleo il discriminatore giudica reali sia l'osservazione sia la ricostruzione.}
 % G_n nelle zone (comportamento_optuna27/zone_g_dterms_5pc.csv, colonne G+clim, 12 novembre 2026): 97|91|40, G 97|89|40.
     \label{fig:ris-d-termini-zone}
 \end{figure}
@@ -248,23 +248,23 @@ $D_{\mathrm{reale}}$ e $D_{\mathrm{generato}}$ fanno il contrario, e questo non 
 % Soglia di G con la normalizzazione: 3.370, il 95-esimo percentile sugli anni di validazione, la stessa usata in
 % tutto il capitolo (giorni_eclatanti/regola.json, chiave "threshold" = 3.370309829711914).
 
-\paragraph{Un esempio: l'istante con G più alto.} La Figura~\ref{fig:ris-d-termini-mappa} mostra G e D il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta degli anni di validazione. Nell'area principale del Nord Africa in cui G è alto, $D_{\mathrm{reale}}$ è vicino a zero, con una mediana di 0.07, e anche $D_{\mathrm{generato}}$ è fra i valori più bassi dell'istante, con una mediana di 0.19: il discriminatore giudica reali sia l'osservazione sia la ricostruzione, l'osservazione di più, e D è fra i valori più bassi del dominio. Su un'area più piccola più a sud-ovest, anch'essa con G alto, il giudizio sull'osservazione è meno netto ($D_{\mathrm{reale}}$ ha una mediana di 0.15), ma anche lì D è bassa. $D_{\mathrm{reale}}$ è basso anche nella penisola arabica, dove G è intorno al 94-esimo percentile dell'istante.
+\paragraph{Un esempio: l'istante con G più alto.} La Figura~\ref{fig:ris-d-termini-mappa} mostra G e D il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta degli anni di validazione. Nell'area principale del Nord Africa in cui G è alto, $D_{\mathrm{reale}}$ è vicino a zero, con una mediana di 0.07, e anche $D_{\mathrm{generato}}$ è fra i valori più bassi dell'istante, con una mediana di 0.19: il discriminatore giudica reali sia l'osservazione sia la ricostruzione, l'osservazione di più, e D è fra i valori più bassi del dominio. Su un'area più piccola più a sud-ovest, anch'essa con G alto, il giudizio sull'osservazione è meno netto ($D_{\mathrm{reale}}$ ha una mediana di 0.15), ma anche lì D è bassa. Dentro la linea della Figura~\ref{fig:ris-d-termini-mappa}, che racchiude l'1\% delle celle con G più alto, il percentile mediano di D fra le celle dell'istante è 6. $D_{\mathrm{reale}}$ è basso anche nella penisola arabica, dove G è intorno al 94-esimo percentile dell'istante.
 
 \begin{figure}[htbp]
     \centering
     \phantomcaption
     \label{fig:ris-d-termini-mappa}
-    \begin{subfigure}[t]{0.520\textwidth}
+    \begin{subfigure}[t]{0.498\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_d_termini_mappa_a}
-        \caption[G, l'errore di ricostruzione del generatore, il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta degli anni di validazione, come percentile fra le celle di quell'istante.]{G, l'errore di ricostruzione del generatore, il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta degli anni di validazione, come percentile fra le celle di quell'istante. La linea arancione racchiude l'1\% delle celle con G più alto. Linee di costa da Natural Earth.}
+        \caption[G il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta degli anni di validazione, come percentile fra le celle dell'istante; la linea arancione racchiude l'1\% delle celle con G più alto.]{G il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta degli anni di validazione, come percentile fra le celle dell'istante; la linea arancione racchiude l'1\% delle celle con G più alto. Linee di costa da Natural Earth.}
         \label{fig:ris-d-termini-mappa-a}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[t]{0.450\textwidth}
+    \begin{subfigure}[t]{0.472\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_d_termini_mappa_b}
-        \caption[Dove G è più alto, D è fra i valori più bassi.]{Dove G è più alto, D è fra i valori più bassi. D, la componente del discriminatore, nello stesso istante e con la stessa linea della Figura~\ref{fig:ris-d-termini-mappa-a}; dentro la linea il percentile mediano è 6. Linee di costa da Natural Earth.}
+        \caption[D il 9 agosto 2003 alle 12~UTC, come percentile fra le celle dell'istante; la linea arancione racchiude l'1\% delle celle con G più alto.]{D il 9 agosto 2003 alle 12~UTC, come percentile fra le celle dell'istante; la linea arancione racchiude l'1\% delle celle con G più alto. Dentro la linea D è fra i valori più bassi. Linee di costa da Natural Earth.}
         \label{fig:ris-d-termini-mappa-b}
     \end{subfigure}
 % Percentile di D fra le celle dell'istante, dentro l'1% di G più alto (figures/dati/era5_g_d.npz, riga 1, 10 novembre 2026): mediana 6.3, il 98% sotto 25.
@@ -276,12 +276,12 @@ $D_{\mathrm{reale}}$ e $D_{\mathrm{generato}}$ fanno il contrario, e questo non 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Rugosità e giudizio medio del discriminatore sull'osservazione, sulla ricostruzione e sulle loro versioni lisciate con la media della patch $3\times3$: mediane su 240 istanti degli anni di validazione, con il modello senza dropout. Un giudizio più alto significa ``più generato''. Ricostruzione e osservazione hanno una rugosità simile; lisciare un campo ne riduce molto la rugosità e alza un poco il giudizio.}
+    \caption{Rugosità, cioè differenza quadratica media fra celle adiacenti, e giudizio medio del discriminatore su quattro campi, con la media della patch $3\times3$ per lisciare: mediane su 240 istanti degli anni di validazione, con il modello senza dropout.}
     \label{tab:ris-levigatezza}
     \vspace{0.6em}
     \begin{tabular}{@{}lrr@{}}
         \toprule
-        Campo & Rugosità & Giudizio medio \\
+        Campo & Rugosità & \shortstack[r]{Giudizio medio\\(1 = generato)} \\
         \midrule
         Osservazione & 0.00082 & 0.502 \\
         Ricostruzione & 0.00089 & 0.502 \\
@@ -460,12 +460,12 @@ vale 1 quando i due insiemi coincidono e 0 quando sono disgiunti; nel seguito è
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Segnalazioni dei metodi sugli anni di test, con la soglia di ciascuno al 95-esimo percentile del proprio score sugli anni di validazione. ``Segnalati'': percentuale dei valori che il metodo segnala. ``Da solo'': percentuale delle sue segnalazioni che nessun altro segnala. ``Di $G_{\mathrm{n}}$'': percentuale delle segnalazioni di $G_{\mathrm{n}}$ segnalate anche dal metodo, che dà l'ordine della tabella. ``Jaccard'': indice di Jaccard con $G_{\mathrm{n}}$.}
+    \caption{Segnalazioni dei metodi sugli anni di test, con la soglia di ciascuno al 95-esimo percentile del proprio score sugli anni di validazione. Righe in ordine di segnalazioni di $G_{\mathrm{n}}$ condivise.}
     \label{tab:ris-confronti}
     \vspace{0.6em}
     \begin{tabular}{@{}lrrrr@{}}
         \toprule
-        Metodo & Segnalati & Da solo & Di $G_{\mathrm{n}}$ & Jaccard \\
+        Metodo & \shortstack[r]{Valori\\segnalati} & \shortstack[r]{Segnalazioni\\di nessun altro\\metodo} & \shortstack[r]{Segnalazioni\\di $G_{\mathrm{n}}$\\condivise} & \shortstack[r]{Jaccard\\con $G_{\mathrm{n}}$} \\
         \midrule
         Variazione in tre ore & 5.48\% & 31.8\% & 53.9\% & 37.2\% \\
         MCD & 5.43\% & 7.9\% & 52.1\% & 35.7\% \\
@@ -486,7 +486,7 @@ vale 1 quando i due insiemi coincidono e 0 quando sono disgiunti; nel seguito è
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{era5_confronti_jaccard}
-    \caption{I metodi che leggono una cella in un istante formano un gruppo (nel riquadro), la variazione in tre ore resta da parte, e $G_{\mathrm{n}}$ si sovrappone a entrambi. Indice di Jaccard delle segnalazioni di ogni coppia di metodi sugli anni di test, in percentuale, con la soglia di ciascuno al 95-esimo percentile del proprio score sugli anni di validazione; ogni coppia compare una volta.}
+    \caption{Indice di Jaccard delle segnalazioni di ogni coppia di metodi sugli anni di test, in percentuale. I metodi che leggono una cella in un istante formano un gruppo (nel riquadro); la variazione in tre ore resta da parte.}
     \label{fig:ris-confronti-jaccard}
 \end{figure}
 
@@ -531,21 +531,22 @@ Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi i clus
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_eventi_dimensione}
-    \caption{I cluster sono quasi tutti piccoli, ma i valori segnalati stanno quasi tutti in pochi cluster enormi. I cluster di $G_{\mathrm{n}}$ sugli anni di test, divisi per dimensione, cioè per numero di valori segnalati (coppie cella--istante) che contengono: piccoli (meno di 20), medi (da 20 a 999) ed enormi (1000 o più). In alto la percentuale dei cluster di ciascuna classe, in basso la percentuale dei valori segnalati che vi stanno. Un cluster di un solo valore, il più frequente, è una cella segnalata in un solo istante, senza segnalazioni accanto né subito prima o dopo.}
+    \caption{I cluster di $G_{\mathrm{n}}$ sugli anni di test per dimensione, cioè per numero di valori: piccoli (meno di 20), medi (da 20 a 999) ed enormi (1000 o più). In alto la percentuale dei cluster, in basso quella dei valori segnalati. Pochi cluster enormi contengono la maggior parte dei valori.}
     \label{fig:ris-eventi-dimensione}
 \end{figure}
 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{I cluster di $G_{\mathrm{n}}$ e quelli di ciascuna baseline della Sezione~\ref{sec:ris-confronti}, ognuno formato dalle proprie segnalazioni, sugli anni di test, con la soglia di ciascun metodo al 95-esimo percentile del proprio score sugli anni di validazione. ``Cluster'': numero di cluster. ``Cluster piccoli'': percentuale dei cluster con meno di 20 valori. ``Valori in cluster enormi'': percentuale dei valori segnalati che stanno in cluster con almeno 1000 valori (le stesse classi della Figura~\ref{fig:ris-eventi-dimensione}). ``Celle fuori dal bordo'': percentile mediano dello score a una, due e sei celle fuori dal bordo dei propri cluster; il profilo completo è nella Figura~\ref{fig:ris-eventi-profilo}. I tipi sono nella Figura~\ref{fig:ris-eventi-tipo}.}
+    \caption{I cluster di ciascun metodo, formati dalle sue segnalazioni, sugli anni di test, con la soglia di ciascun metodo al 95-esimo percentile del proprio score sugli anni di validazione.}
     \label{tab:ris-eventi-baseline}
     \vspace{0.6em}
+    \setlength{\tabcolsep}{4.5pt}
     \begin{tabular}{@{}lrrrrrr@{}}
         \toprule
-         & & & & \multicolumn{3}{c}{celle fuori dal bordo} \\
+         & & & & \multicolumn{3}{c}{\shortstack{Percentile mediano\\dello score fuori\\dal bordo}} \\
         \cmidrule(l){5-7}
-        Metodo & Cluster & \shortstack[r]{Cluster\\piccoli} & \shortstack[r]{Valori in\\cluster enormi} & 1 & 2 & 6 \\
+        Metodo & Cluster & \shortstack[r]{Cluster con\\meno di 20\\valori} & \shortstack[r]{Valori in cluster\\con almeno\\1000 valori} & 1 cella & 2 celle & 6 celle \\
         \midrule
         $G_{\mathrm{n}}$ & 794\,k & 90.6\% & 75.5\% & 90 & 79 & 50 \\
         \addlinespace
@@ -566,7 +567,7 @@ Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi i clus
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_eventi_tipo}
-    \caption{Il tipo dominante dipende dal metodo: in $G_{\mathrm{n}}$ e nella variazione in tre ore dominano velocità verticale e precipitazione, nella distanza dal normale e in CBLOF l'umidità del suolo, in COPOD e HBOS la velocità d'attrito. Percentuale dei valori segnalati per tipo di cluster, sugli anni di test, per tutti i quindici tipi: nei cluster di $G_{\mathrm{n}}$ (prima colonna) e in quelli di ciascuna baseline, ognuno formato dalle proprie segnalazioni. I tipi sono ordinati dal più frequente in $G_{\mathrm{n}}$; ogni colonna somma a 100, e più il colore è scuro, più la percentuale è alta.}
+    \caption{Percentuale dei valori segnalati per tipo di cluster, sugli anni di test, nei cluster di $G_{\mathrm{n}}$ (prima colonna) e in quelli di ciascuna baseline; ogni colonna somma a 100. Il tipo dominante dipende dal metodo.}
     \label{fig:ris-eventi-tipo}
 \end{figure}
 
@@ -582,14 +583,14 @@ Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi i clus
     \begin{subfigure}[t]{0.455\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_eventi_profilo_a}
-        \caption[$G_{\mathrm{n}}$ cala più lentamente di quasi tutte le baseline.]{$G_{\mathrm{n}}$ cala più lentamente di quasi tutte le baseline. Ogni metodo sui propri cluster: percentile mediano dello score secondo le celle di distanza dal bordo del cluster più vicino, sugli anni di test, con la soglia di ciascun metodo al 95-esimo percentile del proprio score sugli anni di validazione; i sei modelli shallow sono la fascia grigia, dal più basso al più alto.}
+        \caption[Percentile mediano dello score secondo la distanza in celle dal bordo del cluster più vicino, per ogni metodo sui propri cluster, sugli anni di test; la fascia grigia va dal più basso al più alto dei sei modelli shallow.]{Percentile mediano dello score secondo la distanza in celle dal bordo del cluster più vicino, per ogni metodo sui propri cluster, sugli anni di test; la fascia grigia va dal più basso al più alto dei sei modelli shallow. $G_{\mathrm{n}}$ cala più lentamente di quasi tutte le baseline.}
         \label{fig:ris-eventi-profilo-a}
     \end{subfigure}
     \hfill
     \begin{subfigure}[t]{0.455\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_eventi_profilo_b}
-        \caption[Sui cluster di $G_{\mathrm{n}}$ tutte le baseline calano allo stesso modo di $G_{\mathrm{n}}$.]{Sui cluster di $G_{\mathrm{n}}$ tutte le baseline calano allo stesso modo di $G_{\mathrm{n}}$. Come la Figura~\ref{fig:ris-eventi-profilo-a}, ma con tutti i metodi misurati sui cluster di $G_{\mathrm{n}}$.}
+        \caption[Percentile mediano dello score secondo la distanza in celle dal bordo del cluster più vicino, per tutti i metodi sui cluster di $G_{\mathrm{n}}$, sugli anni di test; la fascia grigia va dal più basso al più alto dei sei modelli shallow.]{Percentile mediano dello score secondo la distanza in celle dal bordo del cluster più vicino, per tutti i metodi sui cluster di $G_{\mathrm{n}}$, sugli anni di test; la fascia grigia va dal più basso al più alto dei sei modelli shallow. Tutte le baseline calano allo stesso modo di $G_{\mathrm{n}}$.}
         \label{fig:ris-eventi-profilo-b}
     \end{subfigure}
 \end{figure}
@@ -599,26 +600,26 @@ Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi i clus
 
 \paragraph{Insolito, ma non sempre estremo.} Nel nucleo solo il 41\% dei valori supera la soglia della distanza dal normale, contro il 16\% nel contorno e il 2\% nella zona lontana. Il restante 59\% resta sotto quella soglia: $G_{\mathrm{n}}$ segnala anche valori che, presi uno per uno, non sono fra i più lontani dal clima. In parte è atteso, perché i due score misurano cose diverse. Anche la dimensione conta: il percentile mediano della distanza dal normale nel nucleo va da 79--80 nei cluster con meno di 20 valori a 95 in quelli con almeno 10000, quindi i cluster piccoli sono i meno estremi.
 
-\paragraph{Per tipo di cluster, $G_{\mathrm{n}}$ cala in modo simile, come diverse baseline.} Vicino al bordo $G_{\mathrm{n}}$ è quasi uguale per tutti i tipi: una cella fuori vale fra 89 e 91. Più lontano si separa di poco: a sei celle va da 43 per la radiazione solare a 58 per la pressione. Non è una proprietà del solo $G_{\mathrm{n}}$: a due celle fuori dal bordo dei propri cluster, il percentile mediano di $G_{\mathrm{n}}$ va dal 74 all'82 a seconda del tipo, quello della variazione in tre ore dal 60 al 67, di HBOS dal 73 all'81 e di COPOD dal 76 all'85, mentre quelli della distanza dal normale, di MCD e di PCA vanno da poco più di 60 a oltre 80 (Figura~\ref{fig:ris-eventi-profilo-tipi-c}); per sette metodi su nove il tipo più basso è la radiazione solare.
+\paragraph{Per tipo di cluster, $G_{\mathrm{n}}$ cala in modo simile, come diverse baseline.} Vicino al bordo $G_{\mathrm{n}}$ è quasi uguale per tutti i tipi: una cella fuori vale fra 89 e 91. Più lontano si separa di poco: a sei celle va da 43 per la radiazione solare a 58 per la pressione. Non è una proprietà del solo $G_{\mathrm{n}}$: a due celle fuori dal bordo dei propri cluster, il percentile mediano di $G_{\mathrm{n}}$ va dal 74 all'82 a seconda del tipo, quello della variazione in tre ore dal 60 al 67, di HBOS dal 73 all'81 e di COPOD dal 76 all'85, mentre quelli della distanza dal normale, di MCD e di PCA vanno da poco più di 60 a oltre 80 (Figura~\ref{fig:ris-eventi-profilo-tipi-c}, senza i tipi con meno di 1000 valori a quella distanza); per sette metodi su nove il tipo più basso è la radiazione solare.
 % Figura 6.13c: genera_figure_eventi.py, types_spread_figure, dai profili per tipo di ogni metodo sui propri cluster (figures/dati/baseline/profilo_*_5pc.csv ed era5_eventi_profilo.csv), posizione 2, tipi con almeno 1000 valori: G_n 74-82, variazione in tre ore 60-67, HBOS 73-81, COPOD 76-85, Isolation Forest 70-83, CBLOF 65-81, distanza dal normale 64-84, MCD 61-82, PCA 62-84.
 
-\paragraph{Lo scarto standardizzato della variabile del tipo cala invece in modo diverso.} Le differenze grandi riguardano lo scarto standardizzato della variabile del tipo (Figura~\ref{fig:ris-eventi-profilo-tipi}). A differenza della distanza dal normale, che riassume tutte le variabili di una cella, lo scarto standardizzato riguarda una sola variabile; qui se ne usa il valore assoluto. La variabile del tipo è per definizione la più lontana dal normale nel nucleo: è in parte atteso che lì lo scarto standardizzato sia alto e fuori scenda, e il confronto utile è fra i tipi. Per precipitazione, copertura nuvolosa e radiazione solare lo scarto standardizzato torna vicino ai livelli di fondo entro due celle dal bordo: per la precipitazione scende da 1.33 nell'ultima cella del nucleo a 0.48 due celle fuori, per la copertura nuvolosa da 1.62 a 0.52. La velocità verticale scende più lentamente, da 1.38 a 0.78. Per la temperatura a due metri resta alto a lungo: a sette celle fuori lo scarto standardizzato è ancora 1.33. La pressione e la temperatura a 850~hPa si comportano allo stesso modo, con 1.38 e 1.58 a sette celle; i venti e l'umidità specifica stanno in mezzo. Lo scarto standardizzato mediano non è mai zero: a otto o più celle dal bordo vale 0.42 per la precipitazione e 0.98 per la pressione, e questi sono i livelli di fondo.
+\paragraph{Lo scarto standardizzato della variabile del tipo cala invece in modo diverso.} Le differenze grandi riguardano lo scarto standardizzato della variabile del tipo (Figura~\ref{fig:ris-eventi-profilo-tipi}). Nella figura sono in colore i tre tipi con più valori nei cluster di almeno 20 valori, velocità verticale, precipitazione e copertura nuvolosa, e la temperatura a due metri; ogni punto è la mediana dei valori a quella distanza in tutti i cluster del tipo, e i punti con meno di 1000 valori non sono tracciati, perché la mediana sarebbe poco affidabile. A differenza della distanza dal normale, che riassume tutte le variabili di una cella, lo scarto standardizzato riguarda una sola variabile; qui se ne usa il valore assoluto. La variabile del tipo è per definizione la più lontana dal normale nel nucleo: è in parte atteso che lì lo scarto standardizzato sia alto e fuori scenda, e il confronto utile è fra i tipi. Per precipitazione, copertura nuvolosa e radiazione solare lo scarto standardizzato torna vicino ai livelli di fondo entro due celle dal bordo: per la precipitazione scende da 1.33 nell'ultima cella del nucleo a 0.48 due celle fuori, per la copertura nuvolosa da 1.62 a 0.52. La velocità verticale scende più lentamente, da 1.38 a 0.78. Per la temperatura a due metri resta alto a lungo: a sette celle fuori lo scarto standardizzato è ancora 1.33. La pressione e la temperatura a 850~hPa si comportano allo stesso modo, con 1.38 e 1.58 a sette celle; i venti e l'umidità specifica stanno in mezzo. Lo scarto standardizzato mediano non è mai zero: a otto o più celle dal bordo vale 0.42 per la precipitazione e 0.98 per la pressione, e questi sono i livelli di fondo.
 
 \begin{figure}[htbp]
     \centering
     \phantomcaption
     \label{fig:ris-eventi-profilo-tipi}
-    \begin{subfigure}[t]{0.437\textwidth}
+    \begin{subfigure}[t]{0.408\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_eventi_profilo_tipi_a}
-        \caption[$G_{\mathrm{n}}$ cala allo stesso modo per tutti i tipi di cluster.]{$G_{\mathrm{n}}$ cala allo stesso modo per tutti i tipi di cluster. Percentile mediano di $G_{\mathrm{n}}$ secondo le celle di distanza dal bordo del cluster, per ogni tipo di cluster, sugli anni di test. In colore, con i nomi nella Figura~\ref{fig:ris-eventi-profilo-tipi-b}, i tre tipi principali, quelli con più valori segnalati nei cluster medi ed enormi della Figura~\ref{fig:ris-eventi-dimensione} (velocità verticale, precipitazione e copertura nuvolosa), e la temperatura a due metri, citata nel testo; gli altri tipi sono in grigio. Ogni punto è la mediana dei valori a quella distanza in tutti i cluster del tipo, di ogni dimensione; i punti con meno di 1000 valori non sono tracciati, perché la mediana sarebbe poco affidabile.}
+        \caption[Percentile mediano di $G_{\mathrm{n}}$ secondo la distanza in celle dal bordo del cluster, per ogni tipo di cluster, sugli anni di test: in colore velocità verticale (rosa), precipitazione (viola), copertura nuvolosa (grigio scuro) e temperatura a due metri (ocra), in grigio chiaro gli altri tipi.]{Percentile mediano di $G_{\mathrm{n}}$ secondo la distanza in celle dal bordo del cluster, per ogni tipo di cluster, sugli anni di test: in colore velocità verticale (rosa), precipitazione (viola), copertura nuvolosa (grigio scuro) e temperatura a due metri (ocra), in grigio chiaro gli altri tipi. Le curve di tutti i tipi quasi coincidono.}
         \label{fig:ris-eventi-profilo-tipi-a}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[t]{0.475\textwidth}
+    \begin{subfigure}[t]{0.489\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_eventi_profilo_tipi_b}
-        \caption[Le variabili, invece, calano in modo diverso: alcune tornano ai livelli di fondo entro due celle fuori dal bordo del cluster, come la precipitazione, altre restano a lungo lontane dal normale, come la temperatura a due metri.]{Le variabili, invece, calano in modo diverso: alcune tornano ai livelli di fondo entro due celle fuori dal bordo del cluster, come la precipitazione, altre restano a lungo lontane dal normale, come la temperatura a due metri. Scarto standardizzato mediano, in valore assoluto, della variabile che dà il nome al tipo, in deviazioni standard (0 è il valore normale), con gli stessi tipi e colori della Figura~\ref{fig:ris-eventi-profilo-tipi-a}; l'asse è limitato a 3.5.}
+        \caption[Scarto standardizzato mediano, in valore assoluto, della variabile del tipo, secondo la distanza in celle dal bordo del cluster, per ogni tipo di cluster, sugli anni di test.]{Scarto standardizzato mediano, in valore assoluto, della variabile del tipo, secondo la distanza in celle dal bordo del cluster, per ogni tipo di cluster, sugli anni di test. Alcune variabili tornano ai livelli di fondo entro due celle, altre restano a lungo lontane dal normale.}
         \label{fig:ris-eventi-profilo-tipi-b}
     \end{subfigure}
 \end{figure}
@@ -629,7 +630,7 @@ Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi i clus
     \begin{subfigure}[t]{0.970\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_eventi_profilo_tipi_c}
-        \caption[$G_{\mathrm{n}}$ non è il solo a calare allo stesso modo per tutti i tipi di cluster: è fra i metodi più uniformi, con la variazione in tre ore, HBOS e COPOD, mentre la distanza dal normale, MCD e PCA cambiano di 20 su 100 o più da un tipo all'altro.]{$G_{\mathrm{n}}$ non è il solo a calare allo stesso modo per tutti i tipi di cluster: è fra i metodi più uniformi, con la variazione in tre ore, HBOS e COPOD, mentre la distanza dal normale, MCD e PCA cambiano di 20 su 100 o più da un tipo all'altro. Una riga per metodo, ciascuno sui propri cluster. Ogni pallino è un tipo di cluster, con i colori della Figura~\ref{fig:ris-eventi-profilo-tipi-a}, e sta al percentile mediano dello score nei valori a due celle fuori dal bordo: il percentile dice dove cade lo score fra i valori degli anni di validazione (50 è il valore tipico, 95 la soglia), e la mediana è presa su tutti i valori a quella distanza. Il segmento va dal tipo più basso al più alto; il numero a destra è la differenza fra i due percentili, su una scala da 0 a 100. Anni di test, con la soglia di ciascun metodo al 95-esimo percentile del proprio score sugli anni di validazione; non sono considerati i tipi con meno di 1000 valori a quella distanza.}
+        \caption[Percentile mediano di ogni score a due celle fuori dal bordo dei propri cluster, un pallino per tipo di cluster, sugli anni di test; il segmento va dal tipo più basso al più alto e il numero a destra è la loro differenza.]{Percentile mediano di ogni score a due celle fuori dal bordo dei propri cluster, un pallino per tipo di cluster, sugli anni di test; il segmento va dal tipo più basso al più alto e il numero a destra è la loro differenza. $G_{\mathrm{n}}$ è fra i metodi più uniformi.}
         \label{fig:ris-eventi-profilo-tipi-c}
     \end{subfigure}
 \end{figure}
@@ -676,21 +677,32 @@ Il risultato è coerente con il modo in cui queste variabili cambiano nello spaz
 
 Fin qui i cluster sono descritti tutti insieme e per tipo; resta da vedere un cluster per ciascuno dei tre tipi principali, per vedere su una mappa che cosa riassumono i numeri. Gli esempi sono scelti con una regola fissata prima di esaminarli, così che nessuno sia preso per il suo aspetto: i tipi sono i tre con più valori nei cluster di almeno 20 valori, cioè velocità verticale, precipitazione e copertura nuvolosa; per ciascuno l'esempio è il cluster con più valori fra quelli che durano al massimo tre giorni, letto nell'istante in cui conta più celle. Il limite di durata esclude le catene descritte sopra, che difficilmente corrispondono a un'unica anomalia meteorologica. Gli esempi non sono quindi i casi più importanti né i più tipici: mostrano come appare un cluster compatto di ciascun tipo.
 
-\paragraph{Come leggere le figure.} Ogni esempio ha quattro immagini. Le prime due sono le mappe dello scarto standardizzato della variabile del tipo e di $G_{\mathrm{n}}$, con il nucleo del cluster racchiuso dalla linea arancione; la terza segue nel tempo la cella cerchiata sulle mappe, cioè la cella del nucleo con $G_{\mathrm{n}}$ più alto; la quarta è il profilo del cluster dal nucleo verso l'esterno, come nella Figura~\ref{fig:ris-eventi-profilo-a}. La Tabella~\ref{tab:ris-casi} riassume le tre zone. I luoghi del nucleo nominati nel testo sono letti sulla mappa.
+In ogni esempio la cella seguita nel tempo è quella del nucleo con $G_{\mathrm{n}}$ più alto. La Tabella~\ref{tab:ris-casi} riassume le tre zone. I luoghi del nucleo nominati nel testo sono letti sulla mappa.
 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{I tre esempi nell'istante delle mappe, con le celle del nucleo. Le colonne $G_{\mathrm{n}}$ e Distanza riportano il percentile mediano di $G_{\mathrm{n}}$ e della distanza dal normale nel nucleo e nel contorno di questo cluster e nella zona lontana, a più di tre celle da ogni cella segnalata, in quest'ordine. ``Oltre soglia'' è la percentuale dei valori del nucleo oltre la soglia della distanza dal normale.}
+    \caption{I tre esempi, nell'istante delle mappe. La zona lontana è a più di tre celle da ogni cella segnalata.}
     \label{tab:ris-casi}
     \vspace{0.6em}
-    \begin{tabular}{@{}lrrrrr@{}}
+    \begin{tabular}{@{}L{0.46}rrr@{}}
         \toprule
-        Tipo & Celle & $G_{\mathrm{n}}$ & Distanza & Oltre soglia & Durata (ore) \\
+         & \shortstack[r]{Velocità\\verticale} & Precipitazione & \shortstack[r]{Copertura\\nuvolosa} \\
         \midrule
-        Velocità verticale & 549 & 97, 91, 42 & 97, 94, 40 & 65\% & 63 \\
-        Precipitazione & 576 & 97, 91, 33 & 91, 87, 44 & 34\% & 72 \\
-        Copertura nuvolosa & 404 & 98, 89, 43 & 93, 56, 33 & 46\% & 66 \\
+        Celle del nucleo & 549 & 576 & 404 \\
+        Durata del cluster (ore) & 63 & 72 & 66 \\
+        \addlinespace
+        \multicolumn{4}{@{}l}{Percentile mediano di $G_{\mathrm{n}}$} \\
+        \quad nel nucleo & 97 & 97 & 98 \\
+        \quad nel contorno & 91 & 91 & 89 \\
+        \quad nella zona lontana & 42 & 33 & 43 \\
+        \addlinespace
+        \multicolumn{4}{@{}l}{Percentile mediano della distanza dal normale} \\
+        \quad nel nucleo & 97 & 91 & 93 \\
+        \quad nel contorno & 94 & 87 & 56 \\
+        \quad nella zona lontana & 40 & 44 & 33 \\
+        \addlinespace
+        Valori del nucleo oltre la soglia della distanza dal normale & 65\% & 34\% & 46\% \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -701,24 +713,24 @@ Fin qui i cluster sono descritti tutti insieme e per tipo; resta da vedere un cl
     \centering
     \phantomcaption
     \label{fig:ris-caso-velocita}
-    \begin{subfigure}[t]{0.397\textwidth}
+    \begin{subfigure}[t]{0.429\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_caso_00_a}
-        \caption[Il nucleo è una fascia stretta in cui la velocità verticale è per lo più sotto il normale.]{Il nucleo è una fascia stretta in cui la velocità verticale è per lo più sotto il normale. Scarto standardizzato della velocità verticale il 23 novembre 2017 alle 00~UTC; in arancione il nucleo del cluster (63 ore, dal 21 al 24 novembre 2017, con il massimo in questo istante), il cerchio è la cella della Figura~\ref{fig:ris-caso-velocita-c}. Linee di costa da Natural Earth.}
+        \caption[Scarto standardizzato della velocità verticale il 23 novembre 2017 alle 00~UTC, con il nucleo del cluster in arancione e la cella seguita nel cerchio.]{Scarto standardizzato della velocità verticale il 23 novembre 2017 alle 00~UTC, con il nucleo del cluster in arancione e la cella seguita nel cerchio. Il nucleo è una fascia stretta in cui la velocità verticale è per lo più sotto il normale. Linee di costa da Natural Earth.}
         \label{fig:ris-caso-velocita-a}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[t]{0.347\textwidth}
+    \begin{subfigure}[t]{0.367\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_caso_00_b}
-        \caption[$G_{\mathrm{n}}$ nello stesso istante della Figura~\ref{fig:ris-caso-velocita-a}, come percentile, con lo stesso nucleo e la stessa cella.]{$G_{\mathrm{n}}$ nello stesso istante della Figura~\ref{fig:ris-caso-velocita-a}, come percentile, con lo stesso nucleo e la stessa cella. Linee di costa da Natural Earth.}
+        \caption[$G_{\mathrm{n}}$ come percentile il 23 novembre 2017 alle 00~UTC, con il nucleo del cluster in arancione e la cella seguita nel cerchio.]{$G_{\mathrm{n}}$ come percentile il 23 novembre 2017 alle 00~UTC, con il nucleo del cluster in arancione e la cella seguita nel cerchio. Linee di costa da Natural Earth.}
         \label{fig:ris-caso-velocita-b}
     \end{subfigure}
     \par\bigskip
     \begin{subfigure}[t]{0.970\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_caso_00_c}
-        \caption[Nella cella cerchiata $G_{\mathrm{n}}$ resta oltre la soglia, salvo una breve pausa, per circa un giorno e mezzo, e la distanza dal normale sale e scende insieme a $G_{\mathrm{n}}$.]{Nella cella cerchiata $G_{\mathrm{n}}$ resta oltre la soglia, salvo una breve pausa, per circa un giorno e mezzo, e la distanza dal normale sale e scende insieme a $G_{\mathrm{n}}$. In alto il percentile di ogni score nella cella (gli score leggono tutte le variabili), con le baseline come nella Figura~\ref{fig:ris-eventi-profilo-a}; in basso lo scarto standardizzato della velocità verticale da sola. In azzurro gli istanti in cui la cella fa parte del cluster.}
+        \caption[Percentile di ogni score nella cella seguita ($58.5^\circ$N, $8.5^\circ$E), in alto, e scarto standardizzato della velocità verticale da sola, in basso; in azzurro gli istanti in cui la cella fa parte del cluster.]{Percentile di ogni score nella cella seguita ($58.5^\circ$N, $8.5^\circ$E), in alto, e scarto standardizzato della velocità verticale da sola, in basso; in azzurro gli istanti in cui la cella fa parte del cluster. $G_{\mathrm{n}}$ resta oltre la soglia, salvo una breve pausa, per circa un giorno e mezzo, e la distanza dal normale sale e scende insieme a $G_{\mathrm{n}}$.}
         \label{fig:ris-caso-velocita-c}
     \end{subfigure}
 \end{figure}
@@ -729,7 +741,7 @@ Fin qui i cluster sono descritti tutti insieme e per tipo; resta da vedere un cl
     \begin{subfigure}[t]{0.497\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_caso_00_d}
-        \caption[Il cluster dal nucleo verso l'esterno, nell'istante delle mappe: percentile mediano di ogni score secondo le celle dal bordo del cluster, con le baseline come nella Figura~\ref{fig:ris-eventi-profilo-a}; fuori, solo le celle più vicine a questo nucleo che ad altre segnalazioni.]{Il cluster dal nucleo verso l'esterno, nell'istante delle mappe: percentile mediano di ogni score secondo le celle dal bordo del cluster, con le baseline come nella Figura~\ref{fig:ris-eventi-profilo-a}; fuori, solo le celle più vicine a questo nucleo che ad altre segnalazioni.}
+        \caption[Percentile mediano di ogni score secondo la distanza in celle dal bordo del cluster, il 23 novembre 2017 alle 00~UTC; fuori dal bordo, solo le celle più vicine a questo nucleo che ad altre segnalazioni.]{Percentile mediano di ogni score secondo la distanza in celle dal bordo del cluster, il 23 novembre 2017 alle 00~UTC; fuori dal bordo, solo le celle più vicine a questo nucleo che ad altre segnalazioni.}
         \label{fig:ris-caso-velocita-d}
     \end{subfigure}
 \end{figure}
@@ -741,24 +753,24 @@ Fin qui i cluster sono descritti tutti insieme e per tipo; resta da vedere un cl
     \centering
     \phantomcaption
     \label{fig:ris-caso-precipitazione}
-    \begin{subfigure}[t]{0.397\textwidth}
+    \begin{subfigure}[t]{0.415\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_caso_01_a}
-        \caption[Il nucleo è diviso in più parti, in cui la precipitazione è quasi ovunque sopra il normale.]{Il nucleo è diviso in più parti, in cui la precipitazione è quasi ovunque sopra il normale. Scarto standardizzato della precipitazione il 19 maggio 2006 alle 03~UTC; in arancione il nucleo del cluster (72 ore, dal 16 al 19 maggio 2006, finito poche ore dopo il massimo), il cerchio è la cella della Figura~\ref{fig:ris-caso-precipitazione-c}. Linee di costa da Natural Earth.}
+        \caption[Scarto standardizzato della precipitazione il 19 maggio 2006 alle 03~UTC, con il nucleo del cluster in arancione e la cella seguita nel cerchio.]{Scarto standardizzato della precipitazione il 19 maggio 2006 alle 03~UTC, con il nucleo del cluster in arancione e la cella seguita nel cerchio. Il nucleo è diviso in più parti, in cui la precipitazione è quasi ovunque sopra il normale. Linee di costa da Natural Earth.}
         \label{fig:ris-caso-precipitazione-a}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[t]{0.347\textwidth}
+    \begin{subfigure}[t]{0.367\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_caso_01_b}
-        \caption[$G_{\mathrm{n}}$ nello stesso istante della Figura~\ref{fig:ris-caso-precipitazione-a}, come percentile, con lo stesso nucleo e la stessa cella.]{$G_{\mathrm{n}}$ nello stesso istante della Figura~\ref{fig:ris-caso-precipitazione-a}, come percentile, con lo stesso nucleo e la stessa cella. Linee di costa da Natural Earth.}
+        \caption[$G_{\mathrm{n}}$ come percentile il 19 maggio 2006 alle 03~UTC, con il nucleo del cluster in arancione e la cella seguita nel cerchio.]{$G_{\mathrm{n}}$ come percentile il 19 maggio 2006 alle 03~UTC, con il nucleo del cluster in arancione e la cella seguita nel cerchio. Linee di costa da Natural Earth.}
         \label{fig:ris-caso-precipitazione-b}
     \end{subfigure}
     \par\bigskip
     \begin{subfigure}[t]{0.970\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_caso_01_c}
-        \caption[Nella cella cerchiata la distanza dal normale è alta già nei giorni prima, e $G_{\mathrm{n}}$ supera la soglia solo quando arriva la precipitazione.]{Nella cella cerchiata la distanza dal normale è alta già nei giorni prima, e $G_{\mathrm{n}}$ supera la soglia solo quando arriva la precipitazione. In alto il percentile di ogni score nella cella (gli score leggono tutte le variabili), con le baseline come nella Figura~\ref{fig:ris-eventi-profilo-a}; in basso lo scarto standardizzato della precipitazione da sola. In azzurro gli istanti in cui la cella fa parte del cluster.}
+        \caption[Percentile di ogni score nella cella seguita ($56.5^\circ$N, $23^\circ$E), in alto, e scarto standardizzato della precipitazione da sola, in basso; in azzurro gli istanti in cui la cella fa parte del cluster.]{Percentile di ogni score nella cella seguita ($56.5^\circ$N, $23^\circ$E), in alto, e scarto standardizzato della precipitazione da sola, in basso; in azzurro gli istanti in cui la cella fa parte del cluster. La distanza dal normale è alta già nei giorni prima, e $G_{\mathrm{n}}$ supera la soglia solo quando arriva la precipitazione.}
         \label{fig:ris-caso-precipitazione-c}
     \end{subfigure}
 \end{figure}
@@ -769,7 +781,7 @@ Fin qui i cluster sono descritti tutti insieme e per tipo; resta da vedere un cl
     \begin{subfigure}[t]{0.497\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_caso_01_d}
-        \caption[Il cluster dal nucleo verso l'esterno, nell'istante delle mappe: percentile mediano di ogni score secondo le celle dal bordo del cluster, con le baseline come nella Figura~\ref{fig:ris-eventi-profilo-a}; fuori, solo le celle più vicine a questo nucleo che ad altre segnalazioni.]{Il cluster dal nucleo verso l'esterno, nell'istante delle mappe: percentile mediano di ogni score secondo le celle dal bordo del cluster, con le baseline come nella Figura~\ref{fig:ris-eventi-profilo-a}; fuori, solo le celle più vicine a questo nucleo che ad altre segnalazioni.}
+        \caption[Percentile mediano di ogni score secondo la distanza in celle dal bordo del cluster, il 19 maggio 2006 alle 03~UTC; fuori dal bordo, solo le celle più vicine a questo nucleo che ad altre segnalazioni.]{Percentile mediano di ogni score secondo la distanza in celle dal bordo del cluster, il 19 maggio 2006 alle 03~UTC; fuori dal bordo, solo le celle più vicine a questo nucleo che ad altre segnalazioni.}
         \label{fig:ris-caso-precipitazione-d}
     \end{subfigure}
 \end{figure}
@@ -781,24 +793,24 @@ Fin qui i cluster sono descritti tutti insieme e per tipo; resta da vedere un cl
     \centering
     \phantomcaption
     \label{fig:ris-caso-nuvole}
-    \begin{subfigure}[t]{0.397\textwidth}
+    \begin{subfigure}[t]{0.442\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_caso_02_a}
-        \caption[Il nucleo è una fascia stretta sull'Africa nord-occidentale in cui la copertura nuvolosa è quasi ovunque sopra il normale.]{Il nucleo è una fascia stretta sull'Africa nord-occidentale in cui la copertura nuvolosa è quasi ovunque sopra il normale. Scarto standardizzato della copertura nuvolosa il 15 giugno 2024 alle 12~UTC; in arancione il nucleo del cluster (66 ore, dal 14 al 17 giugno 2024, con il massimo in questo istante), il cerchio è la cella della Figura~\ref{fig:ris-caso-nuvole-c}. Linee di costa da Natural Earth.}
+        \caption[Scarto standardizzato della copertura nuvolosa il 15 giugno 2024 alle 12~UTC, con il nucleo del cluster in arancione e la cella seguita nel cerchio.]{Scarto standardizzato della copertura nuvolosa il 15 giugno 2024 alle 12~UTC, con il nucleo del cluster in arancione e la cella seguita nel cerchio. Il nucleo è una fascia stretta sull'Africa nord-occidentale in cui la copertura nuvolosa è quasi ovunque sopra il normale. Linee di costa da Natural Earth.}
         \label{fig:ris-caso-nuvole-a}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[t]{0.347\textwidth}
+    \begin{subfigure}[t]{0.367\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_caso_02_b}
-        \caption[$G_{\mathrm{n}}$ nello stesso istante della Figura~\ref{fig:ris-caso-nuvole-a}, come percentile, con lo stesso nucleo e la stessa cella.]{$G_{\mathrm{n}}$ nello stesso istante della Figura~\ref{fig:ris-caso-nuvole-a}, come percentile, con lo stesso nucleo e la stessa cella. Linee di costa da Natural Earth.}
+        \caption[$G_{\mathrm{n}}$ come percentile il 15 giugno 2024 alle 12~UTC, con il nucleo del cluster in arancione e la cella seguita nel cerchio.]{$G_{\mathrm{n}}$ come percentile il 15 giugno 2024 alle 12~UTC, con il nucleo del cluster in arancione e la cella seguita nel cerchio. Linee di costa da Natural Earth.}
         \label{fig:ris-caso-nuvole-b}
     \end{subfigure}
     \par\bigskip
     \begin{subfigure}[t]{0.970\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_caso_02_c}
-        \caption[Nella cella cerchiata $G_{\mathrm{n}}$ e la distanza dal normale salgono e scendono insieme, e $G_{\mathrm{n}}$ resta oltre la soglia per dodici ore.]{Nella cella cerchiata $G_{\mathrm{n}}$ e la distanza dal normale salgono e scendono insieme, e $G_{\mathrm{n}}$ resta oltre la soglia per dodici ore. In alto il percentile di ogni score nella cella (gli score leggono tutte le variabili), con le baseline come nella Figura~\ref{fig:ris-eventi-profilo-a}; in basso lo scarto standardizzato della copertura nuvolosa da sola. In azzurro gli istanti in cui la cella fa parte del cluster.}
+        \caption[Percentile di ogni score nella cella seguita ($23.5^\circ$N, $13^\circ$W), in alto, e scarto standardizzato della copertura nuvolosa da sola, in basso; in azzurro gli istanti in cui la cella fa parte del cluster.]{Percentile di ogni score nella cella seguita ($23.5^\circ$N, $13^\circ$W), in alto, e scarto standardizzato della copertura nuvolosa da sola, in basso; in azzurro gli istanti in cui la cella fa parte del cluster. $G_{\mathrm{n}}$ e la distanza dal normale salgono e scendono insieme, e $G_{\mathrm{n}}$ resta oltre la soglia per dodici ore.}
         \label{fig:ris-caso-nuvole-c}
     \end{subfigure}
 \end{figure}
@@ -809,7 +821,7 @@ Fin qui i cluster sono descritti tutti insieme e per tipo; resta da vedere un cl
     \begin{subfigure}[t]{0.497\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_caso_02_d}
-        \caption[Il cluster dal nucleo verso l'esterno, nell'istante delle mappe: percentile mediano di ogni score secondo le celle dal bordo del cluster, con le baseline come nella Figura~\ref{fig:ris-eventi-profilo-a}; fuori, solo le celle più vicine a questo nucleo che ad altre segnalazioni.]{Il cluster dal nucleo verso l'esterno, nell'istante delle mappe: percentile mediano di ogni score secondo le celle dal bordo del cluster, con le baseline come nella Figura~\ref{fig:ris-eventi-profilo-a}; fuori, solo le celle più vicine a questo nucleo che ad altre segnalazioni.}
+        \caption[Percentile mediano di ogni score secondo la distanza in celle dal bordo del cluster, il 15 giugno 2024 alle 12~UTC; fuori dal bordo, solo le celle più vicine a questo nucleo che ad altre segnalazioni.]{Percentile mediano di ogni score secondo la distanza in celle dal bordo del cluster, il 15 giugno 2024 alle 12~UTC; fuori dal bordo, solo le celle più vicine a questo nucleo che ad altre segnalazioni.}
         \label{fig:ris-caso-nuvole-d}
     \end{subfigure}
 \end{figure}
@@ -866,21 +878,21 @@ Fin qui si è usata la media delle estrazioni di dropout; questa sezione guarda 
     \begin{subfigure}[t]{0.322\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_dropout_a}
-        \caption[In proporzione a G la dispersione del dropout è quasi costante, e cala solo sui valori di G più alti.]{In proporzione a G la dispersione del dropout è quasi costante, e cala solo sui valori di G più alti. Dispersione media divisa per G medio, per percentile di G su tutti i valori, sugli anni di test.}
+        \caption[Dispersione media divisa per G medio, per fascia di percentile di G, sugli anni di test.]{Dispersione media divisa per G medio, per fascia di percentile di G, sugli anni di test. In proporzione a G la dispersione è quasi costante, e cala solo sui valori di G più alti.}
         \label{fig:ris-dropout-a}
     \end{subfigure}
     \hfill
     \begin{subfigure}[t]{0.357\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_dropout_b}
-        \caption[Attraverso i cluster il rapporto è quasi costante, con un minimo poco dentro il bordo.]{Attraverso i cluster il rapporto è quasi costante, con un minimo poco dentro il bordo. Mediana del rapporto fra dispersione e G, secondo le celle di distanza dal bordo del cluster, con la soglia di $G_{\mathrm{n}}$ al 95-esimo percentile, sugli anni di test.}
+        \caption[Mediana del rapporto fra dispersione e G secondo la distanza in celle dal bordo del cluster di $G_{\mathrm{n}}$, sugli anni di test.]{Mediana del rapporto fra dispersione e G secondo la distanza in celle dal bordo del cluster di $G_{\mathrm{n}}$, sugli anni di test. Il rapporto è quasi costante, con un minimo poco dentro il bordo.}
         \label{fig:ris-dropout-b}
     \end{subfigure}
     \hfill
     \begin{subfigure}[t]{0.279\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_dropout_c}
-        \caption[A parità di G, più dispersione va con dati più lontani dal normale, fino alla penultima classe.]{A parità di G, più dispersione va con dati più lontani dal normale, fino alla penultima classe. I valori segnalati da $G_{\mathrm{n}}$, divisi a parità di G in cinque classi con lo stesso numero di valori, ordinate per rapporto (1 = estrazioni più concordi, 5 = più discordi); per ogni classe, la percentuale oltre la soglia della distanza dal normale. Anni di test.}
+        \caption[Valori segnalati da $G_{\mathrm{n}}$ divisi a parità di G in cinque classi, dalle estrazioni più concordi (1) alle più discordi (5), e percentuale di ciascuna classe oltre la soglia della distanza dal normale.]{Valori segnalati da $G_{\mathrm{n}}$ divisi a parità di G in cinque classi, dalle estrazioni più concordi (1) alle più discordi (5), e percentuale di ciascuna classe oltre la soglia della distanza dal normale. Anni di test. Fino alla classe 4, più dispersione va con dati più lontani dal normale.}
         \label{fig:ris-dropout-c}
     \end{subfigure}
 \end{figure}
@@ -902,14 +914,14 @@ Fin qui si è usata la media delle estrazioni di dropout; questa sezione guarda 
     \begin{subfigure}[t]{0.499\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_dropout_mappe_a}
-        \caption[La dispersione del dropout è più alta a sud e lungo il margine del dominio.]{La dispersione del dropout è più alta a sud e lungo il margine del dominio. Dispersione di G fra le 20 estrazioni in ogni cella, in media sugli anni di test. Linee di costa da Natural Earth.}
+        \caption[Dispersione di G fra le 20 estrazioni in ogni cella, in media sugli anni di test.]{Dispersione di G fra le 20 estrazioni in ogni cella, in media sugli anni di test. È più alta a sud e lungo il margine del dominio. Linee di costa da Natural Earth.}
         \label{fig:ris-dropout-mappe-a}
     \end{subfigure}
     \hfill
     \begin{subfigure}[t]{0.471\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_dropout_mappe_b}
-        \caption[Il rapporto fra dispersione e G varia poco nel dominio.]{Il rapporto fra dispersione e G varia poco nel dominio. Rapporto medio in ogni cella, sugli anni di test. Linee di costa da Natural Earth.}
+        \caption[Rapporto medio fra dispersione e G in ogni cella, sugli anni di test.]{Rapporto medio fra dispersione e G in ogni cella, sugli anni di test. Varia poco nel dominio. Linee di costa da Natural Earth.}
         \label{fig:ris-dropout-mappe-b}
     \end{subfigure}
 \end{figure}
@@ -963,7 +975,7 @@ Tutti i risultati precedenti usano la soglia del 95-esimo percentile degli score
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Le analisi delle sezioni precedenti con la soglia al 95-esimo e al 99-esimo percentile degli score di validazione: percentuale per luogo e zone sugli anni di validazione, confronti e cluster sugli anni di test. La differenza relativa è la differenza assoluta media delle percentuali per fascia di latitudine e mese dalla loro media, divisa per la media.}
+    \caption{Le analisi principali con la soglia al 95-esimo e al 99-esimo percentile degli score di validazione: percentuali per luogo e zone sugli anni di validazione, confronti e cluster sugli anni di test. La differenza relativa misura quanto le percentuali cambiano fra fasce e mesi (0 se sono tutte uguali).}
     \label{tab:ris-soglia}
     \vspace{0.6em}
     \begin{tabular}{@{}L{0.22}L{0.40}rr@{}}

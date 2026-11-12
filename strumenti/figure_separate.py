@@ -28,7 +28,7 @@ def first_sentence(text):
     for i, ch in enumerate(text):
         if ch == '$':
             depth ^= 1
-        elif ch == '.' and not depth and (i + 1 == len(text) or (text[i + 1] == ' ' and text[i + 2:i + 3].isupper())):
+        elif ch == '.' and not depth and (i + 1 == len(text) or (text[i + 1] == ' ' and (text[i + 2:i + 3].isupper() or text[i + 2:i + 3] == '$'))):
             return text[:i + 1]
     return text
 
@@ -75,125 +75,105 @@ def ref(label, letter):
     return f'Figura~\\ref{{{label}-{letter}}}'
 
 
-def case(label, variable, the_variable, moment, cluster, core, cell):
-    """Short captions: four of them share one page."""
+def case(label, the_variable, moment, place, core, cell):
+    """The four images of an example; the durations and the zones are in the table of the examples."""
     return {
-        'a': f"{core} Scarto standardizzato {the_variable} {moment}; in arancione il nucleo del cluster ({cluster}), il cerchio è la "
-             f"cella della {ref(label, 'c')}. {NE}",
-        'b': f"$G_{{\\mathrm{{n}}}}$ nello stesso istante della {ref(label, 'a')}, come percentile, con lo stesso nucleo "
-             f"e la stessa cella. {NE}",
-        'c': f"{cell} In alto il percentile di ogni score nella cella (gli score leggono tutte le variabili), con le "
-             f"baseline come nella Figura~\\ref{{fig:ris-eventi-profilo-a}}; in basso lo scarto standardizzato {the_variable} da "
-             f"sola. In azzurro gli istanti in cui la cella fa parte del cluster.",
-        'd': f"Il cluster dal nucleo verso l'esterno, nell'istante delle mappe: percentile mediano di ogni score "
-             f"secondo le celle dal bordo del cluster, con le baseline come nella "
-             f"Figura~\\ref{{fig:ris-eventi-profilo-a}}; fuori, solo le celle più vicine a questo nucleo che ad "
-             f"altre segnalazioni.",
+        'a': f"Scarto standardizzato {the_variable} {moment}, con il nucleo del cluster in arancione e la cella seguita "
+             f"nel cerchio. {core} {NE}",
+        'b': f"$G_{{\\mathrm{{n}}}}$ come percentile {moment}, con il nucleo del cluster in arancione e la cella seguita "
+             f"nel cerchio. {NE}",
+        'c': f"Percentile di ogni score nella cella seguita ({place}), in alto, e scarto standardizzato {the_variable} "
+             f"da sola, in basso; in azzurro gli istanti in cui la cella fa parte del cluster. {cell}",
+        'd': f"Percentile mediano di ogni score secondo la distanza in celle dal bordo del cluster, {moment}; fuori dal "
+             f"bordo, solo le celle più vicine a questo nucleo che ad altre segnalazioni.",
     }
 
 
 L = {'cicli': 'fig:era5-cicli', 'luogo': 'fig:ris-g-luogo', 'temp': 'fig:ris-d-termini-temporale',
      'mappa': 'fig:ris-d-termini-mappa', 'prof': 'fig:ris-eventi-profilo', 'tipi': 'fig:ris-eventi-profilo-tipi',
      'drop': 'fig:ris-dropout', 'dmap': 'fig:ris-dropout-mappe'}
+SHALLOW = r"la fascia grigia va dal più basso al più alto dei sei modelli shallow"
 FIGURES = {
     'chapters/dati.tex': [
         ('era5_cicli', L['cicli'], ['ab'], {
-            'a': r"Lo stesso mese ha livelli e variabilità diversi da una cella all'altra. Ciclo stagionale della "
-                 r"temperatura a due metri e della copertura nuvolosa in tre celle: Europa settentrionale ($55^\circ$N, "
-                 r"$10^\circ$E), Pianura Padana ($45^\circ$N, $9^\circ$E) e Sahara ($25^\circ$N, $10^\circ$E); media "
-                 r"per mese, con una fascia a una deviazione standard dei valori triorari del mese. La temperatura è in "
-                 r"gradi Celsius (in kelvin nei dati). Anni 1980--1999.",
-            'b': r"Il ciclo giornaliero cambia con il luogo e con la stagione. Media per ora UTC in gennaio "
-                 r"(tratteggio) e in luglio (linea continua), per le stesse variabili e celle della "
-                 + ref(L['cicli'], 'a') + r". Anni 1980--1999."}, True),
+            'a': r"Ciclo stagionale della temperatura a due metri e della copertura nuvolosa in tre celle: media per "
+                 r"mese, con una fascia a una deviazione standard. Anni 1980--1999. Livello e ampiezza del ciclo "
+                 r"cambiano da una cella all'altra.",
+            'b': r"Ciclo giornaliero della temperatura a due metri e della copertura nuvolosa in Europa settentrionale "
+                 r"(blu), Pianura Padana (arancio) e Sahara (verde): media per ora UTC in gennaio (tratteggio) e in "
+                 r"luglio (linea continua). Anni 1980--1999. Il ciclo cambia con il luogo e con la stagione."}, True),
     ],
     'chapters/risultati.tex': [
         ('era5_g_luogo', L['luogo'], ['a', 'b'], {
-            'a': r"Senza normalizzazione le segnalazioni di G si concentrano a sud e in estate. Percentuale dei valori "
-                 r"segnalati da G, per fascia di latitudine e mese, sugli anni di validazione, con la soglia al "
-                 r"95-esimo percentile dello score sugli stessi anni. La scala dei colori non è lineare: il bianco "
-                 r"corrisponde al 5\%, il blu a percentuali minori, il rosso a percentuali maggiori.",
-            'b': r"Con la normalizzazione climatologica le segnalazioni sono distribuite in modo quasi uniforme. Come "
-                 r"la " + ref(L['luogo'], 'a') + r", per $G_{\mathrm{n}}$: G con la normalizzazione climatologica per "
-                 r"cella, ora e giorno dell'anno (finestra di $\pm15$ giorni)."}),
+            'a': r"Percentuale dei valori segnalati da G, senza normalizzazione, per fascia di latitudine e mese, sugli "
+                 r"anni di validazione; il bianco corrisponde al 5\%. Le segnalazioni si concentrano a sud e in estate.",
+            'b': r"Percentuale dei valori segnalati da $G_{\mathrm{n}}$, con la normalizzazione climatologica, per fascia "
+                 r"di latitudine e mese, sugli anni di validazione; il bianco corrisponde al 5\%. Le segnalazioni sono "
+                 r"distribuite in modo quasi uniforme."}),
         ('era5_d_termini_correlazione_temporale', L['temp'], ['ab'], {
-            'a': r"In ogni luogo il giudizio del discriminatore sull'osservazione scende quando G sale: tutte le celle "
-                 r"sono blu, con correlazioni intorno a $-0.7$. Correlazione temporale di Spearman, in ogni cella, fra G e "
-                 r"$D_{\mathrm{reale}}$, sugli anni di validazione, su una scala da $-1$ a $1$. " + NE,
-            'b': r"Lo stesso vale per il giudizio sulla ricostruzione. Correlazione temporale di Spearman, in ogni "
-                 r"cella, fra G e $D_{\mathrm{generato}}$, come nella " + ref(L['temp'], 'a') + '. ' + NE}),
+            'a': r"Correlazione temporale di Spearman fra G e $D_{\mathrm{reale}}$, il giudizio del discriminatore "
+                 r"sull'osservazione, in ogni cella, sugli anni di validazione. È negativa in tutte le celle, intorno a "
+                 r"$-0.7$. " + NE,
+            'b': r"Correlazione temporale di Spearman fra G e $D_{\mathrm{generato}}$, il giudizio del discriminatore "
+                 r"sulla ricostruzione, in ogni cella, sugli anni di validazione. È negativa in tutte le celle, intorno "
+                 r"a $-0.7$. " + NE}),
         ('era5_d_termini_mappa', L['mappa'], ['ab'], {
-            'a': r"G, l'errore di ricostruzione del generatore, il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta "
-                 r"degli anni di validazione, come percentile fra le celle di quell'istante. La linea arancione "
-                 r"racchiude l'1\% delle celle con G più alto. " + NE,
-            'b': r"Dove G è più alto, D è fra i valori più bassi. D, la componente del discriminatore, nello stesso "
-                 r"istante e con la stessa linea della " + ref(L['mappa'], 'a') + r"; dentro la linea il percentile "
-                 r"mediano è 6. " + NE}),
+            'a': r"G il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta degli anni di validazione, come "
+                 r"percentile fra le celle dell'istante; la linea arancione racchiude l'1\% delle celle con G più "
+                 r"alto. " + NE,
+            'b': r"D il 9 agosto 2003 alle 12~UTC, come percentile fra le celle dell'istante; la linea arancione "
+                 r"racchiude l'1\% delle celle con G più alto. Dentro la linea D è fra i valori più bassi. " + NE}),
         ('era5_eventi_profilo', L['prof'], ['ab'], {
-            'a': r"$G_{\mathrm{n}}$ cala più lentamente di quasi tutte le baseline. Ogni metodo sui propri cluster: "
-                 r"percentile mediano dello score secondo le celle di distanza dal bordo del cluster più vicino, sugli "
-                 r"anni di test, con la soglia di ciascun metodo al 95-esimo percentile del proprio score sugli anni di "
-                 r"validazione; i sei modelli shallow sono la fascia grigia, dal più basso al più alto.",
-            'b': r"Sui cluster di $G_{\mathrm{n}}$ tutte le baseline calano allo stesso modo di $G_{\mathrm{n}}$. Come "
-                 r"la " + ref(L['prof'], 'a') + r", ma con tutti i metodi misurati sui cluster di $G_{\mathrm{n}}$."}),
+            'a': r"Percentile mediano dello score secondo la distanza in celle dal bordo del cluster più vicino, per "
+                 r"ogni metodo sui propri cluster, sugli anni di test; " + SHALLOW + r". $G_{\mathrm{n}}$ cala più "
+                 r"lentamente di quasi tutte le baseline.",
+            'b': r"Percentile mediano dello score secondo la distanza in celle dal bordo del cluster più vicino, per "
+                 r"tutti i metodi sui cluster di $G_{\mathrm{n}}$, sugli anni di test; " + SHALLOW + r". Tutte le "
+                 r"baseline calano allo stesso modo di $G_{\mathrm{n}}$."}),
         ('era5_eventi_profilo_tipi', L['tipi'], ['ab', '|', 'c'], {
-            'a': r"$G_{\mathrm{n}}$ cala allo stesso modo per tutti i tipi di cluster. Percentile mediano di "
-                 r"$G_{\mathrm{n}}$ secondo le celle di distanza dal bordo del cluster, per ogni tipo di cluster, sugli "
-                 r"anni di test. In colore, con i nomi nella Figura~\ref{fig:ris-eventi-profilo-tipi-b}, i tre tipi principali, quelli con più valori segnalati nei cluster medi ed "
-                 r"enormi della Figura~\ref{fig:ris-eventi-dimensione} (velocità verticale, precipitazione e copertura "
-                 r"nuvolosa), e la temperatura a due metri, citata nel testo; gli altri tipi sono in grigio. Ogni punto è la "
-                 r"mediana dei valori a quella distanza in tutti i cluster del tipo, di ogni dimensione; i punti con "
-                 r"meno di 1000 valori non sono tracciati, perché la mediana sarebbe poco affidabile.",
-            'b': r"Le variabili, invece, calano in modo diverso: alcune tornano ai livelli di fondo entro due celle fuori "
-                 r"dal bordo del cluster, come la precipitazione, altre restano a lungo lontane dal normale, come la "
-                 r"temperatura a due metri. Scarto standardizzato mediano, in valore assoluto, della variabile che dà il nome al tipo, in deviazioni "
-                 r"standard (0 è il valore normale), con gli stessi tipi e colori della "
-                 + ref(L['tipi'], 'a') + r"; l'asse è limitato a 3.5.",
-            'c': r"$G_{\mathrm{n}}$ non è il solo a calare allo stesso modo per tutti i tipi di cluster: è fra i "
-                 r"metodi più uniformi, con la variazione in tre ore, HBOS e COPOD, mentre la distanza dal normale, MCD "
-                 r"e PCA cambiano di 20 su 100 o più da un tipo all'altro. Una riga per metodo, ciascuno sui "
-                 r"propri cluster. Ogni pallino è un tipo di cluster, con i colori della " + ref(L['tipi'], 'a') + r", "
-                 r"e sta al percentile mediano dello score nei valori a due celle fuori dal bordo: il percentile dice "
-                 r"dove cade lo score fra i valori degli anni di validazione (50 è il valore tipico, 95 la soglia), e la mediana "
-                 r"è presa su tutti i valori a quella distanza. Il segmento va dal tipo più basso al più alto; il numero "
-                 r"a destra è la differenza fra i due percentili, su una scala da 0 a 100. Anni di test, con la soglia di ciascun "
-                 r"metodo al 95-esimo percentile del proprio score sugli anni di validazione; non sono considerati i tipi con "
-                 r"meno di 1000 valori a quella distanza."}),
+            'a': r"Percentile mediano di $G_{\mathrm{n}}$ secondo la distanza in celle dal bordo del cluster, per ogni "
+                 r"tipo di cluster, sugli anni di test: in colore velocità verticale (rosa), precipitazione (viola), "
+                 r"copertura nuvolosa (grigio scuro) e temperatura a due metri (ocra), in grigio chiaro gli altri "
+                 r"tipi. Le curve di tutti i tipi quasi coincidono.",
+            'b': r"Scarto standardizzato mediano, in valore assoluto, della variabile del tipo, secondo la distanza in "
+                 r"celle dal bordo del cluster, per ogni tipo di cluster, sugli anni di test. Alcune variabili tornano "
+                 r"ai livelli di fondo entro due celle, altre restano a lungo lontane dal normale.",
+            'c': r"Percentile mediano di ogni score a due celle fuori dal bordo dei propri cluster, un pallino per tipo "
+                 r"di cluster, sugli anni di test; il segmento va dal tipo più basso al più alto e il numero a destra è "
+                 r"la loro differenza. $G_{\mathrm{n}}$ è fra i metodi più uniformi."}),
         ('era5_dropout', L['drop'], ['abc'], {
-            'a': r"In proporzione a G la dispersione del dropout è quasi costante, e cala solo sui valori di G più "
-                 r"alti. Dispersione media divisa per G medio, per percentile di G su "
-                 r"tutti i valori, sugli anni di test.",
-            'b': r"Attraverso i cluster il rapporto è quasi costante, con un minimo poco dentro il bordo. Mediana del "
-                 r"rapporto fra dispersione e G, secondo le celle di distanza dal bordo del cluster, con la soglia "
-                 r"di $G_{\mathrm{n}}$ al 95-esimo percentile, sugli anni di test.",
-            'c': r"A parità di G, più dispersione va con dati più lontani dal normale, fino alla penultima classe. I "
-                 r"valori segnalati da $G_{\mathrm{n}}$, divisi a parità di G in cinque classi con lo stesso numero "
-                 r"di valori, ordinate per rapporto (1 = estrazioni più concordi, 5 = più discordi); per ogni classe, la percentuale oltre la soglia della "
-                 r"distanza dal normale. Anni di test."}),
+            'a': r"Dispersione media divisa per G medio, per fascia di percentile di G, sugli anni di test. In "
+                 r"proporzione a G la dispersione è quasi costante, e cala solo sui valori di G più alti.",
+            'b': r"Mediana del rapporto fra dispersione e G secondo la distanza in celle dal bordo del cluster di "
+                 r"$G_{\mathrm{n}}$, sugli anni di test. Il rapporto è quasi costante, con un minimo poco dentro il "
+                 r"bordo.",
+            'c': r"Valori segnalati da $G_{\mathrm{n}}$ divisi a parità di G in cinque classi, dalle estrazioni più "
+                 r"concordi (1) alle più discordi (5), e percentuale di ciascuna classe oltre la soglia della distanza "
+                 r"dal normale. Anni di test. Fino alla classe 4, più dispersione va con dati più lontani dal "
+                 r"normale."}),
         ('era5_dropout_mappe', L['dmap'], ['ab'], {
-            'a': r"La dispersione del dropout è più alta a sud e lungo il margine del dominio. Dispersione "
-                 r"di G fra le 20 estrazioni in ogni cella, in media sugli anni di test. " + NE,
-            'b': r"Il rapporto fra dispersione e G varia poco nel dominio. Rapporto medio in ogni cella, "
-                 r"sugli anni di test. " + NE}),
+            'a': r"Dispersione di G fra le 20 estrazioni in ogni cella, in media sugli anni di test. È più alta a sud e "
+                 r"lungo il margine del dominio. " + NE,
+            'b': r"Rapporto medio fra dispersione e G in ogni cella, sugli anni di test. Varia poco nel dominio. " + NE}),
         ('era5_caso_00', 'fig:ris-caso-velocita', ['ab', 'c', '|', 'd'], case(
-            'fig:ris-caso-velocita', 'velocità verticale', 'della velocità verticale', 'il 23 novembre 2017 alle 00~UTC',
-            "63 ore, dal 21 al 24 novembre 2017, con il massimo in questo istante",
+            'fig:ris-caso-velocita', 'della velocità verticale', 'il 23 novembre 2017 alle 00~UTC',
+            r"$58.5^\circ$N, $8.5^\circ$E",
             "Il nucleo è una fascia stretta in cui la velocità verticale è per lo più sotto il normale.",
-            r"Nella cella cerchiata $G_{\mathrm{n}}$ resta oltre la soglia, salvo una breve pausa, per circa un giorno e "
-            r"mezzo, e la distanza dal normale sale e scende insieme a $G_{\mathrm{n}}$.")),
+            r"$G_{\mathrm{n}}$ resta oltre la soglia, salvo una breve pausa, per circa un giorno e mezzo, e la distanza "
+            r"dal normale sale e scende insieme a $G_{\mathrm{n}}$.")),
         ('era5_caso_01', 'fig:ris-caso-precipitazione', ['ab', 'c', '|', 'd'], case(
-            'fig:ris-caso-precipitazione', 'precipitazione', 'della precipitazione', 'il 19 maggio 2006 alle 03~UTC',
-            "72 ore, dal 16 al 19 maggio 2006, finito poche ore dopo il massimo",
+            'fig:ris-caso-precipitazione', 'della precipitazione', 'il 19 maggio 2006 alle 03~UTC',
+            r"$56.5^\circ$N, $23^\circ$E",
             "Il nucleo è diviso in più parti, in cui la precipitazione è quasi ovunque sopra il normale.",
-            r"Nella cella cerchiata la distanza dal normale è alta già nei giorni prima, e $G_{\mathrm{n}}$ supera la "
-            r"soglia solo quando arriva la precipitazione.")),
+            r"La distanza dal normale è alta già nei giorni prima, e $G_{\mathrm{n}}$ supera la soglia solo quando "
+            r"arriva la precipitazione.")),
         ('era5_caso_02', 'fig:ris-caso-nuvole', ['ab', 'c', '|', 'd'], case(
-            'fig:ris-caso-nuvole', 'copertura nuvolosa', 'della copertura nuvolosa', 'il 15 giugno 2024 alle 12~UTC',
-            "66 ore, dal 14 al 17 giugno 2024, con il massimo in questo istante",
+            'fig:ris-caso-nuvole', 'della copertura nuvolosa', 'il 15 giugno 2024 alle 12~UTC',
+            r"$23.5^\circ$N, $13^\circ$W",
             "Il nucleo è una fascia stretta sull'Africa nord-occidentale in cui la copertura nuvolosa è quasi ovunque "
             "sopra il normale.",
-            r"Nella cella cerchiata $G_{\mathrm{n}}$ e la distanza dal normale salgono e scendono insieme, e "
-            r"$G_{\mathrm{n}}$ resta oltre la soglia per dodici ore.")),
+            r"$G_{\mathrm{n}}$ e la distanza dal normale salgono e scendono insieme, e $G_{\mathrm{n}}$ resta oltre la "
+            r"soglia per dodici ore.")),
     ],
 }
 
@@ -203,15 +183,6 @@ for name, figures in FIGURES.items():
     for stem, label, rows, captions, *natural in figures:
         shrink = 1.0  # four images and four captions on one page
         text = replace_figure(text, label, block(stem, label, rows, captions, bool(natural and natural[0]), shrink))
-    if name == 'chapters/risultati.tex':
-        start = text.index('\\paragraph{Come leggere le figure.}')
-        end = text.index('La Tabella~\\ref{tab:ris-casi}', start)
-        text = text[:start] + (
-            "\\paragraph{Come leggere le figure.} Ogni esempio ha quattro immagini. Le prime due sono le mappe "
-            "dello scarto standardizzato della variabile del tipo e di $G_{\\mathrm{n}}$, con il nucleo del cluster racchiuso dalla "
-            "linea arancione; la terza segue nel tempo la cella cerchiata sulle mappe, cioè la cella del nucleo con "
-            "$G_{\\mathrm{n}}$ più alto; la quarta è il profilo del cluster dal nucleo verso l'esterno, come nella "
-            "Figura~\\ref{fig:ris-eventi-profilo-a}. ") + text[end:]
     path.write_text(text, encoding='utf-8', newline='\n')
 
 tesi = ROOT / 'tesi.tex'

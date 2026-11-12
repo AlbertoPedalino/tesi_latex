@@ -8,7 +8,7 @@ La Figura~\ref{fig:catena-rilevatore} riporta l'ordine in cui questi passaggi ag
 \begin{figure}[htbp]
     \centering
     \input{figures/schema_catena_detector}
-    \caption{Ordine dei passaggi del rilevatore su un istante, dai campi ERA5 alla segnalazione. In corsivo, gli anni su cui è stimata ciascuna quantità: le scale della normalizzazione stagionale e i pesi sugli anni di addestramento, la climatologia dello score e la soglia sugli anni di validazione.}
+    \caption{Passaggi del rilevatore su un istante, dai campi ERA5 alla segnalazione. In corsivo gli anni su cui è stimata ciascuna quantità.}
     \label{fig:catena-rilevatore}
 \end{figure}
 
@@ -25,7 +25,7 @@ Il rilevatore segue lo schema di STGAN~\cite{deng2022stgan} descritto nella Sezi
 \begin{figure}[htbp]
     \centering
     \resizebox{\textwidth}{!}{\input{figures/schema_architettura_stgan}}  % 7 pt wider than the text otherwise
-    \caption{Struttura del generatore (a) e del discriminatore (b). Il generatore unisce cella per cella i tre rami, recente, trend e calendario, e produce la ricostruzione dell'istante. Il discriminatore giudica ogni cella sulla propria patch, a partire dalla storia recente e dal campo corrente, osservato o ricostruito. I riquadri tratteggiati indicano i dropout, con probabilità 0.2 (Sezione~\ref{sec:score-dropout-montecarlo}).}
+    \caption{Struttura del generatore (a) e del discriminatore (b). I riquadri tratteggiati indicano i dropout, con probabilità 0.2.}
     \label{fig:architettura-stgan}
 \end{figure}
 
