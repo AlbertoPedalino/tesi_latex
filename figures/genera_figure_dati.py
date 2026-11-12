@@ -29,9 +29,9 @@ VARIABLE_COLOURS = {"total_precipitation": ("#7b4fb3", "#6a3fa3"), "total_cloud_
                     "vertical_velocity": ("#c2408f", "#a8307a"), "2m_temperature": ("#c08a00", "#946a00"),
                     "mean_sea_level_pressure": ("#13867f", "#0f6f69")}
 NAMES = {
-    "2m_temperature": "Temperatura a 2 m",
-    "10m_u_component_of_wind": "Vento zonale a 10 m",
-    "10m_v_component_of_wind": "Vento meridionale a 10 m",
+    "2m_temperature": "Temperatura a due metri",
+    "10m_u_component_of_wind": "Vento zonale a dieci metri",
+    "10m_v_component_of_wind": "Vento meridionale a dieci metri",
     "mean_sea_level_pressure": "Pressione al livello del mare",
     "total_precipitation": "Precipitazione totale",
     "total_cloud_cover": "Copertura nuvolosa totale",

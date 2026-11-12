@@ -45,9 +45,9 @@ TYPES = {"vertical_velocity": "Velocità verticale", "total_precipitation": "Pre
          "boundary_layer_height": "Strato limite", "specific_humidity": "Umidità specifica",
          "volumetric_soil_water_layer_1": "Umidità del suolo", "friction_velocity": "Velocità d'attrito",
          "surface_solar_radiation_downwards": "Radiazione solare", "v_component_of_wind": "Vento meridionale a 850 hPa",
-         "u_component_of_wind": "Vento zonale a 850 hPa", "2m_temperature": "Temperatura a 2 m",
-         "temperature": "Temperatura a 850 hPa", "10m_v_component_of_wind": "Vento meridionale a 10 m",
-         "10m_u_component_of_wind": "Vento zonale a 10 m"}
+         "u_component_of_wind": "Vento zonale a 850 hPa", "2m_temperature": "Temperatura a due metri",
+         "temperature": "Temperatura a 850 hPa", "10m_v_component_of_wind": "Vento meridionale a dieci metri",
+         "10m_u_component_of_wind": "Vento zonale a dieci metri"}
 RAMP = LinearSegmentedColormap.from_list("blu", ("#eef4fc", "#9ec5f4", "#3987e5", "#184f95", "#0d366b"))
 SCORE, NORMAL = "G+clim", "normale"
 CORE = "core"
@@ -455,7 +455,7 @@ def dropout_maps_figure(coastline_path):
     coastline = coastline_of(coastline_path, grid)
     figure, axes = plt.subplots(1, 2, figsize=size(0.56), constrained_layout=True)
     groups = []
-    for axis, key, title, label, scale in ((axes[0], "mean grezza", "Deviazione standard, media", r"deviazione standard dell'errore, $\times 10^{-4}$", 1e4),
+    for axis, key, title, label, scale in ((axes[0], "mean grezza", "Deviazione standard di G, media", r"deviazione standard di G fra le estrazioni, $\times 10^{-4}$", 1e4),
                                            (axes[1], "mean ratio", "Rapporto, medio", "rapporto (%)", 100)):
         values = maps[key] * scale
         low, high = np.nanpercentile(values, (1, 99))
@@ -642,7 +642,7 @@ def case_series_figure(number, data):
     reach = max(3.0, float(np.ceil(np.nanmax(np.abs(data["series_input"])))))
     alone.set_ylim(-reach, reach)
     alone.set_yticks([-reach, 0, reach], [f"{-reach:g}", "0", f"+{reach:g}"])
-    alone.set_ylabel("scarto stand.\n(dev. std.)", fontsize=TICKS)
+    alone.set_ylabel("deviazioni\nstandard", fontsize=TICKS)
     # In ERA5 the vertical velocity is in Pa/s, negative when the air rises.
     note = " (negativo: l'aria sale più del solito)" if record["type"] == "vertical_velocity" else ""
     alone.set_title(f"{TYPES[record['type']]} da sola: scarto standardizzato{note}", fontsize=8, loc="left", color=TEXT,

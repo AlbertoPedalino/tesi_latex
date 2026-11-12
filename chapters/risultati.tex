@@ -85,7 +85,7 @@ Il discriminatore è addestrato a dare 1 al campo generato e 0 a quello osservat
         \toprule
         Grandezza & Che cosa misura & Valore alto \\
         \midrule
-        G ($\bar{s}_G$) & errore di ricostruzione del generatore, medio sulla patch $3\times3$ della cella & osservazione più insolita \\
+        G ($\bar{s}_G$) & errore del generatore, medio sulla patch $3\times3$ della cella & osservazione più insolita \\
         $G_{\mathrm{n}}$ & lo score del rilevatore (Sezione~\ref{sec:normalizzazione-climatologica-score}): G rispetto a ciò che è abituale per quella cella, periodo dell'anno e ora & osservazione più insolita per quel luogo e periodo \\
         $D_{\mathrm{reale}}$ & giudizio del discriminatore sull'osservazione, fra 0 e 1 & osservazione giudicata generata \\
         $D_{\mathrm{generato}}$ & giudizio del discriminatore sulla ricostruzione, fra 0 e 1 & ricostruzione giudicata generata \\
@@ -237,7 +237,7 @@ Le sezioni precedenti mostrano che G e D sono quasi indipendenti, con un solo le
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_d_termini_zone}
-    \caption{Nel nucleo dei cluster di $G_{\mathrm{n}}$ il discriminatore giudica reali sia l'osservazione sia la ricostruzione, e D, la differenza dei due giudizi, è al percentile 27. Percentile mediano di $G_{\mathrm{n}}$, di G, di $D_{\mathrm{reale}}$, di $D_{\mathrm{generato}}$ e di D nel nucleo dei cluster di $G_{\mathrm{n}}$, nel loro contorno e lontano da essi, sugli anni di validazione. La linea tratteggiata indica 50, il valore atteso senza legame con i cluster. $G_{\mathrm{n}}$, che definisce i cluster, e G, l'errore del generatore senza normalizzazione come nello score dell'articolo, sono alti nel nucleo quasi per costruzione e servono da riferimento.}
+    \caption{Nel nucleo dei cluster di $G_{\mathrm{n}}$ il discriminatore giudica reali sia l'osservazione sia la ricostruzione, e D, la differenza dei due giudizi, è al percentile 27. Percentile mediano di $G_{\mathrm{n}}$, di G, di $D_{\mathrm{reale}}$, di $D_{\mathrm{generato}}$ e di D nel nucleo dei cluster di $G_{\mathrm{n}}$, nel loro contorno e nella zona lontana, sugli anni di validazione. La linea tratteggiata indica 50, il valore atteso senza legame con i cluster. $G_{\mathrm{n}}$, che definisce i cluster, e G, l'errore del generatore senza normalizzazione come nello score dell'articolo, sono alti nel nucleo quasi per costruzione e servono da riferimento.}
 % G_n nelle zone (comportamento_optuna27/zone_g_dterms_5pc.csv, colonne G+clim, 12 novembre 2026): 97|91|40, G 97|89|40.
     \label{fig:ris-d-termini-zone}
 \end{figure}
