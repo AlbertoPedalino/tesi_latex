@@ -24,7 +24,7 @@ Il rilevatore segue lo schema di STGAN~\cite{deng2022stgan} descritto nella Sezi
 
 \begin{figure}[htbp]
     \centering
-    \input{figures/schema_architettura_stgan}
+    \resizebox{\textwidth}{!}{\input{figures/schema_architettura_stgan}}  % 7 pt wider than the text otherwise
     \caption{Struttura del generatore (a) e del discriminatore (b). Il generatore unisce cella per cella i tre rami, recente, trend e calendario, e produce la ricostruzione dell'istante. Il discriminatore giudica ogni cella sulla propria patch, a partire dalla storia recente e dal campo corrente, osservato o ricostruito. I riquadri tratteggiati indicano i dropout, con probabilità 0.2 (Sezione~\ref{sec:score-dropout-montecarlo}).}
     \label{fig:architettura-stgan}
 \end{figure}
@@ -67,7 +67,7 @@ Il discriminatore viene addestrato con etichetta zero per il campo reale e uno p
 \end{align}
 dove $\operatorname{MSE}_w$ è l'errore quadratico medio sulle celle valide e sulle variabili, con i pesi delle variabili della Sezione~\ref{sec:pesi-variabili-ricostruzione}, e la BCE, l'entropia incrociata binaria, è mediata sulle uscite locali, una per cella. Rispetto alle equazioni~\eqref{eq:stgan-loss-g}--\eqref{eq:stgan-loss-d} dell'articolo, l'errore di ricostruzione del generatore è un errore quadratico medio anziché una norma e la loss del discriminatore è dimezzata: la scelta segue il codice pubblicato dagli autori.
 
-Generatore e discriminatore vengono aggiornati con ottimizzatori Adam~\cite{kingma2015adam} separati. Nel passo del generatore, i parametri del discriminatore sono congelati ma viene mantenuto il gradiente rispetto alla ricostruzione; la storia della patch è codificata di nuovo, con i pesi del discriminatore appena aggiornati. Il peso di ricostruzione $\lambda_G$, che nell'articolo vale 500, è un iperparametro. I tassi di apprendimento dei due ottimizzatori sono distinti e fissati separatamente. Il coefficiente $\beta_1$ degli ottimizzatori vale 0.9, il valore del codice degli autori. Con $n_D{:}n_G$ aggiornamenti, sullo stesso batch vengono eseguiti prima $n_D$ aggiornamenti del discriminatore e poi $n_G$ del generatore, ciascuno con un proprio passaggio in avanti; è un conteggio di aggiornamenti, non un rapporto fra i tassi di apprendimento. Tassi, aggiornamenti e peso di ricostruzione sono gli strumenti con cui si regola l'equilibrio fra le due reti; i valori usati sono scelti nel Capitolo~\ref{chap:esperimenti}.
+Generatore e discriminatore hanno ciascuno un proprio ottimizzatore Adam~\cite{kingma2015adam}. Nel passo del generatore, i parametri del discriminatore sono congelati ma viene mantenuto il gradiente rispetto alla ricostruzione; la storia della patch è codificata di nuovo, con i pesi del discriminatore appena aggiornati. Il peso di ricostruzione $\lambda_G$, che nell'articolo vale 500, è un iperparametro. I tassi di apprendimento dei due ottimizzatori sono distinti e fissati separatamente. Il coefficiente $\beta_1$ degli ottimizzatori vale 0.9, il valore del codice degli autori. Con $n_D{:}n_G$ aggiornamenti, sullo stesso batch vengono eseguiti prima $n_D$ aggiornamenti del discriminatore e poi $n_G$ del generatore, ciascuno con un proprio passaggio in avanti; è un conteggio di aggiornamenti, non un rapporto fra i tassi di apprendimento. Tassi, aggiornamenti e peso di ricostruzione sono gli strumenti con cui si regola l'equilibrio fra le due reti; i valori usati sono scelti nel Capitolo~\ref{chap:esperimenti}.
 
 Ogni batch contiene un istante, e ogni gradiente è mediato su tutte le celle dell'istante.
 
