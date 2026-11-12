@@ -17,7 +17,7 @@ La seconda è che i dati di addestramento non sono garantiti privi di anomalie. 
 
 La terza è la struttura spaziale. Le condizioni di un luogo dipendono da quelle dei luoghi vicini, e un valore ordinario preso da solo può essere insolito rispetto a ciò che accade nei luoghi vicini. I campi non hanno però una topologia fisica, come il grafo di sensori stradali o di regioni confinanti su cui è costruito STGAN~\cite{deng2022stgan}: sono disposti su un reticolo regolare, e il modo di rappresentare l'intorno va scelto.
 
-Il termine anomalia meteorologica indica in questa tesi una condizione dell'atmosfera che si allontana da quella abituale per il luogo e il periodo dell'anno. Il rilevatore non la osserva direttamente: uno score misura quanto un valore, cioè una coppia di cella e istante, si allontana da ciò che il modello ha appreso dal periodo di addestramento, e sono segnalati i valori con lo score più alto. Una segnalazione indica quindi una possibile anomalia meteorologica, non un'anomalia accertata. Un evento meteorologico estremo è un caso particolare di anomalia meteorologica, ma non ogni anomalia è un evento estremo.
+Il termine anomalia meteorologica indica in questa tesi una condizione dell'atmosfera che si allontana da quella abituale per il luogo e il periodo dell'anno. Il rilevatore non la osserva direttamente: uno score misura quanto un valore, cioè una coppia cella--istante, si allontana da ciò che il modello ha appreso dal periodo di addestramento, e sono segnalati i valori con lo score più alto. Una segnalazione indica quindi una possibile anomalia meteorologica, non un'anomalia accertata. Un evento meteorologico estremo è un caso particolare di anomalia meteorologica, ma non ogni anomalia è un evento estremo.
 
 \section{Approccio proposto}
 
@@ -26,7 +26,7 @@ Il rilevatore parte da STGAN~\cite{deng2022stgan}, una rete avversaria proposta 
     \item un generatore che opera sul campo intero con un'unità ricorrente convoluzionale, la ConvGRU~\cite{shi2015convlstm,ballas2016convgru}, mentre il discriminatore resta locale e giudica ogni cella sulla sua patch $3\times3$;
     \item un ingresso riferito al clima di ogni cella, con una normalizzazione stagionale, e un errore di ricostruzione in cui ogni variabile pesa in proporzione inversa a quanto essa cambia abitualmente;
     \item uno score riferito alla climatologia di ogni cella e il dropout Monte Carlo~\cite{gal2016dropout} nelle due reti, che associa a ogni score una misura di dispersione;
-    \item una validazione senza etichette, in cui i valori più insoliti, individuati con un criterio che non usa il modello, sono in gran parte tenuti fuori dalla misura con cui si scelgono gli iperparametri dell'addestramento avversario e tolti dalla climatologia dello score; gli anni di test non sono mai usati.
+    \item una validazione senza etichette, in cui i valori più insoliti, individuati con un criterio che non usa il modello, sono in gran parte tenuti fuori dalla misura con cui si scelgono gli iperparametri dell'addestramento avversario e tolti dalla climatologia dello score; gli anni di test non entrano in alcuna scelta.
 \end{enumerate}
 
 \section{Obiettivi e contributi della tesi}

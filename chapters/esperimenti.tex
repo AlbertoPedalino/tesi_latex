@@ -18,7 +18,7 @@ Su questo spazio viene definito un riferimento per la validazione, fissato anch'
 +\frac{1}{m(m-1)}\sum_{i\neq i'}k(y_i,y_{i'})
 -\frac{2}{m^{2}}\sum_{i,i'}k(x_i,y_{i'}),
 \end{equation}
-dove $x_i$ sono le coordinate delle osservazioni, $y_i$ quelle delle ricostruzioni e il kernel è la media di tre RBF,
+dove $x_i$ sono le coordinate delle osservazioni, $y_i$ quelle delle ricostruzioni e il kernel è la media di tre kernel gaussiani (RBF, \emph{radial basis function}),
 \begin{equation}
 k(a,b)=\frac{1}{3}\sum_{\kappa\in\{0.5,\,1,\,2\}}
 \exp\!\left(-\frac{\lVert a-b\rVert^{2}}{2(\kappa\gamma)^{2}}\right).
@@ -56,7 +56,7 @@ La configurazione del rilevatore è fissata, a eccezione di quattro iperparametr
         Estrazioni Monte Carlo negli score & 20 & \ref{sec:score-dropout-montecarlo} \\
         Ottimizzatore & Adam, $\beta_1=0.9$, $\beta_2=0.999$, tasso costante & \ref{sec:stgan} \\
         Epoche & 6, come nel codice degli autori di STGAN & -- \\
-        Precisione & BF16, pesi in FP32 & -- \\
+        Precisione & bfloat16 (BF16) nei calcoli, pesi a 32 bit (FP32) & -- \\
         \addlinespace
         Tasso di apprendimento del generatore & da $10^{-4}$ a $3\cdot10^{-3}$, in scala logaritmica; scelto $7.65\cdot10^{-4}$ & \ref{sec:stgan} \\
         Tasso di apprendimento del discriminatore & da $2.5\cdot10^{-5}$ a $5\cdot10^{-3}$, in scala logaritmica; scelto $3.06\cdot10^{-3}$ & \ref{sec:stgan} \\
@@ -102,7 +102,7 @@ La configurazione del rilevatore è fissata, a eccezione di quattro iperparametr
 \tau=Q_{0.95}\bigl\{z_{tn}\,:\,t\in\text{validazione},\;n=1,\dots,N\bigr\},
 \label{eq:soglia}
 \end{equation}
-calcolato su un istante ogni dieci degli anni di validazione e su tutte le celle, una soglia per ciascuno score confrontato. Per G e D senza normalizzazione, usati nel Capitolo~\ref{chap:risultati} per studiare le due componenti, la soglia è allo stesso modo il 95-esimo percentile dello score stesso sugli anni di validazione. Sugli anni di validazione lo score normalizzato $z$ di ogni anno è calcolato con la climatologia degli altri quattro (Sezione~\ref{sec:normalizzazione-climatologica-score}), e i valori senza score non entrano nella soglia. Nella soglia entrano anche i valori esclusi dalle altre misure (Sezione~\ref{sec:maschere-validazione}), perché valori come questi sono presenti anche negli anni di test. Sul test la soglia segnala una percentuale di valori che può differire dal 5\%, ed è riportata nei risultati. Le analisi principali sono ripetute con il 99-esimo percentile, per verificare quanto le conclusioni dipendano dalla soglia (Sezione~\ref{sec:ris-soglia}). Gli estremi con cui le due componenti dello score combinato sono riportate su una scala comune vengono invece dal calcolo degli score sugli anni di validazione eseguito al termine dell'addestramento, con la storia in cui i valori esclusi sono sostituiti dal normale (Sezioni~\ref{sec:maschere-validazione} e~\ref{sec:score-dropout-montecarlo}).
+calcolato su un istante ogni dieci degli anni di validazione e su tutte le celle, una soglia per ciascuno score confrontato. Per G e D senza normalizzazione, usati nel Capitolo~\ref{chap:risultati} per studiare le due componenti, la soglia è allo stesso modo il 95-esimo percentile dello score stesso sugli anni di validazione. Sugli anni di validazione lo score normalizzato $z$ di ogni anno è calcolato con la climatologia degli altri quattro (Sezione~\ref{sec:normalizzazione-climatologica-score}), e i valori senza score non entrano nella soglia. Nella soglia entrano anche i valori esclusi dalle altre misure (Sezione~\ref{sec:maschere-validazione}), perché valori come questi sono presenti anche negli anni di test. Sul test la soglia segnala una percentuale di valori che può differire dal 5\%, ed è riportata nei risultati. Le analisi principali sono ripetute con il 99-esimo percentile, per verificare quanto le conclusioni dipendano dalla soglia (Sezione~\ref{sec:ris-soglia}). Gli estremi con cui le due componenti dello score combinato sono riportate su una scala comune vengono invece dal calcolo degli score sugli anni di validazione eseguito al termine dell'addestramento, con la storia ripulita (Sezioni~\ref{sec:maschere-validazione} e~\ref{sec:score-dropout-montecarlo}).
 % La soglia è letta su un istante ogni dieci della validazione (THRESHOLD_STRIDE
 % in scripts/check_era5_dust_lead.py, riga 114: nanpercentile di values[::10]), da
 % tutte le celle, senza escludere i valori segnati come insoliti. Verificato il 29
