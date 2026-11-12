@@ -112,7 +112,7 @@ FIGURES = {
     ],
     'chapters/risultati.tex': [
         ('era5_g_luogo', L['luogo'], ['a', 'b'], {
-            'a': r"Percentuale dei valori segnalati da G, senza normalizzazione, per fascia di latitudine e mese, sugli "
+            'a': r"Percentuale dei valori segnalati da G, senza normalizzazione climatologica, per fascia di latitudine e mese, sugli "
                  r"anni di validazione; il bianco corrisponde al 5\%. Le segnalazioni si concentrano a sud e in estate.",
             'b': r"Percentuale dei valori segnalati da $G_{\mathrm{n}}$, con la normalizzazione climatologica, per fascia "
                  r"di latitudine e mese, sugli anni di validazione; il bianco corrisponde al 5\%. Le segnalazioni sono "

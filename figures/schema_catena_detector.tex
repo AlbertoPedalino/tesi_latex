@@ -6,7 +6,7 @@
                      text width=2.95cm,minimum height=1.95cm,inner sep=3pt},
         freccia/.style={-{Stealth[length=4.5pt,width=4pt]},black!75}]
     % Prima riga: dall'ingresso all'errore.
-    \node[fase] (era5) at (0,0) {\textbf{Campi ERA5}\\[2pt]\scriptsize 15 variabili\\ogni 3 ore};
+    \node[fase] (era5) at (0,0) {\textbf{Campi ERA5}\\[2pt]\scriptsize quindici variabili\\ogni tre ore};
     \node[fase] (stagionale) at (3.45,0) {\textbf{Normalizzazione}\\\textbf{stagionale}\\[2pt]\scriptsize cella, ora,\\giorno $\pm15$\\\emph{addestramento}};
     \node[fase] (generatore) at (6.9,0) {\textbf{Generatore}\\[2pt]\scriptsize ricostruzione\\20 estrazioni Monte Carlo};
     \node[fase] (errore) at (10.35,0) {\textbf{Errore per estrazione}\\[2pt]\scriptsize pesi $w_f$ per variabile,\\media sulla patch $3\times3$\\\emph{addestramento}};

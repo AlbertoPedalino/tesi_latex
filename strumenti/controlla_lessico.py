@@ -18,6 +18,10 @@ The glossary (one term per concept; the rules forbid the variants found while wr
   zones "nucleo", "contorno", "zona lontana"; "bordo del cluster"; "margine del dominio".
 - "scarto standardizzato" (Section 4.3); "percentuale"; "anni di addestramento / di validazione / di test";
   "storia ripulita"; "anomalia meteorologica" only for real phenomena; short names of the variables after Tab. 3.1.
+- Also (12 Nov 2026): "storia recente"; "distanza MMD"; "prova" (a trial of the search); "griglia" ("reticolo" only for
+  PVGIS); "tendenza lineare"; "deriva"; "normalizzazione stagionale" (input) / "climatologica" (score); "soglia del
+  criterio"; "maschera di dropout" / "maschera del margine"; "parametri" of a network, "pesi" of the variables;
+  "giorno dell'anno" in the climatologies; "celle vicine"; "tipo principale"; "giudizi" for D_reale and D_generato.
 Words of the article (STGAN's "campo generato", "errore di previsione") may appear where the article is described.
 """
 import re
@@ -58,6 +62,61 @@ RULES = [
     (r'A parità di errore|percentile dell\'errore|Secondo l\'errore', 'nella 6.8 G si chiama G', ()),
     (r'cell[ae] cerchiat', 'negli esempi della 6.7.1 è la "cella seguita" (nel cerchio sulle mappe)', ()),
     (r'segnalazioni (del solo|di nessun altro)','"segnalazioni esclusive" (definite nella 6.6)', ()),
+    (r'non è segnalat[oa] da nessuna', '"segnalazioni esclusive"', ()),
+    # Glossary corrections of 12 November 2026 (groups A, B, C).
+    (r'\bgeneratore stima\b|stima del generatore|ne produce una stima|quello da stimare|istante da stimare',
+     'l\'uscita del generatore è la "ricostruzione" (verbo: "ricostruisce")', ()),
+    (r'aggiornamenti per (\\emph\{)?batch|\$n_D\{:\}n_G\$ aggiornamenti', '"aggiornamenti D:G"', ()),
+    (r'dalla validazione|fuori dal test|(?-i:\bIl test\b)|validazione serve|validazione riceve|[Ss]u validazione e test|'
+     r'score di validazione|valori di validazione|\b(campi|valori|istanti) di addestramento|dati di addestramento '
+     r'normalizzati', '"anni di addestramento / di validazione / di test"', ()),
+    (r'(il|la) sol[oa] discriminatore', 'D è la "componente del discriminatore"', ()),
+    (r'\bD normalizzato', 'D è femminile ("la componente")', ()),
+    (r'(due|i suoi|entrambi i) termini\b(?! indicano)|(due|le) uscite (del discriminatore|sulle patch)',
+     '$D_{reale}$ e $D_{generato}$ sono i "giudizi"', ('stato_arte.tex',)),
+    (r'campo reale', 'l\'osservazione ("campo generato" solo per l\'articolo)', ()),
+    (r'minuscol', '"piccoli"', ()),
+    (r'\b\d+ componenti\b(?! principali)|componenti?: quella aleatoria|componente (epistemica|aleatoria)',
+     '"componenti" solo per G e D; "componenti principali" per la PCA', ()),
+    (r'in rapporto a\b|mediana dei rapporti|rapporto fra i tassi', '"rapporto" è solo dispersione / G', ()),
+    (r'\bnucle[oi] (sulla distanza|delle convoluzion)', '"nucleo" è una zona del cluster; per la convoluzione "kernel"', ()),
+    (r'contorni degli eventi', '"contorno" è una zona del cluster', ()),
+    (r'\bzone che conosce', '"regione" nello spazio degli iperparametri', ()),
+    (r'non una prova\b|una prova severa', '"prova" è un tentativo della ricerca; qui "dimostrazione" o "verifica"', ()),
+    (r'(?<!:)\bmascher[ae]\b(?! di dropout| del margine| binaria)', '"maschera di dropout" o "maschera del margine"',
+     ('stato_arte.tex',)),
+    (r'pesi del (discriminatore|generatore)|aggiornamento dei pesi|strato con pesi|pesi a 32|pesi dell.ultima|'
+     r'salva i pesi|Pesi e calcolo', '"pesi" sono quelli delle variabili; della rete: "parametri"', ()),
+    (r'casi più importanti|caso generale|pochi casi|sopra il caso', 'gli esempi sono "esempi"; "caso" solo in "a caso"',
+     ()),
+    (r'finestr[ae] recent|finestr[ae] di ingresso|contesto che lo precede|come contesto|prendono il contesto|'
+     r'di contesto del trend|per ogni finestra|valore della finestra è', '"storia recente"; "finestra di ±15 giorni"',
+     ()),
+    (r'campi recenti', '"storia recente"', ('stato_arte.tex',)),
+    (r'misura di scelta|(miglior|dell\'|un|l\')obiettivo(?= (e|di|più|in|stimato)\b)',
+     '"distanza MMD" ("obiettivo" solo dove è definito)', ()),
+    (r'\besecuzion[ei]\b', '"prova" (un tentativo della ricerca) o "addestramento"', ()),
+    (r'\bconsuet|\bdel solito\b', '"abituale"', ()),
+    (r'\breticol[oi]\b(?! (regolare )?con passo| di 5)', '"griglia" per ERA5 ("reticolo" solo per PVGIS)', ()),
+    (r'\bcamp[oi] complet|reticolo completo', '"campo intero"', ()),
+    (r'\bretta\b', '"tendenza lineare"', ()),
+    (r'\bspostament|\bsi sposta\b|Cambiamenti dopo', '"deriva"', ()),
+    (r'standardizzazion', 'il passo z-score è la "normalizzazione stagionale"', ()),
+    (r"(?<![-{:])\bnormalizzazione\b(?! (stagionale|climatologica|dell'articolo))(?![-}])",
+     '"normalizzazione stagionale" (ingresso) o "normalizzazione climatologica" (score)', ('schema_catena_detector.tex',)),
+    (r'media lisciata', 'la media $\\mu^{s}$ di ciascun giorno', ()),
+    (r'supera il (proprio )?livello|superi il proprio livello|livelli sono stimati', '"soglia del criterio"', ()),
+    (r'dropout spento|senza il dropout', '"senza dropout"', ()),
+    (r'codifica ciclica|\bdal calendario\b|\{Calendario', '"ramo del calendario" (ramo), "codifica temporale" (ingresso)',
+     ()),
+    (r"periodo dell'anno,? e (nel|nell'|alla stessa |la stessa |quell')?ora|stesso periodo dell'anno|"
+     r"(ora solare locale e (il|del)|codifica dell'ora solare locale e del) periodo dell'anno",
+     '"giorno dell\'anno" nelle climatologie; "posizione nell\'anno" nella codifica temporale', ()),
+    (r'celle attorno', '"celle vicine"', ()),
+    (r'\\emph\{metodi statistici\}', 'termine non usato altrove', ()),
+    (r'tipo dominante', '"tipo principale"', ()),
+    (r'\bencoder\b(?!--decoder)|\bclipping\b', 'termine inglese non definito', ('stato_arte.tex', 'risultati.tex')),
+    (r'(?<!celle e )\b15 (variabili|giorni)\b|\b3 ore\b', '"quindici variabili", "quindici giorni", "tre ore"', ()),
 ]
 RULES = [(re.compile(p, re.I), what, allowed) for p, what, allowed in RULES]
 
