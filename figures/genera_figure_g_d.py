@@ -268,7 +268,7 @@ def terms_map_figure(data, coastline):
     outline = np.nan_to_num(image(data, top.astype(float)), nan=0.0)
     figure, axes = plt.subplots(1, 2, figsize=size(0.56), constrained_layout=True)
     groups = []
-    for index, (axis, (title, values)) in enumerate(zip(axes, (("G: errore del generatore", data["G"][row]),
+    for index, (axis, (title, values)) in enumerate(zip(axes, (("G: errore di ricostruzione del generatore", data["G"][row]),
                                                              ("D: componente del discriminatore", data["D"][row])))):
         valid = np.isfinite(values)
         rank = np.full(values.shape, np.nan)

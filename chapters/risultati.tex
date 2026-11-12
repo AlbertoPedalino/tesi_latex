@@ -13,7 +13,7 @@
 
 Il capitolo riporta e discute i risultati del rilevatore sui campi ERA5, nella configurazione scelta dalla ricerca degli iperparametri. Senza etichette, una segnalazione indica dove lo score è alto, non che lì ci sia davvero un'anomalia meteorologica: questo vale per tutto il capitolo. Nel capitolo un valore è una coppia cella--istante; salvo dove indicato, è segnalato quando supera il 95-esimo percentile del proprio score sugli anni di validazione.
 
-La Sezione~\ref{sec:ris-ricerca} fissa la configurazione; il resto del capitolo ha tre parti. Le Sezioni~\ref{sec:ris-correlazione-spaziale}--\ref{sec:ris-conferma} scelgono quale parte dello score di STGAN usare: il legame fra G, l'errore del generatore, e D, la componente del discriminatore, la normalizzazione climatologica, che cosa giudica il discriminatore e la conferma sugli anni di test. Lo score scelto è $G_{\mathrm{n}}$, l'errore del generatore con la normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}). Le Sezioni~\ref{sec:ris-confronti}--\ref{sec:ris-dropout} descrivono che cosa segnala $G_{\mathrm{n}}$: il confronto con otto metodi più semplici, le baseline, i cluster di segnalazioni per tipo e dimensione e la dispersione del dropout. Le Sezioni~\ref{sec:ris-casi} e~\ref{sec:ris-soglia} verificano i risultati, con anomalie meteorologiche note e al variare della soglia.
+La Sezione~\ref{sec:ris-ricerca} fissa la configurazione; il resto del capitolo ha tre parti. Le Sezioni~\ref{sec:ris-correlazione-spaziale}--\ref{sec:ris-conferma} scelgono quale parte dello score di STGAN usare: il legame fra G, l'errore di ricostruzione del generatore, e D, la componente del discriminatore, la normalizzazione climatologica, che cosa giudica il discriminatore e la conferma sugli anni di test. Lo score scelto è $G_{\mathrm{n}}$, l'errore di ricostruzione del generatore con la normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}). Le Sezioni~\ref{sec:ris-confronti}--\ref{sec:ris-dropout} descrivono che cosa segnala $G_{\mathrm{n}}$: il confronto con otto metodi più semplici, le baseline, i cluster di segnalazioni per tipo e dimensione e la dispersione del dropout. Le Sezioni~\ref{sec:ris-casi} e~\ref{sec:ris-soglia} verificano i risultati, con anomalie meteorologiche note e al variare della soglia.
 
 \section{Ricerca degli iperparametri}
 \label{sec:ris-ricerca}
@@ -85,7 +85,7 @@ Il discriminatore è addestrato a dare 1 al campo generato e 0 a quello osservat
         \toprule
         Grandezza & Che cosa misura & Valore alto \\
         \midrule
-        G ($\bar{s}_G$) & errore del generatore, medio sulla patch $3\times3$ della cella & osservazione più insolita \\
+        G ($\bar{s}_G$) & errore di ricostruzione del generatore, medio sulla patch $3\times3$ della cella & osservazione più insolita \\
         $G_{\mathrm{n}}$ & lo score del rilevatore (Sezione~\ref{sec:normalizzazione-climatologica-score}): G rispetto a ciò che è abituale per quella cella, periodo dell'anno e ora & osservazione più insolita per quel luogo e periodo \\
         $D_{\mathrm{reale}}$ & giudizio del discriminatore sull'osservazione, fra 0 e 1 & osservazione giudicata generata \\
         $D_{\mathrm{generato}}$ & giudizio del discriminatore sulla ricostruzione, fra 0 e 1 & ricostruzione giudicata generata \\
@@ -237,7 +237,7 @@ Le sezioni precedenti mostrano che G e D sono quasi indipendenti, con un solo le
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_d_termini_zone}
-    \caption{Nel nucleo dei cluster di $G_{\mathrm{n}}$ il discriminatore giudica reali sia l'osservazione sia la ricostruzione, e D, la differenza dei due giudizi, è al percentile 27. Percentile mediano di $G_{\mathrm{n}}$, di G, di $D_{\mathrm{reale}}$, di $D_{\mathrm{generato}}$ e di D nel nucleo dei cluster di $G_{\mathrm{n}}$, nel loro contorno e nella zona lontana, sugli anni di validazione. La linea tratteggiata indica 50, il valore atteso senza legame con i cluster. $G_{\mathrm{n}}$, che definisce i cluster, e G, l'errore del generatore senza normalizzazione come nello score dell'articolo, sono alti nel nucleo quasi per costruzione e servono da riferimento.}
+    \caption{Nel nucleo dei cluster di $G_{\mathrm{n}}$ il discriminatore giudica reali sia l'osservazione sia la ricostruzione, e D, la differenza dei due giudizi, è al percentile 27. Percentile mediano di $G_{\mathrm{n}}$, di G, di $D_{\mathrm{reale}}$, di $D_{\mathrm{generato}}$ e di D nel nucleo dei cluster di $G_{\mathrm{n}}$, nel loro contorno e nella zona lontana, sugli anni di validazione. La linea tratteggiata indica 50, il valore atteso senza legame con i cluster. $G_{\mathrm{n}}$, che definisce i cluster, e G, l'errore di ricostruzione del generatore senza normalizzazione come nello score dell'articolo, sono alti nel nucleo quasi per costruzione e servono da riferimento.}
 % G_n nelle zone (comportamento_optuna27/zone_g_dterms_5pc.csv, colonne G+clim, 12 novembre 2026): 97|91|40, G 97|89|40.
     \label{fig:ris-d-termini-zone}
 \end{figure}
@@ -255,7 +255,7 @@ Le sezioni precedenti mostrano che G e D sono quasi indipendenti, con un solo le
     \begin{subfigure}[t]{0.499\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_d_termini_mappa_a}
-        \caption[G, l'errore del generatore, il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta degli anni di validazione, come percentile fra le celle di quell'istante.]{G, l'errore del generatore, il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta degli anni di validazione, come percentile fra le celle di quell'istante. La linea arancione racchiude l'1\% delle celle con G più alto. Linee di costa da Natural Earth.}
+        \caption[G, l'errore di ricostruzione del generatore, il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta degli anni di validazione, come percentile fra le celle di quell'istante.]{G, l'errore di ricostruzione del generatore, il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta degli anni di validazione, come percentile fra le celle di quell'istante. La linea arancione racchiude l'1\% delle celle con G più alto. Linee di costa da Natural Earth.}
         \label{fig:ris-d-termini-mappa-a}
     \end{subfigure}
     \hfill
@@ -362,7 +362,7 @@ Le sezioni precedenti mostrano che G e D sono quasi indipendenti, con un solo le
 
 Le Sezioni~\ref{sec:ris-correlazione-spaziale}--\ref{sec:ris-g-d} riguardano gli anni di validazione, su cui si sceglie lo score. Questa sezione verifica che i loro risultati valgano anche sugli anni di test e fissa la scelta.
 
-\paragraph{Sugli anni di test i risultati sono gli stessi.} Le stesse analisi, ripetute sugli anni di test 2005--2025 con la climatologia e le soglie stimate sugli anni di validazione, danno gli stessi risultati (Tabella~\ref{tab:ris-conferma-test}): le correlazioni cambiano di al più tre centesimi, i percentili mediani di al più 4 su 100. Sul test $G_{\mathrm{n}}$ segnala il 5.5\% dei valori, un po' più del 5\%, probabilmente perché negli anni di test l'errore del generatore è in media un po' più alto; per lo stesso motivo le percentuali per luogo arrivano al 7.8\%.
+\paragraph{Sugli anni di test i risultati sono gli stessi.} Le stesse analisi, ripetute sugli anni di test 2005--2025 con la climatologia e le soglie stimate sugli anni di validazione, danno gli stessi risultati (Tabella~\ref{tab:ris-conferma-test}): le correlazioni cambiano di al più tre centesimi, i percentili mediani di al più 4 su 100. Sul test $G_{\mathrm{n}}$ segnala il 5.5\% dei valori, un po' più del 5\%, probabilmente perché negli anni di test l'errore di ricostruzione del generatore è in media un po' più alto; per lo stesso motivo le percentuali per luogo arrivano al 7.8\%.
 
 \begin{table}[htbp]
     \centering
@@ -444,7 +444,7 @@ Le sezioni precedenti scelgono lo score del rilevatore, $G_{\mathrm{n}}$; questa
         \addlinespace
         Variazione in tre ore & una cella, ora e tre ore prima & errore della risposta ``valore di tre ore prima'' \\
         \addlinespace
-        $G_{\mathrm{n}}$ & celle attorno e istanti prima & errore del generatore (Sezioni~\ref{sec:score-dropout-montecarlo} e~\ref{sec:normalizzazione-climatologica-score}) \\
+        $G_{\mathrm{n}}$ & celle attorno e istanti prima & errore di ricostruzione del generatore (Sezioni~\ref{sec:score-dropout-montecarlo} e~\ref{sec:normalizzazione-climatologica-score}) \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -612,7 +612,7 @@ Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi i clus
         \label{fig:ris-eventi-profilo-tipi-a}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[t]{0.456\textwidth}
+    \begin{subfigure}[t]{0.475\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_eventi_profilo_tipi_b}
         \caption[Le variabili, invece, calano in modo diverso: alcune tornano ai livelli di fondo entro due celle fuori dal bordo del cluster, come la precipitazione, altre restano a lungo lontane dal normale, come la temperatura a due metri.]{Le variabili, invece, calano in modo diverso: alcune tornano ai livelli di fondo entro due celle fuori dal bordo del cluster, come la precipitazione, altre restano a lungo lontane dal normale, come la temperatura a due metri. Scarto standardizzato mediano, in valore assoluto, della variabile che dà il nome al tipo, in deviazioni standard (0 è il valore normale), con gli stessi tipi e colori della Figura~\ref{fig:ris-eventi-profilo-tipi-a}; l'asse è limitato a 3.5.}
@@ -848,7 +848,7 @@ Fin qui i cluster sono descritti tutti insieme e per tipo; resta da vedere un cl
 Fin qui si è usata la media delle estrazioni di dropout; questa sezione guarda quanto differiscono fra loro. Lo score è la media di 20 estrazioni con maschere diverse, e la deviazione standard delle estrazioni ne misura la \emph{dispersione} (Sezione~\ref{sec:score-dropout-montecarlo}). Non è una probabilità di anomalia: senza etichette non si può stabilire se una segnalazione con estrazioni concordi sia più giusta di una con estrazioni discordi. Si può però vedere quanto le segnalazioni dipendono dalle maschere, e dove le estrazioni si separano. Poiché la dispersione cresce con l'errore da cui nasce, con una correlazione di Spearman di 0.86, conviene leggerla in proporzione%
 % Spearman 0.861 fra errore grezzo e dispersione: outputs/finale_optuna27/logs/dropout_rapporto_bande.log
 % ("rank correlation between score and spread"), optuna-27, 5 novembre 2026.
-: il \emph{rapporto} è la dispersione dell'errore del generatore divisa per l'errore stesso, cioè G senza normalizzazione. La sezione riguarda gli anni di test.
+: il \emph{rapporto} è la dispersione dell'errore di ricostruzione del generatore divisa per l'errore stesso, cioè G senza normalizzazione. La sezione riguarda gli anni di test.
 
 \paragraph{Tre segnalazioni su quattro reggono alle maschere.} Il 75\% dei valori segnalati resta sopra la soglia togliendo a $G_{\mathrm{n}}$ una deviazione standard delle estrazioni, cioè la deviazione standard di G fra le estrazioni divisa per la stessa deviazione standard climatologica che dà $G_{\mathrm{n}}$; il 55\% togliendone due; dei valori non segnalati, solo l'1.8\% la supererebbe aggiungendone una. È una prova severa, perché la deviazione standard riguarda le singole estrazioni, mentre lo score ne è la media.
 
@@ -896,14 +896,14 @@ Fin qui si è usata la media delle estrazioni di dropout; questa sezione guarda 
     \centering
     \phantomcaption
     \label{fig:ris-dropout-mappe}
-    \begin{subfigure}[t]{0.499\textwidth}
+    \begin{subfigure}[t]{0.516\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_dropout_mappe_a}
         \caption[La dispersione del dropout è più alta a sud e lungo il margine del dominio.]{La dispersione del dropout è più alta a sud e lungo il margine del dominio. Deviazione standard di G fra le 20 estrazioni in ogni cella, in media sugli anni di test. Linee di costa da Natural Earth.}
         \label{fig:ris-dropout-mappe-a}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[t]{0.471\textwidth}
+    \begin{subfigure}[t]{0.454\textwidth}
         \centering
         \includegraphics[width=\linewidth]{era5_dropout_mappe_b}
         \caption[Il rapporto della dispersione con l'errore varia poco nel dominio.]{Il rapporto della dispersione con l'errore varia poco nel dominio. Rapporto medio in ogni cella, sugli anni di test. Linee di costa da Natural Earth.}
