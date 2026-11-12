@@ -33,17 +33,17 @@ NAMES = {
     "10m_u_component_of_wind": "Vento zonale a dieci metri",
     "10m_v_component_of_wind": "Vento meridionale a dieci metri",
     "mean_sea_level_pressure": "Pressione al livello del mare",
-    "total_precipitation": "Precipitazione totale",
-    "total_cloud_cover": "Copertura nuvolosa totale",
-    "surface_solar_radiation_downwards": "Radiazione solare alla superficie",
+    "total_precipitation": "Precipitazione",
+    "total_cloud_cover": "Copertura nuvolosa",
+    "surface_solar_radiation_downwards": "Radiazione solare",
     "volumetric_soil_water_layer_1": "Umidità del suolo",
     "friction_velocity": "Velocità d'attrito",
-    "boundary_layer_height": "Altezza dello strato limite",
+    "boundary_layer_height": "Strato limite",
     "u_component_of_wind": "Vento zonale a 850 hPa",
     "v_component_of_wind": "Vento meridionale a 850 hPa",
-    "vertical_velocity": "Velocità verticale a 850 hPa",
+    "vertical_velocity": "Velocità verticale",
     "temperature": "Temperatura a 850 hPa",
-    "specific_humidity": "Umidità specifica a 850 hPa",
+    "specific_humidity": "Umidità specifica",
 }
 MONTHS = ["G", "F", "M", "A", "M", "G", "L", "A", "S", "O", "N", "D"]
 
