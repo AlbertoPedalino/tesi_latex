@@ -30,7 +30,7 @@ TRIALS = HERE / "dati" / "era5_optuna_prove.csv"
 # One hue, dark for the lowest MMD (the best), light for the highest.
 RAMP = LinearSegmentedColormap.from_list("mmd", ("#0d366b", "#184f95", "#256abf", "#3987e5", "#6da7ec", "#9ec5f4", "#cde2fb"))
 BEST_REGION = ("serene-sweep-14", "optuna-26", "optuna-27")  # lr G 6-8e-4, lr D 1.5-3e-3, weight 60-170, 1:1
-LABELS = ("tasso di appr. G", "tasso di appr. D", r"peso $\lambda_G$", "rapporto D:G")
+LABELS = ("tasso di appr. G", "tasso di appr. D", r"peso $\lambda_G$", "aggiornamenti D:G")
 HALO = [effects.withStroke(linewidth=2.5, foreground="white")]
 REGION = "#e8a33d"
 UPDATES = {"1:2": -1.0, "1:1": 0.0, "2:1": 1.0}
@@ -90,12 +90,12 @@ def main():
     key.set_aspect("equal")
     key.set_xticks([])
     key.set_yticks([])
-    key.set_title("verso dove cresce\nogni parametro", fontsize=6.5, color=MUTED, pad=2)
+    key.set_title("verso dove cresce\nogni iperparametro", fontsize=6.5, color=MUTED, pad=2)
     for side in key.spines.values():
         side.set_color("#d9d8d4")
 
     bar = figure.colorbar(mesh, ax=axis, shrink=0.85, pad=0.02, extend="max")
-    bar.set_label("MMD sulla validazione (più scuro = migliore)", fontsize=TICKS)
+    bar.set_label("MMD sugli anni di validazione (più scuro = migliore)", fontsize=TICKS)
     bar.ax.tick_params(labelsize=TICKS)
     # The names on the figure, not in a legend: the trials stopped by a non-finite loss, next to the leftmost one;
     # the best region, under its lowest trial.

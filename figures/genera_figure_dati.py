@@ -182,7 +182,7 @@ def correlation_figure(data):
     axis.set_xlim(0, edges[-1])
     axis.set_ylim(-0.1, 1.0)
     axis.set_xlabel("Distanza fra le celle (km)")
-    axis.set_ylabel("Correlazione delle differenze\ndalla media climatologica")
+    axis.set_ylabel("Correlazione delle differenze\ndal normale per mese e ora")
     tidy(axis)
     axis.legend(fontsize=8, loc="upper right", labelcolor="linecolor")
     save(figure, "era5_correlazione_distanza.pdf")

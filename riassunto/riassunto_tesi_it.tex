@@ -34,7 +34,7 @@ Le anomalie meteorologiche, cioè le condizioni dell'atmosfera lontane da quelle
 
 Il compito ha tre difficoltà. Senza etichette il rilevamento è \emph{unsupervised} e la valutazione indiretta. Gli anni di addestramento non sono garantiti privi di anomalie meteorologiche, quindi si cercano le condizioni nuove rispetto a quel periodo. Infine ciò che è normale cambia con il luogo e la stagione, e su una griglia non è dato quali punti siano collegati.
 
-La tesi parte da STGAN, una rete generativa avversaria spazio-temporale proposta per il traffico stradale, dove i punti sono collegati dalle strade; il suo score somma l'errore di ricostruzione del generatore e il giudizio del discriminatore. La tesi non propone un algoritmo nuovo: adatta STGAN ai campi ERA5 e si chiede se le due componenti segnalino gli stessi valori, cioè le stesse coppie cella--istante, e quale delle due usare.
+La tesi parte da STGAN, una rete generativa avversaria spazio-temporale proposta per il traffico stradale, dove i punti sono collegati dalle strade; il suo score somma l'errore di ricostruzione del generatore e la componente del discriminatore. La tesi non propone un algoritmo nuovo: adatta STGAN ai campi ERA5 e si chiede se le due componenti segnalino gli stessi valori, cioè le stesse coppie cella--istante, e quale delle due usare.
 
 \section{Metodologia}
 
@@ -50,7 +50,7 @@ Ogni variabile è standardizzata con media e deviazione standard della stessa ce
 
 \subsection{Score del rilevatore e soglia}
 
-Dalla stessa esecuzione si ricavano due componenti. G è l'errore di ricostruzione del generatore, cioè quanto il campo ricostruito si allontana da quello osservato. D è la differenza fra il giudizio del discriminatore sull'osservazione, $D_{\mathrm{reale}}$, e quello sulla ricostruzione, $D_{\mathrm{generato}}$: come per G, un valore alto indica un valore più insolito. G non è confrontabile fra luoghi e stagioni, perché a sud e d'estate è alto per natura. Lo score del rilevatore, $G_{\mathrm{n}}$, dice di quante deviazioni standard G supera il suo valore abituale nella stessa cella, alla stessa ora e nello stesso periodo dell'anno. È l'idea della normalizzazione stagionale applicata all'errore anziché agli ingressi; questa normalizzazione climatologica è stimata sugli anni di validazione, perché su quelli di addestramento l'errore è più basso. Un valore è segnalato quando $G_{\mathrm{n}}$ supera il 95-esimo percentile degli anni di validazione. Lo score combinato dell'articolo, somma di G e D riportati su una scala comune, è calcolato solo per confronto; la scelta di $G_{\mathrm{n}}$ è motivata nella Sezione~4.1.
+Dalla stessa esecuzione si ricavano due componenti. G è l'errore di ricostruzione del generatore, cioè quanto il campo ricostruito si allontana da quello osservato. D, la componente del discriminatore, è la differenza fra il giudizio sull'osservazione, $D_{\mathrm{reale}}$, e quello sulla ricostruzione, $D_{\mathrm{generato}}$: come per G, una D alta indica un valore più insolito. G non è confrontabile fra luoghi e stagioni, perché a sud e d'estate è alto per natura. Lo score del rilevatore, $G_{\mathrm{n}}$, dice di quante deviazioni standard G supera il suo valore abituale nella stessa cella, alla stessa ora e nello stesso periodo dell'anno. È l'idea della normalizzazione stagionale applicata a G anziché agli ingressi; questa normalizzazione climatologica è stimata sugli anni di validazione, perché su quelli di addestramento G è più basso. Un valore è segnalato quando $G_{\mathrm{n}}$ supera il 95-esimo percentile degli anni di validazione. Lo score combinato dell'articolo, somma di G e D riportati su una scala comune, è calcolato solo per confronto; la scelta di $G_{\mathrm{n}}$ è motivata nella Sezione~4.1.
 
 \section{Impostazione sperimentale}
 
@@ -76,7 +76,7 @@ Il confronto è un controllo di coerenza, non una misura di accuratezza: senza e
 
 Sugli anni di test lo 0.5\% dei cluster, quelli con almeno 1000 valori, contiene il 75.5\% dei valori segnalati. Sono per lo più catene, cioè successioni di gruppi di segnalazioni ciascuno a contatto con il seguente, più che singole anomalie meteorologiche. Accade con tutti i metodi: nei loro cluster con almeno 1000 valori sta fra il 60\% e l'86\% dei valori segnalati. Il tipo di un cluster è la variabile che vi si allontana di più dal normale: i cluster di tipo velocità verticale o precipitazione contengono il 61\% dei valori segnalati.
 
-Quanto alla dispersione, il 75\% dei valori segnalati resta sopra la soglia anche togliendo a $G_{\mathrm{n}}$ una deviazione standard delle estrazioni: tre segnalazioni su quattro reggono alle maschere di dropout.
+Quanto alla dispersione, il 75\% dei valori segnalati resta sopra la soglia anche togliendo a $G_{\mathrm{n}}$ una volta la dispersione: tre segnalazioni su quattro reggono alle maschere di dropout.
 
 Con la soglia al 99-esimo percentile, cioè l'1\% dei valori, il comportamento del discriminatore è lo stesso e più marcato e il confronto con le baseline resta simile; la normalizzazione invece riduce meno le differenze fra luoghi e stagioni: sugli anni di validazione 1.4\% fra 20 e 30$^\circ$N, 0.7\% fra 50 e 60$^\circ$N, contro l'1\% atteso.
 

@@ -22,7 +22,7 @@
     \node[modulo] (glin) at (3.3,-1.6) {Lineare e ReLU\\\scriptsize 64};
     \node[unione,minimum height=4.3cm] (gcat) at (6.6,0) {};
     \node[rotate=90,font=\scriptsize] at (gcat) {concatenazione per cella};
-    \node[modulo] (gout) at (10.0,0) {Proiezione $1\times1$\\e tanh\\\scriptsize campo stimato};
+    \node[modulo] (gout) at (10.0,0) {Proiezione $1\times1$\\e tanh\\\scriptsize ricostruzione};
     \draw[freccia] (gr) -- (gconv);
     \draw[freccia] (gt) -- (glstm);
     \draw[freccia] (gc) -- (glin);
@@ -50,5 +50,5 @@
     \end{scope}
     % The estimated field reaches the current patch of the discriminator, without the dropout of G.
     \draw[freccia,dashed] (gout.south) -- ++(0,-2.35) coordinate (bend) -| (-1.62,-6.45) -- (dc.west);
-    \node[font=\scriptsize,above] at (5.5,0 |- bend) {campo stimato, senza dropout};
+    \node[font=\scriptsize,above] at (5.5,0 |- bend) {ricostruzione, senza dropout};
 \end{tikzpicture}

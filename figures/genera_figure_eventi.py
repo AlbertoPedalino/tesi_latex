@@ -415,8 +415,8 @@ def dropout_figure():
     bands.set_xticks(place, ["<50", "50–90", "90–95", "95–99", "99–99.9", ">99.9"], rotation=35, ha="right", rotation_mode="anchor")
     bands.tick_params(labelsize=6.5, length=0)
     bands.set_ylabel("rapporto (%)", fontsize=TICKS)
-    bands.set_xlabel("percentile dell'errore", fontsize=TICKS)
-    bands.set_title("Secondo l'errore", fontsize=8.5, loc="left", color=TEXT)
+    bands.set_xlabel("percentile di G", fontsize=TICKS)
+    bands.set_title("Secondo G", fontsize=8.5, loc="left", color=TEXT)
     clean(bands, "top", "right", "left")
 
     position = np.array(data["positions"]["position"])
@@ -442,7 +442,7 @@ def dropout_figure():
     classes.tick_params(labelsize=TICKS, length=0)
     classes.set_xlabel("classi, dalle estrazioni\nconcordi alle discordi", fontsize=TICKS)
     classes.set_ylabel("oltre la soglia della\ndistanza dal normale (%)", fontsize=TICKS)
-    classes.set_title("A parità di errore", fontsize=8.5, loc="left", color=TEXT)
+    classes.set_title("A parità di G", fontsize=8.5, loc="left", color=TEXT)
     clean(classes, "top", "right", "left")
     save_panels(figure, [[bands], [across], [classes]], HERE, "era5_dropout")
     plt.close(figure)
@@ -455,8 +455,8 @@ def dropout_maps_figure(coastline_path):
     coastline = coastline_of(coastline_path, grid)
     figure, axes = plt.subplots(1, 2, figsize=size(0.56), constrained_layout=True)
     groups = []
-    for axis, key, title, label, scale in ((axes[0], "mean grezza", "Deviazione standard di G, media", r"deviazione standard di G fra le estrazioni, $\times 10^{-4}$", 1e4),
-                                           (axes[1], "mean ratio", "Rapporto, medio", "rapporto (%)", 100)):
+    for axis, key, title, label, scale in ((axes[0], "mean grezza", "Dispersione di G, media", r"dispersione di G fra le estrazioni, $\times 10^{-4}$", 1e4),
+                                           (axes[1], "mean ratio", "Rapporto fra dispersione e G, medio", "rapporto (%)", 100)):
         values = maps[key] * scale
         low, high = np.nanpercentile(values, (1, 99))
         mesh = draw_map(axis, grid, values, coastline, left=axis is axes[0], cmap="viridis", vmin=low, vmax=high)
