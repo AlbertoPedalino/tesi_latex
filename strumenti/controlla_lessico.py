@@ -14,7 +14,7 @@ The glossary (one term per concept; the rules forbid the variants found while wr
 - The output of the generator: "ricostruzione". The draws of the Monte Carlo dropout: "estrazioni"; their standard
   deviation: "dispersione"; dispersione divided by G: "rapporto". n_D:n_G: "aggiornamenti D:G".
 - "valore" = cell-instant pair ("coppia cella--istante"); "valore segnalato", "segnalazione"; "segnalazioni
-  esclusive" (not flagged by any other method); "cella seguita" (examples of 6.7.1); "cluster (di segnalazioni)";
+  esclusive" (not flagged by any other method); "cella seguita" (examples of 6.4); "cluster (di segnalazioni)";
   zones "nucleo", "contorno", "zona lontana"; "bordo del cluster"; "margine del dominio".
 - "scarto standardizzato" (Section 4.3); "percentuale"; "anni di addestramento / di validazione / di test";
   "storia ripulita"; "anomalia meteorologica" only for real phenomena; short names of the variables after Tab. 3.1.
@@ -59,18 +59,41 @@ RULES = [
     (r'a 2\s*~?m\b|a 10\s*~?m\b', '"a due metri", "a dieci metri"', ()),
     (r'umidità del primo strato|precipitazione totale|copertura nuvolosa totale|altezza dello strato limite',
      'nomi lunghi delle variabili dopo la Tab. 3.1', ('dati.tex',)),
-    (r'A parità di errore|percentile dell\'errore|Secondo l\'errore', 'nella 6.8 G si chiama G', ()),
-    (r'cell[ae] cerchiat', 'negli esempi della 6.7.1 è la "cella seguita" (nel cerchio sulle mappe)', ()),
-    (r'segnalazioni (del solo|di nessun altro)','"segnalazioni esclusive" (definite nella 6.6)', ()),
+    (r'A parità di errore|percentile dell\'errore|Secondo l\'errore', 'nella sezione della dispersione G si chiama G', ()),
+    (r'cell[ae] cerchiat', 'negli esempi della 6.4 è la "cella seguita" (nel cerchio sulle mappe)', ()),
+    (r'segnalazioni (del solo|di nessun altro)','"segnalazioni esclusive" (definite nella 5.4)', ()),
     (r'non è segnalat[oa] da nessuna', '"segnalazioni esclusive"', ()),
     # Segnalazioni concordate (glossario del 13 novembre 2026): il consenso dei metodi non è una verità né un'anomalia.
     (r'ground[- ]truth|\bgold\b|anomali[ae] concordat', '"segnalazioni concordate" / "cubo concordato"', ('stato_arte.tex',)),
     (r'zona del cluster|zone dei cluster concordat', '"intorno del cluster" (zona = nucleo, contorno, lontana)', ()),
     (r'errore lungo la traccia|errore di traverso|errore lungo il moto',
      '"spostamento lungo il moto" / "di traverso" (errore = G)', ()),
-    (r'segnalazioni (stabili|instabili)|stabilità delle segnalazioni', '"probabilità di superamento" alta o bassa', ()),
+    (r'segnalazion[ei] instabil|stabilità delle segnalazioni|segnalazion[ei] incert',
+     '"stabile" / "non stabile" (probabilità di superamento almeno 0.9 o no); "instabile" solo per l\'aria', ()),
+    (r'segnalazion[ei][^.;]{0,25}\baffidabil', 'una segnalazione è "stabile", non "affidabile" (stabile non vuol dire giusta)',
+     ()),
     (r'segnalazioni in eccesso', '"segnalazioni non concordate"', ()),
-    (r'cluster corrispondent|segnalazioni (abbinate|collegate al cluster)', '"cluster sovrapposto"', ()),
+    (r'cluster abbinat|cluster sovrappost|segnalazioni (abbinate|collegate al cluster)',
+     '"cluster di G_n (di un metodo) corrispondente al cluster concordato", sempre con il complemento', ()),
+    # Il complemento è obbligatorio (14 novembre 2026): corrispondente a che cosa, rilevato da chi.
+    (r'cluster[^.;:]{0,40}?(?<!senza )\bcorrispondent[ei]\b(?! (al|ai) cluster concordat| a ess[oi]\b)',
+     '"corrispondente" con il complemento ("al cluster concordato") la prima volta nel paragrafo; dopo basta "il '
+     'cluster corrispondente"', ()),
+    (r'cluster concordat[oi][^.;:]{0,15}?\brilevat[oi]\b(?! da)',
+     '"rilevato" sempre con chi rileva: "rilevato da G_n" / "da un metodo"', ()),
+    # Precision e recall in inglese, definiti nella 5.4 (14 novembre 2026); "precisione" resta per la precisione numerica.
+    (r'\brichiam[oi]\b', '"recall" (definito nella 5.4)', ()),
+    (r"precisione (dell'|del |di )?\d|precisione e (un |il )?richiamo", '"precision" (definita nella 5.4)', ()),
+    (r'fals[oi] allarm', '"senza corrispondente" (il cubo concordato non è una verità)', ()),
+    (r'probabilità di rilevamento|\bPOD\b',
+     '"quota di cluster concordati rilevati" (non si confonda con la probabilità di superamento)', ()),
+    (r'contemporane[oi],? (ma|e) lontan|contemporane[oi] lontan', '"contemporaneo, oltre i 300 km" ("lontano" solo per '
+     'la zona lontana e "lontano dal normale")', ()),
+    # Nomi del nuovo intorno (14 novembre 2026): i cluster sempre con il soggetto; niente "gruppo" né "lontane".
+    (r'segnalazioni lontane|lontan[ei] da ogni cluster|\bgrupp[oi] (del metodo|senza corrispondente|abbinat)',
+     '"segnalazioni senza corrispondente" / "cluster di un metodo" ("lontano" solo per la zona lontana e "lontano dal '
+     'normale")', ()),
+    (r'zona di 300|zon[ae] dell.intorno|intorno o zona', '"intorno" (zona = nucleo, contorno, lontana)', ()),
     (r'probabilità delle estrazioni', '"probabilità di superamento"', ()),
     # Glossary corrections of 12 November 2026 (groups A, B, C).
     (r'\bgeneratore stima\b|stima del generatore|ne produce una stima|quello da stimare|istante da stimare',
@@ -177,11 +200,17 @@ def sources():
             yield summary.name, number, line
 
 
+def later_in_paragraph(what, line, match):
+    """A bare "cluster corrispondente" is allowed after the full form earlier in the same paragraph (one source line):
+    "il cluster di G_n corrispondente al cluster concordato ... il cluster corrispondente"."""
+    return what.startswith('"corrispondente"') and 'corrispondente al cluster concordato' in line[:match.start()]
+
+
 def main():
     hits = 0
     for regex, what, allowed in RULES:
         found = [(name, number, line, m) for name, number, line in sources() if name not in allowed
-                 for m in regex.finditer(line)]
+                 for m in regex.finditer(line) if not later_in_paragraph(what, line, m)]
         if found:
             print(f'\n### {what} ({len(found)})')
             for name, number, line, m in found:

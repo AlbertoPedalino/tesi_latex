@@ -136,41 +136,58 @@ def clean(axis, *sides):
         axis.spines[side].set_visible(False)
 
 
+SIZE_BANDS = (("piccoli", "meno di 20 valori", ("1", "2-4", "5-19"), "#b7d3f6", TEXT),
+              ("medi", "da 20 a 999 valori", ("20-99", "100-999"), "#5598e7", "white"),
+              ("enormi", "1000 valori o più", ("1000-9999", ">9999"), "#184f95", "white"))
+
+
+def size_shares():
+    """For G_n and every baseline, on its own clusters: the share of the clusters and of the flagged values in each band
+    of size, and the number of clusters."""
+    rows = []
+    for label, key, table, _ in method_tables():
+        by_size = table[table["type"] == "all"].set_index("size")
+        events = by_size.loc[list(SIZES), "events"].astype(float)
+        values = by_size.loc[list(SIZES), f"{key} {CORE} values"].astype(float)
+        rows.append({"label": label, "clusters": int(events.sum()),
+                     "events": [100 * events.loc[list(band)].sum() / events.sum() for _, _, band, _, _ in SIZE_BANDS],
+                     "values": [100 * values.loc[list(band)].sum() / values.sum() for _, _, band, _, _ in SIZE_BANDS]})
+    return rows
+
+
 def sizes_figure(zones):
-    """Almost all the clusters are small, almost all the flagged values are in a few huge clusters: two bars of 100,
-    the clusters and the flagged values, cut in three bands of size (number of flagged values of the cluster)."""
-    rows = [zones.loc[("all", name)] for name in SIZES]
-    events = np.array([row["events"] for row in rows], dtype=float)
-    values = np.array([row[f"{SCORE} {CORE} values"] for row in rows], dtype=float)
-    bands = (("piccoli", "meno di 20 valori", (0, 1, 2), "#b7d3f6", TEXT),
-             ("medi", "da 20 a 999 valori", (3, 4), "#5598e7", "white"),
-             ("enormi", "1000 valori o più", (5, 6), "#184f95", "white"))
-    figure, axis = plt.subplots(figsize=size(0.34), constrained_layout=True)
-    for y, counts in ((1, events), (0, values)):
-        shares = [100 * counts[list(index)].sum() / counts.sum() for _, _, index, _, _ in bands]
-        left = 0.0
-        for share, (name, _, _, colour, ink) in zip(shares, bands):
-            axis.barh(y, share, left=left, height=0.62, color=colour, edgecolor="white", linewidth=0.8)
-            text = f"{share:.0f}%" if share >= 1 else "<1%"
-            if share >= 6:
-                axis.text(left + share / 2, y, text, ha="center", va="center", fontsize=8, color=ink)
-            else:  # too thin for its number: just after the end of the bar
-                axis.text(101, y, text, ha="left", va="center", fontsize=8, color=colour if colour != "#b7d3f6" else TEXT)
-            left += share
-    axis.set_yticks([1, 0], ["% dei cluster", "% dei valori segnalati"])
-    axis.set_xlim(0, 108)
-    axis.set_ylim(-0.55, 2.05)
-    axis.set_xticks([])
-    axis.tick_params(length=0, labelsize=TICKS)
-    clean(axis, "top", "right", "bottom", "left")
+    """Almost all the clusters are small, most of the flagged values are in a few huge clusters, for G_n and for every
+    baseline on its own clusters: one bar of 100 per method, cut in three bands of size (number of flagged values of the
+    cluster); left the clusters, right the flagged values. G_n on top, apart."""
+    rows = size_shares()
+    figure, axes = plt.subplots(1, 2, figsize=size(0.62), constrained_layout=True, sharey=True)
+    ys = [len(rows)] + list(range(len(rows) - 1, 0, -1))  # G_n on top, a row of space below it
+    for axis, column, title in ((axes[0], "events", "% dei cluster"), (axes[1], "values", "% dei valori segnalati")):
+        for y, row in zip(ys, rows):
+            left = 0.0
+            for share, (_, _, _, colour, ink) in zip(row[column], SIZE_BANDS):
+                axis.barh(y, share, left=left, height=0.66, color=colour, edgecolor="white", linewidth=0.8)
+                if share >= 9:
+                    axis.text(left + share / 2, y, f"{share:.0f}", ha="center", va="center", fontsize=7, color=ink)
+                left += share
+        axis.set_xlim(0, 100)
+        axis.set_xticks([0, 50, 100])
+        axis.set_xlabel(title, fontsize=TICKS)
+        axis.tick_params(length=0, labelsize=TICKS)
+        clean(axis, "top", "right", "left")
+    axes[0].set_yticks(ys, [row["label"] for row in rows])
+    axes[0].get_yticklabels()[0].set_color(BLUE)
+    axes[0].get_yticklabels()[0].set_fontweight("bold")
+    axes[0].set_ylim(0.4, len(rows) + 1.6)
     # The names of the bands, in their colours, above the bars.
-    x = 0.0
-    for name, detail, _, colour, _ in bands:
-        axis.text(x, 1.62, f"\u25a0 {name}\n    {detail}", fontsize=7.5, linespacing=1.1,
+    for axis, x, (name, detail, _, colour, _) in zip((axes[0], axes[0], axes[1]), (0, 52, 0), SIZE_BANDS):
+        axis.text(x, len(rows) + 1.1, f"\u25a0 {name}\n    {detail}", fontsize=7, linespacing=1.1,
                   color=colour if colour != "#b7d3f6" else "#5f8fc9", ha="left", va="center")
-        x += 36
     figure.savefig(HERE / "era5_eventi_dimensione.pdf")
     plt.close(figure)
+    for row in rows:
+        print(f"{row['label']:>24}: {row['clusters']:>8} cluster; cluster % {[round(v, 1) for v in row['events']]}; "
+              f"valori % {[round(v, 1) for v in row['values']]}")
 
 
 def type_order(zones):

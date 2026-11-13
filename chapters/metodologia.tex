@@ -1,7 +1,7 @@
 \chapter{Metodologia}
 \label{chap:metodologia}
 
-Il capitolo descrive il rilevatore nella forma usata sui campi ERA5. La Sezione~\ref{sec:formulazione} formula il problema: che cosa entra nel rilevatore, che cosa ne esce e quando un valore è segnalato. Seguono l'architettura del generatore e del discriminatore con gli obiettivi dell'addestramento avversario (Sezione~\ref{sec:stgan}), l'ingresso del modello (Sezione~\ref{sec:ingresso-normalizzazione-era5}), i pesi delle variabili nell'errore di ricostruzione del generatore, i valori esclusi dalle misure sugli anni di validazione, le componenti dello score con il dropout Monte Carlo e la normalizzazione climatologica dello score. Il capitolo si ferma allo score: la misura con cui si confrontano le configurazioni è descritta nel Capitolo~\ref{chap:esperimenti}, e ciò che si ricava dallo score, come il raggruppamento delle segnalazioni in cluster di segnalazioni, nel Capitolo~\ref{chap:risultati}.
+Il capitolo descrive il rilevatore nella forma usata sui campi ERA5. La Sezione~\ref{sec:formulazione} formula il problema: che cosa entra nel rilevatore, che cosa ne esce e quando un valore è segnalato. Seguono l'architettura del generatore e del discriminatore con gli obiettivi dell'addestramento avversario (Sezione~\ref{sec:stgan}), l'ingresso del modello (Sezione~\ref{sec:ingresso-normalizzazione-era5}), i pesi delle variabili nell'errore di ricostruzione del generatore, i valori esclusi dalle misure sugli anni di validazione, le componenti dello score con il dropout Monte Carlo e la normalizzazione climatologica dello score. Il capitolo si ferma allo score: la misura con cui si confrontano le configurazioni è descritta nel Capitolo~\ref{chap:esperimenti}, e ciò che si ricava dallo score, come il raggruppamento delle segnalazioni in cluster di segnalazioni, nella Sezione~\ref{sec:exp-misure}.
 
 La Figura~\ref{fig:catena-rilevatore} riporta l'ordine in cui questi passaggi agiscono su un istante, e per ogni quantità stimata gli anni su cui è stimata: normalizzazione stagionale e pesi sugli anni di addestramento, prima di addestrare il modello; climatologia e soglia sugli anni di validazione, dopo l'addestramento. Il discriminatore non compare nella catena: serve all'addestramento del generatore e allo score combinato, calcolato solo per confronto.
 
@@ -244,7 +244,7 @@ La componente cresce quindi sia quando la ricostruzione si allontana dall'osserv
 
 \subsection{Score combinato e score del rilevatore}
 
-Dalle stesse estrazioni sono ricavati due score. Lo \emph{score combinato} è quello dell'articolo; non è usato come score del rilevatore, ed è confrontato con le due componenti (Sezione~\ref{sec:ris-conferma}). Le due componenti sono riportate su una scala comune con un min--max e sommate con peso unitario, estrazione per estrazione:
+Dalle stesse estrazioni sono ricavati due score. Lo \emph{score combinato} è quello dell'articolo; non è usato come score del rilevatore, ed è confrontato con le due componenti (Sezione~\ref{sec:ris-combinato}). Le due componenti sono riportate su una scala comune con un min--max e sommate con peso unitario, estrazione per estrazione:
 \begin{equation}
 a^{(j)}_{tn}=
 \frac{s^{(j)}_{G,tn}-r_{\min}}{r_{\max}-r_{\min}}
@@ -284,5 +284,26 @@ con $\bar{s}_{G,tn}$ dell'equazione~\eqref{eq:componente-g-media}: l'errore di r
 % outputs/optuna27/test_generator_clim_day (test, dalla validazione); i rilevatori
 % di confronto con scripts/run_era5_comparisons.sh. Score di validazione con la
 % storia reale: scripts/score_era5_stgan_run.py --period validation.
+
+\paragraph{Le grandezze lette nei risultati.} La Tabella~\ref{tab:ris-score} riassume le grandezze che il Capitolo~\ref{chap:risultati} confronta e il significato di un loro valore alto. Il discriminatore è addestrato a dare 1 alla ricostruzione e 0 al campo osservato: un'uscita alta significa quindi ``giudicato generato''. Va fatta attenzione al nome: $D_{\mathrm{reale}}$ è il giudizio sull'osservazione, e se è alto l'osservazione è giudicata generata. Nell'idea di STGAN un'osservazione di questo tipo non somiglia a quelle viste in addestramento, e per questo una D alta, come un G alto, significa ``più insolito''.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Le grandezze lette nei risultati e il significato di un loro valore alto. Tutte sono calcolate per ogni cella e ogni istante.}
+    \label{tab:ris-score}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.16}L{0.44}L{0.32}@{}}
+        \toprule
+        Grandezza & Che cosa misura & Se è alto \\
+        \midrule
+        G ($\bar{s}_G$) & errore di ricostruzione del generatore, medio sulla patch $3\times3$ della cella & osservazione più insolita \\
+        $G_{\mathrm{n}}$ & lo score del rilevatore (equazione~\eqref{eq:score-finale}): G rispetto a ciò che è abituale per quella cella, giorno dell'anno e ora & osservazione più insolita per quel luogo e periodo \\
+        $D_{\mathrm{reale}}$ & giudizio del discriminatore sull'osservazione, fra 0 e 1 & osservazione giudicata generata \\
+        $D_{\mathrm{generato}}$ & giudizio del discriminatore sulla ricostruzione, fra 0 e 1 & ricostruzione giudicata generata \\
+        D & $D_{\mathrm{reale}}-D_{\mathrm{generato}}$, la componente del discriminatore & osservazione più insolita \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 Il Capitolo~\ref{chap:esperimenti} riporta i valori scelti e il protocollo con cui lo score è valutato.

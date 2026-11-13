@@ -1,13 +1,13 @@
-\chapter{Sensibilità alla soglia}
+\chapter{Sensibilità alla soglia e verifiche aggiuntive}
 \label{app:soglia}
 
-Nel Capitolo~\ref{chap:risultati} un valore è segnalato quando lo score supera il 95-esimo percentile dei propri valori sugli anni di validazione. È una scelta convenzionale, non ottimizzata. Questa appendice verifica quanto i risultati dipendono dalla soglia: la Sezione~\ref{app:soglia-principali} ripete le analisi principali con il 99-esimo percentile, la Sezione~\ref{app:soglia-concordate} ricostruisce le segnalazioni concordate con il 97-esimo e il 99-esimo, e la Sezione~\ref{app:soglia-pr} varia la soglia di ogni metodo con il cubo concordato fisso.
+Nel Capitolo~\ref{chap:risultati} un valore è segnalato quando lo score supera il 95-esimo percentile dei propri valori sugli anni di validazione. È una scelta convenzionale, non ottimizzata. Questa appendice verifica quanto i risultati dipendono dalla soglia: la Sezione~\ref{app:soglia-principali} ripete le analisi principali con il 99-esimo percentile, la Sezione~\ref{app:soglia-concordate} ricostruisce le segnalazioni concordate con il 97-esimo e il 99-esimo, e la Sezione~\ref{app:soglia-pr} varia la soglia di ogni metodo con il cubo concordato fisso. Le Sezioni~\ref{app:discriminatore} e~\ref{app:profilo-tipi} riportano due verifiche che completano il Capitolo~\ref{chap:risultati}: un esempio e la levigatezza per la componente del discriminatore, e il profilo di $G_{\mathrm{n}}$ per tipo di cluster.
 
 \section{Le analisi principali con il 99-esimo percentile}
 \label{app:soglia-principali}
 
 
-Questa sezione ripete le analisi principali delle Sezioni~\ref{sec:ris-climatologia}--\ref{sec:ris-eventi} con il 99-esimo percentile, cioè segnalando l'1\% dei valori degli anni di validazione, per verificare quanto le conclusioni dipendano dalla soglia (Tabella~\ref{tab:ris-soglia}). Le correlazioni fra G e D della Sezione~\ref{sec:ris-correlazione-spaziale} usano tutti i valori e non dipendono dalla soglia, e non sono ripetute; non è ripetuta nemmeno l'analisi del dropout.
+Questa sezione ripete le analisi principali delle Sezioni~\ref{sec:ris-correlazione-spaziale}--\ref{sec:ris-confronti} con il 99-esimo percentile, cioè segnalando l'1\% dei valori degli anni di validazione, per verificare quanto le conclusioni dipendano dalla soglia (Tabella~\ref{tab:ris-soglia}). Le correlazioni fra G e D della Sezione~\ref{sec:ris-g-d-legame} usano tutti i valori e non dipendono dalla soglia, e non sono ripetute; non è ripetuta nemmeno l'analisi del dropout.
 
 \begin{table}[htbp]
     \centering
@@ -65,7 +65,7 @@ Questa sezione ripete le analisi principali delle Sezioni~\ref{sec:ris-climatolo
 % Rapporto fra le quote medie a sud e a nord con G+clim all'1%: validazione 1.43 / 0.68 = 2.1 (sul test,
 % outputs/finale_optuna27/logs/luogo_g_clim_1pc.log, 1.79 / 0.74 = 2.4).
 
-\section{Le segnalazioni concordate con il 97-esimo e il 99-esimo percentile}
+\section{Le segnalazioni concordate al 97-esimo e al 99-esimo percentile}
 \label{app:soglia-concordate}
 
 Le segnalazioni concordate della Sezione~\ref{sec:ris-concordate} sono ricostruite, con le stesse regole, con la soglia di ogni metodo al 97-esimo e al 99-esimo percentile degli score sugli anni di validazione, cioè segnalando il 3\% e l'1\% dei valori; sono ripetuti anche l'inizio, la fine e lo spostamento lungo il moto della Sezione~\ref{sec:ris-concordate-inizio} (Tabella~\ref{tab:app-soglia-concordate}). La sovrapposizione, la probabilità di superamento e ciò che c'è attorno ai cluster non sono ripetuti.
@@ -126,4 +126,157 @@ Le segnalazioni concordate della Sezione~\ref{sec:ris-concordate} sono ricostrui
 \section{Curve precision--recall rispetto al cubo concordato}
 \label{app:soglia-pr}
 
-\provv{Da scrivere dopo la corsa: con il cubo concordato fisso (95-esimo percentile), per ogni metodo si varia la propria soglia e si calcolano precision e recall rispetto al cubo, anche contro il cubo senza il voto del metodo.}
+Con il cubo concordato fisso, quello del 95-esimo percentile, la soglia di ogni metodo varia dall'80-esimo al 99.9-esimo percentile del suo score sugli anni di validazione. A ogni soglia le segnalazioni del metodo sono chiuse come nel cubo, e se ne calcolano la precision e il recall (Sezione~\ref{sec:exp-baseline}) rispetto al cubo concordato e rispetto al cubo senza il voto del metodo, $C^{(-k)}$ (Sezione~\ref{sec:exp-concordate}), sugli anni di test (Figura~\ref{fig:app-pr}). Un metodo che segnalasse a caso avrebbe una precision pari alla percentuale di valori concordati, 0.062. Il cubo non è una verità: precision e recall misurano l'accordo con il cubo concordato, che per costruzione favorisce i metodi simili fra loro; il confronto senza il proprio voto toglie l'effetto del voto del metodo, non questa somiglianza.
+
+\begin{figure}[htbp]
+    \centering
+    \phantomcaption
+    \label{fig:app-pr}
+    \begin{subfigure}[t]{0.480\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{era5_concordate_pr_a}
+        \caption[Precision e recall di ogni metodo al variare della propria soglia, dall'80-esimo al 99.9-esimo percentile, rispetto al cubo concordato al 95-esimo percentile, sugli anni di test; il pallino indica il 95-esimo percentile.]{Precision e recall di ogni metodo al variare della propria soglia, dall'80-esimo al 99.9-esimo percentile, rispetto al cubo concordato al 95-esimo percentile, sugli anni di test; il pallino indica il 95-esimo percentile. Al 95-esimo $G_{\mathrm{n}}$ è penultimo.}
+        \label{fig:app-pr-a}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.480\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{era5_concordate_pr_b}
+        \caption[Come la Figura~\ref{fig:app-pr-a}, rispetto al cubo concordato senza il voto del metodo.]{Come la Figura~\ref{fig:app-pr-a}, rispetto al cubo concordato senza il voto del metodo. Ai percentili più alti la precision di $G_{\mathrm{n}}$ supera quella di CBLOF, della distanza dal normale e della variazione in tre ore.}
+        \label{fig:app-pr-b}
+    \end{subfigure}
+\end{figure}
+
+\paragraph{Al 95-esimo percentile $G_{\mathrm{n}}$ è penultimo.} Alla soglia del cubo $G_{\mathrm{n}}$ ha precision 0.594 e recall 0.697, le più basse dopo quelle della variazione in tre ore; senza il proprio voto 0.522 e 0.669, con lo stesso ordine. È atteso: sei dei nove metodi leggono una cella in un istante e segnalano in gran parte gli stessi valori, mentre $G_{\mathrm{n}}$ si sovrappone anche alla variazione in tre ore (Sezione~\ref{sec:ris-confronti}).
+
+\paragraph{Il proprio voto pesa meno per $G_{\mathrm{n}}$.} Senza il proprio voto la precision di $G_{\mathrm{n}}$ cala di 0.072, quella delle altre baseline fra 0.077 e 0.131; cala meno solo quella della variazione in tre ore, di 0.051. È coerente con il voto decisivo di $G_{\mathrm{n}}$, più basso di quello di ogni modello shallow (Sezione~\ref{sec:ris-concordate-cubo}).
+
+\paragraph{Ai percentili più alti la precision di $G_{\mathrm{n}}$ sale.} Con soglie più alte la precision di $G_{\mathrm{n}}$ senza il proprio voto sale fino a 0.92 al 99.9-esimo percentile: i suoi valori più estremi sono quasi sempre segnalati anche da almeno cinque degli altri otto metodi. Dal 99-esimo percentile supera quella di CBLOF, della distanza dal normale e della variazione in tre ore, che al 99-esimo e al 99.5-esimo percentile restano fra 0.68 e 0.80 (la variazione in tre ore arriva a 0.89 al 99.9-esimo); PCA, HBOS, COPOD, Isolation Forest e MCD arrivano fra 0.91 e 1.00.
+
+\paragraph{Ai percentili più alti il recall è limitato dal numero di segnalazioni.} Al 99-esimo percentile ogni metodo segnala fra l'1.3\% e l'1.7\% dei valori, contro il 6.20\% del cubo: il recall non può superare 0.21--0.28, secondo il metodo, e i metodi vi si equivalgono, fra 0.19 e 0.24.
+% Numeri: Tesi/segnalazioni_concordate/risultati.md §12; dati figures/dati/era5_concordate_pr.csv (trascritti dal log
+% del server outputs/concordate_5pc_regola_tesi_pr.log, 13 novembre 2026; codice check_era5_concordant_pr.py, commit
+% 576547c). Al 95: precision / recall G_n 0.594 / 0.697, senza voto 0.522 / 0.669; calo della precision: PCA 0.131,
+% iForest 0.105, HBOS 0.093, MCD 0.091, COPOD 0.090, CBLOF 0.081, normale 0.077, G_n 0.072, variazione 0.051.
+% Senza voto, 99 / 99.5 / 99.9: G_n 0.819 / 0.877 / 0.918; CBLOF 0.767 / 0.762 / 0.792; normale 0.682 / 0.689 / 0.786;
+% variazione 0.715 / 0.800 / 0.891; al 99 gli altri cinque 0.908-0.985. Al 99 segnalati 1.30-1.73%, recall 0.191-0.244.
+% Figura: figures/genera_figure_concordate.py, pr_figure.
+
+\section{Che cosa giudica il discriminatore: un esempio e la levigatezza}
+\label{app:discriminatore}
+
+Questa sezione completa la Sezione~\ref{sec:ris-g-d} con un istante letto su una mappa e con la verifica della levigatezza delle ricostruzioni.
+
+\paragraph{Un esempio: l'istante con G più alto.} La Figura~\ref{fig:ris-d-termini-mappa} mostra G e D il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta degli anni di validazione. Nell'area principale del Nord Africa in cui G è alto, $D_{\mathrm{reale}}$ è vicino a zero, con una mediana di 0.07, e anche $D_{\mathrm{generato}}$ è fra i valori più bassi dell'istante, con una mediana di 0.19: il discriminatore giudica reali sia l'osservazione sia la ricostruzione, l'osservazione di più, e D è fra i valori più bassi del dominio. Su un'area più piccola più a sud-ovest, anch'essa con G alto, il giudizio sull'osservazione è meno netto ($D_{\mathrm{reale}}$ ha una mediana di 0.15), ma anche lì D è bassa. Dentro la linea della Figura~\ref{fig:ris-d-termini-mappa}, che racchiude l'1\% delle celle con G più alto, il percentile mediano di D fra le celle dell'istante è 6. $D_{\mathrm{reale}}$ è basso anche nella penisola arabica, dove G è intorno al 94-esimo percentile dell'istante.
+
+\begin{figure}[htbp]
+    \centering
+    \phantomcaption
+    \label{fig:ris-d-termini-mappa}
+    \begin{subfigure}[t]{0.493\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{era5_d_termini_mappa_a}
+        \caption[G il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta degli anni di validazione, come percentile fra le celle dell'istante; la linea arancione racchiude l'1\% delle celle con G più alto.]{G il 9 agosto 2003 alle 12~UTC, l'istante con la media di G più alta degli anni di validazione, come percentile fra le celle dell'istante; la linea arancione racchiude l'1\% delle celle con G più alto. Linee di costa da Natural Earth.}
+        \label{fig:ris-d-termini-mappa-a}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.467\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{era5_d_termini_mappa_b}
+        \caption[D il 9 agosto 2003 alle 12~UTC, come percentile fra le celle dell'istante; la linea arancione racchiude l'1\% delle celle con G più alto.]{D il 9 agosto 2003 alle 12~UTC, come percentile fra le celle dell'istante; la linea arancione racchiude l'1\% delle celle con G più alto. Dentro la linea D è fra i valori più bassi. Linee di costa da Natural Earth.}
+        \label{fig:ris-d-termini-mappa-b}
+    \end{subfigure}
+% Percentile di D fra le celle dell'istante, dentro l'1% di G più alto (figures/dati/era5_g_d.npz, riga 1, 10 novembre 2026): mediana 6.3, il 98% sotto 25.
+\end{figure}
+
+\paragraph{Le ricostruzioni non sono più lisce delle osservazioni.} Una spiegazione possibile del comportamento di D è che il discriminatore riconosca le ricostruzioni dal loro aspetto più liscio: i modelli addestrati con un errore quadratico producono campi troppo regolari, e le ricostruzioni di un autoencoder variazionale smussano gli estremi (Sezione~\ref{sec:rw-meteo}). La rugosità (Sezione~\ref{sec:exp-misure}) è misurata su 240 istanti degli anni di validazione (Tabella~\ref{tab:ris-levigatezza}) con il modello senza dropout, per non mescolarla con il rumore delle maschere di dropout. In mediana sugli istanti, la rugosità delle ricostruzioni è però 1.10 volte quella osservata: l'ipotesi non regge.
+% Testo completo prima del taglio del 9 novembre 2026: \paragraph{Le ricostruzioni non sono più lisce delle osservazioni.} Una spiegazione possibile del comportamento di D è che il discriminatore riconosca le ricostruzioni dal loro aspetto più liscio: in letteratura i modelli addestrati con un errore quadratico~\cite{rasp2020weatherbench,lam2023graphcast}, come in parte il generatore della tesi, e le ricostruzioni di un autoencoder variazionale~\cite{pacal2026heatwavedrivers} producono campi troppo regolari e smussano gli estremi. L'ipotesi è messa alla prova su 240 istanti della validazione (Tabella~\ref{tab:ris-levigatezza}), misurando la rugosità, cioè la differenza quadratica media fra celle adiacenti; il modello è usato senza dropout, perché il giudizio non cambi con la maschera di dropout. Le ricostruzioni non sono però più lisce delle osservazioni: la loro rugosità è in mediana 1.10 volte quella osservata, ed è minore solo nel 22\% degli istanti. La levigatezza della ricostruzione non spiega quindi il comportamento di D.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Rugosità e giudizio medio del discriminatore sull'osservazione e sulla ricostruzione, intere e lisciate: mediane su 240 istanti degli anni di validazione, con il modello senza dropout.}
+    \label{tab:ris-levigatezza}
+    \vspace{0.6em}
+    \begin{tabular}{@{}lrr@{}}
+        \toprule
+        Campo & Rugosità & \shortstack[r]{Giudizio medio\\(1 = generato)} \\
+        \midrule
+        Osservazione & 0.00082 & 0.502 \\
+        Ricostruzione & 0.00089 & 0.502 \\
+        Osservazione lisciata & 0.00021 & 0.512 \\
+        Ricostruzione lisciata & 0.00019 & 0.513 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\paragraph{Una lettura: le celle rugose sono giudicate reali.} Le celle con la rugosità locale più alta sono giudicate più reali (correlazione di Spearman mediana $-0.61$ fra rugosità locale e giudizio sull'osservazione) e tendono ad avere G alto (correlazione mediana $0.49$). Lisciare l'osservazione la fa giudicare appena più generata: su tutte le celle il giudizio medio passa, in mediana sugli istanti, da 0.502 a 0.512 (Tabella~\ref{tab:ris-levigatezza}), e sale nel 99.6\% dei valori con G nel 5\% più alto, sia sugli anni di validazione sia su quelli di test.
+% Rugosità locale: scripts/check_era5_discriminator_smoothness.py, local_roughness (quadrato della distanza dalla media della patch 3x3, media sulle variabili). 0.502 -> 0.512 è su tutte le celle (tabella); il 99.6% è la quota delle celle del 5% più alto di G in cui il giudizio sale (testo completo del 9 novembre, sotto).
+ La rugosità potrebbe quindi spiegare in parte perché, dove G è più alto, il discriminatore giudica reali le osservazioni. È una lettura di correlazioni, non una dimostrazione: il lisciamento riduce anche i valori più estremi, un effetto che la verifica non separa.
+% Testo completo prima del taglio del 9 novembre 2026: \paragraph{Una lettura: i campi rugosi sono giudicati reali.} La stessa verifica suggerisce un'altra lettura. Lisciando l'osservazione con la media della sua patch $3\times3$, il discriminatore la giudica più generata nel 99\% delle celle, e nel 99.6\% di quelle con G più alto, anche se di poco: in media il giudizio passa da 0.502 a 0.512. La rugosità locale ordina il giudizio sulle osservazioni: la correlazione di Spearman mediana fra le due è $-0.61$, negativa in tutti gli istanti, cioè le celle più rugose sono giudicate più reali. Le stesse celle tendono ad avere anche G alto, con una correlazione mediana di $0.49$: dove il campo è rugoso, il generatore tende a sbagliare di più. Coerentemente, nei 240 istanti il giudizio sull'osservazione vale in media 0.45 nel 5\% più alto di G, contro 0.50 su tutte le celle. La rugosità potrebbe quindi spiegare in parte perché, dove G segnala, il discriminatore giudica reali le osservazioni. È una lettura di correlazioni, non una dimostrazione: il lisciamento, per esempio, riduce anche i valori più estremi, un effetto che la verifica non separa.
+% Numeri dell'esempio e della levigatezza:
+% Mappa del 9/8/2003: mappe_istanti.npz e outputs/finale_optuna27/logs/mappe_istanti.log
+% (G medio più alto = 9/8/2003 12 UTC, 0.00746); celle nell'1% più alto di G dell'istante
+% (la linea arancione della figura): 85 celle 27.5-30.5N 2.5-12.5E, mediane D(reale) 0.073,
+% D(generato) 0.186 (percentile 1 dell'istante), D -0.112 (percentile 7); 22 celle
+% 23-25.5N 5.5-2W, D(reale) 0.151, D(generato) 0.265, D -0.116. Penisola arabica (lat <=
+% 38N, lon >= 35E, D(reale) < 0.3): 164 celle, G al percentile 93.7 dell'istante
+% (mediana), D(reale) 0.240; il minimo di D dell'istante è a 32.5N 39.5E.
+% Levigatezza: scripts/check_era5_discriminator_smoothness.py, logs/levigatezza_d.log,
+% levigatezza_d.csv (240 istanti, uno ogni 61, modo eval): rugosità mediana osservato
+% 0.00082, ricostruito 0.00089, osservato lisciato 0.00021, ricostruito lisciato 0.00019;
+% rapporto ricostruito/osservato mediana 1.101, sotto 1 nel 21.7% degli istanti; D medio
+% 0.5020, 0.5019, 0.5118, 0.5134; D osservato nel 5% di G più alto 0.4549. Lisciando: D
+% sale nel 99.3% delle celle (+0.0098), nel 5% di G più alto nel 99.6% (+0.0379).
+% Spearman rugosità locale - D osservato -0.613 (negativa nel 100% degli istanti), - G
+% +0.485, - aumento di D +0.762.
+% Paçal et al., p. 971: 'the VAE reconstructions tend to smooth out extremes'.
+% Levigatezza sul test (logs/levigatezza_d.log, 240 istanti, uno ogni 255, modo eval):
+% rugosità mediana osservato 0.00087, ricostruito 0.00095, osservato lisciato 0.00022,
+% ricostruito lisciato 0.00019; rapporto mediana 1.077, sotto 1 nel 31.7% degli istanti;
+% D medio 0.5005, 0.5010, 0.5113, 0.5131; D osservato nel 5% di G più alto 0.4500.
+% Lisciando: D sale nel 99.3% delle celle (+0.0105), nel 5% di G più alto nel 99.6%
+% (+0.0432). Spearman rugosità locale - D osservato -0.611 (negativa nel 100% degli
+% istanti), - G +0.485, - aumento di D +0.757.
+
+\section{Il profilo di $G_{\mathrm{n}}$ per tipo di cluster}
+\label{app:profilo-tipi}
+
+Questa sezione completa la Sezione~\ref{sec:ris-eventi} leggendo il profilo dei cluster di $G_{\mathrm{n}}$ per tipo di cluster.
+
+\paragraph{Per tipo di cluster, $G_{\mathrm{n}}$ cala in modo simile, come diverse baseline.} Vicino al bordo $G_{\mathrm{n}}$ è quasi uguale per tutti i tipi: una cella fuori vale fra 89 e 91. Più lontano si separa di poco: a sei celle va da 43 per la radiazione solare a 58 per la pressione. Non è una proprietà del solo $G_{\mathrm{n}}$. A due celle fuori dal bordo dei propri cluster (Figura~\ref{fig:ris-eventi-profilo-tipi-c}, senza i tipi con meno di 1000 valori a quella distanza), il percentile mediano di $G_{\mathrm{n}}$ va dal 74 all'82 a seconda del tipo. Intervalli altrettanto stretti hanno la variazione in tre ore (da 60 a 67), HBOS (da 73 a 81) e COPOD (da 76 a 85); la distanza dal normale, MCD e PCA vanno invece da poco più di 60 a oltre 80. Per sette metodi su nove il tipo più basso è la radiazione solare.
+% Figura 6.13c: genera_figure_eventi.py, types_spread_figure, dai profili per tipo di ogni metodo sui propri cluster (figures/dati/baseline/profilo_*_5pc.csv ed era5_eventi_profilo.csv), posizione 2, tipi con almeno 1000 valori: G_n 74-82, variazione in tre ore 60-67, HBOS 73-81, COPOD 76-85, Isolation Forest 70-83, CBLOF 65-81, distanza dal normale 64-84, MCD 61-82, PCA 62-84.
+
+\paragraph{Lo scarto standardizzato della variabile del tipo cala invece in modo diverso.} Le differenze grandi riguardano lo scarto standardizzato della variabile del tipo (Figura~\ref{fig:ris-eventi-profilo-tipi}). Nella figura sono in colore i tre tipi con più valori nei cluster di almeno 20 valori, velocità verticale, precipitazione e copertura nuvolosa, e la temperatura a due metri; ogni punto è la mediana dei valori a quella distanza in tutti i cluster del tipo, e i punti con meno di 1000 valori non sono tracciati, perché la mediana sarebbe poco affidabile. A differenza della distanza dal normale, che riassume tutte le variabili di una cella, lo scarto standardizzato riguarda una sola variabile. La variabile del tipo è per definizione la più lontana dal normale nel nucleo: è in parte atteso che lì lo scarto standardizzato sia alto e fuori scenda, e il confronto utile è fra i tipi. Il livello di fondo (Sezione~\ref{sec:exp-misure}) non è mai zero: vale per esempio 0.42 per la precipitazione e 0.98 per la pressione. Per precipitazione, copertura nuvolosa e radiazione solare lo scarto standardizzato torna vicino al livello di fondo entro due celle dal bordo: per la precipitazione scende da 1.33 nell'ultima cella del nucleo a 0.48 due celle fuori, per la copertura nuvolosa da 1.62 a 0.52. La velocità verticale scende più lentamente, da 1.38 a 0.78. Per la temperatura a due metri resta alto a lungo: a sette celle fuori lo scarto standardizzato è ancora 1.33. La pressione e la temperatura a 850~hPa si comportano allo stesso modo, con 1.38 e 1.58 a sette celle; i venti e l'umidità specifica stanno in mezzo.
+
+\begin{figure}[htbp]
+    \centering
+    \phantomcaption
+    \label{fig:ris-eventi-profilo-tipi}
+    \begin{subfigure}[t]{0.437\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{era5_eventi_profilo_tipi_a}
+        \caption[Percentile mediano di $G_{\mathrm{n}}$ secondo la distanza in celle dal bordo del cluster, per tipo di cluster, sugli anni di test: velocità verticale (rosa), precipitazione (viola), copertura nuvolosa (grigio scuro), temperatura a due metri (ocra), altri tipi in grigio chiaro.]{Percentile mediano di $G_{\mathrm{n}}$ secondo la distanza in celle dal bordo del cluster, per tipo di cluster, sugli anni di test: velocità verticale (rosa), precipitazione (viola), copertura nuvolosa (grigio scuro), temperatura a due metri (ocra), altri tipi in grigio chiaro. Le curve quasi coincidono.}
+        \label{fig:ris-eventi-profilo-tipi-a}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.523\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{era5_eventi_profilo_tipi_b}
+        \caption[Scarto standardizzato mediano, in valore assoluto, della variabile del tipo, secondo la distanza in celle dal bordo del cluster, per ogni tipo di cluster, sugli anni di test.]{Scarto standardizzato mediano, in valore assoluto, della variabile del tipo, secondo la distanza in celle dal bordo del cluster, per ogni tipo di cluster, sugli anni di test. Alcune variabili tornano ai livelli di fondo entro due celle, altre restano a lungo lontane dal normale.}
+        \label{fig:ris-eventi-profilo-tipi-b}
+    \end{subfigure}
+\end{figure}
+
+\begin{figure}[htbp]
+    \ContinuedFloat
+    \centering
+    \begin{subfigure}[t]{0.970\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{era5_eventi_profilo_tipi_c}
+        \caption[Percentile mediano di ogni score a due celle fuori dal bordo dei propri cluster, un pallino per tipo di cluster, sugli anni di test; il segmento va dal tipo più basso al più alto e il numero a destra è la loro differenza.]{Percentile mediano di ogni score a due celle fuori dal bordo dei propri cluster, un pallino per tipo di cluster, sugli anni di test; il segmento va dal tipo più basso al più alto e il numero a destra è la loro differenza. $G_{\mathrm{n}}$ è fra i metodi più uniformi.}
+        \label{fig:ris-eventi-profilo-tipi-c}
+    \end{subfigure}
+\end{figure}
+
+Il risultato è coerente con il modo in cui queste variabili cambiano nello spazio, anche se la verifica non lo dimostra: precipitazione e nuvole possono cambiare da una cella all'altra, mentre temperatura e pressione variano su aree più ampie. Nel primo gruppo il nucleo di $G_{\mathrm{n}}$ contiene quasi tutta l'area in cui lo scarto standardizzato è alto. Nel secondo lo scarto standardizzato continua oltre il nucleo: $G_{\mathrm{n}}$ ne segnala solo una parte, e le celle vicine, pur lontane dal normale, restano sotto la sua soglia.

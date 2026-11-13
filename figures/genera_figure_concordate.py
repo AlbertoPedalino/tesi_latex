@@ -3,6 +3,10 @@
 Run from the thesis folder:
     python figures/genera_figure_concordate.py
 which writes figures/era5_concordate_moto_a.pdf and _b.pdf from figures/dati/era5_concordate_moto.csv.
+and figures/era5_concordate_pr_a.pdf and _b.pdf (Appendix A.3) from figures/dati/era5_concordate_pr.csv: precision and
+recall of every detector against the concordant cube, and against the cube without its own vote, as its own threshold
+goes from the 80th to the 99.9th percentile of the validation years (scripts/check_era5_concordant_pr.py of the code
+repository, commit 576547c, run of 13 November 2026; the cube fixed at the 95th percentile).
 
 Data: the median along-track displacement (km, positive = ahead along the motion of the cluster) of the flags of the
 overlapping cluster of each method, by class of the mean speed of the concordant cluster (cells of 0.5 degrees every
@@ -26,6 +30,7 @@ from genera_figure_eventi import (BLUE, GREEN, GREEN_TEXT, GRID, MUTED, ORANGE, 
 
 HERE = pathlib.Path(__file__).parent
 MOTION = HERE / "dati" / "era5_concordate_moto.csv"
+PR = HERE / "dati" / "era5_concordate_pr.csv"
 CLASSES = ("0-0.5", "0.5-1", "1-2", ">=2")
 CLASS_LABELS = ("0–0.5", "0.5–1", "1–2", "2 o più")
 
@@ -66,5 +71,43 @@ def motion_figure():
     plt.close(figure)
 
 
+def pr_figure():
+    """Precision against recall of every detector as its own threshold varies, against the concordant cube (left) and
+    against the cube without its own vote (right); the dot is the 95th percentile, the threshold of the cube. G_n in
+    blue, the two simple baselines in their colours, the six shallow models in grey."""
+    table = pd.read_csv(PR, comment="#")
+    figure, panels = plt.subplots(1, 2, figsize=size(0.5), constrained_layout=True)
+    spaced(figure, 0.2)
+    styles = [(key, SHALLOW_GREY, 1.0, 2) for key in SHALLOW_KEYS]
+    styles += [("change_3h", GREEN, 1.6, 3), ("normal", ORANGE, 1.6, 3), ("Gn", BLUE, 2.6, 4)]
+    for axis, suffix in zip(panels, ("", "_without_vote")):
+        for key, colour, width, order in styles:
+            part = table[table["detector"] == key].sort_values("percentile")
+            axis.plot(part["recall" + suffix], part["precision" + suffix], color=colour, linewidth=width, zorder=order)
+            at = part[part["percentile"] == 95]
+            axis.plot(at["recall" + suffix], at["precision" + suffix], "o", color=colour, markersize=5 if key == "Gn" else 4,
+                      markeredgecolor="white", markeredgewidth=0.6, zorder=order + 1)
+        axis.set_xlim(0, 1.02)
+        axis.set_ylim(0, 1.02)
+        axis.set_xticks([0, 0.25, 0.5, 0.75, 1])
+        axis.set_yticks([0, 0.25, 0.5, 0.75, 1])
+        axis.set_xlabel("recall", fontsize=TICKS)
+        axis.tick_params(labelsize=TICKS, length=0)
+        axis.grid(color=GRID, linewidth=0.6)
+        axis.set_axisbelow(True)
+        clean(axis, "top", "right")
+    for axis in panels:  # each panel stands alone
+        axis.set_ylabel("precision", fontsize=TICKS)
+    handles = [plt.Line2D([], [], color=BLUE, linewidth=2.6, label=r"$G_\mathrm{n}$"),
+               plt.Line2D([], [], color=ORANGE, linewidth=1.6, label="distanza dal normale"),
+               plt.Line2D([], [], color=GREEN, linewidth=1.6, label="variazione in tre ore"),
+               plt.Line2D([], [], color=SHALLOW_GREY, linewidth=1.0, label="sei modelli shallow"),
+               plt.Line2D([], [], color=MUTED, marker="o", linestyle="none", markersize=4, label="95-esimo percentile")]
+    legend = panels[0].legend(handles=handles, loc="lower left", fontsize=TICKS - 1, frameon=False, handlelength=1.6)
+    save_panels(figure, [[panels[0], legend], [panels[1]]], HERE, "era5_concordate_pr")
+    plt.close(figure)
+
+
 if __name__ == "__main__":
     motion_figure()
+    pr_figure()
