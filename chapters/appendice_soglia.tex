@@ -1,0 +1,129 @@
+\chapter{Sensibilità alla soglia}
+\label{app:soglia}
+
+Nel Capitolo~\ref{chap:risultati} un valore è segnalato quando lo score supera il 95-esimo percentile dei propri valori sugli anni di validazione. È una scelta convenzionale, non ottimizzata. Questa appendice verifica quanto i risultati dipendono dalla soglia: la Sezione~\ref{app:soglia-principali} ripete le analisi principali con il 99-esimo percentile, la Sezione~\ref{app:soglia-concordate} ricostruisce le segnalazioni concordate con il 97-esimo e il 99-esimo, e la Sezione~\ref{app:soglia-pr} varia la soglia di ogni metodo con il cubo concordato fisso.
+
+\section{Le analisi principali con il 99-esimo percentile}
+\label{app:soglia-principali}
+
+
+Questa sezione ripete le analisi principali delle Sezioni~\ref{sec:ris-climatologia}--\ref{sec:ris-eventi} con il 99-esimo percentile, cioè segnalando l'1\% dei valori degli anni di validazione, per verificare quanto le conclusioni dipendano dalla soglia (Tabella~\ref{tab:ris-soglia}). Le correlazioni fra G e D della Sezione~\ref{sec:ris-correlazione-spaziale} usano tutti i valori e non dipendono dalla soglia, e non sono ripetute; non è ripetuta nemmeno l'analisi del dropout.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Le analisi principali con la soglia al 95-esimo e al 99-esimo percentile degli score sugli anni di validazione: percentuali per luogo e zone sugli anni di validazione, confronti e cluster sugli anni di test. La differenza relativa è quella della Sezione~\ref{sec:exp-misure}.}
+    \label{tab:ris-soglia}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.22}L{0.40}rr@{}}
+        \toprule
+        Analisi & Misura & 95-esimo & 99-esimo \\
+        \midrule
+        Percentuale per fascia di latitudine e mese (Sez.~\ref{sec:ris-climatologia}) & G senza normalizzazione climatologica, intervallo fra fasce e mesi & 1.6--11.1\% & 0.2--3.6\% \\
+         & $G_{\mathrm{n}}$, intervallo & 3.7--6.3\% & 0.5--2.1\% \\
+         & differenza relativa, G $\rightarrow$ $G_{\mathrm{n}}$ & 0.39 $\rightarrow$ 0.11 & 0.70 $\rightarrow$ 0.28 \\
+        \addlinespace
+        Zone dei cluster (Sez.~\ref{sec:ris-g-d}) & cluster di $G_{\mathrm{n}}$ & 184877 & 70954 \\
+         & $D_{\mathrm{reale}}$ nel nucleo, percentile mediano & 5 & 1 \\
+         & $D_{\mathrm{reale}}$ nel contorno, percentile mediano & 12 & 4 \\
+         & D nel nucleo, percentile mediano & 27 & 2 \\
+        \addlinespace
+        Confronti (Sez.~\ref{sec:ris-confronti}) & segnalazioni di $G_{\mathrm{n}}$ condivise con la variazione in tre ore & 53.9\% & 46.4\% \\
+         & condivise con MCD & 52.1\% & 45.8\% \\
+         & condivise con HBOS & 39.2\% & 24.3\% \\
+         & segnalazioni esclusive di $G_{\mathrm{n}}$ & 18.1\% & 27.4\% \\
+         & valori segnalati da almeno 5 metodi su 9 & 4.22\% & 0.72\% \\
+        \addlinespace
+        Cluster (Sez.~\ref{sec:ris-eventi}) & valori nei cluster con almeno 20 valori & 93\% & 85\% \\
+         & durata dei cluster più grandi dei tre tipi principali & 23--40 giorni & 8--24 giorni \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\paragraph{La normalizzazione climatologica nella coda.} Con la soglia più alta la normalizzazione climatologica riduce ancora molto le differenze fra luoghi e stagioni, ma non le annulla: resta un eccesso di segnalazioni a sud, dove la percentuale media è circa il doppio di quella a nord: 1.4\% fra 20$^\circ$ e 30$^\circ$N contro 0.7\% fra 50$^\circ$ e 60$^\circ$N, con l'1\% atteso. La normalizzazione climatologica allinea media e deviazione standard di G in ogni cella, non la frequenza dei suoi valori più estremi; con il 5\% questa differenza si vede appena, con l'1\% sì.
+
+\paragraph{Il comportamento del discriminatore.} Con la soglia più alta i cluster sono meno della metà, e il comportamento del discriminatore è lo stesso e più marcato. Nel nucleo $D_{\mathrm{reale}}$ scende dal percentile 5 all'1 e D dal 27 al 2. Anche nel contorno $D_{\mathrm{reale}}$ scende, da 12 a 4: con la soglia più alta i cluster sono più estremi, e anche le celle vicine sono fra i valori più alti di $G_{\mathrm{n}}$.
+
+\paragraph{Cluster e catene.} Con la soglia più alta le catene si accorciano ma restano: i cluster più grandi dei tre tipi con più valori durano fra 8 e 24 giorni, contro 23--40 giorni con il 5\%, e i cluster con almeno 20 valori contengono ancora l'85\% dei valori segnalati, contro il 93\% con il 5\%. I tre tipi con più valori nei cluster di almeno 20 valori restano velocità verticale, precipitazione e copertura nuvolosa, ma la precipitazione passa al primo posto.
+
+\paragraph{Confronti con le baseline.} Con la soglia più alta il quadro resta lo stesso, con un accordo più basso. La variazione in tre ore e MCD restano i metodi più vicini a $G_{\mathrm{n}}$, con il 46\% delle sue segnalazioni condivise; il metodo più lontano resta HBOS. I valori segnalati da almeno cinque metodi su nove sono lo 0.72\%: il calo è in gran parte automatico, perché ogni metodo segnala circa cinque volte meno. L'accordo resta molto sopra quello atteso per caso: con l'1\% due metodi indipendenti condividerebbero circa l'1\% delle segnalazioni, mentre $G_{\mathrm{n}}$ ne condivide il 46\% con la variazione in tre ore.
+
+\paragraph{Sintesi.} Le conclusioni sul discriminatore non dipendono dalla soglia, e con una soglia più alta diventano più nette. Anche il quadro del confronto con le baseline non cambia, con un accordo più basso e una percentuale più alta di segnalazioni esclusive di $G_{\mathrm{n}}$. Le catene si accorciano, ma restano. L'effetto della normalizzazione climatologica dipende invece dalla soglia: la normalizzazione climatologica riduce le differenze fra luoghi e stagioni di circa tre quarti con il 5\% e di circa tre quinti con l'1\%.
+% Numeri (5 novembre 2026, optuna-27). Quota per luogo e zone: validazione, outputs/comportamento_optuna27
+% (i commenti delle Sezioni 6.3 e 6.4); quote per luogo da logs/luogo_g_grezzo_{5,1}pc.log e
+% luogo_g_clim_{5,1}pc.log (48 caselle, una cifra decimale; differenza relativa = scarto medio assoluto
+% dalla media delle caselle diviso per la media: 0.390 e 0.107 al 5%, 0.697 e 0.281 all'1%); zone da
+% zone_g_dterms_5pc.csv e zone_g_dterms_1pc.csv (logs/zone_g_dterms_*pc.log). Confronti: test,
+% outputs/confronti_good2/logs/comparison_5pc.log e comparison_1pc.log con MODEL optuna-27.
+% Eventi più grandi dei tre tipi (regola del solo evento più grande, outputs/finale_optuna27/casi_5pc e
+% casi_1pc, cases.csv): al 5% velocità verticale 555 ore (23.1 giorni), precipitazione 960 (40.0),
+% copertura nuvolosa 603 (25.1); all'1% precipitazione 411 ore (17.1 giorni, 138 istanti), velocità
+% verticale 186 (7.8, 63), copertura nuvolosa 564 (23.5, 189). Eventi all'1% (logs/casi_1pc.log): 317892
+% eventi, 7435523 valori, 6323252 in eventi di almeno 20 valori (85.0%); valori negli eventi con più di 19
+% valori: precipitazione 2353900, velocità verticale 1949717, copertura nuvolosa 504300, radiazione 353676.
+% Al 5% gli eventi con almeno 20 valori contengono il 92.5% dei valori (33402993 su 36093783).
+% Rapporto fra le quote medie a sud e a nord con G+clim all'1%: validazione 1.43 / 0.68 = 2.1 (sul test,
+% outputs/finale_optuna27/logs/luogo_g_clim_1pc.log, 1.79 / 0.74 = 2.4).
+
+\section{Le segnalazioni concordate con il 97-esimo e il 99-esimo percentile}
+\label{app:soglia-concordate}
+
+Le segnalazioni concordate della Sezione~\ref{sec:ris-concordate} sono ricostruite, con le stesse regole, con la soglia di ogni metodo al 97-esimo e al 99-esimo percentile degli score sugli anni di validazione, cioè segnalando il 3\% e l'1\% dei valori; sono ripetuti anche l'inizio, la fine e lo spostamento lungo il moto della Sezione~\ref{sec:ris-concordate-inizio} (Tabella~\ref{tab:app-soglia-concordate}). La sovrapposizione, la probabilità di superamento e ciò che c'è attorno ai cluster non sono ripetuti.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Le segnalazioni concordate con la soglia di ogni metodo al 95-esimo, 97-esimo e 99-esimo percentile degli score sugli anni di validazione, sugli anni di test. Lo spostamento lungo il moto è positivo quando le segnalazioni stanno davanti al cluster concordato. ``Più avanti della baseline'' riporta l'intervallo fra le otto baseline.}
+    \label{tab:app-soglia-concordate}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.58}rrr@{}}
+        \toprule
+        Misura & 95-esimo & 97-esimo & 99-esimo \\
+        \midrule
+        \multicolumn{4}{@{}l}{\emph{Cubo e cluster concordati}} \\
+        Valori concordati [\%] & 6.20 & 3.54 & 1.05 \\
+        Valori concordati senza la chiusura [\%] & 4.22 & 2.41 & 0.72 \\
+        Voto decisivo di $G_{\mathrm{n}}$ [\% del cubo] & 8.4 & 9.2 & 11.5 \\
+        Voto decisivo di PCA [\% del cubo] & 15.3 & 17.3 & 21.5 \\
+        Cluster brevi & 27233 & 25392 & 16549 \\
+        Cluster lunghi & 2142 & 1850 & 785 \\
+        Valori concordati nei cluster lunghi [\%] & 85.4 & 74.5 & 50.6 \\
+        Durata del cluster più lungo [giorni] & 97.8 & 97.4 & 40.5 \\
+        \addlinespace
+        \multicolumn{4}{@{}l}{\emph{$G_{\mathrm{n}}$ nei cluster brevi}} \\
+        Spostamento lungo il moto, mediana [km] & $-4.4$ & $-3.9$ & $-2.8$ \\
+        Cluster con $G_{\mathrm{n}}$ davanti [\%] & 46 & 46 & 47 \\
+        Inizio: $G_{\mathrm{n}}$ prima / dopo MCD [\%] & 18 / 51 & 16 / 50 & 14 / 48 \\
+        \addlinespace
+        \multicolumn{4}{@{}l}{\emph{$G_{\mathrm{n}}$ nei cluster lunghi}} \\
+        Spostamento lungo il moto, mediana [km] & 16.3 & 17.5 & 9.7 \\
+        Cluster con $G_{\mathrm{n}}$ davanti [\%] & 62 & 64 & 61 \\
+        Cluster con $G_{\mathrm{n}}$ più avanti della baseline [\%] & 57--65 & 56--67 & 55--68 \\
+        Spostamento lungo il moto di MCD, mediana [km] & 8.8 & 9.0 & 1.5 \\
+        Inizio: $G_{\mathrm{n}}$ prima / dopo MCD [\%] & 16 / 54 & 14 / 56 & 8 / 59 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\paragraph{Il cubo segue la soglia.} Con soglie più alte il cubo concordato si riduce insieme alle segnalazioni di ogni metodo, dal 6.20\% dei valori al 3.54\% e all'1.05\%. Il voto decisivo di $G_{\mathrm{n}}$ cresce, dall'8.4\% all'11.5\% del cubo, ma resta molto più basso di quello di PCA, che passa dal 15.3\% al 21.5\%: a ogni soglia il riferimento dipende poco dal voto di $G_{\mathrm{n}}$.
+
+\paragraph{La durata dei cluster lunghi dipende dalla soglia.} I cluster lunghi contengono l'85.4\% dei valori concordati con il 95-esimo percentile, il 74.5\% con il 97-esimo e il 50.6\% con il 99-esimo; il cluster più lungo passa da 97.8 a 40.5 giorni. Con soglie più alte le catene si accorciano: la durata dei cluster lunghi dipende in parte dalla soglia, non solo dai sistemi che li formano.
+
+\paragraph{L'inizio.} A ogni soglia $G_{\mathrm{n}}$ non anticipa l'inizio dei cluster concordati. MCD comincia prima di $G_{\mathrm{n}}$ in circa metà dei cluster brevi e in più della metà dei lunghi; $G_{\mathrm{n}}$ comincia prima di MCD in meno di un cluster su cinque.
+
+\paragraph{Lo spostamento lungo il moto.} Nei cluster lunghi $G_{\mathrm{n}}$ sta davanti a ogni soglia, di 16.3, 17.5 e 9.7~km in mediana, e sta più avanti di ciascuna baseline nel 55--68\% dei cluster. Con il 99-esimo percentile lo spostamento lungo il moto è più piccolo, anche per MCD, e i sistemi veloci sono pochi: solo 7 cluster si spostano di almeno due celle ogni tre ore. Nei cluster brevi $G_{\mathrm{n}}$ resta a ogni soglia leggermente dietro, di 2.8--4.4~km.
+
+\paragraph{La fine.} La fine è il risultato che dipende di più dalla soglia. Nei cluster brevi, con il 95-esimo percentile $G_{\mathrm{n}}$ finisce dopo cinque baseline su otto; con il 97-esimo dopo quattro, HBOS, COPOD, Isolation Forest e la distanza dal normale, prima di tre e senza differenza significativa con PCA; con il 99-esimo prima di PCA, CBLOF, MCD e della variazione in tre ore, dopo COPOD e senza differenza significativa con HBOS e con la distanza dal normale. Nei cluster lunghi $G_{\mathrm{n}}$ finisce prima di sette baseline su otto con il 95-esimo percentile, di sei con il 97-esimo e di cinque con il 99-esimo; a ogni soglia finisce prima di PCA, CBLOF, MCD, della distanza dal normale e della variazione in tre ore.
+
+\paragraph{Sintesi.} Tre risultati della Sezione~\ref{sec:ris-concordate} non dipendono dalla soglia: $G_{\mathrm{n}}$ non anticipa l'inizio dei cluster concordati, nei cluster lunghi sta davanti lungo il moto più di ogni baseline, nei brevi sta leggermente dietro. Dipendono invece dalla soglia la durata dei cluster lunghi e la fine nei cluster brevi: che $G_{\mathrm{n}}$ finisca dopo la maggior parte delle baseline vale con il 95-esimo percentile, non con il 99-esimo.
+% Numeri: Tesi/segnalazioni_concordate/risultati.md §9 (cubo: summary.json e log del cubo; passo 3: log di
+% check_era5_concordant_lead.py --kind analysed|long, 12 novembre 2026); server outputs/concordate_5pc_regola_tesi*,
+% outputs/concordate_3pc_regola_tesi*, outputs/concordate_1pc_regola_tesi*. Fine, lunghi (test dei segni, p<0.01):
+% 5% prima di tutte tranne COPOD; 3% prima di PCA, CBLOF, MCD, normale, variazione, HBOS (p 0.0097), iForest p 0.017
+% non significativo, dopo COPOD; 1% prima di PCA, CBLOF, MCD, normale, variazione, dopo HBOS, COPOD, iForest.
+% Classe di velocita' di almeno 2 celle ogni 3 h all'1%: 7 cluster.
+
+\section{Curve precision--recall rispetto al cubo concordato}
+\label{app:soglia-pr}
+
+\provv{Da scrivere dopo la corsa: con il cubo concordato fisso (95-esimo percentile), per ogni metodo si varia la propria soglia e si calcolano precision e recall rispetto al cubo, anche contro il cubo senza il voto del metodo.}

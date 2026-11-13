@@ -148,6 +148,13 @@ FIGURES = {
             'c': r"Percentile mediano di ogni score a due celle fuori dal bordo dei propri cluster, un pallino per tipo "
                  r"di cluster, sugli anni di test; il segmento va dal tipo più basso al più alto e il numero a destra è "
                  r"la loro differenza. $G_{\mathrm{n}}$ è fra i metodi più uniformi."}),
+        ('era5_concordate_moto', 'fig:ris-concordate-moto', ['ab'], {
+            'a': r"Spostamento lungo il moto delle segnalazioni di ogni metodo rispetto ai cluster concordati brevi, "
+                 r"secondo la velocità del cluster: mediana sui cluster, positiva davanti al cluster; " + SHALLOW +
+                 r". $G_{\mathrm{n}}$ sta un po' dietro, di più nei cluster veloci.",
+            'b': r"Spostamento lungo il moto delle segnalazioni di ogni metodo rispetto ai cluster concordati lunghi, "
+                 r"secondo la velocità del cluster: mediana sui cluster, positiva davanti al cluster; " + SHALLOW +
+                 r". $G_{\mathrm{n}}$ sta davanti, più delle baseline tranne che nei 48 cluster più veloci."}),
         ('era5_dropout', L['drop'], ['ab', 'c'], {
             'a': r"Dispersione media divisa per G medio, per fascia di percentile di G, sugli anni di test. In "
                  r"proporzione a G la dispersione è quasi costante, e cala solo sui valori di G più alti.",

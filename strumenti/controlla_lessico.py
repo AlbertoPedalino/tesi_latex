@@ -63,6 +63,15 @@ RULES = [
     (r'cell[ae] cerchiat', 'negli esempi della 6.7.1 è la "cella seguita" (nel cerchio sulle mappe)', ()),
     (r'segnalazioni (del solo|di nessun altro)','"segnalazioni esclusive" (definite nella 6.6)', ()),
     (r'non è segnalat[oa] da nessuna', '"segnalazioni esclusive"', ()),
+    # Segnalazioni concordate (glossario del 13 novembre 2026): il consenso dei metodi non è una verità né un'anomalia.
+    (r'ground[- ]truth|\bgold\b|anomali[ae] concordat', '"segnalazioni concordate" / "cubo concordato"', ('stato_arte.tex',)),
+    (r'zona del cluster|zone dei cluster concordat', '"intorno del cluster" (zona = nucleo, contorno, lontana)', ()),
+    (r'errore lungo la traccia|errore di traverso|errore lungo il moto',
+     '"spostamento lungo il moto" / "di traverso" (errore = G)', ()),
+    (r'segnalazioni (stabili|instabili)|stabilità delle segnalazioni', '"probabilità di superamento" alta o bassa', ()),
+    (r'segnalazioni in eccesso', '"segnalazioni non concordate"', ()),
+    (r'cluster corrispondent|segnalazioni (abbinate|collegate al cluster)', '"cluster sovrapposto"', ()),
+    (r'probabilità delle estrazioni', '"probabilità di superamento"', ()),
     # Glossary corrections of 12 November 2026 (groups A, B, C).
     (r'\bgeneratore stima\b|stima del generatore|ne produce una stima|quello da stimare|istante da stimare',
      'l\'uscita del generatore è la "ricostruzione" (verbo: "ricostruisce")', ()),
@@ -100,7 +109,8 @@ RULES = [
     (r'\breticol[oi]\b(?! (regolare )?con passo| di 5)', '"griglia" per ERA5 ("reticolo" solo per PVGIS)', ()),
     (r'\bcamp[oi] complet|reticolo completo', '"campo intero"', ()),
     (r'\bretta\b', '"tendenza lineare"', ()),
-    (r'\bspostament|\bsi sposta\b|Cambiamenti dopo', '"deriva"', ()),
+    (r'\bspostament(?!o (\\emph\{)?(lungo il moto|di traverso))|\bsi sposta\b|Cambiamenti dopo',
+     '"deriva" ("spostamento lungo il moto / di traverso" solo per i cluster concordati)', ()),
     (r'standardizzazion', 'il passo z-score è la "normalizzazione stagionale"', ()),
     (r"(?<![-{:])\bnormalizzazione\b(?! (stagionale|climatologica|dell'articolo))(?![-}])",
      '"normalizzazione stagionale" (ingresso) o "normalizzazione climatologica" (score)', ('schema_catena_detector.tex',)),
@@ -127,6 +137,11 @@ RULES = [
      r'indica valori oltre|un valore fissato|valore unico per osservazione|ogni valore si allontana|il valore dopo tutti|'
      r'il valore è standardizzato|il valore è fissato|valore ordinario preso|calcolata sui valori, e|dà il valore usato',
      '"valore" è una coppia cella–istante; gli altri valori vanno qualificati', ()),
+    (r'(?<!voto a )(?<!questa )\bmaggioranza\b(?! semplice)',
+     '"cubo concordato" / "segnalazioni concordate" ("maggioranza" solo in "voto a maggioranza")', ()),
+    (r'\bdei casi\b', '"dei cluster" o la cosa contata ("caso" solo in "a caso")', ()),
+    (r'(?<![-:])\bevent[oi]\b', '"cluster" o "anomalia meteorologica" (restano la letteratura dei Cap. 2 e 5 '
+     'e la definizione di evento estremo nel Cap. 1)', ('stato_arte.tex', 'esperimenti.tex', 'introduzione.tex')),
 ]
 RULES = [(re.compile(p, re.I), what, allowed) for p, what, allowed in RULES]
 
