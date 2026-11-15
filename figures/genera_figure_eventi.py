@@ -657,7 +657,7 @@ def case_series_figure(number, data):
     reach = max(3.0, float(np.ceil(np.nanmax(np.abs(data["series_input"])))))
     alone.set_ylim(-reach, reach)
     alone.set_yticks([-reach, 0, reach], [f"\u2212{reach:g}", "0", f"+{reach:g}"])
-    alone.set_ylabel(f"{TYPES[record['type']].lower()}:\nscarto stand.", fontsize=TICKS)
+    alone.set_ylabel(f"{TYPES[record['type']].lower()}:\nscarto standardizzato", fontsize=TICKS)
     figure.align_ylabels([scores, alone])
     alone.annotate("istante delle mappe", (moment, 0.0), xycoords=("data", "axes fraction"), xytext=(3, 2),
                    textcoords="offset points", fontsize=TICKS - 1, color=TEXT, ha="left", va="bottom",

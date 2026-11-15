@@ -156,7 +156,7 @@ def around_figure():
               color="#6f6d67", path_effects=HALO, zorder=5)
     left.set_xlim(1.2, 3.0)
     left.set_ylim(35, 105)
-    left.set_xlabel("salto più grande in tre ore prima del valore\n(valori moderati)", fontsize=TICKS)
+    left.set_xlabel("salto più grande in tre ore prima del valore\n(valori moderati, deviazioni standard)", fontsize=TICKS)
     left.set_ylabel("valori con una variabile oltre\ndue deviazioni standard (%)", fontsize=TICKS)
 
     hours = [0, 3, 6, 12, 24]
@@ -176,7 +176,7 @@ def around_figure():
     right.set_xticks(hours)
     right.set_xlim(-0.5, 24.5)
     right.set_xlabel("ore dopo il valore", fontsize=TICKS)
-    right.set_ylabel("scarto standardizzato più grande\n(dietro i cluster brevi)", fontsize=TICKS)
+    right.set_ylabel("scarto standardizzato più grande\ndietro i cluster brevi\n(deviazioni standard)", fontsize=TICKS)
     for axis in (left, right):
         axis.tick_params(labelsize=TICKS, length=2)
         axis.grid(color=GRID, linewidth=0.5)

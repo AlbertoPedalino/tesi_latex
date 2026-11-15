@@ -2,6 +2,9 @@
 
 Descriptive figure of the dataset, not a result of the thesis. Run from the thesis folder:
     python figures/genera_mappa_pvgis.py <path to piedmont_pvgis_2019.nc>
+or with a CSV that has the columns latitude and longitude, one row per location, for example
+    python figures/genera_mappa_pvgis.py <physiq-pv>/.analysis/stgan_results_seed20/summary.csv
+The locations are the same in every year: only their coordinates are used.
 """
 import pathlib
 import sys
@@ -11,14 +14,22 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-import xarray as xr
 
 WIDTH_CM = 9.0
 DOT_COLOUR = "#2a78d6"
 AXIS_COLOUR = "#52514e"
 
-dataset = xr.open_dataset(sys.argv[1])
-latitude, longitude = dataset["lat"].values, dataset["lon"].values
+source = pathlib.Path(sys.argv[1])
+if source.suffix.lower() == ".csv":
+    import pandas as pd
+
+    table = pd.read_csv(source)
+    latitude, longitude = table["latitude"].to_numpy(float), table["longitude"].to_numpy(float)
+else:
+    import xarray as xr
+
+    dataset = xr.open_dataset(source)
+    latitude, longitude = dataset["lat"].values, dataset["lon"].values
 
 plt.rcParams.update({
     "font.family": "serif",
@@ -34,8 +45,8 @@ width = WIDTH_CM / 2.54
 figure, axes = plt.subplots(figsize=(width, width * span_y * aspect / span_x + 0.45))
 axes.scatter(longitude, latitude, s=2.6, color=DOT_COLOUR, linewidths=0)
 axes.set_aspect(aspect)
-axes.set_xlabel("Longitudine est (gradi)", color=AXIS_COLOUR)
-axes.set_ylabel("Latitudine nord (gradi)", color=AXIS_COLOUR)
+axes.set_xlabel("longitudine (E)", color=AXIS_COLOUR)
+axes.set_ylabel("latitudine (N)", color=AXIS_COLOUR)
 axes.set_xticks(np.arange(7.0, 9.01, 0.5))
 axes.set_yticks(np.arange(44.5, 46.01, 0.5))
 axes.margins(0.04)

@@ -89,7 +89,7 @@ def pr_figure():
     axis.set_xlim(0, 1.02)
     axis.set_ylim(0, 1.02)
     axis.set_xticks([0, 0.25, 0.5, 0.75, 1])
-    axis.set_yticks([0, 0.25, 0.5, 0.75, 1])
+    axis.set_yticks([0.25, 0.5, 0.75, 1])  # one 0 at the origin, on the x axis
     axis.set_xlabel("recall", fontsize=TICKS)
     axis.set_ylabel("precision", fontsize=TICKS)
     axis.tick_params(labelsize=TICKS, length=0)
