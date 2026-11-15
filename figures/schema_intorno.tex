@@ -1,0 +1,40 @@
+% Un cluster concordato in un istante, il suo intorno di 300 km e le segnalazioni di un metodo, concordate e non
+% concordate, davanti e dietro rispetto al moto (Sezione 5.5). Disegno schematico, non dati: celle di 0.5 gradi,
+% intorno di circa sei celle. Figura originale della tesi.
+\begin{tikzpicture}[font=\footnotesize, x=0.36cm, y=0.36cm,
+        cubo/.style={fill=black!18, draw=white, line width=0.4pt},
+        conc/.style={fill={rgb,255:red,42;green,120;blue,214}, draw=white, line width=0.4pt},
+        nonconc/.style={fill={rgb,255:red,42;green,120;blue,214}, fill opacity=0.45, draw=white, line width=0.4pt},
+        fuori/.style={fill=black!7, draw=white, line width=0.4pt},
+        freccia/.style={-{Stealth[length=5pt,width=4.5pt]}, black!80, line width=0.9pt}]
+    % the zone: cells within about six cells of the cluster
+    \draw[black!55, dashed, line width=0.7pt, rounded corners=10pt] (-7.2,-6.2) rectangle (13.2,8.2);
+    \node[black!65, anchor=north west, align=left] at (-6.9,7.9) {intorno\\di 300\,km};
+    % the concordant cluster at this timestamp
+    \foreach \x/\y in {0/0,1/0,2/0,3/0,0/1,1/1,2/1,3/1,4/1,1/2,2/2,3/2,4/2,5/2,2/3,3/3,4/3,1/-1,2/-1}
+        \fill[cubo] (\x,\y) rectangle ++(1,1);
+    % flags of the method inside the cluster: concordant
+    \foreach \x/\y in {1/0,2/0,3/0,1/1,2/1,3/1,4/1,2/2,3/2,4/2,3/3}
+        \fill[conc] (\x,\y) rectangle ++(1,1);
+    % flags of the method around the cluster, outside the cube: non-concordant, ahead and behind
+    \foreach \x/\y in {6/2,6/3,5/3,7/3,5/4,6/4,4/4,7/2,6/1,5/1}
+        \fill[nonconc] (\x,\y) rectangle ++(1,1);
+    \foreach \x/\y in {-1/0,-2/1,-1/1}
+        \fill[nonconc] (\x,\y) rectangle ++(1,1);
+    % flags of the method beyond the zone: not read here
+    \foreach \x/\y in {14.4/-5.2,15.4/-5.2,15.4/-4.2}
+        \fill[fuori] (\x,\y) rectangle ++(1,1);
+    % centroid, direction of motion, ahead / behind
+    \fill[black] (2.9,1.6) circle (2.6pt);
+    \draw[freccia] (2.9,1.6) -- (10.6,4.1) node[right, black!80, align=left] {moto del\\cluster ($\mathbf{u}$)};
+    \draw[black!45, dotted, line width=0.8pt] (5.2,-5.6) -- (0.6,8.0);
+    \node[black!70] at (9.6,-3.9) {davanti};
+    \node[black!70] at (-4.4,-3.9) {dietro};
+    % legend
+    \begin{scope}[shift={(-7.2,-9.6)}]
+        \fill[cubo] (0,0) rectangle ++(1,1); \node[anchor=west] at (1.2,0.5) {cluster concordato};
+        \fill[conc] (11,0) rectangle ++(1,1); \node[anchor=west] at (12.2,0.5) {segnalazioni concordate del metodo};
+        \fill[nonconc] (0,-1.6) rectangle ++(1,1); \node[anchor=west] at (1.2,-1.1) {segnalazioni non concordate del metodo};
+        \fill[fuori] (19,-1.6) rectangle ++(1,1); \node[anchor=west] at (20.2,-1.1) {segnalazioni fuori dall'intorno};
+    \end{scope}
+\end{tikzpicture}

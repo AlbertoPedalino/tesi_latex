@@ -21,14 +21,16 @@ import matplotlib.patheffects as effects
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.colors import LinearSegmentedColormap, Normalize
+from matplotlib.colors import BoundaryNorm, ListedColormap
 
 from genera_figure_g_d import MUTED, TEXT, TICKS, size
 
 HERE = pathlib.Path(__file__).parent
 TRIALS = HERE / "dati" / "era5_optuna_prove.csv"
 # One hue, dark for the lowest MMD (the best), light for the highest.
-RAMP = LinearSegmentedColormap.from_list("mmd", ("#0d366b", "#184f95", "#256abf", "#3987e5", "#6da7ec", "#9ec5f4", "#cde2fb"))
+BOUNDS = (0.0025, 0.0035, 0.004, 0.0045, 0.0055, 0.007)  # five classes of the MMD distance, then "over"
+RAMP = ListedColormap(("#0d366b", "#1f5fae", "#3987e5", "#7fb2ef", "#c4dcf8"), name="mmd")
+RAMP.set_over("#eef4fc")
 BEST_REGION = ("serene-sweep-14", "optuna-26", "optuna-27")  # lr G 6-8e-4, lr D 1.5-3e-3, weight 60-170, 1:1
 LABELS = ("tasso di appr. G", "tasso di appr. D", r"peso $\lambda_G$", "aggiornamenti D:G")
 HALO = [effects.withStroke(linewidth=2.5, foreground="white")]
@@ -62,10 +64,11 @@ def main():
     axis.scatter(coords[region, 0], coords[region, 1], marker="o", s=190, facecolors="none", edgecolors=REGION,
                  linewidths=1.6, zorder=2)
 
-    norm = Normalize(vmin=0.0025, vmax=0.007)
+    # Five classes instead of a continuous ramp: nearby distances get clearly different blues.
+    norm = BoundaryNorm(BOUNDS, RAMP.N)
     finished = (trials.state == "finished").to_numpy()
     mesh = axis.scatter(coords[finished, 0], coords[finished, 1], c=trials.mmd[finished], cmap=RAMP, norm=norm,
-                        marker="o", s=46, edgecolors="white", linewidths=0.8, zorder=3)
+                        marker="o", s=46, edgecolors="#8f8d87", linewidths=0.4, zorder=3)
     failed = (trials.state == "non-finite").to_numpy()
     axis.scatter(coords[failed, 0], coords[failed, 1], marker="x", s=36, color=MUTED, linewidths=1.2, zorder=3)
     running = (trials.state == "running").to_numpy()
@@ -77,7 +80,7 @@ def main():
                   fontsize=7.5, color=TEXT, va="top", path_effects=HALO, zorder=4)
 
     # How each parameter enters the two components, in a corner: towards an arrow, that parameter grows.
-    key = axis.inset_axes([0.0, 0.0, 0.3, 0.34])
+    key = axis.inset_axes([0.0, 0.0, 0.34, 0.42])
     for (dx, dy), label in zip(loadings, LABELS):
         key.annotate("", (dx, dy), (0, 0), arrowprops=dict(arrowstyle="-|>", color=MUTED, linewidth=0.8, shrinkA=0,
                                                            shrinkB=0))
@@ -85,12 +88,13 @@ def main():
         key.annotate(label, (dx, dy), xytext=(4 * np.sign(dx) * (side != "center"), 4 * np.sign(dy) * (side == "center")),
                      textcoords="offset points", ha=side, va="center" if side != "center" else
                      ("bottom" if dy > 0 else "top"), fontsize=7, color=MUTED)
-    key.set_xlim(-1.75, 1.75)
-    key.set_ylim(-1.5, 1.5)
+    key.set_xlim(-2.2, 2.2)
+    key.set_ylim(-1.5, 2.9)
     key.set_aspect("equal")
     key.set_xticks([])
     key.set_yticks([])
-    key.set_title("verso dove cresce\nogni iperparametro", fontsize=6.5, color=MUTED, pad=2)
+    key.text(0.5, 0.96, "verso dove cresce\nogni iperparametro", transform=key.transAxes, ha="center", va="top",
+             fontsize=6.5, color=MUTED)
     for side in key.spines.values():
         side.set_color("#d9d8d4")
 
@@ -104,7 +108,7 @@ def main():
         axis.annotate("loss non finita", coords[first], xytext=(-8, 0), textcoords="offset points", fontsize=7.5,
                       color=MUTED, ha="right", va="center", path_effects=HALO, zorder=4)
     lowest = np.flatnonzero(region)[np.argmin(coords[region, 1])]
-    axis.annotate("regione migliore", coords[lowest], xytext=(0, -11), textcoords="offset points", fontsize=7.5,
+    axis.annotate("gruppo migliore", coords[lowest], xytext=(0, -11), textcoords="offset points", fontsize=7.5,
                   color="#a86a10", ha="center", va="top", path_effects=HALO, zorder=4)
     if running.any():
         axis.annotate("in corso", coords[np.flatnonzero(running)[0]], xytext=(8, 0), textcoords="offset points",

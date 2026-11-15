@@ -1,4 +1,4 @@
-\chapter{Sensibilità alla soglia e alla chiusura}
+\chapter{Sensibilità alla soglia e alla chiusura morfologica}
 \label{app:soglia}
 
 Nel Capitolo~\ref{chap:risultati} un valore è segnalato quando lo score supera il 95-esimo percentile dei propri valori sugli anni di validazione. È una scelta di questo lavoro (Sezione~\ref{sec:exp-protocollo}). Sono scelte di questo lavoro anche l'elemento della chiusura con cui le segnalazioni di ogni metodo sono completate e il fatto che la chiusura preceda il voto (Sezione~\ref{sec:exp-concordate}). Questa appendice verifica quanto i risultati sul riferimento concordato dipendono da queste due scelte: la Sezione~\ref{app:soglia-concordate} lo ricostruisce con il 97-esimo e il 99-esimo percentile e senza la chiusura, la Sezione~\ref{app:soglia-pr} varia la soglia di ogni metodo con il cubo concordato fisso.
@@ -6,12 +6,12 @@ Nel Capitolo~\ref{chap:risultati} un valore è segnalato quando lo score supera 
 \section{Il riferimento concordato a soglie diverse e senza la chiusura}
 \label{app:soglia-concordate}
 
-Le segnalazioni concordate della Sezione~\ref{sec:ris-concordate} sono ricostruite, con le stesse regole, con la soglia di ogni metodo al 97-esimo e al 99-esimo percentile degli score sugli anni di validazione, cioè segnalando il 3\% e l'1\% dei valori, e con il 95-esimo percentile ma senza la chiusura, né delle segnalazioni dei metodi né del cubo. Sono ripetuti i cluster rilevati e senza corrispondente, l'inizio, la fine e lo spostamento lungo il moto della Sezione~\ref{sec:ris-concordate}, e ciò che c'è attorno ai cluster lunghi della Sezione~\ref{sec:ris-giudici} (Tabella~\ref{tab:app-soglia-concordate}).
+Le segnalazioni concordate della Sezione~\ref{sec:ris-concordate} sono ricostruite, con le stesse regole, con la soglia di ogni metodo al 97-esimo e al 99-esimo percentile degli score sugli anni di validazione, cioè segnalando il 3\% e l'1\% dei valori, e con il 95-esimo percentile ma senza la chiusura, né delle segnalazioni dei metodi né del cubo concordato. Sono ripetuti i cluster rilevati e senza corrispondente, l'inizio, la fine e lo spostamento lungo il moto della Sezione~\ref{sec:ris-concordate}, e ciò che c'è attorno ai cluster lunghi della Sezione~\ref{sec:ris-giudici} (Tabella~\ref{tab:app-soglia-concordate}).
 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Il riferimento concordato con la soglia di ogni metodo al 95-esimo, 97-esimo e 99-esimo percentile e, al 95-esimo, senza la chiusura, sugli anni di test. Inizio e fine: percentuale dei cluster concordati; asterisco, test dei segni con $p<0.01$. Attorno ai cluster lunghi: $G_{\mathrm{n}}$ / termine di confronto.}
+    \caption{Il riferimento concordato con la soglia di ogni metodo al 95-esimo, 97-esimo e 99-esimo percentile e, al 95-esimo, senza la chiusura, sugli anni di test. Inizio e fine: percentuale dei cluster concordati; asterisco, test dei segni significativo all'1\%. Attorno ai cluster lunghi: $G_{\mathrm{n}}$ / termine di confronto.}
     \label{tab:app-soglia-concordate}
     \vspace{0.3em}
     \setlength{\tabcolsep}{4pt}
@@ -35,11 +35,11 @@ Le segnalazioni concordate della Sezione~\ref{sec:ris-concordate} sono ricostrui
         Senza i vicini a cluster piccoli [\%] & 22.5 & 19.2 & 16.2 & 18.4 \\
         \addlinespace
         \multicolumn{5}{@{}l}{\emph{Inizio nei cluster brevi: $G_{\mathrm{n}}$ prima / dopo [\%]}} \\
-        Distanza dal normale & 47/22* & 46/21* & 41/23* & 43/26* \\
-        CBLOF & 40/28* & 39/27* & 37/26* & 36/31* \\
-        PCA & 30/35* & 28/37* & 22/41* & 29/37* \\
-        MCD & 20/48* & 19/48* & 18/47* & 21/45* \\
         Variazione in tre ore & 15/51* & 13/52* & 13/46* & 21/38* \\
+        Distanza dal normale & 47/22* & 46/21* & 41/23* & 43/26* \\
+        PCA & 30/35* & 28/37* & 22/41* & 29/37* \\
+        CBLOF & 40/28* & 39/27* & 37/26* & 36/31* \\
+        MCD & 20/48* & 19/48* & 18/47* & 21/45* \\
         \addlinespace
         \multicolumn{5}{@{}l}{\emph{Fine nei cluster lunghi: $G_{\mathrm{n}}$ dopo / prima [\%]}} \\
         Distanza dal normale & 52/41* & 42/52* & 26/67* & 43/52* \\
@@ -53,7 +53,7 @@ Le segnalazioni concordate della Sezione~\ref{sec:ris-concordate} sono ricostrui
         Lunghi, $G_{\mathrm{n}}$ più avanti della baseline [\%] & 58.5--65.8 & 58.7--67.3 & 55.4--67.7 & 57.2--68.4 \\
         \addlinespace
         \multicolumn{5}{@{}l}{\emph{Attorno ai cluster lunghi}} \\
-        Variazione più grande in tre ore, moderati & 2.72/1.27 & 3.16/1.34 & 3.99/1.43 & 2.87/1.29 \\
+        Salto più grande in tre ore, moderati & 2.72/1.27 & 3.16/1.34 & 3.99/1.43 & 2.87/1.29 \\
         CAPE insolito [\%] & 10.6/5.2 & 9.2/5.5 & 6.1/5.2 & 9.2/5.3 \\
         Indice K insolito [\%] & 15.2/5.7 & 12.8/6.4 & 7.1/5.8 & 12.7/6.0 \\
         Vapore nella colonna insolito [\%] & 15.7/6.6 & 13.9/7.5 & 7.4/6.2 & 13.9/7.2 \\
@@ -75,20 +75,20 @@ Le segnalazioni concordate della Sezione~\ref{sec:ris-concordate} sono ricostrui
 \section{Curve precision--recall rispetto al cubo concordato}
 \label{app:soglia-pr}
 
-Con il cubo concordato fisso, quello del 95-esimo percentile, la soglia di ogni metodo varia dall'80-esimo al 99.9-esimo percentile del suo score sugli anni di validazione. A ogni soglia le segnalazioni del metodo sono chiuse come nel cubo, e se ne calcolano la precision e il recall (Sezione~\ref{sec:exp-baseline}) rispetto al cubo concordato, sugli anni di test (Figura~\ref{fig:app-pr}). Un metodo che segnalasse a caso avrebbe una precision pari alla percentuale di valori concordati, 0.062. Il cubo non è una verità: precision e recall misurano l'accordo con il cubo concordato, che per costruzione favorisce i metodi simili fra loro.
+Con il cubo concordato fisso, quello del 95-esimo percentile, la soglia di ogni metodo varia dall'80-esimo al 99.9-esimo percentile del suo score sugli anni di validazione. A ogni soglia le segnalazioni del metodo sono chiuse come nel cubo concordato, e se ne calcolano la precision e il recall (Sezione~\ref{sec:exp-baseline}) rispetto al cubo concordato, sugli anni di test (Figura~\ref{fig:app-pr}). Un metodo che segnalasse a caso avrebbe una precision pari alla percentuale di valori concordati, 0.062. Il cubo non è una verità: precision e recall misurano l'accordo con il cubo concordato, che per costruzione favorisce i metodi simili fra loro.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.48\textwidth]{era5_concordate_pr}
-    \caption{Precision e recall di ogni metodo al variare della propria soglia, dall'80-esimo al 99.9-esimo percentile, rispetto al cubo concordato al 95-esimo percentile, sugli anni di test; il pallino indica il 95-esimo percentile. Al 95-esimo $G_{\mathrm{n}}$ è penultimo.}
+    \includegraphics[width=0.72\textwidth]{era5_concordate_pr}
+    \caption{Precision e recall di ogni metodo al variare della propria soglia, dall'80-esimo al 99.9-esimo percentile, rispetto al cubo concordato al 95-esimo percentile, sugli anni di test; il pallino indica il 95-esimo percentile, le sei curve grigie sono i modelli shallow. Al 95-esimo $G_{\mathrm{n}}$ è penultimo.}
     \label{fig:app-pr}
 \end{figure}
 
-\paragraph{Al 95-esimo percentile $G_{\mathrm{n}}$ è penultimo.} Alla soglia del cubo $G_{\mathrm{n}}$ ha precision 0.594 e recall 0.697, le più basse dopo quelle della variazione in tre ore. È atteso: sei dei nove metodi leggono una cella in un istante e segnalano in gran parte gli stessi valori, mentre $G_{\mathrm{n}}$ si sovrappone anche alla variazione in tre ore (Sezione~\ref{sec:ris-confronti}).
+\paragraph{Al 95-esimo percentile $G_{\mathrm{n}}$ è penultimo.} Alla soglia del cubo concordato $G_{\mathrm{n}}$ ha precision 0.594 e recall 0.697, le più basse dopo quelle della variazione in tre ore. È atteso: sei dei nove metodi leggono una cella in un istante e segnalano in gran parte gli stessi valori, mentre $G_{\mathrm{n}}$ si sovrappone anche alla variazione in tre ore (Sezione~\ref{sec:ris-confronti}).
 
 \paragraph{Ai percentili più alti la precision di $G_{\mathrm{n}}$ sale.} Con soglie più alte la precision di $G_{\mathrm{n}}$ sale fino a 0.95 al 99.9-esimo percentile: i suoi valori più estremi sono quasi sempre nel cubo concordato. Al 99-esimo e al 99.5-esimo percentile supera quella di CBLOF, della distanza dal normale e della variazione in tre ore, fra 0.76 e 0.86; PCA, HBOS, COPOD, Isolation Forest e MCD arrivano fra 0.96 e 1.00.
 
-\paragraph{Ai percentili più alti il recall è limitato dal numero di segnalazioni.} Al 99-esimo percentile ogni metodo segnala fra l'1.3\% e l'1.7\% dei valori, contro il 6.20\% del cubo: il recall non può superare 0.21--0.28, secondo il metodo, e i metodi vi si equivalgono, fra 0.19 e 0.24.
+\paragraph{Ai percentili più alti il recall è limitato dal numero di segnalazioni.} Al 99-esimo percentile ogni metodo segnala fra l'1.3\% e l'1.7\% dei valori, contro il 6.20\% del cubo concordato: il recall non può superare 0.21--0.28, secondo il metodo, e i metodi vi si equivalgono, fra 0.19 e 0.24.
 % Numeri: Tesi/segnalazioni_concordate/risultati.md §12; dati figures/dati/era5_concordate_pr.csv (trascritti dal log
 % del server outputs/concordate_5pc_regola_tesi_pr.log, 13 novembre 2026; codice check_era5_concordant_pr.py, commit
 % 576547c). Al 95: precision / recall G_n 0.594 / 0.697, senza voto 0.522 / 0.669; calo della precision: PCA 0.131,

@@ -31,7 +31,7 @@ from genera_figure_eventi import (BASELINES, BLUE, GREEN, GRID, MUTED, ORANGE, S
 HERE = pathlib.Path(__file__).parent
 MOTION = HERE / "dati" / "era5_concordate_moto_r300.csv"
 PR = HERE / "dati" / "era5_concordate_pr.csv"
-ORDER = ("Gn", "normal", "change_3h", "pca", "cblof", "mcd", "hbos", "copod", "iforest")  # as in the tables
+from stile import COLOURS, ORDER, TEXT_COLOURS  # one order and one colour for every method, as in the tables
 LABELS = {"Gn": r"$G_\mathrm{n}$", **BASELINES}
 
 
@@ -43,7 +43,7 @@ def motion_figure():
     ys = [len(ORDER)] + list(range(len(ORDER) - 1, 0, -1))  # G_n on top, a row of space below it
     axis.axvline(0, color=TEXT, linewidth=0.8, zorder=1)
     for y, key in zip(ys, ORDER):
-        colour = BLUE if key == "Gn" else MUTED
+        colour = COLOURS[key]
         short, long = table[("brevi", key)], table[("lunghi", key)]
         axis.plot([short, long], [y, y], color=colour, linewidth=1.0, alpha=0.5, zorder=2)
         axis.plot(short, y, "o", markersize=6, markerfacecolor="white", markeredgecolor=colour, markeredgewidth=1.4,
@@ -51,8 +51,7 @@ def motion_figure():
         axis.plot(long, y, "o", markersize=6, color=colour, markeredgecolor="white", markeredgewidth=0.6, zorder=4)
     axis.set_yticks(ys, [LABELS[key] for key in ORDER])
     for label, key in zip(axis.get_yticklabels(), ORDER):
-        if key == "Gn":
-            label.set_color(BLUE)
+        label.set_color(TEXT_COLOURS[key])
     axis.set_ylim(0.4, len(ORDER) + 0.6)
     axis.set_xlim(-15, 20)
     axis.set_xticks([-15, -10, -5, 0, 5, 10, 15, 20])

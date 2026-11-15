@@ -17,6 +17,10 @@
 \usetikzlibrary{arrows.meta,fit}
 \usepackage{booktabs}
 \usepackage{array}
+% Come placeins (non installato): manda in pagina i float in sospeso prima di proseguire.
+\makeatletter
+\newcommand\FloatBarrier{\par\begingroup\let\@elt\relax\edef\@tempa{\@botlist\@deferlist\@dbldeferlist}\ifx\@tempa\@empty\else\clearpage\fi\endgroup}
+\makeatother
 % Colonna di testo allineata a sinistra, larga una frazione della riga.
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1\textwidth}}
 \usepackage{amsmath,amssymb}

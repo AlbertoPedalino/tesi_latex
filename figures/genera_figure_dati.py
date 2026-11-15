@@ -142,8 +142,8 @@ def change_figure(data, weights):
     axis.set_xlim(0.02, 150)
     axis.set_xticks([0.1, 1, 10, 100], ["0.1", "1", "10", "100"])
     axis.axvline(100 / len(features), color=MUTED, linestyle="--", linewidth=0.8)
-    axis.text(100 / len(features) * 1.08, -1.25, "percentuali uguali", color=MUTED, fontsize=8, va="center")
-    axis.set_ylim(-1.6, len(features) - 0.2)
+    axis.text(100 / len(features) * 1.08, -0.95, "percentuali uguali", color=MUTED, fontsize=8, va="center")
+    axis.set_ylim(-1.5, len(features) - 0.2)
     top = order[-1]
     axis.text(article[top] * 1.08, top_row := len(order) - 1 + 0.19, f"{article[top]:.1f}%", color=TEXT, fontsize=8,
               va="center", ha="left")

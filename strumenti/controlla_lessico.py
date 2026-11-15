@@ -9,19 +9,22 @@ allow; each hit is printed with file, line and context. No output under a rule m
 
 The glossary (one term per concept; the rules forbid the variants found while writing):
 - G: "errore di ricostruzione del generatore" (in the formulas of Ch. 4 $\\bar{s}_{G,tn}$); G_n: "score del
-  rilevatore", $G_{\\mathrm{n}}(t,n)$ in the formulas; D: "componente del discriminatore"; D_reale and D_generato:
-  the two "giudizi" of the discriminator; G and D together: "componenti"; their sum: "score combinato".
+  rilevatore", $G_{\\mathrm{n}}(t,n)$ in the formulas; D: "componente del discriminatore"; D_oss and D_ric (on the
+  observation / on the reconstruction): the two "giudizi" of the discriminator; G and D together: "componenti"; their sum: "score combinato".
 - The output of the generator: "ricostruzione". The draws of the Monte Carlo dropout: "estrazioni"; their standard
   deviation: "dispersione"; dispersione divided by G: "rapporto". n_D:n_G: "aggiornamenti D:G".
 - "valore" = cell-instant pair ("coppia cella--istante"); "valore segnalato", "segnalazione"; "segnalazioni
   esclusive" (not flagged by any other method); "cella seguita" (examples of 6.4); "cluster (di segnalazioni)";
-  zones "nucleo", "contorno", "zona lontana"; "bordo del cluster"; "margine del dominio".
+  "le celle del cluster" (no "nucleo" since 15 Nov 2026); "bordo del cluster"; "margine del dominio".
 - "scarto standardizzato" (Section 4.3); "percentuale"; "anni di addestramento / di validazione / di test";
   "storia ripulita"; "anomalia meteorologica" only for real phenomena; short names of the variables after Tab. 3.1.
 - Also (12 Nov 2026): "storia recente"; "distanza MMD"; "prova" (a trial of the search); "griglia" ("reticolo" only for
   PVGIS); "tendenza lineare"; "deriva"; "normalizzazione stagionale" (input) / "climatologica" (score); "soglia del
   criterio"; "maschera di dropout" / "maschera del margine"; "parametri" of a network, "pesi" of the variables;
-  "giorno dell'anno" in the climatologies; "celle vicine"; "tipo principale"; "giudizi" for D_reale and D_generato.
+  "giorno dell'anno" in the climatologies; "celle vicine"; "tipo principale"; "giudizi" for D_oss and D_ric.
+- Also (15 Nov 2026, revision by two readers): "eccedenza" (not "estensione"), "condizioni ordinarie" (not "tempo
+  ordinario"), "gruppo migliore di prove" (not "regione migliore"), "salto più grande in tre ore" for the measure
+  (the baseline stays "variazione in tre ore"), "grandezze che nessuno score legge", "insieme di validazione" of the MMD.
 Words of the article (STGAN's "campo generato", "errore di previsione") may appear where the article is described.
 """
 import re
@@ -39,7 +42,7 @@ RULES = [
     (r'valor[ei] standardizzat|variabilità abituale', 'vecchio nome dello scarto standardizzato', ()),
     (r'(?<!ricostruzione )\berrore del generatore', 'G si chiama "errore di ricostruzione del generatore"', ()),
     (r'componente di ricostruzione|score di ricostruzione', 'nome di G', ()),
-    (r'giudizio del discriminatore(?! sull)(?! sulla)', '"giudizio" è D_reale o D_generato; D è la "componente"',
+    (r'giudizio del discriminatore(?! sull)(?! sulla)', '"giudizio" è D_oss o D_ric; D è la "componente"',
      ('stato_arte.tex',)),
     (r'leggono il punto|ogni cella da sola', '"metodi che leggono una cella in un istante"', ()),
     (r'osservazioni segnalate', '"valori segnalati"', ()),
@@ -105,15 +108,15 @@ RULES = [
     (r'(il|la) sol[oa] discriminatore', 'D è la "componente del discriminatore"', ()),
     (r'\bD normalizzato', 'D è femminile ("la componente")', ()),
     (r'(due|i suoi|entrambi i) termini\b(?! indicano)|(due|le) uscite (del discriminatore|sulle patch)',
-     '$D_{reale}$ e $D_{generato}$ sono i "giudizi"', ('stato_arte.tex',)),
+     '$D_{oss}$ e $D_{ric}$ sono i "giudizi"', ('stato_arte.tex',)),
     (r'campo reale', 'l\'osservazione ("campo generato" solo per l\'articolo)', ()),
     (r'minuscol', '"piccoli"', ()),
     (r'\b\d+ componenti\b(?! principali)|componenti?: quella aleatoria|componente (epistemica|aleatoria)',
      '"componenti" solo per G e D; "componenti principali" per la PCA', ()),
     (r'in rapporto a\b|mediana dei rapporti|rapporto fra i tassi', '"rapporto" è solo dispersione / G', ()),
-    (r'\bnucle[oi] (sulla distanza|delle convoluzion)', '"nucleo" è una zona del cluster; per la convoluzione "kernel"', ()),
+    (r'\bnucle[oi] (sulla distanza|delle convoluzion)', 'per la convoluzione "kernel"', ()),
     (r'contorni degli eventi', '"contorno" è una zona del cluster', ()),
-    (r'\bzone che conosce', '"regione" nello spazio degli iperparametri', ()),
+    (r'\bzone che conosce', '"gruppo di prove" nello spazio degli iperparametri', ()),
     (r'non una prova\b|una prova severa', '"prova" è un tentativo della ricerca; qui "dimostrazione" o "verifica"', ()),
     (r'(?<!:)\bmascher[ae]\b(?! di dropout| del margine| binaria)', '"maschera di dropout" o "maschera del margine"',
      ('stato_arte.tex',)),
@@ -165,6 +168,22 @@ RULES = [
     (r'\bdei casi\b', '"dei cluster" o la cosa contata ("caso" solo in "a caso")', ()),
     (r'(?<![-:])\bevent[oi]\b', '"cluster" o "anomalia meteorologica" (restano la letteratura dei Cap. 2 e 5 '
      'e la definizione di evento estremo nel Cap. 1)', ('stato_arte.tex', 'esperimenti.tex', 'introduzione.tex')),
+    (r'mathrm\{reale\}|mathrm\{generato\}|D_reale|D_generato', 'i giudizi sono $D_{oss}$ e $D_{ric}$', ()),
+    (r'\bnucle[oi]\b', '"le celle del cluster" (niente "nucleo")', ()),
+    (r'\bestension[ei]\b', '"eccedenza" (estensione si legge come grandezza del cluster)', ('stato_arte.tex',)),
+    (r'tempo ordinario', '"condizioni ordinarie"', ()),
+    (r'regione migliore|\bregion[ei]\b(?= dello spazio degli iperparametri)', '"gruppo migliore di prove"', ()),
+    (r'variazione in tre ore (di|è) \d|Variazione in 3 h|variazione più grande di uno scarto standardizzato è',
+     'la misura è il "salto più grande in tre ore"; "variazione in tre ore" è la baseline', ()),
+    (r'[Vv]ariabili che nessuno score legge', '"grandezze che nessuno score legge"', ()),
+    (r'riferimento per la validazione|osservazioni del riferimento', '"insieme di validazione" della MMD', ()),
+    (r'stabilità dei modelli', '"ripetibilità" dei modelli shallow ("stabile" è solo per la probabilità di superamento)', ()),
+    (r'\bestremi (dello score|\$r_)', '"minimo e massimo" dello score combinato ("estremi" si legge come valori estremi)', ()),
+    (r'\b(dati|serie|osservazioni|pattern|sequenze)( di addestramento)? normali\b|comportamento normale|dinamica normale|'
+     r'come normali\b|considera(ti|ndo) normali|siano normali',
+     '"non anomali" per i dati; "normale" è il normale stagionale (media), "normale standard" la gaussiana', ()),
+    (r'distribuzione normale', '"gaussiana" ("normale standard" solo per la funzione di ripartizione)', ()),
+    (r"intorno immediato|rappresentare l'intorno", '"celle vicine" o "patch 3×3"; "intorno" è quello di 300 km', ()),
 ]
 RULES = [(re.compile(p, re.I), what, allowed) for p, what, allowed in RULES]
 

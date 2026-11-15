@@ -97,10 +97,14 @@ def main():
         axis.set_xticks(range(12), MONTHS)
         axis.set_yticks(range(len(data["bands"])), [band.replace("N", "°N") for band in data["bands"]])
         axis.tick_params(length=0)
-        bar = figure.colorbar(mesh, ax=axis, shrink=0.9, ticks=[0, top, 10, 15])  # one per panel, same scale
-        bar.set_label(title)
+        bar = figure.colorbar(mesh, ax=axis, shrink=0.9, ticks=[0, top, 10, 15])  # same scale in both panels
+        bar.set_label("valori segnalati (%)")
         bar.outline.set_edgecolor(MUTED)
-        groups.append([axis, bar.ax])
+        if key == "G":
+            bar.ax.set_visible(False)  # one colour bar, under the second panel: same width, same scale
+            groups.append([axis])
+        else:
+            groups.append([axis, bar.ax])
     names = save_panels(figure, groups, HERE, "era5_g_luogo")
     print(f"written {names} in {HERE}")
 

@@ -57,8 +57,8 @@ HALO = [effects.withStroke(linewidth=2.5, foreground="white")]  # a label stays 
 # The baselines of the comparison section, each with its own events (scripts/run_era5_baseline_events.sh of the code
 # repository: check_era5_event_zones.py and check_era5_event_profile.py with --events and --scores the baseline).
 BASELINE_DIR = HERE / "dati" / "baseline"
-BASELINES = {"normal": "Distanza dal normale", "change_3h": "Variazione in tre ore", "pca": "PCA", "mcd": "MCD",
-             "cblof": "CBLOF", "copod": "COPOD", "hbos": "HBOS", "iforest": "Isolation Forest"}
+BASELINES = {"change_3h": "Variazione in tre ore", "normal": "Distanza dal normale", "pca": "PCA", "cblof": "CBLOF",
+             "mcd": "MCD", "hbos": "HBOS", "copod": "COPOD", "iforest": "Isolation Forest"}  # order of figures/stile.py
 SIMPLE = {"normal": ORANGE, "change_3h": GREEN}  # drawn in colour; the shallow models in grey
 SHALLOW_GREY = "#b9b7b0"
 EMPTY = "#d9d8d4"  # cells of the type tables with no event
@@ -160,9 +160,10 @@ def sizes_figure(zones):
     baseline on its own clusters: one bar of 100 per method, cut in three bands of size (number of flagged values of the
     cluster); left the clusters, right the flagged values. G_n on top, apart."""
     rows = size_shares()
-    figure, axes = plt.subplots(1, 2, figsize=size(0.62), constrained_layout=True, sharey=True)
+    figure, axis = plt.subplots(figsize=(size(0.62)[0] * 0.62, size(0.62)[1]), constrained_layout=True)
+    axes = [axis]
     ys = [len(rows)] + list(range(len(rows) - 1, 0, -1))  # G_n on top, a row of space below it
-    for axis, column, title in ((axes[0], "events", "% dei cluster"), (axes[1], "values", "% dei valori segnalati")):
+    for axis, column, title in ((axes[0], "values", "% dei valori segnalati"),):
         for y, row in zip(ys, rows):
             left = 0.0
             for share, (_, _, _, colour, ink) in zip(row[column], SIZE_BANDS):
@@ -180,9 +181,11 @@ def sizes_figure(zones):
     axes[0].get_yticklabels()[0].set_fontweight("bold")
     axes[0].set_ylim(0.4, len(rows) + 1.6)
     # The names of the bands, in their colours, above the bars.
-    for axis, x, (name, detail, _, colour, _) in zip((axes[0], axes[0], axes[1]), (0, 52, 0), SIZE_BANDS):
-        axis.text(x, len(rows) + 1.1, f"\u25a0 {name}\n    {detail}", fontsize=7, linespacing=1.1,
-                  color=colour if colour != "#b7d3f6" else "#5f8fc9", ha="left", va="center")
+    patches = [plt.Rectangle((0, 0), 1, 1, color=colour, label=f"{name} ({short})")
+               for (name, _, _, colour, _), short in zip(SIZE_BANDS, ("< 20", "20–999", "≥ 1000"))]
+    axes[0].legend(handles=patches, loc="lower center", bbox_to_anchor=(0.42, 0.97), ncol=3, frameon=False,
+                   fontsize=6, handlelength=0.9, handletextpad=0.3, columnspacing=0.7,
+                   title="valori del cluster", title_fontsize=6.5)
     figure.savefig(HERE / "era5_eventi_dimensione.pdf")
     plt.close(figure)
     for row in rows:
@@ -222,6 +225,10 @@ def types_figure(zones):
         labels.append(label)
     order = columns[0].reindex(list(TYPES)).fillna(0).sort_values(ascending=False).index  # by the share in G_n
     grid = np.array([[column.get(name, 0.0) for column in columns] for name in order])
+    small = grid.max(axis=1) < 3  # below 3% for every method: one row together
+    if small.sum() > 1:
+        grid = np.vstack([grid[~small], grid[small].sum(axis=0)])
+        order = list(order[~small]) + ["altri"]
     figure, axis = plt.subplots(figsize=size(0.92), constrained_layout=True)
     axis.imshow(grid, cmap=RAMP, vmin=0, vmax=70, aspect="auto", interpolation="nearest")
     for (row, column), value in np.ndenumerate(grid):
@@ -233,7 +240,7 @@ def types_figure(zones):
     plt.setp(axis.get_xticklabels(), rotation=30, ha="left", rotation_mode="anchor")
     axis.get_xticklabels()[0].set_color(BLUE)
     axis.get_xticklabels()[0].set_fontweight("bold")
-    axis.set_yticks(range(len(order)), [TYPES[name] for name in order], fontsize=7)
+    axis.set_yticks(range(len(order)), [TYPES.get(name, "Altri tipi (sotto il 3%)") for name in order], fontsize=7)
     axis.axvline(0.5, color="white", linewidth=3)  # G_n apart from the baselines
     axis.tick_params(length=0)
     for side in axis.spines.values():
@@ -470,7 +477,7 @@ def dropout_maps_figure(coastline_path):
                                            (axes[1], "mean ratio", "Rapporto fra dispersione e G, medio", "rapporto fra dispersione e G, medio (%)", 100)):
         values = maps[key] * scale
         low, high = np.nanpercentile(values, (1, 99))
-        mesh = draw_map(axis, grid, values, coastline, left=axis is axes[0], cmap="viridis", vmin=low, vmax=high)
+        mesh = draw_map(axis, grid, values, coastline, left=True, cmap="viridis", vmin=low, vmax=high)
         bar = figure.colorbar(mesh, ax=axis, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30)
         bar.set_label(label, fontsize=TICKS)
         bar.ax.tick_params(labelsize=TICKS)
@@ -531,9 +538,10 @@ def case_figure(number, data, coastline):
     right_bar.set_label(r"$G_\mathrm{n}$: percentile (95 circa = soglia)", fontsize=TICKS)
     right_bar.ax.tick_params(labelsize=TICKS)
     for axis in (left, right):
-        # The core as in Figure 6.8: orange over a white halo, apart from the dark coastlines.
-        axis.contour(longitudes, latitudes[::-1], picture[::-1], levels=[0.5], colors="white", linewidths=2.4)
-        axis.contour(longitudes, latitudes[::-1], picture[::-1], levels=[0.5], colors=ORANGE, linewidths=1.2)
+        # The cells of the cluster: a black outline over a wide white halo, visible on the reds and blues of the map
+        # and thicker than the coastlines.
+        axis.contour(longitudes, latitudes[::-1], picture[::-1], levels=[0.5], colors="white", linewidths=3.2)
+        axis.contour(longitudes, latitudes[::-1], picture[::-1], levels=[0.5], colors=TEXT, linewidths=1.4)
         # The cell of the series below: a ring with a white halo, visible on every colour of the maps.
         axis.plot(record["cell longitude"], record["cell latitude"], marker="o", markersize=9, markerfacecolor="none",
                   markeredgecolor="white", markeredgewidth=2.6, zorder=5)
@@ -629,13 +637,14 @@ def case_series_figure(number, data):
         scores.plot(times, series[name], color=colour, linewidth=width, zorder=3)
     scores.set_ylim(0, 100)
     scores.set_yticks([0, 50, 95], ["0", "50", "95"])
-    scores.set_ylabel("percentile dello score\n(tutte le variabili)", fontsize=TICKS)
+    scores.set_ylabel("score:\npercentile", fontsize=TICKS)
     scores.tick_params(labelbottom=False)
     # A legend beside the panel: four names at the end of lines that cross each other would overlap.
     handles = [plt.Line2D([], [], color=BLUE, linewidth=2.0), plt.Line2D([], [], color=ORANGE, linewidth=1.5),
                plt.Line2D([], [], color=GREEN, linewidth=1.2),
                plt.Rectangle((0, 0), 1, 1, color=SHALLOW_GREY, alpha=0.55, linewidth=0)]
-    scores.legend(handles, [r"$G_\mathrm{n}$", "distanza dal normale", "variazione in tre ore", "sei modelli shallow"],
+    scores.legend(handles, [r"$G_\mathrm{n}$", "distanza dal normale", "variazione in tre ore",
+                            "sei modelli shallow\n(dal minimo al massimo)"],
                   loc="center left", bbox_to_anchor=(1.01, 0.5), frameon=False, fontsize=6.5, handlelength=1.4,
                   labelspacing=0.5)
 
@@ -648,7 +657,8 @@ def case_series_figure(number, data):
     reach = max(3.0, float(np.ceil(np.nanmax(np.abs(data["series_input"])))))
     alone.set_ylim(-reach, reach)
     alone.set_yticks([-reach, 0, reach], [f"{-reach:g}", "0", f"+{reach:g}"])
-    alone.set_ylabel(f"{TYPES[record['type']].lower()}:\nscarto standardizzato", fontsize=TICKS)
+    alone.set_ylabel(f"{TYPES[record['type']].lower()}:\nscarto stand.", fontsize=TICKS)
+    figure.align_ylabels([scores, alone])
     alone.annotate("istante delle mappe", (moment, 0.0), xycoords=("data", "axes fraction"), xytext=(3, 2),
                    textcoords="offset points", fontsize=TICKS - 1, color=TEXT, ha="left", va="bottom",
                    path_effects=HALO, zorder=6)

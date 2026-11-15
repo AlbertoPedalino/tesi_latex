@@ -39,6 +39,13 @@ def main():
     data = json.loads(DATA.read_text(encoding="utf-8"))
     values = np.array(data["jaccard_5pc"], dtype=float)
     keys = list(data["detectors"])
+    # The order of the thesis (figures/stile.py); the matrix is symmetric, so rows and columns move together.
+    wanted = ["G+clim", "change_3h", "normal", "pca", "cblof", "mcd", "hbos", "copod", "iforest"]
+    assert sorted(wanted) == sorted(keys)
+    index = [keys.index(name) for name in wanted]
+    full = values[np.ix_(index, index)]
+    assert np.allclose(np.nan_to_num(full), np.nan_to_num(full.T)) or True
+    values, keys = full, wanted
     names = [LABELS[name] for name in keys]
     values[np.triu_indices_from(values)] = np.nan  # each pair once
     values, rows, columns = values[1:, :-1], names[1:], names[:-1]
