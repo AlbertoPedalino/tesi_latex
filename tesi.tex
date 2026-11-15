@@ -22,6 +22,12 @@
 \newcommand\FloatBarrier{\par\begingroup\let\@elt\relax\edef\@tempa{\@botlist\@deferlist\@dbldeferlist}\ifx\@tempa\@empty\else\clearpage\fi\endgroup}
 \makeatother
 % Colonna di testo allineata a sinistra, larga una frazione della riga.
+% Titoli di sezione allineati a sinistra, senza sillabazione (titlesec non è installato): le definizioni di report.cls
+% con \raggedright.
+\makeatletter
+\renewcommand\section{\@startsection{section}{1}{\z@}{-3.5ex \@plus -1ex \@minus -.2ex}{2.3ex \@plus.2ex}{\normalfont\Large\bfseries\raggedright}}
+\renewcommand\subsection{\@startsection{subsection}{2}{\z@}{-3.25ex\@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\large\bfseries\raggedright}}
+\makeatother
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1\textwidth}}
 \usepackage{amsmath,amssymb}
 \usepackage[hidelinks]{hyperref}
@@ -33,7 +39,10 @@
     pdflang={it-IT}
 }
 \usepackage{csquotes}
-\usepackage[backend=biber,style=numeric,sorting=none]{biblatex}
+\usepackage[backend=biber,style=numeric-comp,sorting=none]{biblatex}
+\setcounter{biburlnumpenalty}{9000}  % DOI e URL vanno a capo sulle cifre, senza spazi
+\setcounter{biburllcpenalty}{7000}
+\setcounter{biburlucpenalty}{8000}
 
 % Numeri provvisori: valori presi da una run che non corrisponde ancora alla
 % descrizione data nel testo. Con \bozzatrue sono stampati in rosso. Prima della
@@ -106,6 +115,11 @@
 \phantomsection
 \addcontentsline{toc}{chapter}{\listfigurename}
 \listoffigures
+\clearpage
+
+\phantomsection
+\addcontentsline{toc}{chapter}{\listtablename}
+\listoftables
 \clearpage
 
 % --- Corpo ------------------------------------------------------------------

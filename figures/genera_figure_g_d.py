@@ -112,8 +112,8 @@ def draw_map(axis, data, values, coastline, *, left=True, bottom=True, **style):
     axis.set_xlim(longitudes.min() - 0.25, longitudes.max() + 0.25)
     axis.set_ylim(latitudes.min() - 0.25, latitudes.max() + 0.25)
     axis.set_aspect(1 / np.cos(np.radians(latitudes.mean())))
-    axis.xaxis.set_major_formatter(lambda value, _: f"{value:g}°")
-    axis.yaxis.set_major_formatter(lambda value, _: f"{value:g}°")
+    axis.xaxis.set_major_formatter(lambda value, _: f"{value:g}°".replace("-", "\u2212"))
+    axis.yaxis.set_major_formatter(lambda value, _: f"{value:g}°".replace("-", "\u2212"))
     axis.tick_params(labelsize=TICKS)
     if bottom:
         axis.set_xlabel("longitudine (E)", fontsize=TICKS)

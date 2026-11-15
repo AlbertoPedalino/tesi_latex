@@ -184,6 +184,13 @@ RULES = [
      '"non anomali" per i dati; "normale" è il normale stagionale (media), "normale standard" la gaussiana', ()),
     (r'distribuzione normale', '"gaussiana" ("normale standard" solo per la funzione di ripartizione)', ()),
     (r"intorno immediato|rappresentare l'intorno", '"celle vicine" o "patch 3×3"; "intorno" è quello di 300 km', ()),
+    # revisione dei tre lettori, 15/11/2026
+    (r'nessuno score legge(?! direttamente)', '"grandezze che nessuno score legge direttamente" (non indipendenti dagli '
+     'ingressi)', ()),
+    (r'profilo umido|parte umida e instabile', '"CAPE, indice K e vapore insolitamente alti per il luogo e il periodo"', ()),
+    (r'sta per raggiungere|segni della convezione',
+     '"spostate nella direzione del moto" / "compatibili con la convezione parametrizzata di ERA5"', ()),
+    (r'ricompaia ripetendo|ricompare ripetendo', 'p riguarda una singola estrazione, non la media delle 20', ()),
 ]
 RULES = [(re.compile(p, re.I), what, allowed) for p, what, allowed in RULES]
 

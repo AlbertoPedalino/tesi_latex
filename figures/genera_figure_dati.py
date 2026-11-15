@@ -80,8 +80,8 @@ def tidy(axis):
 def cycles_figure(data):
     """Monthly mean with one standard deviation, and mean by time of day in January and July."""
     part = data["cycles"]
-    units = {"2m_temperature": ("Temperatura (°C)", lambda v: np.asarray(v) - 273.15, (-np.inf, np.inf)),
-             "total_cloud_cover": ("Copertura\nnuvolosa (0–1)", np.asarray, (0.0, 1.0))}
+    units = {"2m_temperature": ("temperatura (°C)", lambda v: np.asarray(v) - 273.15, (-np.inf, np.inf)),
+             "total_cloud_cover": ("copertura\nnuvolosa (0–1)", np.asarray, (0.0, 1.0))}
     figure, axes = plt.subplots(2, 2, figsize=(14.0 / 2.54, 8.4 / 2.54), sharex="col",
                                 gridspec_kw={"width_ratios": [1, 1]})
     for row, feature in enumerate(part["features"]):
@@ -104,9 +104,9 @@ def cycles_figure(data):
         for axis in axes[row]:
             tidy(axis)
     axes[1, 0].set_xticks(np.arange(1, 13), MONTHS)
-    axes[1, 0].set_xlabel("Mese")
+    axes[1, 0].set_xlabel("mese")
     axes[1, 1].set_xticks([0, 6, 12, 18])
-    axes[1, 1].set_xlabel("Ora UTC")
+    axes[1, 1].set_xlabel("ora UTC")
     handles, labels = axes[0, 0].get_legend_handles_labels()
     cells = axes[1, 0].legend(handles, labels, loc="upper center", ncol=2, bbox_to_anchor=(0.5, -0.32),
                               fontsize=7.5, columnspacing=1.0, handlelength=1.6)
@@ -149,7 +149,7 @@ def change_figure(data, weights):
               va="center", ha="left")
     axis.text(detector[top] * 1.15, top_row - 0.36, f"{detector[top]:.1f}%", color=TEXT, fontsize=8, va="center",
               bbox=dict(facecolor="white", edgecolor="none", pad=0.6))
-    axis.set_xlabel("Percentuale della variazione quadratica media su 24 ore (%)")
+    axis.set_xlabel("percentuale della variazione quadratica media su 24 ore (%)")
     axis.spines[["top", "right"]].set_visible(False)
     axis.grid(axis="x", color=GRID, linewidth=0.5)
     axis.set_axisbelow(True)
@@ -179,8 +179,8 @@ def correlation_figure(data):
     axis.axhline(0, color=MUTED, linewidth=0.5)
     axis.set_xlim(0, edges[-1])
     axis.set_ylim(-0.1, 1.0)
-    axis.set_xlabel("Distanza fra le celle (km)")
-    axis.set_ylabel("Correlazione delle differenze\ndal normale per mese e ora")
+    axis.set_xlabel("distanza fra le celle (km)")
+    axis.set_ylabel("correlazione delle differenze\ndal normale per mese e ora")
     tidy(axis)
     axis.legend(fontsize=8, loc="upper right", labelcolor="linecolor")
     save(figure, "era5_correlazione_distanza.pdf")

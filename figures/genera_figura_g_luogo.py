@@ -95,7 +95,7 @@ def main():
             axis.text(column, row, f"{value:.1f}", ha="center", va="center", fontsize=6.5,
                       color="white" if dark else TEXT)
         axis.set_xticks(range(12), MONTHS)
-        axis.set_yticks(range(len(data["bands"])), [band.replace("N", "°N") for band in data["bands"]])
+        axis.set_yticks(range(len(data["bands"])), [band.replace("N", "°N").replace("-", "–") for band in data["bands"]])
         axis.tick_params(length=0)
         bar = figure.colorbar(mesh, ax=axis, shrink=0.9, ticks=[0, top, 10, 15])  # same scale in both panels
         bar.set_label("valori segnalati (%)")

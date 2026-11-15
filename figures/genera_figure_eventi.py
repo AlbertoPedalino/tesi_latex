@@ -656,7 +656,7 @@ def case_series_figure(number, data):
     alone.plot(times, data["series_input"], color=variable, linewidth=1.5, zorder=3)
     reach = max(3.0, float(np.ceil(np.nanmax(np.abs(data["series_input"])))))
     alone.set_ylim(-reach, reach)
-    alone.set_yticks([-reach, 0, reach], [f"{-reach:g}", "0", f"+{reach:g}"])
+    alone.set_yticks([-reach, 0, reach], [f"\u2212{reach:g}", "0", f"+{reach:g}"])
     alone.set_ylabel(f"{TYPES[record['type']].lower()}:\nscarto stand.", fontsize=TICKS)
     figure.align_ylabels([scores, alone])
     alone.annotate("istante delle mappe", (moment, 0.0), xycoords=("data", "axes fraction"), xytext=(3, 2),
