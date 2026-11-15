@@ -43,7 +43,8 @@
 \setcounter{biburlnumpenalty}{9000}  % DOI e URL vanno a capo sulle cifre, senza spazi
 \setcounter{biburllcpenalty}{7000}
 \setcounter{biburlucpenalty}{8000}
-\biburlbigskip=0mu\relax  % niente spazi dopo punti e barre dei DOI
+\biburlbigskip=0mu\relax
+\renewcommand*{\bibfont}{\normalfont\normalsize\raggedright}  % DOI interi, righe non giustificate  % niente spazi dopo punti e barre dei DOI
 
 % Numeri provvisori: valori presi da una run che non corrisponde ancora alla
 % descrizione data nel testo. Con \bozzatrue sono stampati in rosso. Prima della

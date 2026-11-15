@@ -49,6 +49,8 @@ axes.set_xlabel("longitudine (E)", color=AXIS_COLOUR)
 axes.set_ylabel("latitudine (N)", color=AXIS_COLOUR)
 axes.set_xticks(np.arange(7.0, 9.01, 0.5))
 axes.set_yticks(np.arange(44.5, 46.01, 0.5))
+axes.xaxis.set_major_formatter(lambda value, _: f"{value:.1f}°")
+axes.yaxis.set_major_formatter(lambda value, _: f"{value:.1f}°")
 axes.margins(0.04)
 axes.tick_params(colors=AXIS_COLOUR, width=0.5, length=3)
 for side in ("top", "right"):

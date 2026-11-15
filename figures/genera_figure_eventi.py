@@ -529,7 +529,9 @@ def case_figure(number, data, coastline):
     limit = 4
     mesh = draw_map(left, grid, data["input"], coastline, cmap="RdBu_r", vmin=-limit, vmax=limit)
     left_bar = figure.colorbar(mesh, ax=left, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, extend="both")
-    left_bar.set_label(f"{TYPES[record['type']]}: scarto standardizzato\n(deviazioni standard dal normale)", fontsize=TICKS)
+    root = " (radice quarta)" if record["type"] == "total_precipitation" else ""
+    left_bar.set_label(f"{TYPES[record['type']]}{root}: scarto standardizzato\n(deviazioni standard dal normale)",
+                       fontsize=TICKS)
     left_bar.ax.tick_params(labelsize=TICKS)
     mesh = draw_map(right, grid, percentile(data[f"score_{SCORE}"], data[f"quantiles_{SCORE}"]), coastline, left=True,
                     cmap="viridis", vmin=0, vmax=100)
@@ -657,7 +659,8 @@ def case_series_figure(number, data):
     reach = max(3.0, float(np.ceil(np.nanmax(np.abs(data["series_input"])))))
     alone.set_ylim(-reach, reach)
     alone.set_yticks([-reach, 0, reach], [f"\u2212{reach:g}", "0", f"+{reach:g}"])
-    alone.set_ylabel(f"{TYPES[record['type']].lower()}:\nscarto standardizzato", fontsize=TICKS)
+    root = "\n(radice quarta)" if record["type"] == "total_precipitation" else ""
+    alone.set_ylabel(f"{TYPES[record['type']].lower()}{root}:\nscarto standardizzato", fontsize=TICKS)
     figure.align_ylabels([scores, alone])
     alone.annotate("istante delle mappe", (moment, 0.0), xycoords=("data", "axes fraction"), xytext=(3, 2),
                    textcoords="offset points", fontsize=TICKS - 1, color=TEXT, ha="left", va="bottom",
@@ -667,9 +670,9 @@ def case_series_figure(number, data):
     inside = times[widest[0]] - half <= moment <= times[widest[1]] + half
     anchor, shift, side = (moment, -3, "right") if inside and moment >= middle else \
         ((moment, 3, "left") if inside else (middle, 0, "center"))
-    alone.annotate("la cella è nel cluster", (anchor, 1), xycoords=("data", "axes fraction"), xytext=(shift, -1),
-                   textcoords="offset points", fontsize=6.5, color="#3d6fa8", ha=side, va="top", path_effects=HALO,
-                   zorder=6)
+    alone.annotate("la cella è nel cluster", (anchor, 1), xycoords=("data", "axes fraction"), xytext=(shift, 1),
+                   textcoords="offset points", fontsize=6.5, color="#3d6fa8", ha=side, va="bottom", path_effects=HALO,
+                   zorder=6, annotation_clip=False)
     alone.xaxis.set_major_locator(dates.DayLocator())
     alone.xaxis.set_major_formatter(lambda value, _: f"{dates.num2date(value).day} "
                                                      f"{MONTHS_SHORT[dates.num2date(value).month - 1]}")
