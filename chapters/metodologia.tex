@@ -55,7 +55,7 @@ Le patch di tutte le celle sono valutate in un'unica passata, con la stessa masc
 \subsection{Obiettivi di addestramento}
 \label{sec:stgan-obiettivi}
 
-Il discriminatore viene addestrato con etichetta zero per l'osservazione e uno per la ricostruzione, come nell'articolo. Siano $D_{\mathrm{oss}}$ e $D_{\mathrm{ric}}$ i giudizi del discriminatore sulla patch dell'osservazione e su quella della ricostruzione, cioè del campo generato: sono le $D_\phi(S_{v,t})$ e $D_\phi(\hat{S}_{v,t})$ dell'articolo (Sezione~\ref{sec:rw-stgan}). Gli obiettivi sono
+Il discriminatore viene addestrato con etichetta zero per l'osservazione e uno per la ricostruzione, come nell'articolo. Siano $D_{\mathrm{oss}}$ e $D_{\mathrm{ric}}$ i giudizi del discriminatore sulla patch dell'osservazione e su quella della ricostruzione, cioè del campo generato: sono le $D_\phi(S_{v,t})$ e $D_\phi(\hat{S}_{v,t})$ dell'articolo (Sezione~\ref{sec:rw-stgan}). In questa tesi un valore alto di $D_{\mathrm{oss}}$ o di $D_{\mathrm{ric}}$ vuol dire quindi che il discriminatore giudica l'osservazione o la ricostruzione più simile a un campo generato, cioè meno normale, e una D alta, come un G alto, indica un valore più insolito (Sezione~\ref{sec:score-dropout-montecarlo}). Gli obiettivi sono
 \begin{align}
 \mathcal{L}_{D} &=
 \tfrac{1}{2}\bigl[
@@ -104,7 +104,7 @@ La normalizzazione dell'articolo è un min--max per variabile stimato sui dati d
 \begin{equation}
 u_{tnf}=\frac{x_{tnf}-\mu_{nfog}}{\sigma_{nfog}},
 \end{equation}
-con otto ore del giorno e 366 giorni dell'anno. Il valore $u_{tnf}$ è lo \emph{scarto standardizzato}: dice di quante deviazioni standard il valore della variabile si allontana dal suo normale stagionale, ed è positivo sopra il normale e negativo sotto; 0 corrisponde al normale, $+2$ a due deviazioni standard sopra. La media $\mu_{nfog}$ e la deviazione standard $\sigma_{nfog}$ sono due tensori di forma $[8,366,N,F]$, una voce per ogni ora, giorno, cella e variabile, stimati sui soli anni di addestramento, raccogliendo i quindici giorni che precedono $g$ e i quindici che lo seguono. La deviazione standard misura la variabilità attorno al ciclo stagionale: ogni valore della variabile nella finestra di $\pm15$ giorni è confrontato con la media su $\pm15$ giorni del proprio giorno, non con quella di $g$, e così la variazione del ciclo stagionale dentro questa finestra non è contata come variabilità. Espresse in deviazioni standard del proprio normale, le variabili diventano confrontabili anche fra loro: la copertura nuvolosa, che con il solo min--max domina la variazione su 24 ore, ne produce circa un quindicesimo, come le altre (Sezione~\ref{sec:dati-caratteristiche}).
+con otto ore del giorno e 366 giorni dell'anno. Il valore $u_{tnf}$ è lo \emph{scarto standardizzato}: dice di quante deviazioni standard il valore della variabile si allontana dal suo normale stagionale, ed è positivo sopra il normale e negativo sotto; 0 corrisponde al normale, $+2$ a due deviazioni standard sopra. La media $\mu_{nfog}$ e la deviazione standard $\sigma_{nfog}$ sono due tensori di forma $[8,366,N,F]$, una voce per ogni ora, giorno, cella e variabile, stimati sui soli anni di addestramento, raccogliendo i quindici giorni che precedono $g$ e i quindici che lo seguono. La deviazione standard misura la variabilità attorno al ciclo stagionale: per ogni giorno della finestra di $\pm15$ giorni attorno a $g$, il valore è confrontato con il normale di quel giorno, non con quello di $g$: così il ciclo stagionale, che cambia anche dentro la finestra, non è contato come variabilità. Espresse in deviazioni standard del proprio normale, le variabili diventano confrontabili anche fra loro: la copertura nuvolosa, che con il solo min--max domina la variazione su 24 ore, ne produce circa un quindicesimo, come le altre (Sezione~\ref{sec:dati-caratteristiche}).
 
 La precipitazione richiede un passaggio in più. È nulla nella maggior parte degli istanti e assume di rado valori molto alti: media e deviazione standard dei valori originali sono determinate in larga parte da questi pochi valori. Prima della normalizzazione stagionale la precipitazione è quindi sostituita dalla sua radice quarta, che comprime i valori alti e lascia nullo ciò che è nullo; le due stime descrivono la radice e non il valore originale. A differenza del logaritmo, la radice è definita anche per i valori nulli e non richiede una costante aggiuntiva.
 % Confronto con radice quadrata e logaritmo: fatto sui dati senza modello
@@ -181,12 +181,12 @@ Un valore è detto \emph{escluso} in base a due distanze calcolate sugli scarti 
 % 5.3%). Pesi delle due distanze: quelli dello sweep attuale (variazione su 24
 % ore), indicazione dell'autore del 16 ottobre 2026.
 
-I valori esclusi entrano in modo diverso nelle quantità stimate sugli anni di validazione (Tabella~\ref{tab:valori-esclusi}). Nella storia recente che il modello legge, in due casi i valori esclusi sono sostituiti dal normale stagionale, cioè dallo scarto standardizzato nullo: è la \emph{storia ripulita}. I due casi sono la misura con cui si confrontano le configurazioni e il calcolo degli score sugli anni di validazione eseguito al termine dell'addestramento, da cui vengono il minimo e il massimo dello score combinato. Climatologia e soglia usano invece la storia non ripulita, come sugli anni di test (Sezione~\ref{sec:normalizzazione-climatologica-score}).
+I valori esclusi entrano in modo diverso nelle quantità stimate sugli anni di validazione (Tabella~\ref{tab:valori-esclusi}). Nella storia recente che il modello legge, in due casi i valori esclusi sono sostituiti dal normale stagionale, cioè dallo scarto standardizzato nullo: è la \emph{storia ripulita}. I due casi sono la misura con cui si confrontano le configurazioni e il calcolo degli score sugli anni di validazione eseguito al termine dell'addestramento, da cui vengono il minimo e il massimo dello score combinato. Climatologia e soglia usano invece la storia non ripulita, come sugli anni di test (Sezione~\ref{sec:normalizzazione-climatologica-score}): devono descrivere l'errore che il modello commette quando la storia contiene anche valori insoliti, come sugli anni di test.
 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Come entrano i valori esclusi nelle quantità stimate sugli anni di validazione: come valore da valutare e nella storia recente da cui il modello parte.}
+    \caption{Come entrano i valori esclusi nelle quantità stimate sugli anni di validazione: come valore da valutare e nella storia recente da cui il modello parte. Valori esclusi: i più insoliti degli anni di validazione, individuati con un criterio che non usa il modello; storia ripulita: la storia recente in cui i valori esclusi sono sostituiti dal normale stagionale.}
     \label{tab:valori-esclusi}
     \vspace{0.6em}
     \begin{tabular}{@{}L{0.40}L{0.33}L{0.18}@{}}
@@ -206,7 +206,7 @@ I valori esclusi entrano in modo diverso nelle quantità stimate sugli anni di v
 
 \subsection{Dropout nel generatore e nel discriminatore}
 
-Lo score è calcolato più volte con il dropout Monte Carlo~\cite{gal2016dropout}. Gli strati di dropout sono posti dopo le reti che codificano gli ingressi e prima degli strati di uscita, una forma più semplice di quella con il dropout prima di ogni strato con parametri. Il generatore riceve tre strati di dropout: sulla rappresentazione spaziale del ramo recente, sulla rappresentazione del trend e sulla loro concatenazione con la codifica temporale, prima della proiezione di uscita. Il discriminatore ne riceve altrettanti, nelle posizioni corrispondenti: sulla storia codificata, sul campo corrente codificato e sullo strato nascosto che precede l'uscita. La probabilità è 0.2 in entrambe le reti, fissata e non ottimizzata. I dropout sono attivi nell'addestramento e nel calcolo degli score. L'articolo e il codice degli autori non usano il dropout: la sua aggiunta, come la sua posizione, è una scelta di questo lavoro.
+Lo score è calcolato più volte con il dropout Monte Carlo~\cite{gal2016dropout}: il dropout resta attivo, e a ogni calcolo spegne a caso una parte dei neuroni. Gli strati di dropout sono posti dopo le reti che codificano gli ingressi e prima degli strati di uscita, una forma più semplice di quella con il dropout prima di ogni strato con parametri. Il generatore riceve tre strati di dropout: sulla rappresentazione spaziale del ramo recente, sulla rappresentazione del trend e sulla loro concatenazione con la codifica temporale, prima della proiezione di uscita. Il discriminatore ne riceve altrettanti, nelle posizioni corrispondenti: sulla storia codificata, sul campo corrente codificato e sullo strato nascosto che precede l'uscita. La probabilità è 0.2 in entrambe le reti, fissata e non ottimizzata. I dropout sono attivi nell'addestramento e nel calcolo degli score. L'articolo e il codice degli autori non usano il dropout: la sua aggiunta, come la sua posizione, è una scelta di questo lavoro.
 
 Il discriminatore riceve la ricostruzione calcolata senza dropout: nell'addestramento, sia nel proprio aggiornamento sia nel termine avversario del generatore, e nel calcolo degli score. Se ricevesse la ricostruzione con il dropout, potrebbe distinguere le ricostruzioni dai campi osservati per il rumore che il dropout vi introduce, e non per il loro contenuto. Il dropout del generatore agisce quindi sull'errore di ricostruzione del generatore, quello del discriminatore sul suo giudizio.
 
@@ -269,6 +269,25 @@ Gli score degli anni di validazione da cui sono stimate queste quantità sono ca
 
 Lo scopo è rendere confrontabili celle e stagioni in cui l'errore di ricostruzione del generatore ha una grandezza tipica diversa: senza questo passaggio, le segnalazioni si concentrerebbero dove l'errore è grande per natura. La trasformazione applica la stessa idea della normalizzazione stagionale, cioè esprimere un valore rispetto a ciò che è abituale per quella cella, quel giorno dell'anno e quell'ora, ma a un oggetto diverso. La normalizzazione stagionale agisce sui campi in ingresso, prima del modello, ed è stimata sugli anni di addestramento: toglie il ciclo stagionale e giornaliero dei dati, ma non la differenza di prevedibilità fra celle e stagioni. Dove il tempo cambia più rapidamente il generatore sbaglia di più anche sugli scarti standardizzati. La normalizzazione climatologica dello score agisce sull'errore di ricostruzione del generatore, dopo l'addestramento, è stimata sugli anni di validazione e toglie questa seconda differenza senza modificare il rilevatore.
 
+\begin{table}[!t]
+    \centering
+    \footnotesize
+    \caption{Le grandezze lette nei risultati e il significato di un loro valore alto. Tutte sono calcolate per ogni cella e ogni istante.}
+    \label{tab:ris-score}
+    \vspace{0.6em}
+    \begin{tabular}{@{}L{0.16}L{0.44}L{0.32}@{}}
+        \toprule
+        Grandezza & Che cosa misura & Se è alto \\
+        \midrule
+        G ($\bar{s}_G$) & errore di ricostruzione del generatore, medio sulla patch $3\times3$ della cella & osservazione più insolita \\
+        $G_{\mathrm{n}}$ & lo score del rilevatore (equazione~\eqref{eq:score-finale}): G rispetto a ciò che è abituale per quella cella, giorno dell'anno e ora & osservazione più insolita per quel luogo e periodo \\
+        $D_{\mathrm{oss}}$ & giudizio del discriminatore sull'osservazione, fra 0 e 1 & osservazione giudicata generata \\
+        $D_{\mathrm{ric}}$ & giudizio del discriminatore sulla ricostruzione, fra 0 e 1 & ricostruzione giudicata generata \\
+        D & $D_{\mathrm{oss}}-D_{\mathrm{ric}}$, la componente del discriminatore & osservazione più insolita \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
 \paragraph{Score finale.} Riassumendo, lo score del rilevatore, usato nei risultati, è
 \begin{equation}
 G_{\mathrm{n}}(t,n)=\frac{\bar{s}_{G,tn}-\mu^{s}_{nog}}{\sigma^{s}_{nog}},
@@ -289,21 +308,3 @@ con $\bar{s}_{G,tn}$ dell'equazione~\eqref{eq:componente-g-media}: l'errore di r
 
 Il Capitolo~\ref{chap:esperimenti} riporta i valori scelti e il protocollo con cui lo score è valutato.
 
-\begin{table}[htbp]
-    \centering
-    \footnotesize
-    \caption{Le grandezze lette nei risultati e il significato di un loro valore alto. Tutte sono calcolate per ogni cella e ogni istante.}
-    \label{tab:ris-score}
-    \vspace{0.6em}
-    \begin{tabular}{@{}L{0.16}L{0.44}L{0.32}@{}}
-        \toprule
-        Grandezza & Che cosa misura & Se è alto \\
-        \midrule
-        G ($\bar{s}_G$) & errore di ricostruzione del generatore, medio sulla patch $3\times3$ della cella & osservazione più insolita \\
-        $G_{\mathrm{n}}$ & lo score del rilevatore (equazione~\eqref{eq:score-finale}): G rispetto a ciò che è abituale per quella cella, giorno dell'anno e ora & osservazione più insolita per quel luogo e periodo \\
-        $D_{\mathrm{oss}}$ & giudizio del discriminatore sull'osservazione, fra 0 e 1 & osservazione giudicata generata \\
-        $D_{\mathrm{ric}}$ & giudizio del discriminatore sulla ricostruzione, fra 0 e 1 & ricostruzione giudicata generata \\
-        D & $D_{\mathrm{oss}}-D_{\mathrm{ric}}$, la componente del discriminatore & osservazione più insolita \\
-        \bottomrule
-    \end{tabular}
-\end{table}

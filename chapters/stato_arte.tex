@@ -138,7 +138,7 @@ Con un \emph{kernel} di lato $k$ e \emph{padding} $\lfloor k/2\rfloor$, ogni con
 
 Lo score di STGAN è un numero unico per osservazione, senza una misura della sua variabilità. Nella rassegna di Abdar et al.~\cite{abdar2021review} l'incertezza di una previsione è distinta in due tipi: quella aleatoria, propria dei dati e non riducibile, e quella epistemica, dovuta alla conoscenza limitata del modello e ai dati insufficienti. Gli autori indicano le approssimazioni bayesiane e gli insiemi di modelli come i due metodi più usati, e il riconoscimento di dati lontani da quelli di addestramento come un problema ancora aperto; è l'incertezza epistemica quella che ci si attende cresca per stati poco rappresentati nei dati, come le condizioni meteorologiche rare per un modello addestrato su anni passati. Questa sezione presenta il \emph{dropout} Monte Carlo, applicato al rilevatore, e le principali alternative.
 
-Gal e Ghahramani~\cite{gal2016dropout} interpretano l'addestramento con dropout come un'inferenza bayesiana approssimata. Mantenendo il dropout attivo in previsione e ripetendo più volte il passaggio in avanti si ottiene un insieme di uscite, la cui dispersione fornisce una stima dell'incertezza del modello con un costo aggiuntivo contenuto. L'equivalenza è ricavata per una rete con il dropout prima di ogni strato con parametri; nell'esperimento con una rete convoluzionale gli autori lo applicano, come d'uso in queste reti, soltanto prima dell'ultimo strato completamente connesso. Dati $J$ passaggi in avanti $\hat{y}_j(x)$ ottenuti con maschere di dropout diverse, la media predittiva è stimata da
+Gal e Ghahramani~\cite{gal2016dropout} interpretano l'addestramento con dropout, che a ogni passaggio spegne a caso una parte dei neuroni, come un'inferenza bayesiana approssimata. Mantenendo il dropout attivo in previsione e ripetendo più volte il passaggio in avanti si ottiene un insieme di uscite, la cui dispersione fornisce una stima dell'incertezza del modello con un costo aggiuntivo contenuto. L'equivalenza è ricavata per una rete con il dropout prima di ogni strato con parametri; nell'esperimento con una rete convoluzionale gli autori lo applicano, come d'uso in queste reti, soltanto prima dell'ultimo strato completamente connesso. Dati $J$ passaggi in avanti $\hat{y}_j(x)$ ottenuti con maschere di dropout diverse, la media predittiva è stimata da
 % Gal e Ghahramani 2016 letto il 10 novembre 2026 (Desktop/1506.02142v6.pdf): 'dropout applied before every weight layer' (Sez. 1); LeNet con 'dropout applied before the last fully connected inner-product layer (the usual way dropout is used in convnets)' (Sez. 5).
 \begin{equation}
     \mathbb{E}[y\mid x]\approx\frac{1}{J}\sum_{j=1}^{J}\hat{y}_j(x),
@@ -178,7 +178,7 @@ La Tabella~\ref{tab:confronto-rilevatore} riassume i quattro candidati considera
     \centering
     \footnotesize
     \setlength{\tabcolsep}{3pt}
-    \caption{Candidati considerati per il rilevatore e percorso della tesi a confronto.}
+    \caption{Candidati considerati per il rilevatore e percorso della tesi a confronto. $G_{\mathrm{n}}$: l'errore di ricostruzione del generatore riferito alla climatologia di ogni cella; dispersione: deviazione standard dello score fra le estrazioni del dropout; trattate come già osservate: le anomalie degli anni di addestramento restano nei dati, e il rilevatore le considera condizioni già viste.}
     \label{tab:confronto-rilevatore}
     \vspace{0.6em}
     \begin{tabular}{@{}L{0.12}L{0.16}L{0.16}L{0.14}L{0.19}L{0.13}@{}}
