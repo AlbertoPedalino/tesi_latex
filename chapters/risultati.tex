@@ -13,7 +13,7 @@
 
 Il capitolo riporta e discute i risultati del rilevatore sui campi ERA5, nella configurazione scelta dalla ricerca degli iperparametri. Senza etichette, una segnalazione indica dove lo score è alto, non che lì ci sia davvero un'anomalia meteorologica: questo vale per tutto il capitolo. Nel capitolo un valore è una coppia cella--istante; salvo dove indicato, è segnalato quando supera il 95-esimo percentile del proprio score sugli anni di validazione.
 
-La Sezione~\ref{sec:ris-ricerca} fissa la configurazione; il resto del capitolo ha due parti. Le Sezioni~\ref{sec:ris-correlazione-spaziale} e~\ref{sec:ris-climatologia} rispondono alle domande del lavoro: quale delle due componenti dello score combinato usare, G, l'errore di ricostruzione del generatore, o D, la componente del discriminatore; se abbia senso sommarle; come rendere lo score confrontabile fra luoghi e stagioni. Lo score scelto è $G_{\mathrm{n}}$, l'errore di ricostruzione del generatore con la normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}). Le Sezioni~\ref{sec:ris-eventi} e~\ref{sec:ris-confronti} confrontano $G_{\mathrm{n}}$ con otto metodi più semplici, le baseline: che cosa segnala ciascun metodo e quanto le segnalazioni coincidono valore per valore. La Sezione~\ref{sec:ris-dropout} guarda quanto le segnalazioni dipendono dalle maschere di dropout. La Sezione~\ref{sec:ris-concordate} legge ogni metodo attorno alle segnalazioni concordate, e la Sezione~\ref{sec:ris-giudici} guarda, in via preliminare, grandezze di ERA5 che nessuno score legge. L'Appendice~\ref{app:soglia} verifica i risultati al variare della soglia e riporta alcune verifiche aggiuntive.
+La Sezione~\ref{sec:ris-ricerca} fissa la configurazione; il resto del capitolo ha due parti. Le Sezioni~\ref{sec:ris-correlazione-spaziale} e~\ref{sec:ris-climatologia} rispondono alle domande del lavoro: quale delle due componenti dello score combinato usare, G, l'errore di ricostruzione del generatore, o D, la componente del discriminatore; se abbia senso sommarle; come rendere lo score confrontabile fra luoghi e stagioni. Lo score scelto è $G_{\mathrm{n}}$, l'errore di ricostruzione del generatore con la normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}). Le Sezioni~\ref{sec:ris-eventi} e~\ref{sec:ris-confronti} confrontano $G_{\mathrm{n}}$ con otto metodi più semplici, le baseline: che cosa segnala ciascun metodo e quanto le segnalazioni coincidono valore per valore. La Sezione~\ref{sec:ris-dropout} guarda quanto le segnalazioni dipendono dalle maschere di dropout. La Sezione~\ref{sec:ris-concordate} legge ogni metodo attorno alle segnalazioni concordate, e la Sezione~\ref{sec:ris-giudici} guarda, in via preliminare, grandezze di ERA5 che nessuno score legge. L'Appendice~\ref{app:soglia} verifica quanto i risultati sul riferimento concordato dipendono dalla soglia e dalla chiusura.
 
 \section{Ricerca degli iperparametri}
 \label{sec:ris-ricerca}
@@ -28,7 +28,7 @@ La ricerca della Sezione~\ref{sec:exp-configurazioni} conta 29 prove, quattro de
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_optuna_pca}
-    \caption{Le prove della ricerca degli iperparametri nel piano delle prime due componenti principali dei quattro iperparametri, colorate secondo la distanza MMD sugli anni di validazione, più scura dove è più bassa. I cerchi arancioni indicano le tre prove della regione migliore, il riquadro la direzione in cui cresce ciascun iperparametro.}
+    \caption{Le prove della ricerca degli iperparametri nel piano delle prime due componenti principali dei quattro iperparametri, colorate secondo la distanza MMD sugli anni di validazione, più scura dove è più bassa. I cerchi arancioni indicano le tre prove della regione migliore, vicine fra loro, il riquadro la direzione in cui cresce ciascun iperparametro.}
     \label{fig:ris-ricerca}
 \end{figure}
 
@@ -76,7 +76,6 @@ Lo score combinato di STGAN somma due componenti, e prima di sceglierne una conv
 
 Le due componenti sono confrontate con due correlazioni. Quella di Spearman è calcolata sui ranghi: dice se le due componenti mettono i valori nello stesso ordine, e pochi valori estremi pesano poco. Quella di Pearson è calcolata sulle componenti stesse, e dà più peso ai valori estremi. Entrambe valgono 1 se le due componenti vanno insieme, $-1$ se vanno in senso opposto, 0 se non hanno legame.
 
-\subsection{Un legame debole}
 \label{sec:ris-g-d-legame}
 
 \paragraph{Nello spazio, G e D ordinano i luoghi quasi senza legame.} La correlazione spaziale è calcolata in ogni istante sulle celle, e dice se le due componenti segnalano gli stessi luoghi nello stesso istante. Fra G e D la correlazione di Spearman vale in media $0.015$ ed è negativa nel 44\% degli istanti (Figura~\ref{fig:ris-g-d-spaziale}). Il segno segue la stagione: la media è $0.10$ da dicembre a febbraio e $-0.06$ da giugno ad agosto. Sull'insieme delle celle, quindi, le due componenti ordinano i luoghi quasi in modo indipendente, e il poco legame che c'è cambia segno con la stagione.
@@ -84,7 +83,7 @@ Le due componenti sono confrontate con due correlazioni. Quella di Spearman è c
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_g_d_correlazione_spaziale}
-    \caption{Correlazione spaziale fra G e D in ogni istante degli anni di validazione, calcolata sulle 10611 celle: media giornaliera (linea sottile) e media mobile su 30 giorni (linea spessa). Le due correlazioni restano vicine a zero; quella di Pearson è più negativa in estate.}
+    \caption{Correlazione spaziale di Spearman e di Pearson fra G e D in ogni istante degli anni di validazione, calcolata sulle 10611 celle: media giornaliera (linea sottile) e media mobile su 30 giorni (linea spessa). Le due correlazioni restano vicine a zero; quella di Pearson è più negativa in estate.}
     \label{fig:ris-g-d-spaziale}
 \end{figure}
 
@@ -138,10 +137,7 @@ Le due componenti sono confrontate con due correlazioni. Quella di Spearman è c
 % Dopo la normalizzazione climatologica: Spearman G+clim-D+clim media 0.014 nello spazio, mediana
 % -0.014 nel tempo; G-G+clim 0.906, D-D+clim 0.891 (media nello spazio).
 
-\subsection{Che cosa giudica il discriminatore}
-\label{sec:ris-g-d}
-
-Per capire da dove viene il legame negativo nei valori più alti di G, D è scomposta nei suoi due giudizi, $D_{\mathrm{reale}}$ e $D_{\mathrm{generato}}$ (Tabella~\ref{tab:ris-score}): D è alta quando il discriminatore giudica generata l'osservazione più della sua ricostruzione. Come sopra, G è senza normalizzazione climatologica, come nello score combinato; i cluster (Sezione~\ref{sec:exp-misure}) sono invece quelli di $G_{\mathrm{n}}$, cioè di G con la normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}).
+Per capire da dove viene il legame negativo nei valori più alti di G, D è scomposta nei suoi due giudizi, $D_{\mathrm{reale}}$ e $D_{\mathrm{generato}}$ (Tabella~\ref{tab:ris-score}): D è alta quando il discriminatore giudica generata l'osservazione più della sua ricostruzione. Come sopra, G è senza normalizzazione climatologica, come nello score combinato.
 
 \paragraph{Quando G sale, entrambi i giudizi scendono.} La correlazione temporale di Spearman fra G e $D_{\mathrm{reale}}$ ha mediana $-0.73$, quella fra G e $D_{\mathrm{generato}}$ ha mediana $-0.69$, ed entrambe sono negative in tutte le celle (Figura~\ref{fig:ris-d-termini-temporale}). Quando il generatore sbaglia di più, il discriminatore giudica più reali di quanto è abituale sia l'osservazione sia la sua ricostruzione.
 
@@ -164,29 +160,7 @@ Per capire da dove viene il legame negativo nei valori più alti di G, D è scom
     \end{subfigure}
 \end{figure}
 
-\paragraph{I due giudizi si compensano.} Poiché scendono insieme, i due giudizi sono legati fra loro, con una correlazione di Spearman mediana di $0.73$. D è la loro differenza, e di questo movimento comune conserva solo una piccola parte: per questo il suo legame con G è debole. Nei valori più alti di G, però, $D_{\mathrm{reale}}$ scende un po' più di $D_{\mathrm{generato}}$, e D scende: è il legame negativo che la correlazione di Pearson mette in luce nella Sezione~\ref{sec:ris-correlazione-spaziale}. In media, su 240 istanti degli anni di validazione e senza dropout, il discriminatore dà 0.50 sia all'osservazione sia alla ricostruzione (Appendice~\ref{app:discriminatore}): la differenza fra le due sta nelle singole celle, non nella media.
-
-\paragraph{Cluster di segnalazioni.} Le correlazioni riguardano tutti i valori. Per vedere che cosa fa il discriminatore proprio dove $G_{\mathrm{n}}$ segnala, gli score sono letti attorno ai cluster di segnalazioni di $G_{\mathrm{n}}$ (Sezione~\ref{sec:exp-misure}), lo score con cui il rilevatore segnala (Sezione~\ref{sec:score-dropout-montecarlo}); G e $G_{\mathrm{n}}$ ordinano i valori quasi allo stesso modo (Sezione~\ref{sec:ris-g-d-legame}). Sugli anni di validazione risultano 184877 cluster, con 7.7 milioni di valori in tutto, in media circa 42 valori per cluster.
-
-\paragraph{Le zone.} Attorno ai cluster di $G_{\mathrm{n}}$ le celle sono divise in nucleo, contorno e zona lontana, e in ogni zona ciascuno score è riassunto dal suo percentile mediano sugli anni di validazione (Sezione~\ref{sec:exp-misure}, Figura~\ref{fig:ris-zone-schema}). Nucleo e contorno sono definiti dalle sole segnalazioni di $G_{\mathrm{n}}$.
-
-\paragraph{Dove $G_{\mathrm{n}}$ segnala, il discriminatore giudica reali l'osservazione e la ricostruzione.} La Figura~\ref{fig:ris-d-termini-zone} riporta il risultato. Come riferimento sono mostrati $G_{\mathrm{n}}$, lo score che definisce il nucleo, e G senza normalizzazione climatologica, molto legato a $G_{\mathrm{n}}$ (Sezione~\ref{sec:ris-g-d-legame}) e quindi anch'esso alto nel nucleo quasi per costruzione; nel contorno entrambi sono alti in parte perché G di una cella è la media dell'errore sulla sua patch $3\times3$, che contiene celle del nucleo.
-
-$D_{\mathrm{reale}}$ e $D_{\mathrm{generato}}$ fanno il contrario, e questo non dipende dalla definizione delle zone, che usano solo $G_{\mathrm{n}}$. Nel nucleo $D_{\mathrm{reale}}$ ha un percentile mediano di 5 e $D_{\mathrm{generato}}$ di 6: nei valori segnalati da $G_{\mathrm{n}}$ sia l'osservazione sia la ricostruzione sono giudicate più reali di quanto è abituale, anche se di poco in valore assoluto. Nel contorno restano bassi, con 12 e 15, anche perché il discriminatore legge la stessa patch; lontano dai cluster salgono a 58 e 57. In D i due effetti in parte si compensano, e nel nucleo il percentile mediano è 27.
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=\textwidth]{era5_d_termini_zone}
-    \caption{Percentile mediano di $G_{\mathrm{n}}$, G, $D_{\mathrm{reale}}$, $D_{\mathrm{generato}}$ e D nel nucleo dei cluster di $G_{\mathrm{n}}$, nel contorno e nella zona lontana, sugli anni di validazione; il tratteggio indica 50, il valore tipico. Nel nucleo il discriminatore giudica reali sia l'osservazione sia la ricostruzione.}
-% G_n nelle zone (comportamento_optuna27/zone_g_dterms_5pc.csv, colonne G+clim, 12 novembre 2026): 97|91|40, G 97|89|40.
-    \label{fig:ris-d-termini-zone}
-\end{figure}
-
-\paragraph{Nel nucleo D segnala un valore su quattro.} Pur con un percentile mediano di 27, nel nucleo il 25.0\% dei valori supera la soglia di D, contro il 2.9\% della zona lontana: D segnala nel nucleo circa otto volte più che lontano dai cluster, ma solo in un valore su quattro; negli altri tre resta sotto la soglia. Il giudizio sull'osservazione va invece nel senso opposto: solo lo 0.5\% dei valori del nucleo supera la soglia di $D_{\mathrm{reale}}$, contro il 6.1\% lontano dai cluster. Anche fra i valori segnalati da $G_{\mathrm{n}}$ il legame è lo stesso: divisi in tre gruppi con lo stesso numero di valori secondo $D_{\mathrm{reale}}$, quello con $D_{\mathrm{reale}}$ più basso, cioè con l'osservazione giudicata più reale, è quello con $G_{\mathrm{n}}$ più alto. In quel gruppo $G_{\mathrm{n}}$, che è in deviazioni standard di G per quella cella, giorno dell'anno e ora, ha mediana 7.0, circa il doppio della soglia (3.4); negli altri due 4.8 e 4.4. Con una soglia più alta il comportamento è lo stesso e più marcato (Appendice~\ref{app:soglia-principali}).
-% Soglia di G con la normalizzazione climatologica: 3.370, il 95-esimo percentile sugli anni di validazione, la stessa usata in
-% tutto il capitolo (giorni_eclatanti/regola.json, chiave "threshold" = 3.370309829711914).
-
-\paragraph{Non è la levigatezza delle ricostruzioni.} I modelli addestrati con un errore quadratico tendono a produrre campi troppo regolari (Sezione~\ref{sec:rw-meteo}), e il discriminatore potrebbe riconoscere le ricostruzioni dal loro aspetto più liscio. Non è così: la rugosità delle ricostruzioni (Sezione~\ref{sec:exp-misure}) è in mediana 1.10 volte quella osservata. Le celle più rugose sono invece giudicate più reali e tendono ad avere G alto, una lettura di correlazioni descritta nell'Appendice~\ref{app:discriminatore} insieme a un esempio su una mappa.
+\paragraph{I due giudizi si compensano.} Poiché scendono insieme, i due giudizi sono legati fra loro, con una correlazione di Spearman mediana di $0.73$. D è la loro differenza, e di questo movimento comune conserva solo una piccola parte: per questo il suo legame con G è debole. Nei valori più alti di G, però, $D_{\mathrm{reale}}$ scende un po' più di $D_{\mathrm{generato}}$, e D scende: è il legame negativo che la correlazione di Pearson mette in luce più sopra. Da D, quindi, non si capisce che cosa il rilevatore segnali: dove il generatore sbaglia di più, il discriminatore giudica l'osservazione più reale, non meno.
 
 % Numeri (5 novembre 2026, validazione, outputs/comportamento_optuna27): correlazioni dei
 % termini in correlazioni_g_dterms (temporal_correlation.npz, mediane nelle celle; nei
@@ -194,42 +168,9 @@ $D_{\mathrm{reale}}$ e $D_{\mathrm{generato}}$ fanno il contrario, e questo non 
 % negative in tutte le celle; G-D(reale) Spearman -0.732, Pearson -0.767, negative in
 % tutte; D(reale)-D(generato) Spearman 0.733, positiva in tutte; G-D Pearson -0.246.
 % Spaziali (media sugli istanti): G-D(reale) Spearman -0.696, G-D(generato) -0.684.
-% Zone: zone_g_dterms_5pc.csv e _1pc.csv, eventi di generator_clim, soglie della
-% validazione stessa; nucleo|contorno|lontano: G 97|89|40, D(reale) 5|12|58, D(generato)
-% 6|15|57, D 27|39|51; D(reale) sopra la propria soglia nello 0.45% del nucleo contro il
-% 6.13% lontano. D oltre la propria soglia, nucleo|contorno|lontano: 25.01|14.23|2.88%
-% (sul test 24.26|13.79|2.81%). Per dimensione (1, 2-4, 5-19, 20-99, 100-999, 1000-9999,
-% >9999 valori) D(reale) nel nucleo 15, 14, 12, 8, 6, 5, 3. Per tipo (percentile di
-% D(reale) nel nucleo, da una dimensione all'altra; zone_g_dterms_5pc_types.csv): copertura
-% nuvolosa 1-21, velocità verticale 5-12, radiazione 1-5, strato limite 3-10; pressione 3-24,
-% umidità del suolo 4-19, velocità di attrito 3-13, umidità specifica 6-26.
-% Precipitazione e velocità verticale: 60% dei valori del nucleo (30.9% e 28.8%).
-% Gruppi più piccoli: un evento (vento a 10 m, componente u, 1000-9999 valori; vento in
-% quota, componente v, >9999 valori). All'1%: 70954 eventi, 1.5 milioni di valori nel
-% nucleo; G 99|97|47, D(reale) 1|4|53, D(generato) 2|6|52, D 2|12|51; D(reale) sopra la
-% propria soglia all'1% nello 0.21% del nucleo contro l'1.05% lontano; D nel 12.5% del
-% nucleo contro lo 0.69% lontano.
-% Terzi dei valori segnalati da G (validazione, scripts/check_era5_discriminator_confidence.py,
-% soglia al 5%, per D(reale) crescente; outputs/finale_optuna27/logs/fiducia_d_val.log, 5
-% novembre 2026): 7728944 valori, mediana di G+clim 6.984, 4.842, 4.391; mediana di D(reale)
-% 0.379, 0.458, 0.491.
-% Test (outputs/finale_optuna27, run outputs/stgan_optuna27_scored, eventi di
-% outputs/optuna27/test_generator_clim_day, soglie della validazione): correlazioni dei
-% termini in correlazioni_g_dterms (nei file D(generato) si chiama Dricostruito),
-% mediane nelle celle: G-D(generato) Spearman -0.685, negativa in tutte le celle;
-% G-D(reale) Spearman -0.733, Pearson -0.750, negative in tutte; D(reale)-D(generato)
-% Spearman 0.732. Zone (zone_g_dterms_5pc.csv): 794206 eventi, 36.1 milioni di valori nel
-% nucleo; G 97|88|39, D(reale) 5|13|59, D(generato) 6|16|58, D 23|37|52; D(reale) sopra la
-% propria soglia nello 0.52% del nucleo contro il 6.22% lontano. Per dimensione D(reale)
-% nel nucleo 16, 15, 13, 8, 6, 5, 4. Per tipo: copertura nuvolosa 1-22, velocità
-% verticale 5-13, radiazione 1-5, strato limite 4-10; pressione 5-27, umidità del suolo
-% 4-19, velocità di attrito 7-14, umidità specifica 2-25. Precipitazione e velocità
-% verticale: 61% dei valori del nucleo. Soglia al 99-esimo percentile
-% (zone_g_dterms_1pc.csv): 317892 eventi, 7.4 milioni di valori nel nucleo; G 99|97|46,
-% D(reale) 1|4|53, D(generato) 2|6|52, D 2|11|51; D(reale) sopra la propria soglia all'1%
-% nello 0.22% del nucleo contro l'1.04% lontano.
+% Test (outputs/finale_optuna27/correlazioni_g_dterms, run outputs/stgan_optuna27_scored), mediane nelle celle:
+% G-D(generato) Spearman -0.685; G-D(reale) Spearman -0.733, Pearson -0.750; D(reale)-D(generato) Spearman 0.732.
 
-\subsection{Sommare le due componenti}
 \label{sec:ris-combinato}
 
 Senza etichette, il disaccordo fra G e D non dice da solo quale delle due componenti abbia ragione; resta da vedere che cosa succede sommandole.
@@ -250,7 +191,7 @@ Senza etichette, il disaccordo fra G e D non dice da solo quale delle due compon
 
 Il valore di G dipende anche da dove e quando è calcolato: dove G è grande per natura, G segnala di più. La normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}) toglie questa differenza, esprimendo ogni score rispetto a ciò che è abituale per la stessa cella, lo stesso giorno dell'anno e la stessa ora; G così normalizzato è indicato con $G_{\mathrm{n}}$ (Tabella~\ref{tab:ris-score}). Questa sezione verifica dove cadono le segnalazioni con e senza la normalizzazione climatologica, ripete sugli anni di test le misure di questa sezione e della Sezione~\ref{sec:ris-correlazione-spaziale}, e fissa lo score del rilevatore.
 
-\paragraph{Con la normalizzazione climatologica le segnalazioni diventano quasi uniformi.} La normalizzazione climatologica non cambia il legame fra G e D (Sezione~\ref{sec:ris-g-d-legame}), ma cambia dove cadono le segnalazioni (Figura~\ref{fig:ris-g-luogo}). Con la soglia al 95-esimo percentile, sugli anni di validazione ciascuno score segnala il 5\% dei valori. Senza normalizzazione climatologica G segnala soprattutto a sud e in estate, dove il suo errore è alto per natura: la percentuale va dall'1.6\% fra 50$^\circ$ e 60$^\circ$N in dicembre all'11.1\% fra 20$^\circ$ e 30$^\circ$N in agosto. Con $G_{\mathrm{n}}$ resta fra il 3.7\% e il 6.3\% in ogni fascia e in ogni mese. È l'effetto atteso dalla Sezione~\ref{sec:normalizzazione-climatologica-score}: la normalizzazione climatologica toglie la differenza di prevedibilità fra luoghi e stagioni. Lo si misura con la differenza relativa fra fasce di latitudine e mesi (Sezione~\ref{sec:exp-misure}): da G a $G_{\mathrm{n}}$ scende da 0.39 a 0.11, cioè di circa tre quarti; con la soglia al 99-esimo percentile, che segnala l'1\% dei valori, da 0.70 a 0.28, circa tre quinti (Appendice~\ref{app:soglia-principali}).
+\paragraph{Con la normalizzazione climatologica le segnalazioni diventano quasi uniformi.} La normalizzazione climatologica non cambia il legame fra G e D (Sezione~\ref{sec:ris-g-d-legame}), ma cambia dove cadono le segnalazioni (Figura~\ref{fig:ris-g-luogo}). Con la soglia al 95-esimo percentile, sugli anni di validazione ciascuno score segnala il 5\% dei valori. Senza normalizzazione climatologica G segnala soprattutto a sud e in estate, dove il suo errore è alto per natura: la percentuale va dall'1.6\% fra 50$^\circ$ e 60$^\circ$N in dicembre all'11.1\% fra 20$^\circ$ e 30$^\circ$N in agosto. Con $G_{\mathrm{n}}$ resta fra il 3.7\% e il 6.3\% in ogni fascia e in ogni mese. È l'effetto atteso dalla Sezione~\ref{sec:normalizzazione-climatologica-score}: la normalizzazione climatologica toglie la differenza di prevedibilità fra luoghi e stagioni. Lo si misura con la differenza relativa fra fasce di latitudine e mesi (Sezione~\ref{sec:exp-misure}): da G a $G_{\mathrm{n}}$ scende da 0.39 a 0.11, cioè di circa tre quarti; con la soglia al 99-esimo percentile, che segnala l'1\% dei valori, da 0.70 a 0.28, circa tre quinti. Con questa soglia resta un eccesso di segnalazioni a sud: la percentuale media è l'1.4\% fra 20$^\circ$ e 30$^\circ$N e lo 0.7\% fra 50$^\circ$ e 60$^\circ$N, contro l'1\% atteso.
 
 \begin{figure}[htbp]
     \centering
@@ -286,7 +227,7 @@ Il valore di G dipende anche da dove e quando è calcolato: dove G è grande per
 
 \paragraph{Lo score del rilevatore è $G_{\mathrm{n}}$.} La scelta poggia sul significato delle due componenti. G ha un significato chiaro: misura quanto un campo si allontana da ciò che il modello si aspetta. D dipende anche dal giudizio sulla ricostruzione, e il suo comportamento si spiega solo in parte. Sommarle, come nello score combinato, darebbe di fatto D (Sezione~\ref{sec:ris-combinato}). Il rilevatore usa quindi $G_{\mathrm{n}}$ (Sezione~\ref{sec:normalizzazione-climatologica-score}), che distribuisce le segnalazioni in modo quasi uniforme fra luoghi e stagioni (Figura~\ref{fig:ris-g-luogo}).
 
-\paragraph{Sugli anni di test i risultati sono gli stessi.} Le stesse analisi, ripetute sugli anni di test 2005--2025 con la climatologia e le soglie stimate sugli anni di validazione, danno gli stessi risultati (Tabella~\ref{tab:ris-conferma-test}): le correlazioni cambiano di al più tre centesimi, i percentili mediani di al più 4 su 100. Sugli anni di test $G_{\mathrm{n}}$ segnala il 5.5\% dei valori, un po' più del 5\%, probabilmente perché negli anni di test l'errore di ricostruzione del generatore è in media un po' più alto; per lo stesso motivo le percentuali per luogo arrivano al 7.8\%.
+\paragraph{Sugli anni di test i risultati sono gli stessi.} Le stesse analisi, ripetute sugli anni di test 2005--2025 con la climatologia e le soglie stimate sugli anni di validazione, danno gli stessi risultati (Tabella~\ref{tab:ris-conferma-test}): le correlazioni cambiano di al più tre centesimi. Sugli anni di test $G_{\mathrm{n}}$ segnala il 5.5\% dei valori, un po' più del 5\%, probabilmente perché negli anni di test l'errore di ricostruzione del generatore è in media un po' più alto; per lo stesso motivo le percentuali per luogo arrivano al 7.8\%.
 
 \begin{table}[htbp]
     \centering
@@ -303,28 +244,15 @@ Il valore di G dipende anche da dove e quando è calcolato: dove G è grande per
         Correlazione temporale di Spearman fra G e $D_{\mathrm{generato}}$, mediana & $-0.69$ & $-0.69$ \\
         Correlazione temporale di Spearman fra G e $D_{\mathrm{reale}}$, mediana (di Pearson) & $-0.73$ ($-0.77$) & $-0.73$ ($-0.75$) \\
         \addlinespace
-        Cluster di $G_{\mathrm{n}}$ & 184877 & 794206 \\
-        Percentile mediano nel nucleo: $D_{\mathrm{reale}}$, $D_{\mathrm{generato}}$, D & 5, 6, 27 & 5, 6, 23 \\
-        $D_{\mathrm{reale}}$ sopra la propria soglia: nucleo, zona lontana & 0.5\%, 6.1\% & 0.5\%, 6.2\% \\
-        \addlinespace
         Percentuale per fascia di latitudine e mese di $G_{\mathrm{n}}$ & 3.7--6.3\% & 3.6--7.8\% \\
         Differenza relativa di $G_{\mathrm{n}}$ fra fasce di latitudine e mesi & 0.11 & 0.11 \\
-        Rugosità della ricostruzione divisa per quella dell'osservazione, mediana & 1.10 & 1.08 \\
         \bottomrule
     \end{tabular}
 \end{table}
-% Fonti della tabella (5 novembre 2026). Validazione: outputs/comportamento_optuna27/zone_g_dterms_5pc.csv
-% (184877 eventi; nucleo D(reale) 5, D(generato) 6, D 27; D(reale) oltre la propria soglia nello 0.45% del
-% nucleo e nel 6.13% della zona lontana); correlazioni_g_d e correlazioni_g_dterms (temporal_correlation.npz,
-% mediane nelle celle: G-D Spearman -0.050, G-D(generato) -0.689, G-D(reale) -0.732, Pearson -0.767);
-% levigatezza_d.csv della validazione, mediana dei rapporti fra rugosità ricostruita e osservata 1.101
-% (rapporto delle mediane 1.086). Test: outputs/finale_optuna27/zone_g_dterms_5pc.csv,
-% check_era5_event_zones.py con gli eventi di outputs/optuna27/test_generator_clim_day e gli score di
-% outputs/stgan_optuna27_scored, soglie della validazione (794206 eventi; nucleo 5, 6, 23; D(reale) oltre la
-% propria soglia nello 0.52% del nucleo e nel 6.22% della zona lontana); correlazioni in
-% outputs/finale_optuna27/correlazioni_g_d e correlazioni_g_dterms (Spearman spaziale media -0.001; mediane
-% nelle celle G-D -0.066, G-D(generato) -0.685, G-D(reale) -0.733, Pearson -0.750);
-% outputs/finale_optuna27/levigatezza_d.csv, mediana dei rapporti 1.077 (rapporto delle mediane 1.086).
+% Fonti della tabella (5 novembre 2026). Validazione: outputs/comportamento_optuna27/correlazioni_g_d e
+% correlazioni_g_dterms (temporal_correlation.npz, mediane nelle celle: G-D Spearman -0.050, G-D(generato) -0.689,
+% G-D(reale) -0.732, Pearson -0.767). Test: outputs/finale_optuna27/correlazioni_g_d e correlazioni_g_dterms (Spearman
+% spaziale media -0.001; mediane nelle celle G-D -0.066, G-D(generato) -0.685, G-D(reale) -0.733, Pearson -0.750).
 % Differenza relativa di G+clim (14 novembre 2026, ricalcolata dai log delle 48 caselle con la formula della 5.3.1, che
 % riproduce 0.107 e 0.281 della validazione): test 0.112 al 5% (risultati_optuna27/outputs/finale_optuna27/logs/
 % luogo_g_clim_5pc.log, media 5.56%), 0.370 all'1% (luogo_g_clim_1pc.log). G senza normalizzazione sul test: log non
@@ -334,18 +262,18 @@ Il valore di G dipende anche da dove e quando è calcolato: dove G è grande per
 \section{Che cosa segnala $G_{\mathrm{n}}$}
 \label{sec:ris-eventi}
 
-Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi i cluster, quali variabili vi si allontanano di più dal normale e come cala $G_{\mathrm{n}}$ attorno a ciò che segnala. Le segnalazioni sono raggruppate in cluster come nella Sezione~\ref{sec:ris-g-d}: sugli anni di test se ne contano 794206, con 36.1 milioni di valori. Per confronto, le stesse misure sono ripetute sui cluster che ciascuna delle otto baseline della Sezione~\ref{sec:exp-baseline} forma con le proprie segnalazioni, anch'esse al 5\% con la soglia stimata sugli anni di validazione. Le baseline leggono una cella alla volta, senza le celle vicine, e non dipendono dal modello addestrato.
+Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi i cluster, quali variabili vi si allontanano di più dal normale e quanto sono estremi i valori segnalati. Le segnalazioni sono raggruppate in cluster (Sezione~\ref{sec:exp-misure}): sugli anni di test se ne contano 794206, con 36.1 milioni di valori. Per confronto, le stesse misure sono ripetute sui cluster che ciascuna delle otto baseline della Sezione~\ref{sec:exp-baseline} forma con le proprie segnalazioni, anch'esse al 5\% con la soglia stimata sugli anni di validazione. Le baseline leggono una cella alla volta, senza le celle vicine, e non dipendono dal modello addestrato.
 
 \paragraph{Pochi cluster enormi contengono la maggior parte dei valori.} In ogni metodo quasi tutti i cluster hanno meno di 20 valori, ma la maggior parte dei valori segnalati sta nei pochi cluster con almeno 1000 valori: in $G_{\mathrm{n}}$ circa tre quarti, nelle baseline fra il 60\% e l'86\% (Figura~\ref{fig:ris-eventi-dimensione}). $G_{\mathrm{n}}$ ha meno cluster piccoli di ogni baseline: le sue segnalazioni sono più raggruppate, in parte perché lo score di una cella è mediato sulla sua patch $3\times3$.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_eventi_dimensione}
-    \caption{I cluster di ogni metodo, formati dalle sue segnalazioni con la soglia al 95-esimo percentile, sugli anni di test, per dimensione, cioè per numero di valori: piccoli (meno di 20), medi (da 20 a 999) ed enormi (1000 o più). A sinistra la percentuale dei cluster, a destra quella dei valori segnalati. In ogni metodo pochi cluster enormi contengono la maggior parte dei valori.}
+    \caption{I cluster di ogni metodo sugli anni di test per numero di valori: piccoli (meno di 20), medi (20--999) ed enormi (1000 o più); a sinistra la percentuale dei cluster, a destra quella dei valori segnalati. In ogni metodo pochi cluster enormi contengono la maggior parte dei valori.}
     \label{fig:ris-eventi-dimensione}
 \end{figure}
 
-\paragraph{Il tipo di cluster.} Divisi per tipo (Sezione~\ref{sec:exp-misure}), i cluster di velocità verticale e di precipitazione raccolgono da soli il 61\% dei valori segnalati di $G_{\mathrm{n}}$; segue, molto distante, la copertura nuvolosa, con il 7\% (Figura~\ref{fig:ris-eventi-tipo}). Il tipo principale dipende dal metodo. La variazione in tre ore ha quasi gli stessi tipi di $G_{\mathrm{n}}$, con velocità verticale e precipitazione al 65\% dei valori e la copertura nuvolosa al terzo posto. Anche MCD raccoglie in queste due variabili il 68\% dei valori, ma con la precipitazione al primo posto (43\%) e l'umidità del suolo al terzo. Negli altri metodi il tipo principale cambia: nella distanza dal normale e in CBLOF è l'umidità del suolo, che cambia lentamente e forma cluster lunghi; in COPOD e HBOS è la velocità d'attrito; in PCA e Isolation Forest i valori sono divisi fra più tipi.
+\paragraph{Il tipo di cluster.} Divisi per tipo (Sezione~\ref{sec:exp-misure}), i cluster di velocità verticale e di precipitazione raccolgono da soli il 61\% dei valori segnalati di $G_{\mathrm{n}}$; segue, molto distante, la copertura nuvolosa, con il 7\% (Figura~\ref{fig:ris-eventi-tipo}). Il tipo principale dipende dal metodo. La variazione in tre ore ha quasi gli stessi tipi di $G_{\mathrm{n}}$, con velocità verticale e precipitazione al 65\% dei valori e la copertura nuvolosa al terzo posto. Anche MCD raccoglie in queste due variabili il 68\% dei valori, ma con la precipitazione al primo posto (43\%) e l'umidità del suolo al terzo. Negli altri metodi il tipo principale cambia: nella distanza dal normale e in CBLOF è l'umidità del suolo, che cambia lentamente e forma cluster lunghi; in COPOD e HBOS è la velocità d'attrito; in PCA e Isolation Forest i valori sono divisi fra più tipi. La regola del tipo, quindi, non porta tutti i metodi verso le stesse variabili.
 
 \begin{figure}[htbp]
     \centering
@@ -354,38 +282,12 @@ Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi i clus
     \label{fig:ris-eventi-tipo}
 \end{figure}
 
-\paragraph{I cluster più grandi sono catene.} Quando è segnalato il 5\% dei valori, segnalazioni dovute ad anomalie meteorologiche diverse possono toccarsi e unirsi in un solo cluster; i più grandi durano settimane: il più grande di precipitazione dura 40 giorni, quello di velocità verticale 23, e in quasi tutti i loro istanti contano centinaia di celle, con una mediana rispettivamente di 472 e 723. Un cluster così lungo difficilmente corrisponde a un'unica anomalia: è piuttosto una catena, cioè una successione di gruppi di segnalazioni, ciascuno a contatto con il seguente, e la sua dimensione dice quanto si estende la catena. Le catene non sono una particolarità di $G_{\mathrm{n}}$: si formano in tutti i metodi (Figura~\ref{fig:ris-eventi-dimensione}). Le catene dipendono poco dal collegamento nello spazio e molto da quello nel tempo: senza le diagonali la percentuale dei valori nei cluster con almeno 1000 valori resta al 74\%; se invece due istanti consecutivi si collegano solo quando le celle in comune sono almeno la metà di quelle dell'istante con meno celle, la percentuale scende al 57\%, e senza alcun collegamento nel tempo sarebbe l'1\%. Vengono quindi soprattutto dalla persistenza nel tempo delle aree segnalate, e in parte dalla percentuale segnalata: con la soglia più alta si accorciano (Appendice~\ref{app:soglia-principali}).
+\paragraph{I cluster più grandi sono catene.} Quando è segnalato il 5\% dei valori, segnalazioni dovute ad anomalie meteorologiche diverse possono toccarsi e unirsi in un solo cluster; i più grandi durano settimane: il più grande di precipitazione dura 40 giorni, quello di velocità verticale 23, e in quasi tutti i loro istanti contano centinaia di celle, con una mediana rispettivamente di 472 e 723. Un cluster così lungo difficilmente corrisponde a un'unica anomalia: è piuttosto una catena, cioè una successione di gruppi di segnalazioni, ciascuno a contatto con il seguente, e la sua dimensione dice quanto si estende la catena. Le catene non sono una particolarità di $G_{\mathrm{n}}$: si formano in tutti i metodi (Figura~\ref{fig:ris-eventi-dimensione}). Le catene dipendono poco dal collegamento nello spazio e molto da quello nel tempo: senza le diagonali la percentuale dei valori nei cluster con almeno 1000 valori resta al 74\%; se invece due istanti consecutivi si collegano solo quando le celle in comune sono almeno la metà di quelle dell'istante con meno celle, la percentuale scende al 57\%, e senza alcun collegamento nel tempo sarebbe l'1\%. Vengono quindi soprattutto dalla persistenza nel tempo delle aree segnalate, e in parte dalla percentuale segnalata: con la soglia al 99-esimo percentile si accorciano, e i cluster più grandi dei tre tipi con più valori durano fra 8 e 24 giorni, contro 23--40 con il 5\%; i cluster con almeno 20 valori contengono l'85\% dei valori segnalati, contro il 93\%.
 % Regole di contatto: scripts/check_era5_cluster_rules.py (commit b7a26698), outputs/optuna27/regole_cluster.csv, anni di test, 5%: quota nei cluster >= 1000 valori 75.5 (regola della tesi), 73.9 (4 vicine), 69.3 (sovrapposizione >= 25%), 56.6 (>= 50%), 1.1 (nessun collegamento nel tempo).
 
-\paragraph{$G_{\mathrm{n}}$ cala in modo graduale.} Resta da vedere come $G_{\mathrm{n}}$ cala dal nucleo verso l'esterno. La Figura~\ref{fig:ris-eventi-profilo} riassume tutti gli anni di test nel profilo di ogni score (Sezione~\ref{sec:exp-misure}), dove 50 è un valore tipico. Che le celle segnalate stiano sopra la soglia e le altre sotto è vero per costruzione; il risultato è la forma della curva. A una cella dentro il bordo $G_{\mathrm{n}}$ vale 96, a una cella fuori 90, due celle fuori 79, tre celle fuori 68, e torna a un valore tipico dopo circa sei celle, cioè tre gradi, circa 300~km. Oltre scende ancora, perché lontano dai cluster restano soprattutto i valori bassi. $G_{\mathrm{n}}$ distingue quindi nucleo, contorno e zona lontana in modo graduale, senza un confine proprio: la soglia taglia una curva continua. Le baseline, ciascuna sui propri cluster, hanno la stessa forma, ma quasi tutte calano più in fretta: a due celle fuori $G_{\mathrm{n}}$ vale 79 e le baseline fra 64 (variazione in tre ore) e 77 (Isolation Forest); solo COPOD, con 82, cala ancora più lentamente di $G_{\mathrm{n}}$. A sei celle tutti i metodi sono fra 41 e 56. Per $G_{\mathrm{n}}$ parte della gradualità vicino al bordo dipende dalla patch $3\times3$ su cui lo score è mediato, che le baseline, lette cella per cella, non hanno. Il nucleo, inoltre, è sottile: il 67\% dei valori segnalati sta sul bordo del cluster, a una sola cella dall'esterno.
+\paragraph{Insolito, ma non sempre estremo.} Dei valori segnalati da $G_{\mathrm{n}}$ solo il 41\% supera la soglia della distanza dal normale. Il restante 59\% è sotto quella soglia: $G_{\mathrm{n}}$ segnala anche valori che, presi uno per uno, non sono fra i più lontani dal clima. In parte è atteso, perché i due score misurano cose diverse. Anche la dimensione conta: il percentile mediano della distanza dal normale nei valori segnalati va da 79--80 nei cluster con meno di 20 valori a 95 in quelli con almeno 10000, quindi i cluster piccoli sono i meno estremi.
 
-\begin{figure}[htbp]
-    \centering
-    \phantomcaption
-    \label{fig:ris-eventi-profilo}
-    \begin{subfigure}[t]{0.480\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{era5_eventi_profilo_a}
-        \caption[Percentile mediano dello score secondo la distanza in celle dal bordo del cluster più vicino, per ogni metodo sui propri cluster, sugli anni di test; la fascia grigia va dal più basso al più alto dei sei modelli shallow.]{Percentile mediano dello score secondo la distanza in celle dal bordo del cluster più vicino, per ogni metodo sui propri cluster, sugli anni di test; la fascia grigia va dal più basso al più alto dei sei modelli shallow. $G_{\mathrm{n}}$ cala più lentamente di quasi tutte le baseline.}
-        \label{fig:ris-eventi-profilo-a}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[t]{0.480\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{era5_eventi_profilo_b}
-        \caption[Percentile mediano dello score secondo la distanza in celle dal bordo del cluster più vicino, per tutti i metodi sui cluster di $G_{\mathrm{n}}$, sugli anni di test; la fascia grigia va dal più basso al più alto dei sei modelli shallow.]{Percentile mediano dello score secondo la distanza in celle dal bordo del cluster più vicino, per tutti i metodi sui cluster di $G_{\mathrm{n}}$, sugli anni di test; la fascia grigia va dal più basso al più alto dei sei modelli shallow. Tutte le baseline calano allo stesso modo di $G_{\mathrm{n}}$.}
-        \label{fig:ris-eventi-profilo-b}
-    \end{subfigure}
-\end{figure}
-
-\paragraph{Anche le baseline seguono il profilo di $G_{\mathrm{n}}$.} Letti sui cluster di $G_{\mathrm{n}}$ invece che sui propri, gli score delle baseline non giudicano $G_{\mathrm{n}}$: dicono quanto erano insoliti, per ciascun metodo, i dati dove $G_{\mathrm{n}}$ segnala. È la Figura~\ref{fig:ris-eventi-profilo-b}; nella Figura~\ref{fig:ris-eventi-profilo-a} ogni metodo segue invece i propri cluster. Sui cluster di $G_{\mathrm{n}}$ tutte le baseline hanno lo stesso andamento di $G_{\mathrm{n}}$: valgono 99--100 nelle celle più interne, fra 89 e 93 una cella dentro il bordo, fra 79 e 84 una cella fuori ($G_{\mathrm{n}}$: 96 e 90) e fra 49 e 53 dopo sei celle. La distanza dal normale è fra le più basse e continua a salire anche dentro il nucleo, da 89 a 96 in una sola cella: la sua soglia non coincide con il bordo, quindi la salita non è un effetto della soglia. Che le grandezze salgano insieme mostra che le segnalazioni non cadono a caso, non che siano giuste.
-% Profilo di tutti gli score sui cluster di G+clim: scripts/check_era5_event_profile.py, 11 novembre 2026, outputs/optuna27/profilo_5pc_tutti.csv e outputs/optuna27_profilo_tutti.log (anni di test, 5%), copiato in figures/dati/era5_eventi_profilo_tutti.csv: una cella dentro 89-93, una fuori 79-84, due fuori 69-75, sei fuori 49-53 (baseline); G+clim 96, 90, 79, 50.
-
-\paragraph{Insolito, ma non sempre estremo.} Nel nucleo solo il 41\% dei valori supera la soglia della distanza dal normale, contro il 16\% nel contorno e il 2\% nella zona lontana. Il restante 59\% è sotto quella soglia: $G_{\mathrm{n}}$ segnala anche valori che, presi uno per uno, non sono fra i più lontani dal clima. In parte è atteso, perché i due score misurano cose diverse. Anche la dimensione conta: il percentile mediano della distanza dal normale nel nucleo va da 79--80 nei cluster con meno di 20 valori a 95 in quelli con almeno 10000, quindi i cluster piccoli sono i meno estremi.
-
-\paragraph{Per tipo di cluster il profilo cambia poco.} Vicino al bordo $G_{\mathrm{n}}$ è quasi uguale per tutti i tipi, e a due celle fuori dal bordo dei propri cluster il suo percentile mediano varia fra i tipi meno di quello della maggior parte delle baseline; cambia invece da tipo a tipo quanto la variabile del tipo resta lontana dal normale fuori dal nucleo (Appendice~\ref{app:profilo-tipi}).
-
-\paragraph{Sintesi.} In tutti i metodi la maggior parte dei valori segnalati sta in pochi cluster enormi, quelli di $G_{\mathrm{n}}$ per lo più di velocità verticale o precipitazione; i tipi di $G_{\mathrm{n}}$ somigliano a quelli della variazione in tre ore e, in parte, di MCD. $G_{\mathrm{n}}$ cala gradualmente attorno a ciò che segnala, senza un confine proprio e più lentamente di quasi tutte le baseline, in parte per la patch su cui è mediato. Letta sui cluster di $G_{\mathrm{n}}$, la distanza dal normale ha lo stesso andamento, ma meno della metà dei valori segnalati ne supera la soglia.
+\paragraph{Sintesi.} In tutti i metodi la maggior parte dei valori segnalati sta in pochi cluster enormi, quelli di $G_{\mathrm{n}}$ per lo più di velocità verticale o precipitazione; i tipi di $G_{\mathrm{n}}$ somigliano a quelli della variazione in tre ore e, in parte, di MCD. Meno della metà dei valori segnalati da $G_{\mathrm{n}}$ supera la soglia della distanza dal normale: $G_{\mathrm{n}}$ segnala anche valori che, presi uno per uno, non sono estremi.
 % Baseline (5 novembre 2026; non dipendono dal modello): scripts/run_era5_baseline_events.sh (codice 69063e4f),
 % uscita outputs/eventi_baseline sul server, copiata in figures/dati/baseline/; riepilogo
 % figures/dati/era5_eventi_baseline.csv scritto da figures/genera_figure_eventi.py, con la riga di G
@@ -425,7 +327,7 @@ Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi i clus
 
 Fin qui i cluster sono descritti tutti insieme e per tipo; resta da vedere su una mappa che cosa riassumono i numeri, con un cluster per ciascuno dei tre tipi con più valori. Gli esempi sono scelti con una regola fissata prima di esaminarli, così che nessuno sia preso per il suo aspetto. I tipi sono i tre con più valori nei cluster di almeno 20 valori: velocità verticale, precipitazione e copertura nuvolosa. Per ciascuno l'esempio è il cluster con più valori fra quelli che durano al massimo tre giorni, letto nell'istante in cui conta più celle. Il limite di durata esclude le catene descritte sopra, che difficilmente corrispondono a un'unica anomalia meteorologica. Gli esempi non sono quindi i cluster più importanti né i più tipici: mostrano come appare un cluster compatto di ciascun tipo.
 
-In ogni esempio la cella seguita nel tempo è quella del nucleo con $G_{\mathrm{n}}$ più alto. In tutti e tre gli esempi, nell'istante delle mappe, $G_{\mathrm{n}}$ ha un percentile mediano fra 97 e 98 nel nucleo, fra 89 e 91 nel contorno e fra 33 e 43 nella zona lontana. I luoghi del nucleo nominati nel testo sono letti sulla mappa.
+In ogni esempio la cella seguita nel tempo è quella del nucleo con $G_{\mathrm{n}}$ più alto. In tutti e tre gli esempi, nell'istante delle mappe, $G_{\mathrm{n}}$ ha un percentile mediano fra 97 e 98 nel nucleo. I luoghi del nucleo nominati nel testo sono letti sulla mappa.
 
 \paragraph{Velocità verticale.} Il cluster dura 63 ore. Il 23 novembre 2017, con 549 celle, il nucleo forma una fascia stretta che va dall'Atlantico al largo del Portogallo fino alla Scandinavia meridionale, passando sul Golfo di Biscaglia, sulla Manica e sul Mare del Nord (Figura~\ref{fig:ris-caso-velocita}). Lungo la fascia la velocità verticale è per lo più sotto il normale. In ERA5 è in Pa\,s$^{-1}$, quindi è negativa quando l'aria sale: lo scarto standardizzato è negativo, cioè l'aria sale più o scende meno di quanto è abituale, nel 73\% delle celle del nucleo. Nel 34\% delle celle è inferiore a 1 in valore assoluto, vicino al normale. Una parte del nucleo, 25 celle, sta sulla prima fila a 60$^\circ$N, cioè sul margine del dominio, dove le componenti si comportano in modo diverso (Sezione~\ref{sec:ris-correlazione-temporale}): quella parte va letta con cautela. Dei tre esempi è il più estremo per la distanza dal normale: il 65\% dei valori del nucleo ne supera la soglia. Nella cella seguita, a 58.5$^\circ$N e 8.5$^\circ$E, $G_{\mathrm{n}}$ supera la soglia nelle prime ore del 22 novembre e vi resta, salvo una breve pausa, per circa un giorno e mezzo, finché la cella fa parte del cluster; la distanza dal normale sale insieme a $G_{\mathrm{n}}$ e supera il 90-esimo percentile per circa un giorno. Poi entrambi tornano a valori tipici. Il cluster cresce e cala in modo abbastanza regolare, con il massimo nell'istante delle mappe.
 
@@ -485,7 +387,7 @@ In ogni esempio la cella seguita nel tempo è quella del nucleo con $G_{\mathrm{
 \end{figure}
 
 \clearpage  % each example with its images
-\paragraph{Copertura nuvolosa.} Il cluster dura 66 ore. Il 15 giugno 2024 il nucleo forma una fascia stretta che va dalla costa atlantica del Sahara occidentale, attraverso il Marocco e l'Algeria, fino alla costa mediterranea dell'Algeria, con una piccola parte sul mare fra le Baleari e la Sardegna (Figura~\ref{fig:ris-caso-nuvole}). La copertura nuvolosa è sopra il normale nel 92\% delle celle del nucleo, con uno scarto standardizzato mediano di 2.1, e lo scarto standardizzato supera 3 nel 19\% delle celle. Il nucleo segue lo scarto standardizzato da vicino: fra i tre esempi è quello in cui la distanza dal normale cala di più dal nucleo al contorno, con un percentile mediano che scende da 93 a 56, mentre quello di $G_{\mathrm{n}}$ resta a 89. Sulla stessa mappa $G_{\mathrm{n}}$ è alto anche altrove, soprattutto sul Mediterraneo orientale, in altri cluster. Nella cella seguita, a 23.5$^\circ$N e 13$^\circ$W, $G_{\mathrm{n}}$ supera la soglia per cinque istanti, dalle 03 alle 15~UTC del 15 giugno, gli stessi in cui la cella fa parte del cluster; lo scarto standardizzato della copertura nuvolosa vi è fra 1.9 e 3.5, e la distanza dal normale supera il 90-esimo percentile dalle 06 alle 12~UTC. Prima e dopo, $G_{\mathrm{n}}$ e la distanza dal normale tornano a valori tipici. Il cluster conta fra circa 200 e 400 celle per quasi due giorni, con il massimo, 404 celle, nell'istante delle mappe.
+\paragraph{Copertura nuvolosa.} Il cluster dura 66 ore. Il 15 giugno 2024 il nucleo forma una fascia stretta che va dalla costa atlantica del Sahara occidentale, attraverso il Marocco e l'Algeria, fino alla costa mediterranea dell'Algeria, con una piccola parte sul mare fra le Baleari e la Sardegna (Figura~\ref{fig:ris-caso-nuvole}). La copertura nuvolosa è sopra il normale nel 92\% delle celle del nucleo, con uno scarto standardizzato mediano di 2.1, e lo scarto standardizzato supera 3 nel 19\% delle celle. Il nucleo segue lo scarto standardizzato da vicino. Sulla stessa mappa $G_{\mathrm{n}}$ è alto anche altrove, soprattutto sul Mediterraneo orientale, in altri cluster. Nella cella seguita, a 23.5$^\circ$N e 13$^\circ$W, $G_{\mathrm{n}}$ supera la soglia per cinque istanti, dalle 03 alle 15~UTC del 15 giugno, gli stessi in cui la cella fa parte del cluster; lo scarto standardizzato della copertura nuvolosa vi è fra 1.9 e 3.5, e la distanza dal normale supera il 90-esimo percentile dalle 06 alle 12~UTC. Prima e dopo, $G_{\mathrm{n}}$ e la distanza dal normale tornano a valori tipici. Il cluster conta fra circa 200 e 400 celle per quasi due giorni, con il massimo, 404 celle, nell'istante delle mappe.
 
 \begin{figure}[htbp]
     \centering
@@ -515,7 +417,7 @@ In ogni esempio la cella seguita nel tempo è quella del nucleo con $G_{\mathrm{
 
 
 \clearpage  % the three examples before what they show
-\paragraph{Che cosa mostrano gli esempi.} In due delle tre celle seguite $G_{\mathrm{n}}$ e la distanza dal normale salgono e scendono insieme; nella cella della precipitazione la distanza dal normale è alta già nei giorni prima, e $G_{\mathrm{n}}$ supera la soglia solo quando arriva la precipitazione. Il nucleo, inoltre, non contiene tutte le celle in cui la variabile del tipo è più lontana dal normale. Delle celle del dominio con uno scarto standardizzato oltre 3 in valore assoluto, nell'istante delle mappe, il nucleo ne contiene il 37\% per la velocità verticale, il 62\% per la precipitazione e il 57\% per la copertura nuvolosa. Per la velocità verticale quasi una cella su cinque di queste sta nella zona lontana, senza alcuna segnalazione; per gli altri due tipi solo l'1\%. Negli esempi si vede anche quanto mostrano i numeri aggregati: il tipo non descrive ogni cella, perché in una parte del nucleo la variabile del tipo è vicina al normale, e $G_{\mathrm{n}}$ segnala anche valori che, per la distanza dal normale, non sono fra i più estremi. Sono esempi scelti con una regola, non una dimostrazione che le segnalazioni corrispondano ad anomalie meteorologiche, che senza un riferimento esterno non si può dare.
+\paragraph{Che cosa mostrano gli esempi.} In due delle tre celle seguite $G_{\mathrm{n}}$ e la distanza dal normale salgono e scendono insieme; nella cella della precipitazione la distanza dal normale è alta già nei giorni prima, e $G_{\mathrm{n}}$ supera la soglia solo quando arriva la precipitazione. Il nucleo, inoltre, non contiene tutte le celle in cui la variabile del tipo è più lontana dal normale. Delle celle del dominio con uno scarto standardizzato oltre 3 in valore assoluto, nell'istante delle mappe, il nucleo ne contiene il 37\% per la velocità verticale, il 62\% per la precipitazione e il 57\% per la copertura nuvolosa. Per la velocità verticale quasi una cella su cinque di queste sta a più di tre celle da ogni cella segnalata; per gli altri due tipi solo l'1\%. Negli esempi si vede anche quanto mostrano i numeri aggregati: il tipo non descrive ogni cella, perché in una parte del nucleo la variabile del tipo è vicina al normale, e $G_{\mathrm{n}}$ segnala anche valori che, per la distanza dal normale, non sono fra i più estremi. Sono esempi scelti con una regola, non una dimostrazione che le segnalazioni corrispondano ad anomalie meteorologiche, che senza un riferimento esterno non si può dare.
 % Numeri (5 novembre 2026, test, optuna-27): scripts/check_era5_event_cases.py con --longest-days 3 (regola
 % fissata prima di leggere i risultati, nel docstring dello script), uscite outputs/finale_optuna27/esempi
 % (cases.csv, case_NN.npz, log logs/esempi.log), copiate in figures/dati/era5_caso_NN.npz; mediane per zona
@@ -617,7 +519,7 @@ La Sezione~\ref{sec:ris-eventi} confronta i cluster di $G_{\mathrm{n}}$ con quel
 \section{La dispersione del dropout}
 \label{sec:ris-dropout}
 
-Il 68.7\% delle segnalazioni di $G_{\mathrm{n}}$ è stabile (Sezione~\ref{sec:exp-misure}): con l'approssimazione gaussiana delle 20 estrazioni, ci si aspetta che ricompaia in quasi tutte le ripetizioni del calcolo con maschere di dropout diverse. La percentuale scende in modo regolare con il livello di probabilità di superamento richiesto: 93.1\% con almeno 0.6, 86.1\% con 0.7, 78.4\% con 0.8 e 61.4\% con 0.95. Stabile non vuol dire giusta: dice solo che la segnalazione non cambia al variare della maschera di dropout. Il resto della sezione guarda quanto le estrazioni differiscono fra loro. La dispersione delle 20 estrazioni (Sezione~\ref{sec:score-dropout-montecarlo}) non è una probabilità di anomalia: senza etichette non si può stabilire se una segnalazione con estrazioni concordi sia più giusta di una con estrazioni discordi. Si può però vedere dove le estrazioni si separano. La dispersione di G cresce con G, con una correlazione di Spearman di 0.86, in parte attesa perché G e la sua dispersione vengono dalle stesse estrazioni; per questo è letta in proporzione%
+Con una probabilità di superamento (Sezione~\ref{sec:exp-misure}) di almeno 0.6, 0.7, 0.8, 0.9 e 0.95 resta rispettivamente il 93.1, l'86.1, il 78.4, il 68.7 e il 61.4\% delle segnalazioni di $G_{\mathrm{n}}$: la percentuale scende in modo regolare con il livello. Stabile non vuol dire giusta: dice solo che la segnalazione non cambia al variare della maschera di dropout. Il resto della sezione guarda quanto le estrazioni differiscono fra loro. La dispersione delle 20 estrazioni (Sezione~\ref{sec:score-dropout-montecarlo}) non è una probabilità di anomalia: senza etichette non si può stabilire se una segnalazione con estrazioni concordi sia più giusta di una con estrazioni discordi. Si può però vedere dove le estrazioni si separano. La dispersione di G cresce con G, con una correlazione di Spearman di 0.86, in parte attesa perché G e la sua dispersione vengono dalle stesse estrazioni; per questo è letta in proporzione%
 % Spearman 0.861 fra errore grezzo e dispersione: outputs/finale_optuna27/logs/dropout_rapporto_bande.log
 % ("rank correlation between score and spread"), optuna-27, 5 novembre 2026.
 , con il rapporto della Sezione~\ref{sec:exp-misure}. La sezione riguarda gli anni di test.
@@ -626,32 +528,12 @@ Il 68.7\% delle segnalazioni di $G_{\mathrm{n}}$ è stabile (Sezione~\ref{sec:ex
 
 \paragraph{In proporzione, la dispersione cala solo sui valori di G più alti.} In valore assoluto la dispersione cresce con G, ma in proporzione resta quasi costante (Figura~\ref{fig:ris-dropout-a}): in ogni fascia di G, la dispersione media divisa per G medio è fra l'11.1\% e l'11.8\% fino al 99-esimo percentile di G, e scende solo oltre, al 9.7\% fra il 99-esimo e il 99.9-esimo percentile e al 9.1\% nello 0.1\% più alto. Le maschere di dropout incidono quindi su G in proporzione quasi uguale, tranne sui valori più alti, su cui incidono un po' meno.
 
-\paragraph{Attraverso i cluster il rapporto è minimo poco dentro il bordo.} La dispersione assoluta ha quasi lo stesso profilo di $G_{\mathrm{n}}$: il percentile mediano è 94 appena dentro il bordo del cluster e 49 dopo sei celle, contro 96 e 50 di $G_{\mathrm{n}}$. Il rapporto mediano è invece quasi costante attraverso i cluster: circa il 10\% in tutte le celle fuori dal cluster, con un minimo del 9.6\% due celle dentro il nucleo e una risalita all'11.2\% nelle pochissime celle più interne. Le differenze ci sono ma sono piccole; il motivo della risalita nelle celle più interne non è verificato. La mediana sta un po' sotto le medie della Figura~\ref{fig:ris-dropout-a} e delle mappe più avanti, che sono intorno all'11\%.
-
 \begin{figure}[htbp]
     \centering
-    \phantomcaption
-    \label{fig:ris-dropout}
-    \begin{subfigure}[t]{0.458\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{era5_dropout_a}
-        \caption[Dispersione media divisa per G medio, per fascia di percentile di G, sugli anni di test.]{Dispersione media divisa per G medio, per fascia di percentile di G, sugli anni di test. In proporzione a G la dispersione è quasi costante, e cala solo sui valori di G più alti.}
-        \label{fig:ris-dropout-a}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[t]{0.465\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{era5_dropout_c}
-        \caption[Valori segnalati da $G_{\mathrm{n}}$ divisi a parità di G in cinque classi, dalle estrazioni più concordi (1) alle più discordi (5), e percentuale di ciascuna classe oltre la soglia della distanza dal normale.]{Valori segnalati da $G_{\mathrm{n}}$ divisi a parità di G in cinque classi, dalle estrazioni più concordi (1) alle più discordi (5), e percentuale di ciascuna classe oltre la soglia della distanza dal normale. Anni di test. Fino alla classe 4, più dispersione va con dati più lontani dal normale.}
-        \label{fig:ris-dropout-c}
-    \end{subfigure}
+    \includegraphics[width=0.458\textwidth]{era5_dropout_a}
+    \caption{Dispersione media divisa per G medio, per fascia di percentile di G, sugli anni di test. In proporzione a G la dispersione è quasi costante, e cala solo sui valori di G più alti.}
+    \label{fig:ris-dropout-a}
 \end{figure}
-
-\paragraph{A parità di G, più dispersione va con dati più lontani dal normale, ma non nella classe più discorde.} Per confrontare valori con lo stesso G, i valori segnalati sono divisi nelle classi del rapporto (Sezione~\ref{sec:exp-misure}): la classe 1, con le estrazioni più concordi, ha un rapporto mediano del 5\%, la classe 5, con le più discordi, del 19\% (Figura~\ref{fig:ris-dropout-c}). Dalla classe 1 alla 4 la percentuale di valori oltre la soglia della distanza dal normale sale dal 24\% al 50\%; nella classe 5 scende al 45\%. Il risultato è quasi uguale a parità di $G_{\mathrm{n}}$. Fino alla classe 4, dunque, le estrazioni si separano di più dove i dati sono più lontani dal normale, coerentemente con l'idea che il modello sia meno stabile sui dati più diversi da quelli dell'addestramento; la classe più discorde non segue l'andamento, e il motivo non è verificato.
-% Testo completo prima del taglio del 9 novembre 2026: \paragraph{A parità di errore, più dispersione va con dati più lontani dal normale, ma non nella classe più discorde.} Per confrontare valori con lo stesso errore, i valori segnalati sono divisi prima in 20 fasce di errore e poi, in ogni fascia, in cinque classi uguali per rapporto; il rapporto mediano va dal 5\% della classe 1, con le estrazioni più concordi, al 19\% della classe 5, con le più discordi (Figura~\ref{fig:ris-dropout-c}). Dalla classe 1 alla 4 la percentuale di valori oltre la soglia della distanza dal normale sale dal 24\% al 50\%; nella classe 5 scende al 45\%. La percentuale di valori in cui nessuna variabile si allontana dal normale più di due deviazioni standard fa il contrario: è il 13\% nella classe 1, circa il 9\% nelle classi 3 e 4 e di nuovo il 12\% nella 5. Il risultato è quasi uguale dividendo a parità di $G_{\mathrm{n}}$: dal 27\% della classe 1 al 49\% della 4, e il 45\% nella 5. Fino alla classe 4, dunque, le estrazioni si separano di più dove i dati sono più lontani dal normale, e quelle più concordi cadono più spesso dove nessuna variabile della cella è lontana dal normale. Questo è coerente con l'idea che il modello sia meno stabile sui dati più diversi da quelli visti in addestramento. La classe più discorde, però, non segue l'andamento, e il legame non è quindi un semplice ``più dispersione, dati più insoliti''; il motivo del calo nell'ultima classe non è verificato, e la verifica, nel complesso, non dimostra quell'idea.
-
-\paragraph{Per tipo di cluster il quadro è simile.} Con gli stessi tipi della Sezione~\ref{sec:ris-eventi}, il rapporto è quasi ovunque più basso poco dentro il nucleo e sale verso l'esterno, con l'eccezione dell'umidità del suolo, in cui scende verso l'esterno. A parità di G, in ogni tipo la classe 1 ha la percentuale più bassa di valori oltre la soglia della distanza dal normale e la più alta è la classe 3 o 4; per la velocità verticale, per esempio, la percentuale va dal 20\% della classe 1 al 45\% della 4 e scende al 40\% nella 5. La classe 5 raggiunge la 4 solo nella precipitazione e nell'umidità del suolo.
-% Testo completo prima del taglio del 9 novembre 2026: \paragraph{Per tipo di cluster il quadro è simile.} Con gli stessi tipi della Sezione~\ref{sec:ris-eventi}, il rapporto è quasi ovunque più basso dentro il nucleo, in genere due o tre celle dentro il bordo, e sale verso l'esterno (Figura~\ref{fig:ris-dropout-tipi}, a sinistra); la radiazione solare ha il minimo più basso, il 7.1\%. Fa eccezione l'umidità del suolo, con il rapporto più alto, che scende verso l'esterno. A parità di G, in ogni tipo la classe 1 ha la percentuale più bassa di valori oltre la soglia della distanza dal normale, ma la più alta è la classe 3 o 4 (la classe 3 non è mostrata nella figura), non la 5 (Figura~\ref{fig:ris-dropout-tipi}, a destra): per la velocità verticale, per esempio, la percentuale va dal 20\% della classe 1 al 45\% della classe 4, e scende al 40\% nella 5. Solo per precipitazione e umidità del suolo la classe 5 è alla pari con la 4.
 
 \paragraph{La dispersione cella per cella.} La Figura~\ref{fig:ris-dropout-mappe} mostra la dispersione di G in ogni cella. In media sugli anni di test è più alta a sud, dove è più alto anche G: circa il 23\% in più fra 20$^\circ$ e 30$^\circ$N che fra 50$^\circ$ e 60$^\circ$N. Il rapporto medio invece varia poco, fra l'11.0\% e l'11.4\% da una fascia all'altra. Lungo il margine del dominio si vede una cornice, con una dispersione in media 1.8 volte quella delle celle interne, come la cornice della Sezione~\ref{sec:ris-correlazione-temporale}. Negli istanti dei tre esempi della Sezione~\ref{sec:ris-esempi} la dispersione nel nucleo è in mediana da 3.4 a 5 volte quella fuori dal nucleo, la più alta nella copertura nuvolosa; in proporzione a G, invece, il rapporto mediano nel nucleo resta vicino a quello di fuori, fra l'8\% e il 13\% contro il 10--11\% fuori dal nucleo.
 % Esempi: figures/dati/era5_dropout_mappe.npz (deviazione standard e rapporto negli istanti) e era5_caso_NN.npz (nucleo), 10 novembre 2026: mediane nel nucleo e fuori 6.0/1.3, 4.1/1.2, 8.4/1.7 x 1e-4 (velocità verticale, precipitazione, copertura nuvolosa); rapporto 13.2/10.7, 10.3/10.6, 8.3/9.6%. Quota a sud e a nord con l'1%: media dei 12 mesi di luogo_g_clim_1pc.log (validazione), 1.43% e 0.68%.
@@ -676,7 +558,7 @@ Il 68.7\% delle segnalazioni di $G_{\mathrm{n}}$ è stabile (Sezione~\ref{sec:ex
     \end{subfigure}
 \end{figure}
 
-\paragraph{Sintesi.} In proporzione a G la dispersione è quasi costante, attraverso i cluster e in quasi tutti i tipi di cluster. A parità di G le estrazioni concordano di meno dove i dati sono più lontani dal normale, fino alla classe 4. Questo descrive quanto le segnalazioni dipendono dalle maschere di dropout, non se siano giuste.
+\paragraph{Sintesi.} In proporzione a G la dispersione è quasi costante, intorno all'11\%, e cala solo sui valori di G più alti; varia poco anche da un luogo all'altro del dominio. Questo descrive quanto le segnalazioni dipendono dalle maschere di dropout, non se siano giuste.
 % Numeri (5 novembre 2026, test, optuna-27, run_era5_final_analyses.sh): scripts/check_era5_dropout_spread.py
 % (--score-component generator, un istante ogni 9, rapporto delle medie per fascia: log
 % outputs/finale_optuna27/logs/dropout_rapporto_bande.log) e scripts/check_era5_dropout_flags.py
@@ -713,7 +595,6 @@ Il 68.7\% delle segnalazioni di $G_{\mathrm{n}}$ è stabile (Sezione~\ref{sec:ex
 
 \section{Il riferimento concordato}
 \label{sec:ris-concordate}
-% DA RIFARE con il nuovo intorno (specifica_intorno.md)
 
 Fin qui ogni metodo è letto sui propri cluster o valore per valore; da qui il riferimento sono i cluster concordati (Sezione~\ref{sec:exp-concordate}), formati dai valori che almeno cinque metodi su nove segnalano. Non sono una verità ma l'accordo dei metodi. Le misure dicono come $G_{\mathrm{n}}$ si colloca rispetto a essi: quanta parte ne segnala, quanto aggiunge attorno, quando comincia e quando finisce, da che parte sta rispetto al moto. Come nelle sezioni precedenti si usano gli anni di test 2005--2025 e la soglia al 95-esimo percentile.
 % Numeri: Tesi/segnalazioni_concordate/risultati.md (§1-10, 12-13 novembre 2026), server
@@ -727,24 +608,7 @@ Fin qui ogni metodo è letto sui propri cluster o valore per valore; da qui il r
 
 \paragraph{Il cubo concordato.} Le segnalazioni concordate sono il 6.20\% dei valori degli anni di test. Senza la chiusura sarebbero il 4.22\%, la stessa percentuale del voto a maggioranza della Sezione~\ref{sec:ris-confronti}. La chiusura aumenta le segnalazioni degli altri metodi fra il 29\% (COPOD) e il 49\% (HBOS), quelle di $G_{\mathrm{n}}$ del 31\%; fa eccezione la variazione in tre ore, che cresce del 67.5\% perché le sue segnalazioni hanno più lacune. Il voto decisivo di $G_{\mathrm{n}}$ è l'8.4\% del cubo concordato. È meno di ogni modello shallow e della distanza dal normale, fra il 9.1\% (distanza dal normale) e il 15.3\% (PCA), e più soltanto della variazione in tre ore, con il 7.5\%: il riferimento dipende poco dal voto di $G_{\mathrm{n}}$.
 
-\paragraph{Pochi cluster lunghi contengono quasi tutti i valori.} La Tabella~\ref{tab:ris-concordate-cluster} riassume i cluster concordati. I 2142 cluster lunghi, di oltre tre giorni, contengono l'85.4\% dei valori concordati; i 27233 brevi l'11.9\%; i cluster concordati con meno di 20 valori, che non sono studiati, il 2.7\%. Un cluster breve tipico dura 12 ore e contiene 48 valori; un cluster lungo tipico dura cinque giorni, contiene 5450 valori e tocca circa 39 righe e 59 colonne della griglia, cioè su una parte ampia del dominio. Il più lungo dura 97.8 giorni.
-
-\begin{table}[htbp]
-    \centering
-    \footnotesize
-    \caption{I cluster concordati sugli anni di test, con la soglia di ogni metodo al 95-esimo percentile. Durata, valori, righe e colonne sono mediane sui cluster concordati; righe e colonne sono quelle della griglia toccate dal cluster concordato.}
-    \label{tab:ris-concordate-cluster}
-    \vspace{0.6em}
-    \begin{tabular}{@{}lrrrrr@{}}
-        \toprule
-        Cluster & Numero & \shortstack[r]{Valori concordati\\contenuti [\%]} & Durata & Valori & \shortstack[r]{Righe $\times$\\colonne} \\
-        \midrule
-        Brevi (al più tre giorni) & 27233 & 11.9 & 12 h & 48 & $7\times9$ \\
-        Lunghi (oltre tre giorni) & 2142 & 85.4 & 5 giorni & 5450 & $39\times59$ \\
-        Con meno di 20 valori & 419566 & 2.7 & -- & -- & -- \\
-        \bottomrule
-    \end{tabular}
-\end{table}
+\paragraph{Pochi cluster lunghi contengono quasi tutti i valori.} Sugli anni di test i 2142 cluster concordati lunghi, di oltre tre giorni, contengono l'85.4\% dei valori concordati; i 27233 brevi l'11.9\%; i 419566 cluster concordati con meno di 20 valori, che non sono studiati, il 2.7\%. In mediana un cluster breve dura 12 ore, contiene 48 valori e tocca 7 righe e 9 colonne della griglia; un cluster lungo dura cinque giorni, contiene 5450 valori e tocca 39 righe e 59 colonne, cioè una parte ampia del dominio. Il più lungo dura 97.8 giorni.
 
 \paragraph{I cluster lunghi.} Il tipo dei cluster lunghi, definito come nella Sezione~\ref{sec:ris-eventi}, è la precipitazione nel 23\% dei cluster concordati e la velocità verticale nel 22\%; seguono lo strato limite e la velocità d'attrito, con il 10\% ciascuno, e la copertura nuvolosa, la pressione e l'umidità specifica, con il 5\%. L'umidità del suolo, che cambia lentamente, è il tipo del 4.5\% soltanto. I cluster lunghi non sono quindi stati che persistono nella stessa area: durano giorni, ma sono legati a variabili che cambiano in fretta. È un quadro compatibile con sistemi che si spostano sul dominio, come le perturbazioni. La durata dipende poco dalla regola di unione. Contando anche i cluster di oltre tre giorni con meno di 20 valori, i valori concordati in cluster di oltre tre giorni sono l'86.2\%; chiedendo che il cluster di un istante e quello del successivo condividano almeno il 20\% o il 50\% dei valori, scendono all'84.7\% e al 78.9\%, e il cluster concordato più lungo non cambia. Dipende invece dalla soglia: con il 99-esimo percentile i cluster lunghi contengono il 50.6\% dei valori concordati (Appendice~\ref{app:soglia-concordate}).
 % Tipi: risultati.md §1 (type = input farthest from normal on average over the cluster, event_types
@@ -754,42 +618,49 @@ Fin qui ogni metodo è letto sui propri cluster o valore per valore; da qui il r
 \subsection{Quanto ogni metodo concorda}
 \label{sec:ris-concordate-sovrapposizione}
 
+\paragraph{Cluster rilevati e cluster senza corrispondente.} $G_{\mathrm{n}}$ rileva il 46\% dei cluster concordati brevi e il 91\% dei lunghi. Nei brevi è come la maggior parte delle baseline, fra il 44\% (MCD) e il 55\% (Isolation Forest), sotto PCA (65\%) e sopra la variazione in tre ore (32\%); nei lunghi è fra i metodi che ne rilevano di più, con COPOD (92\%), contro il 76--89\% delle altre baseline. Il 54.5\% dei cluster di $G_{\mathrm{n}}$ è senza corrispondente, quasi quanto in MCD (53.7\%) e meno che nella variazione in tre ore (72.5\%); nelle altre baseline sono fra il 14\% e il 34\%. Senza i cluster vicini solo a cluster concordati piccoli le percentuali scendono al 22.5\% per $G_{\mathrm{n}}$, al 15.9\% per MCD e al 52.5\% per la variazione in tre ore, e fra l'1\% e l'8\% per le altre baseline. Contro il cubo senza il proprio voto la percentuale di cluster brevi rilevati da $G_{\mathrm{n}}$ scende da 46\% a 43\%, meno che per PCA, da 65\% a 54\%.
+
+\paragraph{Che cosa sono i cluster di $G_{\mathrm{n}}$ senza corrispondente.} Tre cluster di $G_{\mathrm{n}}$ senza corrispondente su quattro (13147 su 17354) stanno accanto a cluster concordati piccoli, esclusi dal riferimento perché hanno meno di 20 valori. Durano poco, con una mediana di 6 ore, meno di quelli di ogni baseline, e cadono nelle stesse stagioni dei cluster di $G_{\mathrm{n}}$ corrispondenti ai cluster concordati. Rispetto ai valori che nessun metodo segnala negli intorni degli stessi cluster piccoli, hanno più spesso una variabile oltre due deviazioni standard, il 71\% contro il 36\%, e i loro valori moderati sono cambiati in fretta, con una variazione in tre ore di 2.50 contro 1.29. Gli altri 4207 non sono vicini ad alcun cluster concordato: durano ancora meno, con una mediana di tre ore, e cadono più spesso in inverno, il 32\% contro il 18\% dei cluster di $G_{\mathrm{n}}$ corrispondenti ai cluster concordati.
+% Numeri: risultati.md §15 (match_r300.log, sezioni POD/FAR e \"groups\"; contro C^(-k): r. 95-115 del log), §13 e §17
+% (match_r300_ns_lonely.csv; excess_r300_analysed_ns.csv e log, posizioni \"near small Gn, in zone\"; tutte le segnalazioni
+% di G_n: 70.8% oltre 2 DS contro 35.6%). Durata mediana dei cluster corrispondenti di G_n 21 h; inverno 18.3%, estate 34.6%.
+
 La Tabella~\ref{tab:ris-concordate-sovrapposizione} riporta, per ogni metodo, la copertura, l'estensione e l'indice di Jaccard nell'intorno dei cluster concordati. Tutti i metodi concordano di più nei cluster lunghi che nei brevi.
 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Copertura (cop), estensione (est) e indice di Jaccard di ogni metodo nell'intorno dei cluster concordati, brevi e lunghi: mediane sui cluster concordati. Per i cluster brevi anche l'indice di Jaccard contro il cubo concordato senza il voto del metodo.}
+    \caption{Copertura (cop), estensione (est) e indice di Jaccard di ogni metodo nell'intorno di 300~km dei cluster concordati, brevi e lunghi: mediane sui cluster concordati.}
     \label{tab:ris-concordate-sovrapposizione}
     \vspace{0.6em}
-    \begin{tabular}{@{}lrrrrrrr@{}}
+    \begin{tabular}{@{}lrrrrrr@{}}
         \toprule
-         & \multicolumn{4}{c}{Cluster brevi} & \multicolumn{3}{c}{Cluster lunghi} \\
-        \cmidrule(lr){2-5}\cmidrule(l){6-8}
-        Metodo & cop & est & Jaccard & \shortstack[r]{Jaccard senza\\il proprio voto} & cop & est & Jaccard \\
+         & \multicolumn{3}{c}{Cluster brevi} & \multicolumn{3}{c}{Cluster lunghi} \\
+        \cmidrule(lr){2-4}\cmidrule(l){5-7}
+        Metodo & cop & est & Jaccard & cop & est & Jaccard \\
         \midrule
-        $G_{\mathrm{n}}$ & 0.69 & 0.91 & 0.27 & 0.20 & 0.71 & 0.37 & 0.49 \\
+        $G_{\mathrm{n}}$ & 0.69 & 0.79 & 0.30 & 0.71 & 0.36 & 0.50 \\
         \addlinespace
-        Distanza dal normale & 0.64 & 0.06 & 0.45 & 0.38 & 0.75 & 0.14 & 0.62 \\
-        PCA & 0.97 & 0.32 & 0.69 & 0.51 & 0.95 & 0.17 & 0.81 \\
-        CBLOF & 0.83 & 0.26 & 0.51 & 0.41 & 0.80 & 0.21 & 0.63 \\
-        MCD & 0.96 & 0.90 & 0.45 & 0.33 & 0.87 & 0.32 & 0.64 \\
-        HBOS & 0.70 & 0.43 & 0.38 & 0.29 & 0.85 & 0.34 & 0.61 \\
-        COPOD & 0.67 & 0.13 & 0.44 & 0.36 & 0.82 & 0.20 & 0.65 \\
-        Isolation Forest & 0.87 & 0.34 & 0.54 & 0.41 & 0.90 & 0.25 & 0.71 \\
-        Variazione in tre ore & 0.77 & 1.80 & 0.21 & 0.15 & 0.67 & 0.58 & 0.40 \\
+        Distanza dal normale & 0.64 & 0.05 & 0.47 & 0.75 & 0.12 & 0.64 \\
+        PCA & 0.97 & 0.29 & 0.71 & 0.95 & 0.17 & 0.81 \\
+        CBLOF & 0.83 & 0.21 & 0.54 & 0.80 & 0.18 & 0.65 \\
+        MCD & 0.96 & 0.77 & 0.48 & 0.87 & 0.30 & 0.65 \\
+        HBOS & 0.70 & 0.37 & 0.40 & 0.85 & 0.33 & 0.61 \\
+        COPOD & 0.67 & 0.11 & 0.46 & 0.82 & 0.19 & 0.65 \\
+        Isolation Forest & 0.87 & 0.30 & 0.56 & 0.90 & 0.25 & 0.71 \\
+        Variazione in tre ore & 0.77 & 1.36 & 0.24 & 0.67 & 0.53 & 0.41 \\
         \bottomrule
     \end{tabular}
 \end{table}
+% Numeri: Tesi/log_server/r300/outputs/concordate_5pc_regola_tesi/boxes_r300{,_long}.csv (15 novembre 2026): mediane
+% di coverage, excess/concordant, jaccard; quartili G_n brevi cop 0.34-0.90, est 0.31-1.55. Jaccard di G_n per tipo
+% (log boxes_r300): radiazione 0.42, copertura nuvolosa 0.37, precipitazione 0.34, temperatura a 2 m 0.16.
 
-\paragraph{Tre comportamenti.} Separare copertura ed estensione distingue tre comportamenti. PCA e Isolation Forest ricalcano il cubo concordato: ne segnalano quasi tutto, con una copertura fra 0.87 e 0.97, e aggiungono poco attorno. La distanza dal normale e COPOD ne mancano una parte, con una copertura fra 0.64 e 0.82, ma non aggiungono quasi nulla, con un'estensione fra 0.06 e 0.20. La variazione in tre ore allarga il cubo concordato: nei cluster brevi segnala attorno a essi 1.8 valori per ogni valore concordato.
+\paragraph{Tre comportamenti.} Separare copertura ed estensione distingue tre comportamenti. PCA e Isolation Forest ricalcano il cubo concordato: ne segnalano quasi tutto, con una copertura fra 0.87 e 0.97, e aggiungono poco attorno. La distanza dal normale e COPOD ne mancano una parte, con una copertura fra 0.64 e 0.82, ma non aggiungono quasi nulla, con un'estensione fra 0.05 e 0.19. La variazione in tre ore allarga il cubo concordato: nei cluster brevi segnala attorno a essi 1.4 valori per ogni valore concordato.
 
-\paragraph{$G_{\mathrm{n}}$ nei cluster brevi allarga e manca.} Nei cluster brevi l'indice di Jaccard di $G_{\mathrm{n}}$, 0.27, è il più basso dopo quello della variazione in tre ore, per due motivi insieme. Il primo è l'estensione, 0.91 come quella di MCD: attorno al cluster concordato $G_{\mathrm{n}}$ segnala quasi tanti valori quanti il cluster concordato ne contiene. Il secondo è la copertura, 0.69 come quelle di HBOS, COPOD e della distanza dal normale: $G_{\mathrm{n}}$ manca circa un terzo del cluster concordato, mentre MCD e PCA ne segnalano il 96--97\%. Da cluster a cluster il comportamento varia molto: i quartili di $G_{\mathrm{n}}$ vanno da 0.34 a 0.90 per la copertura e da 0.36 a 1.80 per l'estensione. L'indice di Jaccard di $G_{\mathrm{n}}$ dipende dal tipo del cluster concordato: è 0.38 nei cluster di radiazione solare, 0.34 in quelli di copertura nuvolosa e 0.32 in quelli di precipitazione, ma solo 0.16 in quelli di temperatura.
+\paragraph{$G_{\mathrm{n}}$ nei cluster brevi allarga e manca.} Nei cluster brevi l'indice di Jaccard di $G_{\mathrm{n}}$, 0.30, è il più basso dopo quello della variazione in tre ore, per due motivi insieme. Il primo è l'estensione, 0.79 come quella di MCD: attorno al cluster concordato $G_{\mathrm{n}}$ segnala quasi tanti valori quanti il cluster concordato ne contiene. Il secondo è la copertura, 0.69 come quelle di HBOS, COPOD e della distanza dal normale: $G_{\mathrm{n}}$ manca circa un terzo del cluster concordato, mentre MCD e PCA ne segnalano il 96--97\%. Da cluster a cluster il comportamento varia molto: i quartili di $G_{\mathrm{n}}$ vanno da 0.34 a 0.90 per la copertura e da 0.31 a 1.55 per l'estensione. L'indice di Jaccard di $G_{\mathrm{n}}$ dipende dal tipo del cluster concordato: è 0.42 nei cluster di radiazione solare, 0.37 in quelli di copertura nuvolosa e 0.34 in quelli di precipitazione, ma solo 0.16 in quelli di temperatura a due metri.
 
-\paragraph{Nei cluster lunghi $G_{\mathrm{n}}$ manca una parte.} Nei cluster lunghi l'estensione di $G_{\mathrm{n}}$ è ordinaria, 0.37, come quelle di HBOS e MCD. Il suo indice di Jaccard, più basso di quello della maggior parte dei metodi, viene dalla copertura, 0.71: dopo la variazione in tre ore, $G_{\mathrm{n}}$ è il metodo che segnala la parte più piccola dei cluster lunghi.
-
-\paragraph{Il proprio voto non cambia il quadro.} Contro il cubo concordato senza il proprio voto l'indice di Jaccard di ogni metodo scende, perché il metodo non conta più nel riferimento, ma il quadro resta lo stesso: $G_{\mathrm{n}}$ passa da 0.27 a 0.20 e resta penultimo, davanti alla variazione in tre ore; PCA resta il primo.
-% Jaccard senza voto: risultati.md §2 (brevi). Lunghi senza voto non estratti. Quartili e tipi: §2, §10.
+\paragraph{Nei cluster lunghi $G_{\mathrm{n}}$ manca una parte.} Nei cluster lunghi l'estensione di $G_{\mathrm{n}}$ è ordinaria, 0.36, come quelle di HBOS e MCD. Il suo indice di Jaccard, 0.50, più basso di quello della maggior parte dei metodi, viene dalla copertura, 0.71: dopo la variazione in tre ore, $G_{\mathrm{n}}$ è il metodo che segnala la parte più piccola dei cluster lunghi, anche se ne rileva quasi tutti.
 
 \paragraph{Che cosa manca ogni metodo.} Sommando i valori di tutti i cluster concordati, $G_{\mathrm{n}}$ segnala il 65.7\% dei valori concordati dei cluster brevi e il 70.8\% di quelli dei lunghi, quasi quanto la variazione in tre ore, con il 65.5\% e il 63.5\%; PCA ne segnala il 92.3\% e il 95.0\%. I metodi mancano valori di due tipi diversi. I valori concordati che $G_{\mathrm{n}}$ e la variazione in tre ore non segnalano hanno molte variabili lontane dal normale, in media 3.4--3.6 oltre due deviazioni standard, ma meno estreme: il più grande scarto standardizzato in valore assoluto è in media 3.3--3.5, contro 4.0--4.2 dei valori che segnalano. Sono anche cambiati poco: nelle tre ore prima la variazione più grande di uno scarto standardizzato è 1.7--2.2 per i valori che $G_{\mathrm{n}}$ manca, contro 3.1--3.3 per quelli che segnala. HBOS, COPOD e Isolation Forest mancano invece valori in cui una sola variabile è molto lontana dal normale: il più grande scarto standardizzato è in media 3.7--4.2, con circa due variabili oltre due deviazioni standard. PCA manca pochi valori, il 5--8\%, poco estremi.
 % Visti / mancati (passo 4 completo, 12 novembre 2026, non dipendono dai giudici): risultati.md §11.1;
@@ -801,12 +672,12 @@ La Tabella~\ref{tab:ris-concordate-sovrapposizione} riporta, per ogni metodo, la
 \subsection{Inizio, fine e direzione}
 \label{sec:ris-concordate-inizio}
 
-\paragraph{$G_{\mathrm{n}}$ non anticipa l'inizio dei cluster concordati.} Nei cluster brevi il cluster di $G_{\mathrm{n}}$ corrispondente al cluster concordato comincia prima di esso nel 37.9\% dei cluster concordati, quello di MCD nel 56\% e quello della variazione in tre ore nel 61\%. Cluster per cluster (Tabella~\ref{tab:ris-concordate-inizio}), MCD e la variazione in tre ore cominciano prima di $G_{\mathrm{n}}$ in circa metà dei cluster concordati, e $G_{\mathrm{n}}$ prima di loro in meno di uno su cinque; con gli altri metodi l'inizio è vicino, e $G_{\mathrm{n}}$ comincia più spesso prima solo di COPOD e, di poco, della distanza dal normale. Nei cluster lunghi il quadro è lo stesso: MCD e la variazione in tre ore cominciano prima di $G_{\mathrm{n}}$ nel 54\% e nel 58\% dei cluster concordati, $G_{\mathrm{n}}$ prima di loro nel 16\% e nell'11\%. Il risultato è lo stesso con la soglia al 97-esimo e al 99-esimo percentile (Appendice~\ref{app:soglia-concordate}).
+\paragraph{$G_{\mathrm{n}}$ comincia dopo MCD e la variazione in tre ore.} Inizio e fine sono letti sui cluster concordati il cui cluster del metodo corrispondente al cluster concordato rispetta il criterio di Crawford: il 75\% dei cluster brevi rilevati da $G_{\mathrm{n}}$ e l'80\% dei lunghi. Nei cluster brevi il cluster di $G_{\mathrm{n}}$ corrispondente al cluster concordato comincia prima di esso nel 37\% dei cluster concordati, quello di MCD e quello della variazione in tre ore nel 47\%; la differenza mediana è nulla per tutti. Cluster per cluster (Tabella~\ref{tab:ris-concordate-inizio}), MCD e la variazione in tre ore cominciano prima di $G_{\mathrm{n}}$ in circa metà dei cluster concordati, e $G_{\mathrm{n}}$ prima di loro in uno su cinque o meno; anche PCA comincia un po' più spesso prima. $G_{\mathrm{n}}$ comincia invece più spesso prima della distanza dal normale, di CBLOF e di COPOD; con HBOS e Isolation Forest la differenza non è significativa. Nei cluster lunghi il quadro è lo stesso: MCD e la variazione in tre ore cominciano prima di $G_{\mathrm{n}}$ nel 57\% e nel 64\% dei cluster concordati, $G_{\mathrm{n}}$ prima di loro nel 25\% e nel 19\%, mentre $G_{\mathrm{n}}$ comincia più spesso prima delle altre baseline tranne PCA. A ogni soglia $G_{\mathrm{n}}$ comincia prima della distanza dal normale e di CBLOF e dopo MCD, la variazione in tre ore e PCA; il confronto con COPOD e Isolation Forest dipende dalla soglia (Appendice~\ref{app:soglia-concordate}).
 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Inizio e fine di $G_{\mathrm{n}}$ rispetto a ogni baseline, cluster per cluster, sui cluster concordati brevi rilevati da entrambi i metodi: percentuale dei cluster concordati in cui $G_{\mathrm{n}}$ comincia prima e dopo la baseline, e in cui finisce dopo e prima. Le restanti percentuali sono i cluster concordati in cui i due metodi cominciano o finiscono insieme. L'asterisco indica un test dei segni con $p<0.01$.}
+    \caption{Inizio e fine di $G_{\mathrm{n}}$ rispetto a ogni baseline sui cluster concordati brevi rilevati da entrambi: percentuale dei cluster concordati in cui $G_{\mathrm{n}}$ comincia prima o dopo la baseline e finisce dopo o prima; nei restanti i due metodi cominciano o finiscono insieme. L'asterisco indica un test dei segni con $p<0.01$.}
     \label{tab:ris-concordate-inizio}
     \vspace{0.6em}
     \begin{tabular}{@{}lrrrr@{}}
@@ -815,59 +686,54 @@ La Tabella~\ref{tab:ris-concordate-sovrapposizione} riporta, per ogni metodo, la
         \cmidrule(lr){2-3}\cmidrule(l){4-5}
         Baseline & \shortstack[r]{$G_{\mathrm{n}}$\\prima [\%]} & \shortstack[r]{$G_{\mathrm{n}}$\\dopo [\%]} & \shortstack[r]{$G_{\mathrm{n}}$\\dopo [\%]} & \shortstack[r]{$G_{\mathrm{n}}$\\prima [\%]} \\
         \midrule
-        Distanza dal normale & 37 & 35\,* & 42 & 39\,* \\
-        PCA & 30 & 37\,* & 40 & 36\,* \\
-        CBLOF & 33 & 39\,* & 35 & 45\,* \\
-        MCD & 18 & 51\,* & 26 & 47\,* \\
-        HBOS & 38 & 38 & 44 & 37\,* \\
-        COPOD & 42 & 31\,* & 51 & 29\,* \\
-        Isolation Forest & 36 & 35 & 44 & 35\,* \\
-        Variazione in tre ore & 11 & 55\,* & 9 & 67\,* \\
+        Distanza dal normale & 47 & 22\,* & 52 & 28\,* \\
+        PCA & 30 & 35\,* & 42 & 33\,* \\
+        CBLOF & 40 & 28\,* & 43 & 34\,* \\
+        MCD & 20 & 48\,* & 29 & 45\,* \\
+        HBOS & 41 & 39 & 44 & 40\,* \\
+        COPOD & 43 & 33\,* & 48 & 34\,* \\
+        Isolation Forest & 38 & 36 & 44 & 36\,* \\
+        Variazione in tre ore & 15 & 51\,* & 14 & 67\,* \\
         \bottomrule
     \end{tabular}
 \end{table}
+% Numeri: Tesi/log_server/r300/outputs/concordate_5pc_regola_tesi_match_r300.log (15 novembre 2026; commit 1ae6baa6),
+% sezione \"Gn against each detector on the clusters both catch\" (Crawford, senza bordo). Brevi: inizio p 0.0998 HBOS,
+% 0.044 iForest; fine HBOS p 0.0076. Lunghi, inizio G_n prima / dopo: PCA 37.7/43.9 (p 0.043), CBLOF 52.7/33.5,
+% MCD 25.1/57.3, HBOS 48.3/39.4, COPOD 53.7/34.4, iForest 48.9/37.0, normale 58.7/27.9, variazione 18.5/64.2; fine G_n
+% dopo / prima: PCA 38.6/52.0, CBLOF 45.7/49.6 (p 0.31), MCD 27.5/63.2, HBOS 47.7/44.1 (p 0.20), COPOD 55.0/38.4,
+% iForest 45.4/46.5 (p 0.71), normale 51.9/40.8 (p 0.0017), variazione 25.4/67.5. Comincia prima del cluster concordato:
+% G_n 36.7% brevi (mediana 0 h), 54.1% lunghi (mediana -3 h); MCD 46.9 / 66.3; variazione 47.0 / 66.2.
 
-\paragraph{La fine.} Nei cluster brevi $G_{\mathrm{n}}$ finisce dopo cinque baseline su otto e prima di CBLOF, MCD e della variazione in tre ore. Questo dipende dalla soglia: con il 97-esimo percentile $G_{\mathrm{n}}$ finisce dopo quattro baseline, con il 99-esimo prima della maggior parte (Appendice~\ref{app:soglia-concordate}). Nei cluster lunghi $G_{\mathrm{n}}$ finisce prima di sette baseline su otto, tutte tranne COPOD; a tutte le soglie finisce prima di PCA, CBLOF, MCD, della distanza dal normale e della variazione in tre ore.
-% Fine, lunghi, G_n dopo / prima (test dei segni): 5% PCA 26.6/54.0, CBLOF 16.2/72.3, MCD 16.8/65.2, HBOS 38.2/45.7
-% (p 0.00016), COPOD 45.1/38.0 (p 0.00031), iForest 37.8/44.0 (p 0.0016), normale 20.8/66.5, variazione 15.0/65.0;
-% 3%: HBOS p 0.0097 prima, iForest p 0.017, COPOD dopo; 1%: dopo HBOS, COPOD, iForest (log di lead_long, 12 novembre 2026).
+\paragraph{La fine.} Nei cluster brevi $G_{\mathrm{n}}$ finisce dopo sei baseline su otto e prima di MCD e della variazione in tre ore; contro HBOS e PCA il risultato dipende dalla soglia (Appendice~\ref{app:soglia-concordate}). Nei cluster lunghi la fine dipende dalla soglia e dalla chiusura, ma nella maggior parte dei confronti $G_{\mathrm{n}}$ finisce prima delle baseline: prima di PCA, MCD e della variazione in tre ore a ogni soglia e senza la chiusura. Solo con il 95-esimo percentile e la chiusura finisce dopo la distanza dal normale, di poco (52\% contro 41\% dei cluster concordati), e non differisce da CBLOF; con il 97-esimo e il 99-esimo percentile e senza la chiusura finisce prima di entrambe, con il 99-esimo in circa due cluster lunghi su tre (Appendice~\ref{app:soglia-concordate}).
 
-\paragraph{Nei cluster lunghi $G_{\mathrm{n}}$ sta davanti lungo il moto.} Nei cluster lunghi le segnalazioni del cluster di $G_{\mathrm{n}}$ corrispondente al cluster concordato stanno in mediana 16.3~km davanti a esso lungo il suo moto, e sono davanti nel 62\% dei cluster concordati. Fra le baseline solo MCD e la variazione in tre ore stanno davanti, di 8.8 e 8.7~km; le altre sei stanno dietro, fra 4.4~km (COPOD) e 13.0~km (CBLOF). Cluster per cluster, $G_{\mathrm{n}}$ sta più avanti di ciascuna baseline nel 57--65\% dei cluster concordati, sempre con $p<0.01$. Lo spostamento lungo il moto cresce con la velocità del cluster concordato (Figura~\ref{fig:ris-concordate-moto-b}). È di 5.4~km nei cluster concordati quasi fermi, sotto mezza cella ogni tre ore; di 24.1~km in quelli che si spostano di 0.5--1 celle ogni tre ore e di 33.6~km in quelli che si spostano di 1--2, cioè la distanza che il cluster concordato percorre in un'ora o due. Nei 48 cluster più veloci è di 21.9~km, e lì MCD sta più avanti, con 26.7~km. La posizione in avanti non viene solo dai valori lontani dal normale: le segnalazioni di $G_{\mathrm{n}}$ lontane dal normale e quelle moderate stanno davanti della stessa misura, 17.1 e 17.4~km. Si ritrova con il 97-esimo percentile (17.5~km) e, più piccolo, con il 99-esimo (9.7~km), dove $G_{\mathrm{n}}$ resta più avanti di ogni baseline nel 55--68\% dei cluster concordati.
+\paragraph{Nei cluster lunghi $G_{\mathrm{n}}$ sta davanti lungo il moto.} Nei cluster lunghi le segnalazioni di $G_{\mathrm{n}}$ nell'intorno del cluster concordato stanno in mediana 17.0~km davanti a esso lungo il suo moto, e sono davanti nel 63\% dei cluster concordati (Figura~\ref{fig:ris-concordate-moto}). Fra le baseline solo MCD e la variazione in tre ore stanno davanti, di 9.3 e 8.0~km; le altre sei stanno dietro, fra 3.6~km (COPOD) e 10.7~km (CBLOF). Cluster per cluster, $G_{\mathrm{n}}$ sta più avanti di ciascuna baseline nel 58.5--65.8\% dei cluster concordati, sempre con $p<0.01$. La posizione in avanti non viene solo dai valori lontani dal normale: le segnalazioni di $G_{\mathrm{n}}$ lontane dal normale e quelle moderate stanno davanti della stessa misura, 16.9 e 16.6~km. Si ritrova con il 97-esimo percentile (17.2~km) e, più piccolo, con il 99-esimo (9.4~km), dove $G_{\mathrm{n}}$ resta più avanti di ogni baseline nel 55--68\% dei cluster concordati.
 
-\paragraph{Nei cluster brevi sta un po' dietro.} Nei cluster brevi lo spostamento lungo il moto di $G_{\mathrm{n}}$ è in mediana di $-4.4$~km, cioè un po' dietro al cluster concordato, e cresce in valore assoluto con la velocità, fino a $-14.3$~km nei cluster concordati più veloci, circa un quarto di cella (Figura~\ref{fig:ris-concordate-moto-a}). PCA e MCD stanno sul cluster concordato (0.0 e $+0.9$~km), la variazione in tre ore più dietro di $G_{\mathrm{n}}$ ($-12.5$~km, fino a $-33.6$ nei più veloci). Cluster per cluster $G_{\mathrm{n}}$ sta più indietro delle altre sette baseline nel 51--55\% dei cluster concordati e più avanti della variazione in tre ore nel 58\%.
+\paragraph{Nei cluster brevi sta un po' dietro.} Nei cluster brevi lo spostamento lungo il moto di $G_{\mathrm{n}}$ è in mediana di $-4.7$~km, cioè un po' dietro al cluster concordato (Figura~\ref{fig:ris-concordate-moto}). PCA e MCD stanno sul cluster concordato ($+0.2$ e $+1.0$~km), la variazione in tre ore più dietro di $G_{\mathrm{n}}$ ($-12.5$~km). Cluster per cluster $G_{\mathrm{n}}$ sta più indietro delle altre sette baseline nel 51--55\% dei cluster concordati e più avanti della variazione in tre ore nel 58.5\%.
 
 \begin{figure}[htbp]
     \centering
-    \phantomcaption
+    \includegraphics[width=\textwidth]{era5_concordate_moto}
+    \caption{Spostamento lungo il moto delle segnalazioni di ogni metodo rispetto ai cluster concordati brevi (cerchio vuoto) e lunghi (cerchio pieno): mediana sui cluster concordati, positiva davanti al cluster concordato, sugli anni di test. Nei cluster lunghi $G_{\mathrm{n}}$ sta davanti più di ogni baseline.}
     \label{fig:ris-concordate-moto}
-    \begin{subfigure}[t]{0.480\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{era5_concordate_moto_a}
-        \caption[Spostamento lungo il moto delle segnalazioni di ogni metodo rispetto ai cluster concordati brevi, secondo la velocità del cluster concordato: mediana sui cluster concordati, positiva davanti al cluster concordato; la fascia grigia va dal più basso al più alto dei sei modelli shallow.]{Spostamento lungo il moto delle segnalazioni di ogni metodo rispetto ai cluster concordati brevi, secondo la velocità del cluster concordato: mediana sui cluster concordati, positiva davanti al cluster concordato; la fascia grigia va dal più basso al più alto dei sei modelli shallow. $G_{\mathrm{n}}$ sta un po' dietro, di più nei cluster concordati veloci.}
-        \label{fig:ris-concordate-moto-a}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[t]{0.480\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{era5_concordate_moto_b}
-        \caption[Spostamento lungo il moto delle segnalazioni di ogni metodo rispetto ai cluster concordati lunghi, secondo la velocità del cluster concordato: mediana sui cluster concordati, positiva davanti al cluster concordato; la fascia grigia va dal più basso al più alto dei sei modelli shallow.]{Spostamento lungo il moto delle segnalazioni di ogni metodo rispetto ai cluster concordati lunghi, secondo la velocità del cluster concordato: mediana sui cluster concordati, positiva davanti al cluster concordato; la fascia grigia va dal più basso al più alto dei sei modelli shallow. $G_{\mathrm{n}}$ sta davanti, più delle baseline tranne che nei 48 cluster più veloci.}
-        \label{fig:ris-concordate-moto-b}
-    \end{subfigure}
 \end{figure}
-% Figura: figures/genera_figure_concordate.py, dati figures/dati/era5_concordate_moto.csv (log di
-% check_era5_concordant_lead.py, 5%, analysed e long, 12 novembre 2026).
+% Figura: figures/genera_figure_concordate.py, dati figures/dati/era5_concordate_moto_r300.csv (colonna along_km di
+% lead_r300.csv e lead_r300_long.csv, intorno di 300 km, 5%). Log concordate_{5,3,1}pc_regola_tesi_lead_r300{,_long}.log:
+% lunghi G_n 17.0 km, davanti 62.7%; a coppie 58.5 (change_3h) - 65.8% (cblof), p <= 1.5e-15; lontani / moderati 16.9 / 16.6;
+% 3% 17.2 (58.7-67.3%), 1% 9.4 (55.4-67.7%). Brevi G_n -4.7, pca +0.2, mcd +1.0, change_3h -12.5; a coppie G_n dietro
+% le altre sette nel 51.0-55.1%, davanti a change_3h nel 58.5%.
 
-\paragraph{Lettura.} I cluster brevi e quelli lunghi danno due quadri diversi. Nei brevi $G_{\mathrm{n}}$ allarga il cluster concordato e ne manca una parte, segue il cubo concordato da un po' dietro e non comincia prima. Nei lunghi, che contengono quasi tutti i valori concordati, $G_{\mathrm{n}}$ non comincia prima né finisce dopo, ma mentre il cluster concordato è in moto segnala di più dalla parte verso cui va: rispetto al cubo concordato, formato soprattutto da metodi che leggono una cella in un istante, $G_{\mathrm{n}}$ segnala di più le celle che il sistema sta per raggiungere. Lo spostamento lungo il moto è piccolo, una frazione di cella; e la direzione del moto è quella media fra il primo e l'ultimo istante, grossolana per sistemi che in cinque giorni cambiano direzione.
+\paragraph{Lettura.} I cluster brevi e quelli lunghi danno due quadri diversi. Nei brevi $G_{\mathrm{n}}$ allarga il cluster concordato e ne manca una parte, segue il cubo concordato da un po' dietro e comincia dopo MCD e la variazione in tre ore. Nei lunghi, che contengono quasi tutti i valori concordati, $G_{\mathrm{n}}$ ne rileva quasi tutti, comincia dopo MCD e la variazione in tre ore e finisce prima di loro e di PCA, ma mentre il cluster concordato è in moto segnala di più dalla parte verso cui va: rispetto al cubo concordato, formato soprattutto da metodi che leggono una cella in un istante, $G_{\mathrm{n}}$ segnala di più le celle che il sistema sta per raggiungere. Lo spostamento lungo il moto è piccolo, una frazione di cella; e la direzione del moto è quella media fra il primo e l'ultimo istante, grossolana per sistemi che in cinque giorni cambiano direzione.
 
 \subsection{Che cosa c'è attorno ai cluster concordati}
 \label{sec:ris-concordate-attorno}
 
-Questa sottosezione guarda le segnalazioni non concordate di ogni metodo nell'intorno dei cluster concordati: quanto i valori sono lontani dal normale nell'istante del valore, come cambiano nelle ore dopo e quanto sono cambiati nelle tre ore prima (Tabella~\ref{tab:ris-concordate-attorno}). Il termine di confronto sono i valori degli stessi intorni, nelle stesse posizioni, che nessun metodo segnala.
+Questa sottosezione guarda le segnalazioni non concordate di ogni metodo nell'intorno dei cluster concordati, davanti e dietro rispetto al moto: quanto i valori sono lontani dal normale nell'istante del valore, come cambiano nelle ore dopo e quanto sono cambiati nelle tre ore prima (Tabella~\ref{tab:ris-concordate-attorno}). Il termine di confronto sono i valori degli stessi intorni, nelle stesse posizioni, che nessun metodo segnala. Nella tabella, lo scarto standardizzato è il più grande in valore assoluto fra le variabili d'ingresso, in media, nell'istante del valore e 24 ore dopo; la variazione in tre ore è la variazione più grande di uno scarto standardizzato nelle tre ore prima del valore, in media, separata per i valori lontani dal normale, con almeno una variabile oltre due deviazioni standard, e per quelli moderati.
 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Le segnalazioni non concordate di ogni metodo davanti e dietro i cluster concordati, sugli anni di test, e il termine di confronto. Oltre 2: percentuale di valori con almeno una variabile d'ingresso oltre due deviazioni standard. Scarto standardizzato dietro: il più grande in valore assoluto, in media, dietro i cluster brevi, nell'istante del valore e 24 ore dopo. Variazione in 3 h: la variazione più grande di uno scarto standardizzato nelle tre ore prima del valore, in media, nei cluster brevi, per i valori lontani dal normale e per quelli moderati.}
+    \caption{Le segnalazioni non concordate di ogni metodo attorno ai cluster concordati, sugli anni di test, e il termine di confronto. Oltre 2: percentuale di valori con almeno una variabile oltre due deviazioni standard. Scarto standardizzato dietro i cluster brevi, ora e 24 ore dopo; variazione nelle tre ore prima, nei cluster brevi, per i valori lontani dal normale e moderati.}
     \label{tab:ris-concordate-attorno}
     \vspace{0.6em}
     \begin{tabular}{@{}lrrrrrr@{}}
@@ -876,52 +742,47 @@ Questa sottosezione guarda le segnalazioni non concordate di ogni metodo nell'in
         \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-7}
         Metodo & Brevi & Lunghi & 0 h & 24 h & Lontani & Moderati \\
         \midrule
-        $G_{\mathrm{n}}$ & 74.1 & 77.5 & 2.44 & 1.90 & 2.80 & 2.77 \\
+        $G_{\mathrm{n}}$ & 74.2 & 78.4 & 2.45 & 1.91 & 2.80 & 2.78 \\
         \addlinespace
-        Distanza dal normale & 95.1 & 94.9 & 2.79 & 2.48 & 1.43 & 1.41 \\
-        PCA & 96.2 & 96.1 & 3.27 & 2.21 & 1.92 & 2.45 \\
-        CBLOF & 89.6 & 89.7 & 2.74 & 2.21 & 1.62 & 1.67 \\
-        MCD & 90.9 & 90.5 & 2.93 & 2.04 & 2.23 & 2.27 \\
-        HBOS & 94.1 & 95.0 & 2.66 & 2.03 & 1.58 & 1.68 \\
-        COPOD & 92.0 & 93.4 & 2.60 & 1.94 & 1.66 & 1.73 \\
-        Isolation Forest & 96.2 & 95.9 & 2.74 & 2.01 & 1.68 & 1.92 \\
-        Variazione in tre ore & 65.3 & 69.9 & 2.31 & 1.89 & 2.85 & 2.69 \\
+        Distanza dal normale & 95.1 & 95.0 & 2.79 & 2.49 & 1.44 & 1.42 \\
+        PCA & 96.2 & 96.0 & 3.27 & 2.22 & 1.91 & 2.46 \\
+        CBLOF & 90.2 & 90.6 & 2.76 & 2.23 & 1.62 & 1.71 \\
+        MCD & 90.7 & 90.3 & 2.93 & 2.05 & 2.22 & 2.28 \\
+        HBOS & 94.2 & 95.0 & 2.66 & 2.04 & 1.58 & 1.69 \\
+        COPOD & 92.0 & 93.5 & 2.61 & 1.94 & 1.66 & 1.75 \\
+        Isolation Forest & 96.2 & 95.9 & 2.75 & 2.02 & 1.68 & 1.93 \\
+        Variazione in tre ore & 66.2 & 72.1 & 2.33 & 1.89 & 2.85 & 2.71 \\
         \addlinespace
-        Termine di confronto & 32.8 & 35.5 & 1.83 & 1.81 & 1.37 & 1.22 \\
+        Termine di confronto & 40.3 & 47.9 & 1.92 & 1.86 & 1.41 & 1.28 \\
         \bottomrule
     \end{tabular}
-% Variazione in 3 h nei cluster lunghi (lontani / moderati), citata nel testo: G_n 2.72 / 2.69, variazione in tre ore
-% 2.76 / 2.58, MCD 2.08 / 2.22, normale 1.35 / 1.36, termine di confronto 1.33 / 1.17 (risultati.md §11.2).
 \end{table}
-% Passo 4 completo (12 novembre 2026; non dipende dai giudici): risultati.md §11.2; log
-% segnalazioni_concordate/log_server/passo4_completo/concordate_5pc_regola_tesi_excess_full_{analysed,long}.log.
-% Oltre 2: media pesata sul numero di valori di davanti e dietro (passo4_riassunto.txt [2]; G_n dalla sezione "at the
-% timestamp of the value" del log: brevi 77.04 / 71.43, lunghi 78.42 / 76.58). Scarto dietro: tabella "mean of the
-% largest |standardised input| ... later (hours)". Variazione in 3 h: sezione "the course before the value", media
-% pesata di davanti e dietro (§11.2).
+% Numeri (15 novembre 2026): Tesi/log_server/r300/outputs/concordate_5pc_regola_tesi/excess_r300_{analysed,long}.csv
+% (Oltre 2 e scarto dietro: medie pesate sui valori di davanti e dietro, righe 'alone', 'with others' e del termine di
+% confronto) e log concordate_5pc_regola_tesi_excess_r300_{analysed,long}.log, sezione \"the course before the value\"
+% (variazione in 3 h, davanti + dietro pesati). Lunghi, variazione in 3 h lontani / moderati: G_n 2.72 / 2.72, variazione
+% 2.76 / 2.59, MCD 2.08 / 2.23, normale 1.38 / 1.39, termine di confronto 1.38 / 1.27. Dietro i brevi, G_n a 0/3/6/12/24 h:
+% 2.45 / 2.24 / 2.07 / 1.94 / 1.91; termine di confronto 1.92 / 1.95 / 1.94 / 1.90 / 1.86. Lunghi: G_n davanti 2.55 -> 2.41
+% a 24 h, termine di confronto 2.01 -> 2.31; G_n dietro 2.52 -> 2.22. Soglie 3% e 1%: risultati.md §18.
 
-\paragraph{Le segnalazioni non concordate dei metodi che leggono una cella sono lontane dal normale.} Per i sette metodi che leggono una cella in un istante, fra il 90\% e il 96\% delle segnalazioni non concordate davanti e dietro i cluster concordati ha almeno una variabile oltre due deviazioni standard, contro il 33--36\% del termine di confronto: sono valori lontani dal normale, che restano fuori dal cubo concordato solo perché meno di cinque metodi li segnalano. Per $G_{\mathrm{n}}$ la percentuale è il 74\% nei cluster brevi e il 78\% nei lunghi, per la variazione in tre ore il 65\% e il 70\%: una parte delle loro segnalazioni non concordate non è lontana dal normale.
+\paragraph{Le segnalazioni non concordate dei metodi che leggono una cella sono lontane dal normale.} Per i sette metodi che leggono una cella in un istante, fra il 90\% e il 96\% delle segnalazioni non concordate davanti e dietro i cluster concordati ha almeno una variabile oltre due deviazioni standard, contro il 40--48\% del termine di confronto: sono valori lontani dal normale, che restano fuori dal cubo concordato solo perché meno di cinque metodi li segnalano. Per $G_{\mathrm{n}}$ la percentuale è il 74\% nei cluster brevi e il 78\% nei lunghi, per la variazione in tre ore il 66\% e il 72\%: una parte delle loro segnalazioni non concordate non è lontana dal normale.
 
-\paragraph{Le segnalazioni non concordate di $G_{\mathrm{n}}$ sono cambiate in fretta.} Nelle tre ore prima del valore la variazione più grande di uno scarto standardizzato è in media 2.7--2.8 per le segnalazioni non concordate di $G_{\mathrm{n}}$, lontane dal normale o moderate, quanto per la variazione in tre ore e circa il doppio del termine di confronto, 1.2--1.4. Per MCD è 2.1--2.3, per la distanza dal normale 1.4, come per il termine di confronto. Anche dove nessuna variabile è lontana dal normale, dunque, ciò che $G_{\mathrm{n}}$ segnala fuori dal cubo concordato è un cambiamento rapido; vale anche per le sue segnalazioni esclusive moderate, che la variazione in tre ore non segnala, con 1.7--1.8. In parte è atteso: $G_{\mathrm{n}}$ è l'errore della ricostruzione di un istante dagli istanti precedenti, e un salto nelle ultime tre ore è difficile da ricostruire.
-% Esclusive di G_n, moderate, 3 h: risultati.md §6 (corti 1.71-1.82, lunghi 1.70-1.82; log _excess_{analysed,long}.log,
-% commit 7d2b68ad).
+\paragraph{Le segnalazioni non concordate di $G_{\mathrm{n}}$ sono cambiate in fretta.} Nelle tre ore prima del valore la variazione più grande di uno scarto standardizzato è in media 2.7--2.8 per le segnalazioni non concordate di $G_{\mathrm{n}}$, lontane dal normale o moderate, quanto per la variazione in tre ore e circa il doppio del termine di confronto, 1.3--1.4. Per MCD è 2.1--2.3, per la distanza dal normale 1.4, come per il termine di confronto. Anche dove nessuna variabile è lontana dal normale, dunque, ciò che $G_{\mathrm{n}}$ segnala fuori dal cubo concordato è un cambiamento rapido; vale anche per le sue segnalazioni esclusive moderate, che la variazione in tre ore non segnala, con 1.7--1.8. Il risultato si ritrova con il 97-esimo e il 99-esimo percentile, dove $G_{\mathrm{n}}$ è secondo solo alla variazione in tre ore (Appendice~\ref{app:soglia-concordate}). In parte è atteso: $G_{\mathrm{n}}$ è l'errore della ricostruzione di un istante dagli istanti precedenti, e un salto nelle ultime tre ore è difficile da ricostruire.
+% Esclusive di G_n, moderate, 3 h: risultati.md §14 (brevi 1.71 / 1.75 davanti / dietro, lunghi 1.69 / 1.69).
 
-\paragraph{Dietro e dopo i cluster brevi, le segnalazioni di $G_{\mathrm{n}}$ rientrano in poche ore.} Dietro i cluster brevi il più grande scarto standardizzato delle segnalazioni non concordate di $G_{\mathrm{n}}$ scende da 2.44 nell'istante del valore a 2.06 sei ore dopo e a 1.94 dopo dodici ore, vicino al termine di confronto, 1.81--1.83; dopo la fine del cluster concordato scende da 2.20 a 1.85 in sei ore, contro 1.67--1.73 del termine di confronto. La variazione in tre ore fa lo stesso. Le segnalazioni degli altri metodi restano più a lungo sopra il termine di confronto: dopo 24 ore sono fra 1.94 e 2.21 dietro il cluster concordato e fra 1.99 e 2.81 dopo la sua fine; quelle della distanza dal normale restano le più lontane, con 2.48 e 2.67. I metodi che leggono una cella in un istante segnalano quindi soprattutto stati che durano, $G_{\mathrm{n}}$ e la variazione in tre ore cambiamenti che rientrano in poche ore.
+\paragraph{Dietro i cluster brevi, le segnalazioni di $G_{\mathrm{n}}$ rientrano in poche ore.} Dietro i cluster brevi il più grande scarto standardizzato delle segnalazioni non concordate di $G_{\mathrm{n}}$ scende da 2.45 nell'istante del valore a 2.07 sei ore dopo e a 1.94 dopo dodici ore, vicino al termine di confronto, 1.86--1.95. La variazione in tre ore fa lo stesso. Le segnalazioni degli altri metodi restano più a lungo sopra il termine di confronto: dopo 24 ore sono fra 1.94 e 2.23, e quelle della distanza dal normale restano le più lontane, con 2.49. I metodi che leggono una cella in un istante segnalano quindi soprattutto stati che durano, $G_{\mathrm{n}}$ e la variazione in tre ore cambiamenti che rientrano in poche ore.
 
-\paragraph{Davanti ai cluster lunghi lo scarto standardizzato resta alto.} Davanti ai cluster lunghi il più grande scarto standardizzato delle segnalazioni non concordate di $G_{\mathrm{n}}$ resta alto per un giorno, da 2.54 a 2.41 dopo 24 ore, mentre quello del termine di confronto sale da 1.85 a 2.30: il cluster concordato arriva in quelle celle. Dietro scende da 2.51 a 2.21.
-% Dopo la fine (brevi), 24 h: PCA 2.81, CBLOF 2.38, MCD 2.32, HBOS 2.08, COPOD 1.99, iForest 2.07, normale 2.67
-% (passo4_riassunto.txt [2]); G_n dopo 2.20 / 1.93 / 1.85 / 1.86 / 1.90 a 0 / 3 / 6 / 12 / 24 h; lunghi G_n davanti
-% 2.54 / 2.61 / 2.57 / 2.54 / 2.41, dietro 2.51 / 2.50 / 2.42 / 2.35 / 2.21; termine di confronto davanti 1.85 -> 2.30.
+\paragraph{Davanti ai cluster lunghi lo scarto standardizzato resta alto.} Davanti ai cluster lunghi il più grande scarto standardizzato delle segnalazioni non concordate di $G_{\mathrm{n}}$ resta alto per un giorno, da 2.55 a 2.41 dopo 24 ore, mentre quello del termine di confronto sale da 2.01 a 2.31: il cluster concordato arriva in quelle celle. Dietro scende da 2.52 a 2.22.
 
 \subsection{Probabilità di superamento}
 \label{sec:ris-concordate-probabilita}
 
-Quante segnalazioni di $G_{\mathrm{n}}$ sono stabili è nella Sezione~\ref{sec:ris-dropout}; qui le segnalazioni di ciascun livello di probabilità di superamento sono confrontate, cluster concordato per cluster concordato, con il loro controllo (Tabella~\ref{tab:ris-concordate-probabilita}).
+Quante segnalazioni di $G_{\mathrm{n}}$ sono stabili è nella Sezione~\ref{sec:ris-dropout}; qui le segnalazioni di ciascun livello di probabilità di superamento sono confrontate, cluster concordato per cluster concordato, con il loro controllo, lo stesso numero di segnalazioni di $G_{\mathrm{n}}$ prese a caso, sui cluster concordati brevi e lunghi (Tabella~\ref{tab:ris-concordate-probabilita}). Inizio e fine sono contati sui cluster concordati in cui il livello e il controllo hanno un cluster corrispondente al cluster concordato che passa il criterio di Crawford; il moto usa tutte le segnalazioni del livello e del controllo nell'intorno del cluster concordato, negli stessi istanti. Nei cluster concordati che la tabella non conta, livello e controllo non differiscono.
 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Le segnalazioni di $G_{\mathrm{n}}$ con probabilità di superamento almeno pari al livello, confrontate cluster per cluster con il loro controllo, lo stesso numero di segnalazioni di $G_{\mathrm{n}}$ estratte a caso, sui cluster concordati brevi e lunghi degli anni di test. Per ogni livello, in percentuale dei cluster concordati, quelli in cui le segnalazioni del livello cominciano prima / dopo il controllo (Inizio), finiscono dopo / prima (Fine) e stanno più avanti / più indietro lungo il moto (Moto). Le restanti percentuali sono i cluster concordati in cui non differiscono. L'asterisco indica un test dei segni con $p<0.01$.}
+    \caption{Segnalazioni di $G_{\mathrm{n}}$ con probabilità di superamento almeno pari al livello contro il loro controllo, tante segnalazioni di $G_{\mathrm{n}}$ prese a caso: percentuale dei cluster concordati in cui il livello comincia prima/dopo, finisce dopo/prima, sta più avanti/più indietro lungo il moto. Asterisco: test dei segni con $p<0.01$.}
     \label{tab:ris-concordate-probabilita}
     \vspace{0.6em}
     \begin{tabular}{@{}lrrrrrr@{}}
@@ -931,29 +792,29 @@ Quante segnalazioni di $G_{\mathrm{n}}$ sono stabili è nella Sezione~\ref{sec:r
         Livello & Inizio & Fine & Moto & Inizio & Fine & Moto \\
          & [\%] & [\%] & [\%] & [\%] & [\%] & [\%] \\
         \midrule
-        0.6 & 5/23\,* & 5/25\,* & 51/48\,* & 4/27\,* & 5/29\,* & 48/52 \\
-        0.7 & 5/26\,* & 5/29\,* & 52/48\,* & 5/30\,* & 5/35\,* & 49/51 \\
-        0.8 & 5/29\,* & 4/34\,* & 53/47\,* & 4/33\,* & 4/42\,* & 50/50 \\
-        0.9 & 5/32\,* & 5/39\,* & 54/46\,* & 4/38\,* & 4/49\,* & 52/48 \\
-        0.95 & 6/32\,* & 5/42\,* & 54/46\,* & 6/39\,* & 4/54\,* & 54/46\,* \\
+        0.6 & 3/8\,* & 3/11\,* & 51/46\,* & 3/12\,* & 5/16\,* & 54/46\,* \\
+        0.7 & 4/13\,* & 4/18\,* & 53/46\,* & 6/19\,* & 6/28\,* & 56/44\,* \\
+        0.8 & 5/18\,* & 5/25\,* & 54/46\,* & 8/26\,* & 6/37\,* & 56/44\,* \\
+        0.9 & 7/22\,* & 5/32\,* & 54/45\,* & 10/32\,* & 7/46\,* & 56/44\,* \\
+        0.95 & 9/24\,* & 7/36\,* & 55/45\,* & 11/34\,* & 8/50\,* & 56/44\,* \\
         \bottomrule
     \end{tabular}
 \end{table}
-% Numeri: segnalazioni_concordate/log_server/passo3_curva_probabilita.txt (log del passo 3 al 5%, brevi
-% concordate_5pc_regola_tesi_lead.log, lunghi ..._lead_long.log; colonna "vs same number at random", righe Gn_pL;
-% tenute: "share of its flags with p at least").
+% Numeri: Tesi/log_server/r300_ns_p2/outputs, corse _p2 (commit 90319b13 di physiq-pv, controllo pescato fra le
+% segnalazioni di G_n): inizio e fine da concordate_5pc_regola_tesi_match_r300_p2.log (righe 149-171, match_r300_p2_levels.csv:
+% "starts earlier" / "ends later", first ahead / first behind); moto da concordate_5pc_regola_tesi_lead_r300{,_long}_p2.log,
+% colonna "vs same number at random". Gruppi a 0.6: livello 72680, controllo 71751.
 
-\paragraph{Le segnalazioni non stabili stanno all'inizio, alla fine e dietro.} A ogni livello, nei cluster brevi e nei lunghi, le segnalazioni con probabilità alta cominciano più tardi e finiscono prima del loro controllo (Tabella~\ref{tab:ris-concordate-probabilita}). Nei cluster brevi stanno anche meno dietro lungo il moto: con probabilità di almeno 0.9 lo spostamento lungo il moto mediano è di $-0.8$~km, contro $-3.9$~km del controllo. Il cluster di $G_{\mathrm{n}}$ corrispondente al cluster concordato comincia prima di esso in 9670 dei 25512 cluster brevi rilevati da $G_{\mathrm{n}}$. In questi cluster concordati il 34.4\% delle segnalazioni prima dell'inizio ha probabilità di almeno 0.9, contro il 52.0\% di tutte le segnalazioni di $G_{\mathrm{n}}$ nell'intorno; la probabilità mediana è 0.69 contro 0.90. Nei cluster lunghi le due percentuali sono 36.2\% e 53.7\%. Le segnalazioni non stabili stanno quindi all'inizio, alla fine e dalla parte da cui il cluster concordato si allontana; quelle con probabilità alta occupano il corpo del cluster concordato.
+\paragraph{Le segnalazioni stabili cominciano dopo e finiscono prima.} A ogni livello le segnalazioni con probabilità alta cominciano più tardi e finiscono prima del loro controllo (Tabella~\ref{tab:ris-concordate-probabilita}), e l'effetto cresce con il livello. Con il livello 0.6 coincidono quasi sempre con il controllo: nei cluster brevi l'inizio è lo stesso nell'89\% dei cluster concordati. Con il livello 0.95, nei cluster brevi cominciano dopo il controllo nel 24\% dei cluster concordati e prima nel 9\%, e finiscono prima nel 36\% e dopo nel 7\%; nei cluster lunghi finiscono prima nella metà dei cluster concordati, il 50.5\%, e dopo nell'8\%. Le segnalazioni non stabili stanno quindi soprattutto alla fine dei cluster, e in parte all'inizio.
 
-\paragraph{La posizione in avanti non dipende dalla probabilità.} Nei cluster lunghi le segnalazioni con probabilità alta non stanno più avanti del loro controllo, salvo di poco al livello più alto, 0.95, dove stanno più avanti nel 54\% dei cluster concordati e più indietro nel 46\%: la posizione in avanti di $G_{\mathrm{n}}$ nei sistemi che si spostano non viene dalle segnalazioni non stabili.
+\paragraph{Le segnalazioni stabili stanno un po' più avanti.} Lungo il moto le segnalazioni con probabilità alta stanno più avanti del loro controllo nel 51--56\% dei cluster concordati, a ogni livello, nei brevi e nei lunghi. Con il livello 0.95 lo spostamento lungo il moto mediano è di 18.9~km nei cluster lunghi, contro 15.3~km del controllo, e di $-0.7$~km nei brevi, contro $-4.6$~km. La posizione in avanti di $G_{\mathrm{n}}$ nei cluster lunghi non viene quindi dalle segnalazioni non stabili.
 
-% Numeri: risultati.md §3 (stabilità), §5. "Tutte le sue segnalazioni nell'intorno" = tutte quelle dei
-% cluster abbinati (all the flags of its matches).
+% Numeri: risultati.md §16 bis (livelli contro il controllo corretto, 15 novembre 2026).
+% Spostamento mediano lungo il moto a 0.95 (lead _p2): lunghi Gn_p0.95 18.9 km, Gn_rand0.95 15.3; brevi -0.7 e -4.6.
 
 
 \section{Variabili che nessuno score legge}
 \label{sec:ris-giudici}
-% DA RIFARE con il nuovo intorno (specifica_intorno.md)
 
 Le sezioni precedenti descrivono le segnalazioni con le variabili d'ingresso, cioè con ciò che i metodi leggono. Questa sezione le guarda, in via preliminare, con le otto grandezze di ERA5 che nessuno score legge (Sezione~\ref{sec:exp-concordate}): per ogni grandezza si conta la percentuale di valori in cui è insolita, cioè nel suo 5\% più estremo per quella cella, quel mese e quell'ora. Per caso la percentuale sarebbe il 5\%. Le grandezze non sono state scelte per un tipo di anomalia, e un valore insolito non è di per sé un'anomalia meteorologica: la sezione descrive che cosa accompagna le segnalazioni, non le convalida.
 
@@ -961,7 +822,7 @@ Le sezioni precedenti descrivono le segnalazioni con le variabili d'ingresso, ci
     \centering
     \footnotesize
     \setlength{\tabcolsep}{2.5pt}
-    \caption{Percentuale di valori in cui ciascuna grandezza che nessuno score legge è insolita, per le segnalazioni non concordate di ogni metodo davanti e dietro i cluster concordati lunghi, sugli anni di test, e per il termine di confronto. Per caso la percentuale sarebbe il 5\%. Rugiada e temperature sono a due metri, la raffica a dieci metri; alta e bassa indicano la coda del 5\% più estremo.}
+    \caption{Percentuale di valori in cui ciascuna grandezza che nessuno score legge è insolita (per caso il 5\%), per le segnalazioni non concordate di ogni metodo attorno ai cluster concordati lunghi e per il termine di confronto, sugli anni di test. Rug.: temperatura di rugiada; Min. e Mass.: temperatura minima e massima; alta e bassa: la coda.}
     \label{tab:ris-giudici}
     \vspace{0.6em}
     \begin{tabular}{@{}lrrrrrrrrr@{}}
@@ -970,38 +831,42 @@ Le sezioni precedenti descrivono le segnalazioni con le variabili d'ingresso, ci
         Metodo & CAPE & Raffica & conv. & alta & bassa & K & bassa & alta & colonna \\
          & [\%] & [\%] & [\%] & [\%] & [\%] & [\%] & [\%] & [\%] & [\%] \\
         \midrule
-        $G_{\mathrm{n}}$ & 10.3 & 7.3 & 11.3 & 10.3 & 3.1 & 14.7 & 3.6 & 9.4 & 15.2 \\
+        $G_{\mathrm{n}}$ & 10.6 & 7.5 & 11.6 & 10.5 & 3.0 & 15.2 & 3.5 & 9.6 & 15.7 \\
         \addlinespace
-        Distanza dal normale & 6.5 & 4.9 & 4.4 & 10.1 & 10.4 & 6.7 & 11.4 & 15.5 & 7.0 \\
-        PCA & 6.7 & 17.9 & 6.6 & 7.7 & 11.1 & 7.9 & 10.0 & 11.1 & 8.9 \\
-        CBLOF & 7.2 & 6.8 & 6.7 & 10.5 & 6.3 & 7.8 & 9.2 & 9.7 & 8.5 \\
-        MCD & 8.9 & 7.1 & 14.1 & 8.8 & 4.2 & 13.9 & 5.5 & 7.2 & 14.7 \\
-        HBOS & 6.8 & 21.1 & 5.9 & 9.2 & 9.6 & 8.2 & 9.8 & 13.8 & 9.8 \\
-        COPOD & 7.8 & 25.3 & 9.0 & 9.2 & 7.1 & 9.2 & 10.1 & 9.2 & 11.3 \\
-        Isolation Forest & 6.8 & 23.4 & 7.1 & 9.2 & 8.4 & 9.3 & 8.2 & 12.5 & 11.5 \\
-        Variazione in tre ore & 9.1 & 6.8 & 9.7 & 8.5 & 3.5 & 11.6 & 3.9 & 7.9 & 12.0 \\
+        Distanza dal normale & 6.9 & 5.2 & 4.5 & 10.7 & 10.9 & 7.1 & 12.0 & 16.7 & 7.5 \\
+        PCA & 6.7 & 18.3 & 6.7 & 7.8 & 11.3 & 8.0 & 10.1 & 11.3 & 9.0 \\
+        CBLOF & 7.4 & 7.3 & 7.0 & 10.8 & 6.5 & 8.2 & 9.4 & 10.3 & 9.0 \\
+        MCD & 9.1 & 7.2 & 14.2 & 9.0 & 4.1 & 14.3 & 5.4 & 7.3 & 15.1 \\
+        HBOS & 6.9 & 21.5 & 6.0 & 9.3 & 9.7 & 8.4 & 9.9 & 14.0 & 9.9 \\
+        COPOD & 7.8 & 25.7 & 9.1 & 9.3 & 7.1 & 9.3 & 10.2 & 9.3 & 11.5 \\
+        Isolation Forest & 6.9 & 23.9 & 7.2 & 9.3 & 8.4 & 9.5 & 8.3 & 12.8 & 11.7 \\
+        Variazione in tre ore & 9.6 & 7.1 & 10.2 & 9.0 & 3.5 & 12.3 & 3.8 & 8.3 & 12.8 \\
         \addlinespace
-        Termine di confronto & 4.3 & 4.0 & 3.2 & 5.2 & 5.4 & 4.3 & 5.3 & 5.1 & 4.9 \\
+        Termine di confronto & 5.2 & 5.3 & 3.8 & 6.3 & 5.4 & 5.7 & 5.5 & 6.5 & 6.6 \\
         \bottomrule
     \end{tabular}
 \end{table}
-% Giudici sugli anni 2005-2025 (21 anni, corsa del 13 novembre 2026). Fonte: risultati.md §11.3;
-% segnalazioni_concordate/log_server/passo4_21/passo4_riassunto.txt [3] (long, colonna Gn, non "Gn in cluster");
-% log concordate_5pc_regola_tesi_excess_full21_long.log, sezione "PRELIMINARY: variables no score reads".
+% Giudici sugli anni 2005-2025, intorno di 300 km (15 novembre 2026): Tesi/log_server/r300/outputs/concordate_5pc_regola_tesi/
+% excess_r300_long_giudici.csv, istante del valore, media pesata sui valori di davanti e dietro (risultati.md §14, §18).
 
-\paragraph{Ogni metodo ha un tratto suo.} Attorno ai cluster lunghi (Tabella~\ref{tab:ris-giudici}) le segnalazioni non concordate di $G_{\mathrm{n}}$ hanno CAPE, indice K e vapore acqueo nella colonna insoliti nel 10.3\%, nel 14.7\% e nel 15.2\% dei valori, contro il 4.3\%, il 4.3\% e il 4.9\% del termine di confronto: per tutte e tre $G_{\mathrm{n}}$ ha la percentuale più alta dei nove metodi. Anche la precipitazione convettiva è insolita più spesso, nell'11.3\% contro il 3.2\%; qui la percentuale più alta è quella di MCD, 14.1\%. MCD e la variazione in tre ore hanno un tratto simile a quello di $G_{\mathrm{n}}$. Le code fredde e secche vanno invece nel senso opposto: la temperatura di rugiada bassa e la temperatura minima bassa sono insolite nel 3.1\% e nel 3.6\% delle segnalazioni di $G_{\mathrm{n}}$, meno che nel termine di confronto. PCA, HBOS, COPOD e Isolation Forest segnalano soprattutto raffiche insolite, fra il 17.9\% e il 25.3\%, contro il 7.3\% di $G_{\mathrm{n}}$; la distanza dal normale segnala soprattutto temperature estreme, con la massima alta nel 15.5\% e la minima bassa nell'11.4\%.
+\paragraph{Ogni metodo ha un tratto suo.} Attorno ai cluster lunghi (Tabella~\ref{tab:ris-giudici}) le segnalazioni non concordate di $G_{\mathrm{n}}$ hanno CAPE, indice K e vapore acqueo nella colonna insoliti nel 10.6\%, nel 15.2\% e nel 15.7\% dei valori, contro il 5.2\%, il 5.7\% e il 6.6\% del termine di confronto: per tutte e tre $G_{\mathrm{n}}$ ha la percentuale più alta dei nove metodi. Anche la precipitazione convettiva è insolita più spesso, nell'11.6\% contro il 3.8\%; qui la percentuale più alta è quella di MCD, 14.2\%. MCD e la variazione in tre ore hanno un tratto simile a quello di $G_{\mathrm{n}}$. Le code fredde e secche vanno invece nel senso opposto: la temperatura di rugiada bassa e la temperatura minima bassa sono insolite nel 3.0\% e nel 3.5\% delle segnalazioni di $G_{\mathrm{n}}$, meno che nel termine di confronto. PCA, HBOS, COPOD e Isolation Forest segnalano soprattutto raffiche insolite, fra il 18.3\% e il 25.7\%, contro il 7.5\% di $G_{\mathrm{n}}$; la distanza dal normale segnala soprattutto temperature estreme, con la massima alta nel 16.7\% e la minima bassa nel 12.0\%. Il quadro si ritrova con il 97-esimo percentile; con il 99-esimo $G_{\mathrm{n}}$ resta sopra il termine di confronto ma non è più il primo dei nove metodi (Appendice~\ref{app:soglia-concordate}).
 
-\paragraph{Le segnalazioni esclusive di $G_{\mathrm{n}}$ hanno lo stesso tratto.} Davanti e dietro i cluster lunghi, le segnalazioni che solo $G_{\mathrm{n}}$ fa hanno CAPE insolito nell'8.1--8.9\%, indice K nell'11.8--13.1\% e vapore nella colonna nel 12.4--14.3\% dei valori, sopra il termine di confronto in tutti i 21 anni; temperatura di rugiada bassa e temperatura minima bassa sono sotto il termine di confronto in tutti i 21 anni.
-% Fonte (2005-2025, passo4_21): risultati.md §11.3 "Esclusive di G_n"; log full21 long, sezione "the same by who else
-% flags the values", righe "Gn ahead/behind alone" (CAPE 8.1 / 8.9, 21/21; rugiada bassa 3.1 / 3.5 e minima 3.0 / 3.9, 0/21).
+\paragraph{Le segnalazioni esclusive di $G_{\mathrm{n}}$ hanno lo stesso tratto.} Davanti e dietro i cluster lunghi, le segnalazioni che solo $G_{\mathrm{n}}$ fa hanno CAPE insolito nell'8.4--9.2\%, indice K nel 12.4--13.6\% e vapore nella colonna nel 13.0--14.9\% dei valori, sopra il termine di confronto in tutti i 21 anni; temperatura di rugiada bassa e temperatura minima bassa sono sotto il termine di confronto in tutti i 21 anni.
+% Fonte: log concordate_5pc_regola_tesi_excess_r300_long.log, sezione "PRELIMINARY: the same by who else flags the values",
+% righe "Gn ahead/behind alone" (CAPE 8.4 / 9.2, indice K 13.6 / 12.4, vapore 14.9 / 13.0, 21/21; rugiada bassa 3.1 / 3.4 e
+% minima 2.9 / 3.8, 0/21).
 
 \paragraph{Dentro i cluster $G_{\mathrm{n}}$ manca la parte fredda e secca.} Dentro i cluster concordati lunghi, i valori concordati che $G_{\mathrm{n}}$ segnala hanno CAPE, precipitazione convettiva, indice K e vapore nella colonna insoliti circa due volte più spesso di quelli che manca: il CAPE nel 14.2--15.4\% contro il 7.7--8.2\%, l'indice K nel 20.7--23.1\% contro l'8.0--10.0\%. I valori che manca hanno invece più spesso la temperatura minima bassa, nel 12.2--16.9\% contro il 6.0--9.3\%, la temperatura di rugiada bassa, nel 10.9--12.0\% contro il 4.2--5.0\%, e la raffica insolita, nel 27.7--32.9\% contro il 23.3--24.9\%. Insieme alla Sezione~\ref{sec:ris-concordate-sovrapposizione}, dove gli stessi valori risultano cambiati poco nelle tre ore prima, questo indica che dentro i cluster $G_{\mathrm{n}}$ segnala la parte umida e instabile che cambia in fretta e manca la parte fredda, secca e ventosa che cambia lentamente.
 % Fonte (2005-2025, passo4_21): risultati.md §11.1 (tabella dei giudici dentro i cluster, davanti / dietro); log full21
 % long, righe "Gn in cluster ahead/behind seen/missed" (CAPE 14.2 / 15.4 contro 7.7 / 8.2, raffica 23.3 / 24.9 contro 27.7 / 32.9).
 
-\paragraph{Nei cluster brevi i segni sono gli stessi, ma deboli.} Attorno ai cluster brevi CAPE, precipitazione convettiva, indice K e vapore nella colonna sono insoliti nel 6.2--7.1\% delle segnalazioni non concordate di $G_{\mathrm{n}}$, contro il 4.8--5.3\% del termine di confronto. Anche qui COPOD segnala soprattutto raffiche, nel 18.7\% dei valori.
-% Fonte (2005-2025): passo4_21/passo4_riassunto.txt [3] (analysed): G_n CAPE 6.2, prec. conv. 7.1, indice K 6.7, vapore
-% 6.6; termine di confronto 5.0, 4.8, 4.9, 5.3; COPOD raffica 18.7.
+\paragraph{Nei cluster brevi i segni sono gli stessi, ma deboli.} Attorno ai cluster brevi CAPE, precipitazione convettiva, indice K e vapore nella colonna sono insoliti nel 6.3--7.2\% delle segnalazioni non concordate di $G_{\mathrm{n}}$, contro il 5.1--5.7\% del termine di confronto, e COPOD e HBOS hanno percentuali uguali o più alte. Anche qui COPOD segnala soprattutto raffiche, nel 18.8\% dei valori.
+% Fonte: excess_r300_analysed_giudici.csv (davanti + dietro): G_n CAPE 6.3, prec. conv. 7.2, indice K 6.8, vapore 6.7;
+% termine di confronto 5.1, 5.1, 5.3, 5.7; COPOD 7.0, 8.5, 8.6, 10.0, raffica 18.8.
+
+\paragraph{I cluster di $G_{\mathrm{n}}$ senza corrispondente hanno i segni della convezione.} Nei cluster di $G_{\mathrm{n}}$ senza corrispondente vicini a cluster concordati piccoli (Sezione~\ref{sec:ris-concordate-sovrapposizione}), nell'intorno dei cluster piccoli, la precipitazione convettiva è insolita nel 24\% dei valori, contro il 4\% del termine di confronto; l'indice K nel 17\% contro il 6\%, il CAPE nel 12.5\% contro il 5.8\% e il vapore nella colonna nell'11\% contro il 5\%. Per le segnalazioni che solo $G_{\mathrm{n}}$ fa le quattro percentuali sono sopra il termine di confronto in tutti i 21 anni, mentre le code fredde e secche restano sotto.
+% Fonte: risultati.md §17 (excess_r300_analysed_ns.log, posizione "near small Gn, in zone": prec. conv. 24.1 / 3.8, indice K
+% 17.3 / 5.7, CAPE 12.5 / 5.8, vapore 11.2 / 4.9; solo G_n 21/21 anni; rugiada bassa e minima bassa 0-1/21).
 
 \paragraph{Sintesi.} Insieme alle Sezioni~\ref{sec:ris-concordate-sovrapposizione} e~\ref{sec:ris-concordate-attorno}, questi risultati indicano che $G_{\mathrm{n}}$ si sovrappone in gran parte ai metodi più semplici e in più segnala qualcosa che essi segnalano meno. Questi segnalano soprattutto gli stati lontani dal normale che durano; $G_{\mathrm{n}}$ segnala soprattutto i cambiamenti rapidi, in particolare la parte umida e instabile dei sistemi che si spostano, che nei cluster lunghi segnala anche un po' più avanti lungo il moto (Sezione~\ref{sec:ris-concordate-inizio}), e manca le condizioni fredde e secche che persistono. La verifica con le grandezze che nessuno score legge resta preliminare.
 

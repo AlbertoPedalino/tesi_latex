@@ -1,0 +1,21 @@
+\chapter{Uno score di previsione}
+\label{app:pn}
+
+% Spazio tenuto per l'Appendice B (decisione dell'utente, 15/11/2026). NON incluso in tesi.tex (nessun \include o
+% \input) finché non ci sono i numeri: niente pagine vuote né rimandi nel testo compilato.
+%
+% Lo score: P_n, quanto è insolito, rispetto alla climatologia, il campo che il generatore prevede per l'istante
+% successivo (l'anomalia attesa), mentre G_n misura l'errore (l'inatteso). Fonte interna: casi_noti/anticipo_risultati.md
+% (tabella G_n / P_n). Nel Cap. 7 è uno sviluppo futuro ("Uno score di previsione"), senza simbolo e senza rimando qui.
+%
+% Piano (Tesi/segnalazioni_concordate/protocollo.md §5):
+% - P_n VOTA al posto di G_n: cubo P_n + 8 baseline (almeno 5 su 9), poi tutti i passi alla lettera come per G_n
+%   (cubo, match, boxes, lead, excess), cluster brevi e lunghi, stessi controlli e stesse tabelle.
+% - Controllo senza il proprio voto: stesso cubo delle 8 baseline (almeno 5 su 8) del controllo di G_n; solo lì i due
+%   si confrontano direttamente (con il proprio voto stanno su cubi diversi).
+% - P_n all'istante di validità: la run grezza ("forecast anomaly of T + 1 at T") va spostata di un istante, PRIMA
+%   della climatologia (giorno +-15 x ora), su validazione e test; poi climatologia e soglia come per G_n. Serve un
+%   piccolo script con test. Nel testo: la previsione era disponibile 3 h prima, dichiarato a parte.
+% - Run deterministica (decisione D2): outputs/optuna27/previsione/...; niente curva della probabilita' di superamento.
+% - Da verificare sul server che le run grezze di P_n (validazione e test) esistano ancora.
+% - Fonte per "ogni metodo contro un consenso a cui partecipa": Lora 2020 (da leggere prima di citarla).

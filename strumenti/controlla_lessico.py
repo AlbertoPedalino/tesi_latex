@@ -69,7 +69,7 @@ RULES = [
     (r'errore lungo la traccia|errore di traverso|errore lungo il moto',
      '"spostamento lungo il moto" / "di traverso" (errore = G)', ()),
     (r'segnalazion[ei] instabil|stabilità delle segnalazioni|segnalazion[ei] incert',
-     '"stabile" / "non stabile" (probabilità di superamento almeno 0.9 o no); "instabile" solo per l\'aria', ()),
+     '"stabile" / "non stabile" (probabilità di superamento alta o no, senza un valore fisso); "instabile" solo per l\'aria', ()),
     (r'segnalazion[ei][^.;]{0,25}\baffidabil', 'una segnalazione è "stabile", non "affidabile" (stabile non vuol dire giusta)',
      ()),
     (r'segnalazioni in eccesso', '"segnalazioni non concordate"', ()),
@@ -86,7 +86,7 @@ RULES = [
     (r"precisione (dell'|del |di )?\d|precisione e (un |il )?richiamo", '"precision" (definita nella 5.4)', ()),
     (r'fals[oi] allarm', '"senza corrispondente" (il cubo concordato non è una verità)', ()),
     (r'probabilità di rilevamento|\bPOD\b',
-     '"quota di cluster concordati rilevati" (non si confonda con la probabilità di superamento)', ()),
+     '"percentuale di cluster concordati rilevati dal metodo" (non si confonda con la probabilità di superamento)', ()),
     (r'contemporane[oi],? (ma|e) lontan|contemporane[oi] lontan', '"contemporaneo, oltre i 300 km" ("lontano" solo per '
      'la zona lontana e "lontano dal normale")', ()),
     # Nomi del nuovo intorno (14 novembre 2026): i cluster sempre con il soggetto; niente "gruppo" né "lontane".
