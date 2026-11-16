@@ -38,10 +38,15 @@ LABELS = {"Gn": r"$G_\mathrm{n}$", **BASELINES}
 def motion_figure():
     """On the long clusters G_n is ahead along the motion, more than every baseline; on the short ones a little behind.
     One row per method, G_n on top; open dot = short clusters, filled dot = long clusters."""
-    table = pd.read_csv(MOTION, comment="#").set_index(["kind", "detector"])["median_km"]
+    frame = pd.read_csv(MOTION, comment="#").set_index(["kind", "detector"])
+    table, ahead = frame["median_km"], frame["ahead_pct"]
     figure, axis = plt.subplots(figsize=size(0.42), constrained_layout=True)
     ys = [len(ORDER)] + list(range(len(ORDER) - 1, 0, -1))  # G_n on top, a row of space below it
     axis.axvline(0, color=TEXT, linewidth=0.8, zorder=1)
+    # One cell of the grid, 28-55 km (less in longitude than in latitude): the shifts are a fraction of it.
+    axis.axvspan(28, 55, color=GRID, alpha=0.7, linewidth=0, zorder=0)
+    axis.text(41.5, len(ORDER) + 0.9, "una cella\n(28–55 km)", fontsize=TICKS - 1, color=MUTED, ha="center",
+              va="top", linespacing=0.95)
     for y, key in zip(ys, ORDER):
         colour = COLOURS[key]
         short, long = table[("brevi", key)], table[("lunghi", key)]
@@ -52,15 +57,23 @@ def motion_figure():
     axis.set_yticks(ys, [LABELS[key] for key in ORDER])
     for label, key in zip(axis.get_yticklabels(), ORDER):
         label.set_color(TEXT_COLOURS[key])
-    axis.set_ylim(0.4, len(ORDER) + 0.6)
-    axis.set_xlim(-15, 20)
-    axis.set_xticks([-15, -10, -5, 0, 5, 10, 15, 20])
+    axis.set_ylim(0.4, len(ORDER) + 1.0)
+    # G_n: the share of the concordant clusters in which it is ahead, short and long.
+    top = len(ORDER)
+    axis.annotate(f"davanti nel {ahead[('brevi', 'Gn')]:.0f}%", (table[("brevi", "Gn")], top), xytext=(0, 6),
+                  textcoords="offset points", fontsize=TICKS - 1, color=TEXT_COLOURS["Gn"], ha="center", va="bottom",
+                  bbox=dict(facecolor="white", edgecolor="none", pad=0.6), zorder=6)
+    axis.annotate(f"davanti nel {ahead[('lunghi', 'Gn')]:.0f}%", (table[("lunghi", "Gn")], top), xytext=(0, 6),
+                  textcoords="offset points", fontsize=TICKS - 1, color=TEXT_COLOURS["Gn"], ha="center", va="bottom",
+                  bbox=dict(facecolor="white", edgecolor="none", pad=0.6), zorder=6)
+    axis.set_xlim(-15, 58)
+    axis.set_xticks([-10, 0, 10, 20, 30, 40, 50])
     axis.set_xlabel("spostamento lungo il moto, mediana (km)", fontsize=TICKS)
     axis.tick_params(labelsize=TICKS, length=0)
     axis.grid(axis="x", color=GRID, linewidth=0.6)
     axis.set_axisbelow(True)
     clean(axis, "top", "right", "left")
-    axis.text(19.5, 0.55, "davanti", fontsize=TICKS - 1, color=MUTED, ha="right", va="bottom")
+    axis.text(57, 0.55, "davanti", fontsize=TICKS - 1, color=MUTED, ha="right", va="bottom")
     axis.text(-14.5, 0.55, "dietro", fontsize=TICKS - 1, color=MUTED, ha="left", va="bottom")
     handles = [plt.Line2D([], [], marker="o", linestyle="none", markersize=6, markerfacecolor="white",
                           markeredgecolor=MUTED, markeredgewidth=1.4, label="cluster brevi"),

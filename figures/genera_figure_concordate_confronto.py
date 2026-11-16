@@ -44,8 +44,8 @@ def overlap_figure():
                   "pca": (0.985, 0.18, "right"), "cblof": (0.80, 0.08, "left"), "mcd": (0.94, 0.77, "right"),
                   "hbos": (0.68, 0.37, "right"), "copod": (0.69, 0.15, "left"), "iforest": (0.79, 0.43, "left")},
         "lunghi": {"Gn": (0.69, 0.36, "right"), "change_3h": (0.69, 0.60, "left"), "normal": (0.60, 0.04, "left"),
-                   "pca": (0.985, 0.06, "right"), "cblof": (0.60, 0.22, "left"), "mcd": (0.91, 0.36, "left"),
-                   "hbos": (0.80, 0.46, "right"), "copod": (0.75, -0.08, "left"), "iforest": (0.985, 0.46, "right")}}
+                   "pca": (0.985, 0.06, "right"), "cblof": (0.60, 0.22, "left"), "mcd": (0.875, 0.40, "center"),
+                   "hbos": (0.80, 0.46, "right"), "copod": (0.75, -0.08, "left"), "iforest": (0.985, 0.51, "right")}}
     for axis, kind, title in zip(axes, ("brevi", "lunghi"), ("cluster brevi", "cluster lunghi")):
         for level in (0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8):
             excess = cover / level - 1

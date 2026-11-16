@@ -64,6 +64,7 @@ SHALLOW_GREY = "#b9b7b0"
 EMPTY = "#d9d8d4"  # cells of the type tables with no event
 BAND = "#cde2fb"  # the timestamps in which the cell of a case is in its cluster
 FLAGGED = "#fbe1d8"  # above the threshold
+THRESHOLD_RED = "#e0301e"  # outline of the cells of a case map above the threshold of G_n
 SHALLOW_KEYS = ("pca", "mcd", "cblof", "copod", "hbos", "iforest")
 SPREAD_COLUMN = 90.5  # Figure 6.13c: the x of the column of the differences
 MONTHS_SHORT = ("gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic")
@@ -537,8 +538,12 @@ def case_figure(number, data, coastline):
                     cmap="viridis", vmin=0, vmax=100)
     right_bar = figure.colorbar(mesh, ax=right, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30,
                                 ticks=[0, 25, 50, 75, 95])
-    right_bar.set_label(r"$G_\mathrm{n}$: percentile (95 circa = soglia)", fontsize=TICKS)
+    right_bar.set_label(r"$G_\mathrm{n}$: percentile (linea rossa = soglia)", fontsize=TICKS)
     right_bar.ax.tick_params(labelsize=TICKS)
+    # The threshold of G_n: the colour scale saturates near 95, so the cells above it get their own outline.
+    above = np.zeros((len(latitudes), len(longitudes)))
+    above[data["rows"], data["cols"]] = data[f"score_{SCORE}"] > float(data[f"limit_{SCORE}"])
+    right.contour(longitudes, latitudes[::-1], above[::-1], levels=[0.5], colors=THRESHOLD_RED, linewidths=0.8)
     for axis in (left, right):
         # The cells of the cluster: a black outline over a wide white halo, visible on the reds and blues of the map
         # and thicker than the coastlines.

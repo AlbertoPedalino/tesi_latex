@@ -20,7 +20,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from genera_figure_eventi import end_labels, position_axis, spaced
+from genera_figure_eventi import position_axis, spaced
 from genera_figure_g_d import TICKS, size
 from stile import BLUE, COLOURS, GREEN_TEXT, MUTED, ORANGE, SHALLOW, SHALLOW_GREY, TEXT, key_of
 
@@ -34,6 +34,22 @@ def lines_of(table, kind):
     """The median percentile of every method, by position, for one kind of concordant cluster."""
     part = table[table["type"] == kind].set_index("position").sort_index()
     return {key_of(column[:-len(" percentile")]): part[column] for column in part.columns if column.endswith(" percentile")}
+
+
+def stacked_labels(axis, bottom, labels, fontsize=7):
+    """Names right of the points at six or more cells: the first (G_n, the lowest point) at the height of its point, the
+    others stacked above it in the order given, so that none is pushed below its point."""
+    figure = axis.figure
+    figure.canvas.draw()
+    low, high = axis.get_ylim()
+    line_height = 1.2 * fontsize * figure.dpi / 72 / (axis.get_window_extent().height / (high - low))
+    place = float(bottom) - line_height / 2  # the lower edge of the first name
+    for label, colour in labels:
+        height = (label.count("\n") + 1) * line_height
+        axis.annotate(label, (1, place + height / 2), xycoords=("axes fraction", "data"), xytext=(3, 0),
+                      textcoords="offset points", fontsize=fontsize, color=colour, ha="left", va="center",
+                      linespacing=1.0, annotation_clip=False)
+        place += height
 
 
 def main():
@@ -68,9 +84,8 @@ def main():
         axis.set_ylim(0, 104)
         axis.set_yticks([0, 25, 50, 75, 100])
         last = lambda key: lines[key].iloc[-1]
-        end_labels(axis, ((last("Gn"), r"$G_\mathrm{n}$", BLUE), (last("normal"), "distanza\ndal normale", ORANGE),
-                          (last("change_3h"), "variazione\nin tre ore", GREEN_TEXT),
-                          (band.iloc[-1].mean(), "sei modelli\nshallow", "#8a8880")))
+        stacked_labels(axis, last("Gn"), ((r"$G_\mathrm{n}$", BLUE), ("sei modelli\nshallow", "#8a8880"),
+                                          ("distanza\ndal normale", ORANGE), ("variazione\nin tre ore", GREEN_TEXT)))
     axes[0].set_ylabel("percentile mediano", fontsize=TICKS)
     figure.savefig(HERE / "era5_concordate_profilo.pdf")
     plt.close(figure)
