@@ -530,8 +530,8 @@ def case_figure(number, data, coastline):
     limit = 4
     mesh = draw_map(left, grid, data["input"], coastline, cmap="RdBu_r", vmin=-limit, vmax=limit)
     left_bar = figure.colorbar(mesh, ax=left, orientation="horizontal", shrink=0.9, pad=0.02, aspect=30, extend="both")
-    root = " (radice quarta)" if record["type"] == "total_precipitation" else ""
-    left_bar.set_label(f"{TYPES[record['type']]}{root}: scarto standardizzato\n(deviazioni standard dal normale)",
+    # The fourth root of the precipitation is said in the caption: a longer label would shrink panel (a).
+    left_bar.set_label(f"{TYPES[record['type']]}: scarto standardizzato\n(deviazioni standard dal normale)",
                        fontsize=TICKS)
     left_bar.ax.tick_params(labelsize=TICKS)
     mesh = draw_map(right, grid, percentile(data[f"score_{SCORE}"], data[f"quantiles_{SCORE}"]), coastline, left=True,

@@ -72,7 +72,7 @@ def overlap_figure():
         axis.set_xlim(0.55, 1.0)
         axis.set_ylim(-0.13, 1.5)
         axis.set_xlabel("copertura del cluster concordato", fontsize=TICKS)
-        axis.text(0.02, 0.98, title, transform=axis.transAxes, fontsize=TICKS, color=TEXT, va="top")
+        axis.set_title(title, fontsize=TICKS, color=TEXT, pad=11)
         axis.tick_params(labelsize=TICKS, length=2)
         for side in ("top", "right"):
             axis.spines[side].set_visible(False)

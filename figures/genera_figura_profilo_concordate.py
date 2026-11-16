@@ -46,7 +46,7 @@ def stacked_labels(axis, bottom, labels, fontsize=7):
     place = float(bottom) - line_height / 2  # the lower edge of the first name
     for label, colour in labels:
         height = (label.count("\n") + 1) * line_height
-        axis.annotate(label, (1, place + height / 2), xycoords=("axes fraction", "data"), xytext=(3, 0),
+        axis.annotate(label, (1, place + height / 2), xycoords=("axes fraction", "data"), xytext=(9, 0),
                       textcoords="offset points", fontsize=fontsize, color=colour, ha="left", va="center",
                       linespacing=1.0, annotation_clip=False)
         place += height

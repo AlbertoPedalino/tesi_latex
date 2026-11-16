@@ -60,8 +60,8 @@ def motion_figure():
     axis.set_ylim(0.4, len(ORDER) + 1.0)
     # G_n: the share of the concordant clusters in which it is ahead, short and long.
     top = len(ORDER)
-    axis.annotate(f"davanti nel {ahead[('brevi', 'Gn')]:.0f}%", (table[("brevi", "Gn")], top), xytext=(0, 6),
-                  textcoords="offset points", fontsize=TICKS - 1, color=TEXT_COLOURS["Gn"], ha="center", va="bottom",
+    axis.annotate(f"davanti nel {ahead[('brevi', 'Gn')]:.0f}%", (-1.0, top), xytext=(0, 6),
+                  textcoords="offset points", fontsize=TICKS - 1, color=TEXT_COLOURS["Gn"], ha="right", va="bottom",
                   bbox=dict(facecolor="white", edgecolor="none", pad=0.6), zorder=6)
     axis.annotate(f"davanti nel {ahead[('lunghi', 'Gn')]:.0f}%", (table[("lunghi", "Gn")], top), xytext=(0, 6),
                   textcoords="offset points", fontsize=TICKS - 1, color=TEXT_COLOURS["Gn"], ha="center", va="bottom",
