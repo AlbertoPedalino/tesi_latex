@@ -419,8 +419,8 @@ Questa sezione mostra su una mappa un cluster per ciascuno dei tre tipi con più
 \end{figure}
 
 
+\FloatBarrier  % the three examples before their reading and Section 6.5
 \paragraph{Che cosa mostrano gli esempi.} In due delle tre celle seguite $G_{\mathrm{n}}$ e la distanza dal normale salgono e scendono insieme; in quella della precipitazione $G_{\mathrm{n}}$ supera la soglia solo quando la precipitazione arriva. Il cluster, inoltre, non contiene tutte le celle in cui la variabile del tipo è più lontana dal normale: delle celle del dominio con uno scarto standardizzato oltre 3 in valore assoluto, nell'istante delle mappe, ne contiene il 37\% per la velocità verticale, il 62\% per la precipitazione e il 57\% per la copertura nuvolosa. Sono esempi, non una dimostrazione.
-\FloatBarrier  % the three examples before Section 6.5
 % Numeri (5 novembre 2026, test, optuna-27): scripts/check_era5_event_cases.py con --longest-days 3 (regola
 % fissata prima di leggere i risultati, nel docstring dello script), uscite outputs/finale_optuna27/esempi
 % (cases.csv, case_NN.npz, log logs/esempi.log), copiate in figures/dati/era5_caso_NN.npz; mediane per zona
@@ -481,7 +481,7 @@ La Sezione~\ref{sec:ris-eventi} confronta i cluster di $G_{\mathrm{n}}$ con quel
 
 \paragraph{I metodi che leggono una cella in un istante concordano fra loro.} La Figura~\ref{fig:ris-confronti-jaccard} riporta l'indice di Jaccard di ogni coppia. I sei modelli shallow e la distanza dal normale formano un gruppo, con indici fra il 35\% e il 63\%: leggono lo stesso vettore, e tutti misurano quanto il valore è lontano da ciò che è abituale. La variazione in tre ore resta da parte, con indici fra il 17\% e il 26\%: segnala soprattutto altri valori.
 
-\begin{figure}[htbp]
+\begin{figure}[!t]
     \centering
     \includegraphics[width=0.8\textwidth]{era5_confronti_jaccard}
     \caption{Indice di Jaccard delle segnalazioni di ogni coppia di metodi sugli anni di test, in percentuale. I metodi che leggono una cella in un istante formano un gruppo (nel riquadro); la variazione in tre ore resta da parte.}
@@ -738,7 +738,7 @@ Inizio e fine confrontano il primo e l'ultimo istante del cluster del metodo cor
 
 Questa sottosezione guarda le segnalazioni non concordate di ogni metodo nell'intorno dei cluster concordati, davanti e dietro rispetto al moto: quanto i valori sono lontani dal normale nell'istante del valore, come cambiano nelle ore dopo e quanto sono cambiati nelle tre ore prima (Figura~\ref{fig:ris-concordate-attorno}), con le misure della Sezione~\ref{sec:exp-concordate}. Il termine di confronto sono i valori degli stessi intorni, nelle stesse posizioni, che nessun metodo segnala. Lo scarto standardizzato è il più grande in valore assoluto fra le variabili d'ingresso, in media, nell'istante del valore e nelle ore dopo; il salto più grande in tre ore è la variazione più grande di uno scarto standardizzato nelle tre ore prima del valore, in media, separata per i valori lontani dal normale, con almeno una variabile oltre due deviazioni standard, e per quelli moderati.
 
-\begin{figure}[htbp]
+\begin{figure}[!t]
     \centering
     \includegraphics[width=\textwidth]{era5_concordate_attorno}
     \caption{Le segnalazioni non concordate di ogni metodo attorno ai cluster concordati brevi e il termine di confronto, sugli anni di test. A sinistra, il salto più grande in tre ore prima dei valori moderati e la percentuale di valori con una variabile oltre due deviazioni standard; a destra, lo scarto standardizzato più grande dietro i cluster, dall'istante del valore a 24 ore dopo. Termine di confronto: i valori che nessun metodo segnala, negli stessi intorni; valori moderati: senza variabili oltre due deviazioni standard. Le segnalazioni di $G_{\mathrm{n}}$, come quelle della variazione in tre ore, sono cambiate in fretta e rientrano in poche ore.}
@@ -785,7 +785,7 @@ Le segnalazioni di $G_{\mathrm{n}}$ con probabilità di superamento almeno pari 
 
 Le sezioni precedenti descrivono le segnalazioni con le variabili d'ingresso, cioè con ciò che i metodi leggono. Questa sezione le guarda, in via preliminare, con le otto grandezze di ERA5 che nessuno score legge direttamente (Sezione~\ref{sec:exp-concordate}): per ogni grandezza si conta la percentuale di valori in cui è insolita, cioè nel suo 5\% più estremo per quella cella, quel mese e quell'ora. Per valori presi a caso nel dominio la percentuale sarebbe al più il 5\%, meno per CAPE e precipitazione convettiva (Sezione~\ref{sec:exp-concordate}); il termine di confronto, fatto dei valori non segnalati attorno ai cluster, non è un campione a caso, e per alcune grandezze arriva al 6.6\%. Le grandezze non sono state scelte per un tipo di anomalia, e un valore insolito non è di per sé un'anomalia meteorologica: la sezione descrive che cosa accompagna le segnalazioni, non le convalida.
 
-\begin{figure}[htbp]
+\begin{figure}[!t]
     \centering
     \includegraphics[width=\textwidth]{era5_concordate_giudici}
     \caption{Percentuale di valori in cui ciascuna grandezza che nessuno score legge direttamente è insolita, per le segnalazioni non concordate di ogni metodo attorno ai cluster concordati lunghi e per il termine di confronto, i valori che nessun metodo segnala negli stessi intorni, sugli anni di test. Il colore è il rapporto con il termine di confronto. Per valori presi a caso nel dominio la percentuale sarebbe al più il 5\%; il termine di confronto non è un campione a caso e arriva al 6.6\%. $G_{\mathrm{n}}$ ha CAPE, indice K e vapore insoliti più spesso degli altri metodi.}
