@@ -276,7 +276,7 @@ Il valore di G dipende anche da dove e quando è calcolato: dove G è grande per
 
 Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi i cluster, quali variabili vi si allontanano di più dal normale e quanto sono estremi i valori segnalati. Le segnalazioni sono raggruppate in cluster (Sezione~\ref{sec:exp-misure}): sugli anni di test se ne contano 794206, con 36.1 milioni di valori. Per confronto, le stesse misure sono ripetute sui cluster che ciascuna delle otto baseline della Sezione~\ref{sec:exp-baseline} forma con le proprie segnalazioni, anch'esse al 5\% con la soglia stimata sugli anni di validazione. Le baseline leggono una cella alla volta, senza le celle vicine, e non dipendono dal modello addestrato.
 
-\paragraph{Pochi cluster enormi contengono la maggior parte dei valori.} In ogni metodo quasi tutti i cluster hanno meno di 20 valori, fra il 91\% e il 97\%, ma la maggior parte dei valori segnalati sta nei pochi cluster con almeno 1000 valori: in $G_{\mathrm{n}}$ circa tre quarti, nelle baseline fra il 60\% e l'86\% (Figura~\ref{fig:ris-eventi-dimensione}). $G_{\mathrm{n}}$ ha la percentuale più bassa di cluster piccoli, il 91\% contro il 95--97\% delle baseline: le sue segnalazioni sono più raggruppate, in parte perché lo score di una cella è mediato sulla sua patch $3\times3$.
+\paragraph{Pochi cluster enormi contengono la maggior parte dei valori.} In ogni metodo quasi tutti i cluster hanno meno di 20 valori, fra il 91\% e il 97\%, ma la maggior parte dei valori segnalati sta nei pochi cluster con almeno 1000 valori: in $G_{\mathrm{n}}$ circa tre quarti, nelle baseline fra il 60\% e l'86\% (Figura~\ref{fig:ris-eventi-dimensione}). $G_{\mathrm{n}}$ ha la percentuale più bassa di cluster piccoli, il 91\% contro il 95--97\% delle baseline: le sue segnalazioni sono più raggruppate, in parte perché lo score di una cella è la media dell'errore sulla sua patch $3\times3$, che si sovrappone a quella delle celle vicine: se una cella supera la soglia, spesso la superano anche le vicine.
 
 \begin{figure}[!t]
     \centering
@@ -399,8 +399,6 @@ Questa sezione mostra su una mappa un cluster per ciascuno dei tre tipi con più
 \end{figure}
 
 % (clearpage tolto)
-\paragraph{Copertura nuvolosa.} Il cluster dura 66 ore. Il 15 giugno 2024 le sue 404 celle formano una fascia stretta dal Sahara occidentale alla costa mediterranea dell'Algeria e toccano il margine ovest del dominio, da leggere con cautela (Figura~\ref{fig:ris-caso-nuvole}; Sezione~\ref{sec:ris-correlazione-temporale}). La copertura nuvolosa è sopra il normale nel 92\% delle celle del cluster, con uno scarto standardizzato mediano di 2.1. Nella cella seguita $G_{\mathrm{n}}$ supera la soglia per cinque istanti, gli stessi in cui la cella fa parte del cluster, e la distanza dal normale sale e scende con esso.
-
 \begin{figure}[!t]
     \centering
     \captionsetup[sub]{labelformat=parens, labelsep=none, list=false}  % (a)(b)(c), one caption below
@@ -427,6 +425,9 @@ Questa sezione mostra su una mappa un cluster per ciascuno dei tre tipi con più
     \caption{Il cluster di copertura nuvolosa il 15 giugno 2024 alle 12~UTC, con le celle del cluster nel contorno nero e la cella seguita nel cerchio: (a) scarto standardizzato della copertura nuvolosa; (b) $G_{\mathrm{n}}$ come percentile; (c) nella cella seguita ($23.5^\circ$N, $13^\circ$W), percentile degli score e scarto standardizzato, in azzurro gli istanti nel cluster; cluster, cella, percentile e fascia come nella Figura~\ref{fig:ris-caso-velocita}. $G_{\mathrm{n}}$ e la distanza dal normale salgono e scendono insieme.}
     \label{fig:ris-caso-nuvole}
 \end{figure}
+
+\paragraph{Copertura nuvolosa.} Il cluster dura 66 ore. Il 15 giugno 2024 le sue 404 celle formano una fascia stretta dal Sahara occidentale alla costa mediterranea dell'Algeria e toccano il margine ovest del dominio, da leggere con cautela (Figura~\ref{fig:ris-caso-nuvole}; Sezione~\ref{sec:ris-correlazione-temporale}). La copertura nuvolosa è sopra il normale nel 92\% delle celle del cluster, con uno scarto standardizzato mediano di 2.1. Nella cella seguita $G_{\mathrm{n}}$ supera la soglia per cinque istanti, gli stessi in cui la cella fa parte del cluster, e la distanza dal normale sale e scende con esso.
+
 
 
 \FloatBarrier  % the three examples before their reading and Section 6.5
