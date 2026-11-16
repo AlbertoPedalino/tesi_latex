@@ -31,7 +31,7 @@ Il rilevatore parte da STGAN~\cite{deng2022stgan}, una rete avversaria proposta 
     \item un generatore che opera sul campo intero con un'unità ricorrente convoluzionale, la ConvGRU~\cite{shi2015convlstm,ballas2016convgru}, mentre il discriminatore resta locale e giudica ogni cella sulla sua \emph{patch} $3\times3$;
     \item un ingresso riferito al clima di ogni cella, con una normalizzazione stagionale degli ingressi, e un errore di ricostruzione del generatore, cioè l'errore con cui il generatore ricostruisce un istante dai precedenti, quindi quanto l'istante è inatteso a tre ore, in cui ogni variabile pesa in proporzione inversa a quanto essa cambia abitualmente;
     \item uno score riferito alla climatologia di ogni cella, cioè alla media e alla deviazione standard dello score per cella, giorno dell'anno e ora, e il dropout Monte Carlo~\cite{gal2016dropout} nelle due reti, che associa a ogni score una misura di dispersione;
-    \item una validazione senza etichette. I valori più insoliti, individuati con un criterio che non usa il modello, sono in gran parte tenuti fuori dalla misura con cui si scelgono gli iperparametri e tolti dalla climatologia dello score; nessuna quantità è stimata sugli anni di test.
+    \item una validazione senza etichette. I valori più insoliti, individuati con un criterio che non usa il modello, sono in gran parte tenuti fuori dalla misura con cui si scelgono gli iperparametri e tolti dalla climatologia dello score; nessuna quantità del rilevatore è stimata sugli anni di test.
 \end{enumerate}
 
 \section{Obiettivi e contributi della tesi}
