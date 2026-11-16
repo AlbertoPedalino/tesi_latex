@@ -28,7 +28,7 @@ La ricerca della Sezione~\ref{sec:exp-configurazioni} conta 29 prove, quattro de
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_optuna_pca}
-    \caption{Le prove della ricerca degli iperparametri nel piano delle prime due componenti principali dei quattro iperparametri, colorate secondo la distanza MMD sugli anni di validazione, più scura dove è più bassa. I cerchi arancioni indicano le tre prove del gruppo migliore, vicine fra loro, il riquadro sotto il grafico la direzione in cui cresce ciascun iperparametro.}
+    \caption{Le prove della ricerca degli iperparametri nel piano delle prime due componenti principali dei quattro iperparametri, colorate secondo la distanza MMD sugli anni di validazione, più scura dove è più bassa. I cerchi arancioni indicano le tre prove del gruppo migliore, vicine fra loro, il riquadro sotto il grafico la direzione in cui cresce ciascun iperparametro. Le croci sono le prove interrotte per una loss non finita.}
     \label{fig:ris-ricerca}
 \end{figure}
 
@@ -271,16 +271,16 @@ Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi i clus
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.62\textwidth]{era5_eventi_dimensione}
-    \caption{Percentuale dei valori segnalati da ogni metodo, sugli anni di test, che sta in cluster piccoli (meno di 20 valori), medi (20--999) ed enormi (1000 o più). In ogni metodo pochi cluster enormi contengono la maggior parte dei valori.}
+    \caption{Percentuale dei valori segnalati da ogni metodo, sugli anni di test, che sta in cluster piccoli (meno di 20 valori), medi (20--999) ed enormi (1000 o più). In ogni metodo pochi cluster enormi contengono la maggior parte dei valori. Metodi: Tabella~\ref{tab:ris-metodi-confronto}.}
     \label{fig:ris-eventi-dimensione}
 \end{figure}
 
 \paragraph{Il tipo di cluster.} Divisi per tipo (Sezione~\ref{sec:exp-misure}), i cluster di velocità verticale e di precipitazione raccolgono da soli il 61\% dei valori segnalati di $G_{\mathrm{n}}$; segue, molto distante, la copertura nuvolosa, con il 7\% (Figura~\ref{fig:ris-eventi-tipo}). Il tipo principale dipende dal metodo. La variazione in tre ore ha quasi gli stessi tipi di $G_{\mathrm{n}}$, con velocità verticale e precipitazione al 65\% dei valori e la copertura nuvolosa al terzo posto. Anche MCD raccoglie in queste due variabili il 68\% dei valori, ma con la precipitazione al primo posto (43\%) e l'umidità del suolo al terzo. Negli altri metodi il tipo principale cambia: nella distanza dal normale e in CBLOF è l'umidità del suolo, che cambia lentamente e forma cluster lunghi (quanti di questi cluster stiano sul mare, dove la variabile non ha un significato fisico, non è stato separato); in COPOD e HBOS è la velocità d'attrito; in PCA e Isolation Forest i valori sono divisi fra più tipi. La regola del tipo, quindi, non porta tutti i metodi verso le stesse variabili.
 
-\begin{figure}[htbp]
+\begin{figure}[!t]
     \centering
     \includegraphics[width=\textwidth]{era5_eventi_tipo}
-    \caption{Percentuale dei valori segnalati per tipo di cluster, cioè per la variabile d'ingresso in media più lontana dal normale nel cluster, sugli anni di test, nei cluster di $G_{\mathrm{n}}$ (prima colonna) e in quelli di ciascuna baseline; ogni colonna somma a 100. Il tipo principale dipende dal metodo.}
+    \caption{Percentuale dei valori segnalati per tipo di cluster, cioè per la variabile d'ingresso in media più lontana dal normale nel cluster, sugli anni di test, nei cluster di $G_{\mathrm{n}}$ (prima colonna) e in quelli di ciascuna baseline; ogni colonna somma a 100. Il tipo principale dipende dal metodo. Metodi: Tabella~\ref{tab:ris-metodi-confronto}.}
     \label{fig:ris-eventi-tipo}
 \end{figure}
 
@@ -391,7 +391,7 @@ Questa sezione mostra su una mappa un cluster per ciascuno dei tre tipi con più
 % (clearpage tolto)
 \paragraph{Copertura nuvolosa.} Il cluster dura 66 ore. Il 15 giugno 2024 le sue 404 celle formano una fascia stretta dal Sahara occidentale alla costa mediterranea dell'Algeria e toccano il margine ovest del dominio, da leggere con cautela (Figura~\ref{fig:ris-caso-nuvole}; Sezione~\ref{sec:ris-correlazione-temporale}). La copertura nuvolosa è sopra il normale nel 92\% delle celle del cluster, con uno scarto standardizzato mediano di 2.1. Nella cella seguita $G_{\mathrm{n}}$ supera la soglia per cinque istanti, gli stessi in cui la cella fa parte del cluster, e la distanza dal normale sale e scende con esso.
 
-\begin{figure}[htbp]
+\begin{figure}[!t]
     \centering
     \captionsetup[sub]{labelformat=parens, labelsep=none, list=false}  % (a)(b)(c), one caption below
     \begin{subfigure}[t]{0.487\textwidth}
@@ -458,7 +458,7 @@ La Sezione~\ref{sec:ris-eventi} confronta i cluster di $G_{\mathrm{n}}$ con quel
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Segnalazioni dei metodi sugli anni di test, con la soglia di ciascuno al 95-esimo percentile del proprio score sugli anni di validazione. Esclusive: non segnalate da nessun altro metodo.}
+    \caption{Segnalazioni dei metodi sugli anni di test, con la soglia di ciascuno al 95-esimo percentile del proprio score sugli anni di validazione. Esclusive: non segnalate da nessun altro metodo. Metodi: Tabella~\ref{tab:ris-metodi-confronto}.}
     \label{tab:ris-confronti}
     \vspace{0.6em}
     \begin{tabular}{@{}lrrr@{}}
@@ -484,7 +484,7 @@ La Sezione~\ref{sec:ris-eventi} confronta i cluster di $G_{\mathrm{n}}$ con quel
 \begin{figure}[!t]
     \centering
     \includegraphics[width=0.8\textwidth]{era5_confronti_jaccard}
-    \caption{Indice di Jaccard delle segnalazioni di ogni coppia di metodi sugli anni di test, in percentuale. I metodi che leggono una cella in un istante formano un gruppo (nel riquadro); la variazione in tre ore resta da parte.}
+    \caption{Indice di Jaccard delle segnalazioni di ogni coppia di metodi sugli anni di test, in percentuale. I metodi che leggono una cella in un istante formano un gruppo (nel riquadro); la variazione in tre ore resta da parte. Metodi: Tabella~\ref{tab:ris-metodi-confronto}.}
     \label{fig:ris-confronti-jaccard}
 \end{figure}
 
@@ -620,7 +620,7 @@ Un cluster concordato è rilevato da un metodo quando un cluster del metodo gli 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Percentuale dei cluster concordati brevi e lunghi rilevati da ogni metodo, e percentuale dei cluster del metodo senza corrispondente, contando come Bourdin et al.\ anche i cluster vicini solo a cluster concordati piccoli (meno di 20 valori) e senza di essi; anni di test.}
+    \caption{Percentuale dei cluster concordati brevi e lunghi rilevati da ogni metodo, e percentuale dei cluster del metodo senza corrispondente, contando come Bourdin et al.\ anche i cluster vicini solo a cluster concordati piccoli (meno di 20 valori) e senza di essi; anni di test. Metodi: Tabella~\ref{tab:ris-metodi-confronto}.}
     \label{tab:ris-concordate-rilevati}
     \vspace{0.6em}
     \begin{tabular}{@{}lrrrr@{}}
@@ -650,12 +650,12 @@ Un cluster concordato è rilevato da un metodo quando un cluster del metodo gli 
 % (match_r300_ns_lonely.csv; excess_r300_analysed_ns.csv e log, posizioni \"near small Gn, in zone\"; tutte le segnalazioni
 % di G_n: 70.8% oltre 2 DS contro 35.6%). Durata mediana dei cluster corrispondenti di G_n 21 h; inverno 18.3%, estate 34.6%.
 
-La Figura~\ref{fig:ris-concordate-sovrapposizione} riporta, per ogni metodo, la copertura, l'eccedenza e l'indice di Jaccard nell'intorno dei cluster concordati. Tutti i metodi concordano di più nei cluster lunghi che nei brevi.
+La Figura~\ref{fig:ris-concordate-sovrapposizione} riporta, per ogni metodo, la copertura, l'eccedenza e l'indice di Jaccard nell'intorno dei cluster concordati. Tutti i metodi concordano di più nei cluster lunghi che nei brevi. L'Appendice~\ref{app:profilo} mostra come lo score di ciascun metodo cala uscendo dai cluster concordati.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_concordate_sovrapposizione}
-    \caption{Copertura ed eccedenza di ogni metodo nell'intorno dei cluster concordati brevi e lunghi, mediane sui cluster concordati degli anni di test. Le linee grigie hanno indice di Jaccard costante, $J=\mathrm{cop}/(1+\mathrm{ecc})$: più un metodo sta in basso a destra, più le sue segnalazioni coincidono con il cluster concordato. I punti sono le mediane di copertura ed eccedenza; l'indice di Jaccard mediano sui cluster può quindi non coincidere con la linea su cui cade il punto.}
+    \caption{Copertura ed eccedenza di ogni metodo nell'intorno dei cluster concordati brevi e lunghi, mediane sui cluster concordati degli anni di test. Le linee grigie hanno indice di Jaccard costante, $J=\mathrm{cop}/(1+\mathrm{ecc})$: più un metodo sta in basso a destra, più le sue segnalazioni coincidono con il cluster concordato. I punti sono le mediane di copertura ed eccedenza; l'indice di Jaccard mediano sui cluster può quindi non coincidere con la linea su cui cade il punto. Metodi: Tabella~\ref{tab:ris-metodi-confronto}.}
     \label{fig:ris-concordate-sovrapposizione}
 \end{figure}
 % Numeri: Tesi/log_server/r300/outputs/concordate_5pc_regola_tesi/boxes_r300{,_long}.csv (15 novembre 2026): mediane
@@ -685,7 +685,7 @@ Inizio e fine confrontano il primo e l'ultimo istante del cluster del metodo cor
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Inizio e fine di $G_{\mathrm{n}}$ rispetto a ogni baseline sui cluster concordati brevi rilevati da entrambi: percentuale dei cluster concordati in cui $G_{\mathrm{n}}$ comincia prima o dopo la baseline e finisce dopo o prima; nei restanti i due metodi cominciano o finiscono insieme. L'asterisco indica un test dei segni significativo all'1\%.}
+    \caption{Inizio e fine di $G_{\mathrm{n}}$ rispetto a ogni baseline sui cluster concordati brevi rilevati da entrambi: percentuale dei cluster concordati in cui $G_{\mathrm{n}}$ comincia prima o dopo la baseline e finisce dopo o prima; nei restanti i due metodi cominciano o finiscono insieme. L'asterisco indica un test dei segni significativo all'1\%. Metodi: Tabella~\ref{tab:ris-metodi-confronto}.}
     \label{tab:ris-concordate-inizio}
     \vspace{0.6em}
     \begin{tabular}{@{}lrrrr@{}}
@@ -722,7 +722,7 @@ Inizio e fine confrontano il primo e l'ultimo istante del cluster del metodo cor
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_concordate_moto}
-    \caption{Spostamento lungo il moto delle segnalazioni di ogni metodo rispetto ai cluster concordati, formati dai valori segnalati da almeno cinque metodi su nove, brevi (cerchio vuoto) e lunghi (cerchio pieno): mediana sui cluster concordati, positiva davanti al cluster concordato, sugli anni di test. Nei cluster lunghi $G_{\mathrm{n}}$ sta davanti più di ogni baseline.}
+    \caption{Spostamento lungo il moto delle segnalazioni di ogni metodo rispetto ai cluster concordati, formati dai valori segnalati da almeno cinque metodi su nove, brevi (cerchio vuoto) e lunghi (cerchio pieno): mediana sui cluster concordati, positiva davanti al cluster concordato, sugli anni di test. Nei cluster lunghi $G_{\mathrm{n}}$ sta davanti più di ogni baseline. Metodi: Tabella~\ref{tab:ris-metodi-confronto}.}
     \label{fig:ris-concordate-moto}
 \end{figure}
 % Figura: figures/genera_figure_concordate.py, dati figures/dati/era5_concordate_moto_r300.csv (colonna along_km di
@@ -788,7 +788,7 @@ Le sezioni precedenti descrivono le segnalazioni con le variabili d'ingresso, ci
 \begin{figure}[!t]
     \centering
     \includegraphics[width=\textwidth]{era5_concordate_giudici}
-    \caption{Percentuale di valori in cui ciascuna grandezza che nessuno score legge direttamente è insolita, per le segnalazioni non concordate di ogni metodo attorno ai cluster concordati lunghi e per il termine di confronto, i valori che nessun metodo segnala negli stessi intorni, sugli anni di test. Il colore è il rapporto con il termine di confronto. Per valori presi a caso nel dominio la percentuale sarebbe al più il 5\%; il termine di confronto non è un campione a caso e arriva al 6.6\%. $G_{\mathrm{n}}$ ha CAPE, indice K e vapore insoliti più spesso degli altri metodi.}
+    \caption{Percentuale di valori in cui ciascuna grandezza che nessuno score legge direttamente è insolita, per le segnalazioni non concordate di ogni metodo attorno ai cluster concordati lunghi e per il termine di confronto, i valori che nessun metodo segnala negli stessi intorni, sugli anni di test. Il colore è il rapporto con il termine di confronto. Insolita: nel 5\% più estremo per cella, mese e ora. Colonne: prec. conv.\ = precipitazione convettiva; rugiada, minima e massima = temperatura di rugiada, minima e massima a due metri; vapore colonna = vapore acqueo nella colonna. Per valori presi a caso nel dominio la percentuale sarebbe al più il 5\%; il termine di confronto non è un campione a caso e arriva al 6.6\%. $G_{\mathrm{n}}$ ha CAPE, indice K e vapore insoliti più spesso degli altri metodi. Metodi: Tabella~\ref{tab:ris-metodi-confronto}.}
     \label{fig:ris-giudici}
 \end{figure}
 % Giudici sugli anni 2005-2025, intorno di 300 km (15 novembre 2026): Tesi/log_server/r300/outputs/concordate_5pc_regola_tesi/
