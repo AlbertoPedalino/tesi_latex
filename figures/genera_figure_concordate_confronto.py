@@ -139,7 +139,7 @@ def around_figure():
                                          gridspec_kw={"width_ratios": (1.1, 1)})
     # Names: one by one where a point stands apart; the four shallow models packed together get one name.
     places = {"Gn": (2.66, 74.2, "right"), "change_3h": (2.74, 62.5, "right"), "normal": (1.25, 101.5, "left"),
-              "pca": (2.52, 96.2, "left"), "mcd": (2.34, 90.7, "left"), "reference": (1.37, 40.3, "left")}
+              "pca": (2.52, 96.2, "left"), "mcd": (2.34, 90.7, "left")}
     for method in list(reversed(ORDER)) + ["reference"]:
         x, y = table.loc[method, ["salto_moderati", "oltre2_brevi"]]
         colour = COLOURS.get(method, TEXT)
@@ -152,12 +152,16 @@ def around_figure():
         name = REFERENCE_LABEL if method == "reference" else LABELS[method]
         left.text(tx, ty, name, ha=side, va="center", fontsize=TICKS - 1.5, color=TEXT_COLOURS.get(method, TEXT),
                   path_effects=HALO, zorder=5)
+    reference = table.loc["reference", ["salto_moderati", "oltre2_brevi"]]
+    left.annotate(REFERENCE_LABEL, tuple(reference), xytext=(1.48, 50), ha="left", va="center", fontsize=TICKS - 1.5,
+                  color=TEXT, path_effects=HALO, zorder=5,
+                  arrowprops=dict(arrowstyle="-", color=MUTED, linewidth=0.5, shrinkA=1, shrinkB=4))
     left.text(1.62, 85.5, "CBLOF, HBOS, COPOD,\nIsolation Forest", ha="left", va="top", fontsize=TICKS - 1.5,
               color="#6f6d67", path_effects=HALO, zorder=5)
     left.set_xlim(1.2, 3.0)
     left.set_ylim(35, 105)
-    left.set_xlabel("salto più grande in tre ore prima del valore\n(valori moderati, deviazioni standard)", fontsize=TICKS)
-    left.set_ylabel("valori con una variabile oltre\ndue deviazioni standard (%)", fontsize=TICKS)
+    left.set_xlabel("salto più grande in tre ore prima del valore\n[deviazioni standard], solo valori moderati", fontsize=TICKS)
+    left.set_ylabel("tutti i valori: con una variabile\noltre due deviazioni standard (%)", fontsize=TICKS)
 
     hours = [0, 3, 6, 12, 24]
     for method in list(reversed(ORDER)) + ["reference"]:
@@ -172,11 +176,13 @@ def around_figure():
                plt.Line2D([], [], color=COLOURS["normal"], linewidth=1.4, label=LABELS["normal"]),
                plt.Line2D([], [], color=COLOURS["pca"], linewidth=1.0, label="sei modelli shallow"),
                plt.Line2D([], [], color=TEXT, linewidth=1.2, linestyle="--", label=REFERENCE_LABEL)]
-    right.legend(handles=handles, loc="upper right", frameon=False, fontsize=TICKS - 1.5, handlelength=1.8)
+    right.legend(handles=handles, loc="lower left", frameon=False, fontsize=TICKS - 1.5, handlelength=1.8)
     right.set_xticks(hours)
     right.set_xlim(-0.5, 24.5)
     right.set_xlabel("ore dopo il valore", fontsize=TICKS)
-    right.set_ylabel("scarto standardizzato più grande\ndietro i cluster brevi\n(deviazioni standard)", fontsize=TICKS)
+    right.set_ylabel("scarto standardizzato più grande\n[deviazioni standard]", fontsize=TICKS)
+    right.set_title("solo dietro i cluster brevi", fontsize=TICKS, color=TEXT)
+    right.set_ylim(0, 3.5)  # from zero: the axis is not cut
     for axis in (left, right):
         axis.tick_params(labelsize=TICKS, length=2)
         axis.grid(color=GRID, linewidth=0.5)

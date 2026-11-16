@@ -51,7 +51,7 @@ La ricerca della Sezione~\ref{sec:exp-configurazioni} conta 29 prove, quattro de
 
 \paragraph{Il gruppo migliore di prove.} Tre prove formano il gruppo migliore (Tabella~\ref{tab:ris-regione}). Le loro distanze MMD sono 0.00259, 0.00327 e 0.00384: le prime due sono le più basse dell'intera ricerca. La configurazione scelta, la prima, ha un tasso di apprendimento di $7.65\times10^{-4}$ per il generatore e di $3.06\times10^{-3}$ per il discriminatore, peso $\lambda_G=63.7$ e un aggiornamento del discriminatore per ogni aggiornamento del generatore. Le tre prove sono vicine fra loro nei quattro iperparametri, standardizzati come nella Figura~\ref{fig:ris-ricerca}, e sono le sole di quella parte dello spazio sotto 0.004: per questo il gruppo comprende anche la terza, con 0.00384. Fuori dal gruppo la prova migliore vale 0.00367, ma è isolata e le prove più vicine hanno dato fra 0.0038 e 0.0044: è un risultato singolo, non un gruppo.
 
-\paragraph{Le prove vicine alla configurazione scelta.} La prova più vicina alla configurazione scelta ha un tasso del generatore poco più basso ($5.2\times10^{-4}$) e quasi lo stesso peso di ricostruzione (60), ma il tasso del discriminatore al massimo della ricerca, $5\times10^{-3}$: la distanza sale a 0.0041. Le due prove con il tasso del discriminatore pari a 50 volte quello del generatore danno 0.0044 e 0.0054. Per la configurazione scelta il processo gaussiano della ricerca stima un valore atteso di $0.0032\pm0.0004$, con un rumore della distanza MMD di circa 0.0005: parte del suo vantaggio sulle prove vicine dipende quindi dal seme.
+\paragraph{Le prove vicine alla configurazione scelta.} La prova più vicina alla configurazione scelta ha un tasso del generatore poco più basso ($5.2\times10^{-4}$) e quasi lo stesso peso di ricostruzione (60), ma il tasso del discriminatore al massimo della ricerca, $5\times10^{-3}$: la distanza sale a 0.0041. Le due prove con il tasso del discriminatore pari a 50 volte quello del generatore danno 0.0044 e 0.0054. Per la configurazione scelta il processo gaussiano della ricerca stima un valore atteso di $0.0032\pm0.0004$, con un rumore della distanza MMD di circa 0.0005: parte del vantaggio sulle prove vicine viene quindi dal seme.
 
 Le ultime prove esplorano parti meno note dello spazio degli iperparametri e nessuna scende sotto la distanza della configurazione scelta.
 % Prove: report di scripts/optuna_era5_stgan.py sullo studio era5-gan-extended-2 (4 novembre 2026, sera,
@@ -93,7 +93,7 @@ Le due componenti sono confrontate con due correlazioni. Quella di Spearman è c
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_g_d_correlazione_temporale}
-    \caption{Correlazione temporale di Spearman fra G e D (Figura~\ref{fig:ris-g-d-spaziale}) in ogni cella, sugli anni di validazione: blu dove D scende quando G sale, rosso dove salgono insieme; il triangolo all'estremo della scala dei colori indica correlazioni oltre $0.3$. Il legame è debole quasi ovunque; la cornice rossa lungo il margine del dominio è probabilmente un effetto del modello, che lì completa il campo con zeri.}
+    \caption{Correlazione temporale di Spearman fra G e D (Figura~\ref{fig:ris-g-d-spaziale}) in ogni cella, sugli anni di validazione: blu dove D scende quando G sale, rosso dove salgono insieme; il triangolo della scala indica correlazioni oltre $0.3$. Il legame è debole quasi ovunque; la cornice rossa lungo il margine del dominio è probabilmente un effetto del modello, che lì completa il campo con zeri; macchie rosse anche su alcuni rilievi (Sezione~\ref{sec:conc-limiti}).}
     \label{fig:ris-g-d-temporale}
 \end{figure}
 
@@ -129,7 +129,7 @@ Le due componenti sono confrontate con due correlazioni. Quella di Spearman è c
 % (celle azzerate e mascherate). Le ricostruzioni vicino al bordo non sono salvate: il
 % meccanismo della cornice non è verificato in dettaglio. Da riprendere nei Limiti.
 
-\paragraph{Con la normalizzazione climatologica il legame resta debole.} Dopo la normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}) la correlazione di Spearman fra $G_{\mathrm{n}}$ e D, anch'essa normalizzata, vale in media $0.01$ nello spazio e ha mediana $-0.01$ nel tempo: resta vicina a zero. Ciascuna componente conserva quasi lo stesso ordine: la correlazione di Spearman fra la componente prima e dopo la normalizzazione climatologica, applicata allo stesso modo anche a D, è 0.91 per G e 0.89 per D, calcolata sulle celle in ogni istante e poi mediata sugli istanti.
+\paragraph{Con la normalizzazione climatologica il legame resta debole.} Dopo la normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}) la correlazione di Spearman fra $G_{\mathrm{n}}$ e D, anch'essa normalizzata, vale in media $0.01$ nello spazio e ha mediana $-0.01$ nel tempo: resta vicina a zero. Ciascuna componente conserva quasi lo stesso ordine: la correlazione di Spearman fra la componente prima e dopo la normalizzazione climatologica, applicata allo stesso modo anche a D, è 0.91 per G e 0.89 per D, calcolata sulle celle istante per istante e mediata.
 
 % Numeri (5 novembre 2026, outputs/comportamento_optuna27): correlazioni con G+clim e
 % D+clim = generator_clim e discriminator_clim, climatologia giorno +-15 x ora sugli
@@ -137,13 +137,13 @@ Le due componenti sono confrontate con due correlazioni. Quella di Spearman è c
 % Dopo la normalizzazione climatologica: Spearman G+clim-D+clim media 0.014 nello spazio, mediana
 % -0.014 nel tempo; G-G+clim 0.906, D-D+clim 0.891 (media nello spazio).
 
-Per capire da dove viene il legame negativo nei valori più alti di G, D è scomposta nei suoi due giudizi, $D_{\mathrm{oss}}$ e $D_{\mathrm{ric}}$ (Tabella~\ref{tab:ris-score}): D è alta quando il discriminatore giudica generata l'osservazione più della sua ricostruzione. Come sopra, G è senza normalizzazione climatologica, come nello score combinato.
+Per capire da dove viene il legame negativo nei valori più alti di G, D è scomposta nei suoi due giudizi, $D_{\mathrm{oss}}$ e $D_{\mathrm{ric}}$ (Tabella~\ref{tab:ris-score}): D è alta quando il discriminatore giudica generata l'osservazione più della sua ricostruzione. G è senza normalizzazione climatologica, come nello score combinato.
 
 \paragraph{Quando G sale, entrambi i giudizi scendono.} La correlazione temporale di Spearman fra G e $D_{\mathrm{oss}}$ ha mediana $-0.73$, quella fra G e $D_{\mathrm{ric}}$ ha mediana $-0.69$, ed entrambe sono negative in tutte le celle, intorno a $-0.7$ quasi ovunque nel dominio. Quando il generatore sbaglia di più, il discriminatore giudica più reali di quanto è abituale sia l'osservazione sia la sua ricostruzione.
 
 % Figura era5_d_termini_correlazione_temporale_{a,b} tolta il 15/11/2026 (revisione: un messaggio, detto nel testo).
 
-\paragraph{I due giudizi si compensano.} Poiché scendono insieme, i due giudizi sono legati fra loro, con una correlazione di Spearman mediana di $0.73$. D è la loro differenza, e di questo movimento comune conserva solo una piccola parte: per questo il suo legame con G è debole. Nei valori più alti di G, però, $D_{\mathrm{oss}}$ scende un po' più di $D_{\mathrm{ric}}$, e D scende: è il legame negativo che la correlazione di Pearson ha messo in luce sopra. Da D, quindi, non si capisce che cosa il rilevatore segnali: dove il generatore sbaglia di più, il discriminatore giudica l'osservazione più reale, non meno.
+\paragraph{I due giudizi si compensano.} Poiché scendono insieme, i due giudizi sono legati fra loro, con una correlazione di Spearman mediana di $0.73$. D è la loro differenza, e di questo movimento comune conserva solo una piccola parte: per questo il suo legame con G è debole. Nei valori più alti di G, però, $D_{\mathrm{oss}}$ scende un po' più di $D_{\mathrm{ric}}$, e D scende: è il legame negativo che la correlazione di Pearson ha messo in luce sopra. Da D, quindi, non si capisce che cosa segnali il discriminatore: dove il generatore sbaglia di più, il discriminatore giudica l'osservazione più reale, non meno.
 
 % Numeri (5 novembre 2026, validazione, outputs/comportamento_optuna27): correlazioni dei
 % termini in correlazioni_g_dterms (temporal_correlation.npz, mediane nelle celle; nei
@@ -158,7 +158,11 @@ Per capire da dove viene il legame negativo nei valori più alti di G, D è scom
 
 Senza etichette, il disaccordo fra G e D non dice da solo quale delle due componenti abbia ragione; resta da vedere che cosa succede sommandole.
 
-\paragraph{Con il min--max scelto, lo score combinato è di fatto D.} Lo score combinato somma le due componenti dopo averle riportate su una scala comune, il min--max scelto in questo lavoro (Sezione~\ref{sec:score-dropout-montecarlo}). Sugli anni di validazione ordina i valori quasi come D e poco come G: la correlazione di Spearman con D è 0.99 sia nello spazio sia nel tempo, quella con G è 0.13 nello spazio e 0.07 nel tempo, e con la normalizzazione climatologica i valori restano quasi gli stessi (0.99 con D normalizzata, 0.12 e 0.10 con $G_{\mathrm{n}}$). Anche le segnalazioni sono quelle di D (Tabella~\ref{tab:ris-combinato}): con i tre score normalizzati, il 94\% dei valori segnalati dallo score combinato è segnalato anche da D, solo il 32\% anche da $G_{\mathrm{n}}$, e con la soglia al 99-esimo percentile le percentuali sono 93\% e 19\%. Con questa scala, usare lo score combinato vorrebbe dire, quindi, usare il discriminatore.
+\paragraph{Con il min--max scelto, lo score combinato è di fatto D.} Lo score combinato somma le due componenti dopo averle riportate su una scala comune, il min--max scelto in questo lavoro (Sezione~\ref{sec:score-dropout-montecarlo}). Sugli anni di validazione ordina i valori quasi come D e poco come G: la correlazione di Spearman con D è 0.99 sia nello spazio sia nel tempo, quella con G è 0.13 nello spazio e 0.07 nel tempo, e con la normalizzazione climatologica i valori restano quasi gli stessi (0.99 con D normalizzata, 0.12 e 0.10 con $G_{\mathrm{n}}$). Anche le segnalazioni sono quelle di D (Tabella~\ref{tab:ris-combinato}): con i tre score normalizzati, il 94\% dei valori segnalati dallo score combinato è segnalato anche da D, solo il 32\% anche da $G_{\mathrm{n}}$, e con la soglia al 99-esimo percentile le percentuali sono 93\% e 19\%. Con questa scala, usare lo score combinato vorrebbe dire, quindi, usare il discriminatore. Il motivo sta nella scala: il min--max usa gli estremi degli anni di validazione, e dopo di esso i valori tipici di G stanno fra 0.0015 e 0.0035 (quartili), schiacciati vicino a zero dai suoi valori più alti, quelli di D fra 0.583 e 0.593. L'intervallo interquartile di D è circa cinque volte quello di G, e la somma varia quasi solo con D.
+% Fonte: physiq-pv a2ab1781, scripts/check_era5_minmax_spread.py, outputs/minmax_spread.log (16/11/2026): estremi da
+% backend.score_normalization = validation_objective.score_ranges (r 0.000122842-0.514984, d -0.517472-0.362449);
+% validazione, una riga temporale ogni tre. G dopo il min-max: p25 0.001461, p50 0.002221, p75 0.003514, IQR 0.002053
+% (senza esclusi 0.00169); D: p25 0.5827, p50 0.5879, p75 0.5933, IQR 0.01062 (senza esclusi 0.0098); rapporto 5.17 (5.8).
 % Numeri (5 novembre 2026, validazione 2000-2004, optuna-27): score combinato = componente combined di
 % outputs/stgan_optuna27_validation; climatologia outputs/comportamento_optuna27/combined_clim (giorno +-15 x ora,
 % un anno fuori, come generator_clim). Correlazioni: logs/correlazioni_combinato.log (D-combinato Spearman spaziale
@@ -191,9 +195,7 @@ Senza etichette, il disaccordo fra G e D non dice da solo quale delle due compon
 
 Il valore di G dipende anche da dove e quando è calcolato: dove G è grande per natura, G segnala di più. La normalizzazione climatologica (Sezione~\ref{sec:normalizzazione-climatologica-score}) toglie questa differenza, esprimendo ogni score rispetto a ciò che è abituale per la stessa cella, lo stesso giorno dell'anno e la stessa ora; G così normalizzato è indicato con $G_{\mathrm{n}}$ (Tabella~\ref{tab:ris-score}). Questa sezione verifica dove cadono le segnalazioni con e senza la normalizzazione climatologica, ripete sugli anni di test le misure di questa sezione e della Sezione~\ref{sec:ris-correlazione-spaziale}, e fissa lo score del rilevatore.
 
-\paragraph{Con la normalizzazione climatologica le segnalazioni diventano quasi uniformi.} La normalizzazione climatologica non cambia il legame fra G e D (Sezione~\ref{sec:ris-g-d-legame}), ma cambia dove cadono le segnalazioni (Figura~\ref{fig:ris-g-luogo}). Con la soglia al 95-esimo percentile, sugli anni di validazione ciascuno score segnala il 5\% dei valori. Senza normalizzazione climatologica G segnala soprattutto a sud e in estate, dove il suo errore è alto per natura, per ragioni che qui non sono separate: la percentuale va dall'1.6\% fra 50$^\circ$ e 60$^\circ$N in dicembre all'11.1\% fra 20$^\circ$ e 30$^\circ$N in agosto. Con $G_{\mathrm{n}}$ resta fra il 3.7\% e il 6.3\% in ogni fascia e in ogni mese. È l'effetto atteso dalla Sezione~\ref{sec:normalizzazione-climatologica-score}: la normalizzazione climatologica toglie la differenza di prevedibilità fra luoghi e stagioni. Lo si misura con la differenza relativa fra fasce di latitudine e mesi, cioè con quanto, in media e in proporzione, la percentuale di valori segnalati in ogni fascia e mese si scosta da quella media (Sezione~\ref{sec:exp-misure}): da G a $G_{\mathrm{n}}$ scende da 0.39 a 0.11, cioè di circa tre quarti; con la soglia al 99-esimo percentile, che segnala l'1\% dei valori, da 0.70 a 0.28, circa tre quinti. Con questa soglia resta un eccesso di segnalazioni a sud: la percentuale media è l'1.4\% fra 20$^\circ$ e 30$^\circ$N e lo 0.7\% fra 50$^\circ$ e 60$^\circ$N, contro l'1\% atteso.
-
-\begin{figure}[htbp]
+\begin{figure}[!t]
     \centering
     \captionsetup[sub]{labelformat=parens, labelsep=none, list=false}  % (a)(b), one caption below
     \begin{subfigure}[t]{0.970\textwidth}
@@ -212,6 +214,9 @@ Il valore di G dipende anche da dove e quando è calcolato: dove G è grande per
     \caption{Percentuale dei valori segnalati per fascia di latitudine e mese, sugli anni di validazione, da G senza normalizzazione climatologica (a) e da $G_{\mathrm{n}}$ (b), con la stessa scala dei colori; il bianco corrisponde al 5\%. Senza normalizzazione climatologica le segnalazioni si concentrano a sud e in estate; con $G_{\mathrm{n}}$ sono distribuite in modo quasi uniforme.}
     \label{fig:ris-g-luogo}
 \end{figure}
+
+\paragraph{Con la normalizzazione climatologica le segnalazioni diventano quasi uniformi.} La normalizzazione climatologica non cambia il legame fra G e D (Sezione~\ref{sec:ris-g-d-legame}), ma cambia dove cadono le segnalazioni (Figura~\ref{fig:ris-g-luogo}). Con la soglia al 95-esimo percentile, sugli anni di validazione ciascuno score segnala il 5\% dei valori. Senza normalizzazione climatologica G segnala soprattutto a sud e in estate, dove il suo errore è alto per natura, per ragioni che qui non sono separate: la percentuale va dall'1.6\% fra 50$^\circ$ e 60$^\circ$N in dicembre all'11.1\% fra 20$^\circ$ e 30$^\circ$N in agosto. Con $G_{\mathrm{n}}$ resta fra il 3.7\% e il 6.3\% in ogni fascia e in ogni mese. È l'effetto atteso dalla Sezione~\ref{sec:normalizzazione-climatologica-score}: la normalizzazione climatologica toglie la differenza di prevedibilità fra luoghi e stagioni. Lo si misura con la differenza relativa fra fasce di latitudine e mesi, cioè con quanto, in media e in proporzione, la percentuale di valori segnalati in ogni fascia e mese si scosta da quella media (Sezione~\ref{sec:exp-misure}): da G a $G_{\mathrm{n}}$ scende da 0.39 a 0.11, cioè di circa tre quarti; con la soglia al 99-esimo percentile, che segnala l'1\% dei valori, da 0.70 a 0.28, circa tre quinti. Con questa soglia resta un eccesso di segnalazioni a sud: la percentuale media è l'1.4\% fra 20$^\circ$ e 30$^\circ$N e lo 0.7\% fra 50$^\circ$ e 60$^\circ$N, contro l'1\% atteso.
+
 % Quote per luogo: scripts/check_era5_score_by_place.py, log
 % logs/luogo_g_grezzo_5pc.log e luogo_g_clim_5pc.log; dati in
 % figures/dati/era5_g_luogo.json, figura figures/genera_figura_g_luogo.py. Dai log
@@ -227,12 +232,6 @@ Il valore di G dipende anche da dove e quando è calcolato: dove G è grande per
 % sul test 5.54% (36093783 su 61360 x 10611, zone_g_dterms_5pc.csv).
 
 \paragraph{Lo score del rilevatore è $G_{\mathrm{n}}$.} La scelta poggia sul significato delle due componenti. G ha un significato chiaro: misura quanto un campo si allontana da ciò che il modello si aspetta. D dipende anche dal giudizio sulla ricostruzione, e il suo comportamento si spiega solo in parte. Sommarle, come nello score combinato, darebbe di fatto D (Sezione~\ref{sec:ris-combinato}). Il rilevatore usa quindi $G_{\mathrm{n}}$ (Sezione~\ref{sec:normalizzazione-climatologica-score}), che distribuisce le segnalazioni in modo quasi uniforme fra luoghi e stagioni (Figura~\ref{fig:ris-g-luogo}).
-
-\paragraph{Sugli anni di test i risultati sono simili.} Le stesse analisi, ripetute sugli anni di test 2005--2025 con la climatologia e le soglie stimate sugli anni di validazione, danno risultati simili (Tabella~\ref{tab:ris-conferma-test}): le correlazioni cambiano di al più tre centesimi. Sugli anni di test $G_{\mathrm{n}}$ segnala il 5.5\% dei valori, un po' più del 5\%, probabilmente perché negli anni di test l'errore di ricostruzione del generatore è in media un po' più alto; per lo stesso motivo le percentuali per fascia di latitudine e mese arrivano al 7.8\%. Anno per anno, sugli anni di test, $G_{\mathrm{n}}$ segnala fra il 4.9\% e il 6.6\% dei valori, in media più spesso dal 2014 in poi (5.8\% contro 5.2\% nel 2005--2013); la variazione in tre ore, che non usa il modello, va dal 4.9\% al 6.2\%, con lo stesso massimo nel 2018. L'aumento si vede quindi anche senza il modello e non richiede una deriva del modello. Non richiede nemmeno la tendenza lenta del clima, che sugli ingressi è in parte sottratta (Sezione~\ref{sec:ingresso-normalizzazione-era5}) e su una differenza di tre ore non pesa: indica cambiamenti rapidi più frequenti o più grandi rispetto agli anni di validazione, la cui causa qui non è separata.
-% Fonte: figures/dati/anni_segnalazioni.csv (physiq-pv e2e5eb17, scripts/check_era5_yearly_share_and_skill.py yearly,
-% outputs/anni_segnalazioni.csv, 16/11/2026; soglie dagli anni di validazione): G_n 4.911% (2007) - 6.554% (2018), dal
-% 2014 mai sotto 5.295%; variazione in tre ore 4.935% (2005) - 6.159% (2018); distanza dal normale 4.643% (2017) - 7.140%
-% (2018). Medie 2005-2013 / 2014-2025: G_n 5.17 / 5.83, variazione 5.16 / 5.72.
 
 \begin{table}[htbp]
     \centering
@@ -262,6 +261,13 @@ Il valore di G dipende anche da dove e quando è calcolato: dove G è grande per
 % riproduce 0.107 e 0.281 della validazione): test 0.112 al 5% (risultati_optuna27/outputs/finale_optuna27/logs/
 % luogo_g_clim_5pc.log, media 5.56%), 0.370 all'1% (luogo_g_clim_1pc.log). G senza normalizzazione sul test: log non
 % disponibile.
+
+\paragraph{Sugli anni di test i risultati sono simili.} Le stesse analisi, ripetute sugli anni di test 2005--2025 con la climatologia e le soglie stimate sugli anni di validazione, danno risultati simili (Tabella~\ref{tab:ris-conferma-test}): le correlazioni cambiano di al più tre centesimi. Sugli anni di test $G_{\mathrm{n}}$ segnala il 5.5\% dei valori, un po' più del 5\%, probabilmente perché negli anni di test l'errore di ricostruzione del generatore è in media un po' più alto; per lo stesso motivo le percentuali per fascia di latitudine e mese arrivano al 7.8\%. Anno per anno, sugli anni di test, $G_{\mathrm{n}}$ segnala fra il 4.9\% e il 6.6\% dei valori, in media più spesso dal 2014 in poi (5.8\% contro 5.2\% nel 2005--2013); la variazione in tre ore, che non usa il modello, va dal 4.9\% al 6.2\%, con lo stesso massimo nel 2018. L'aumento si vede quindi anche senza il modello e non richiede una deriva del modello. Non richiede nemmeno la tendenza lenta del clima, che sugli ingressi è in parte sottratta (Sezione~\ref{sec:ingresso-normalizzazione-era5}) e su una differenza di tre ore non pesa: indica cambiamenti rapidi più frequenti o più grandi rispetto agli anni di validazione, la cui causa qui non è separata.
+% Fonte: figures/dati/anni_segnalazioni.csv (physiq-pv e2e5eb17, scripts/check_era5_yearly_share_and_skill.py yearly,
+% outputs/anni_segnalazioni.csv, 16/11/2026; soglie dagli anni di validazione): G_n 4.911% (2007) - 6.554% (2018), dal
+% 2014 mai sotto 5.295%; variazione in tre ore 4.935% (2005) - 6.159% (2018); distanza dal normale 4.643% (2017) - 7.140%
+% (2018). Medie 2005-2013 / 2014-2025: G_n 5.17 / 5.83, variazione 5.16 / 5.72.
+
 
 
 \FloatBarrier
@@ -358,14 +364,14 @@ Questa sezione mostra su una mappa un cluster per ciascuno dei tre tipi con più
         \caption{}
         \label{fig:ris-caso-velocita-c}
     \end{subfigure}
-    \caption{Il cluster di velocità verticale il 23 novembre 2017 alle 00~UTC, con le celle del cluster nel contorno nero e la cella seguita nel cerchio: (a) scarto standardizzato della velocità verticale, negativo se l'aria sale; (b) $G_{\mathrm{n}}$ come percentile, con la linea rossa attorno alle celle oltre la soglia; (c) nella cella seguita ($58.5^\circ$N, $8.5^\circ$E), percentile degli score e scarto standardizzato, in azzurro gli istanti nel cluster. Il cluster è, per il suo tipo, quello con più valori fra quelli che durano al più tre giorni; la cella seguita è quella con $G_{\mathrm{n}}$ più alto nell'istante delle mappe; il percentile è fra tutti i valori dello stesso score. $G_{\mathrm{n}}$ resta oltre la soglia per circa un giorno e mezzo.}
+    \caption{Il cluster di velocità verticale il 23 novembre 2017 alle 00~UTC, con le celle del cluster nel contorno nero e la cella seguita nel cerchio: (a) scarto standardizzato della velocità verticale, negativo se l'aria sale; (b) $G_{\mathrm{n}}$ come percentile, con la linea rossa attorno alle celle oltre la soglia; (c) nella cella seguita ($58.5^\circ$N, $8.5^\circ$E), percentile degli score e scarto standardizzato, in azzurro gli istanti nel cluster. Il cluster è, per il suo tipo, quello con più valori fra quelli che durano al più tre giorni; la cella seguita è quella con $G_{\mathrm{n}}$ più alto nell'istante delle mappe; il percentile è fra tutti i valori dello stesso score sugli anni di test, e la fascia ``segnalato'' parte dal suo 95-esimo, vicino alla soglia ma non uguale, perché la soglia viene dagli anni di validazione. $G_{\mathrm{n}}$ resta oltre la soglia per circa un giorno e mezzo.}
     \label{fig:ris-caso-velocita}
 \end{figure}
 
 % (clearpage tolto: testo breve, figure in alternanza)
 \paragraph{Precipitazione.} Il cluster dura 72 ore. Il 19 maggio 2006 le sue 576 celle sono divise in più parti, la maggiore dalle Alpi orientali al Baltico (Figura~\ref{fig:ris-caso-precipitazione}). La precipitazione è sopra il normale nel 91\% delle celle del cluster, con uno scarto standardizzato mediano, della radice quarta, di 2.2. Dei tre esempi è il meno estremo per la distanza dal normale, che supera la soglia nel 34\% dei valori. Nella cella seguita la distanza dal normale è alta già tre giorni prima, per altre variabili, mentre $G_{\mathrm{n}}$ supera la soglia solo la sera del 18 maggio, quando arriva la precipitazione.
 
-\begin{figure}[htbp]
+\begin{figure}[!t]
     \centering
     \captionsetup[sub]{labelformat=parens, labelsep=none, list=false}  % (a)(b)(c), one caption below
     \begin{subfigure}[t]{0.487\textwidth}
@@ -388,7 +394,7 @@ Questa sezione mostra su una mappa un cluster per ciascuno dei tre tipi con più
         \caption{}
         \label{fig:ris-caso-precipitazione-c}
     \end{subfigure}
-    \caption{Il cluster di precipitazione il 19 maggio 2006 alle 03~UTC, con le celle del cluster nel contorno nero e la cella seguita nel cerchio: (a) scarto standardizzato della radice quarta della precipitazione, in cui le zone senza pioggia appaiono come scarti standardizzati negativi; (b) $G_{\mathrm{n}}$ come percentile; (c) nella cella seguita ($56.5^\circ$N, $23^\circ$E), percentile degli score e scarto standardizzato, in azzurro gli istanti nel cluster; cluster, cella e percentile come nella Figura~\ref{fig:ris-caso-velocita}. $G_{\mathrm{n}}$ supera la soglia solo quando arriva la precipitazione.}
+    \caption{Il cluster di precipitazione il 19 maggio 2006 alle 03~UTC, con le celle del cluster nel contorno nero e la cella seguita nel cerchio: (a) scarto standardizzato della radice quarta della precipitazione, in cui le zone senza pioggia appaiono come scarti standardizzati negativi; (b) $G_{\mathrm{n}}$ come percentile; (c) nella cella seguita ($56.5^\circ$N, $23^\circ$E), percentile degli score e scarto standardizzato, in azzurro gli istanti nel cluster; cluster, cella, percentile e fascia come nella Figura~\ref{fig:ris-caso-velocita}. $G_{\mathrm{n}}$ supera la soglia solo quando arriva la precipitazione.}
     \label{fig:ris-caso-precipitazione}
 \end{figure}
 
@@ -418,7 +424,7 @@ Questa sezione mostra su una mappa un cluster per ciascuno dei tre tipi con più
         \caption{}
         \label{fig:ris-caso-nuvole-c}
     \end{subfigure}
-    \caption{Il cluster di copertura nuvolosa il 15 giugno 2024 alle 12~UTC, con le celle del cluster nel contorno nero e la cella seguita nel cerchio: (a) scarto standardizzato della copertura nuvolosa; (b) $G_{\mathrm{n}}$ come percentile; (c) nella cella seguita ($23.5^\circ$N, $13^\circ$W), percentile degli score e scarto standardizzato, in azzurro gli istanti nel cluster; cluster, cella e percentile come nella Figura~\ref{fig:ris-caso-velocita}. $G_{\mathrm{n}}$ e la distanza dal normale salgono e scendono insieme.}
+    \caption{Il cluster di copertura nuvolosa il 15 giugno 2024 alle 12~UTC, con le celle del cluster nel contorno nero e la cella seguita nel cerchio: (a) scarto standardizzato della copertura nuvolosa; (b) $G_{\mathrm{n}}$ come percentile; (c) nella cella seguita ($23.5^\circ$N, $13^\circ$W), percentile degli score e scarto standardizzato, in azzurro gli istanti nel cluster; cluster, cella, percentile e fascia come nella Figura~\ref{fig:ris-caso-velocita}. $G_{\mathrm{n}}$ e la distanza dal normale salgono e scendono insieme.}
     \label{fig:ris-caso-nuvole}
 \end{figure}
 
@@ -648,7 +654,7 @@ Un cluster concordato è rilevato da un metodo quando un cluster del metodo gli 
 % Numeri: figures/dati/era5_concordate_rilevati.csv (figures/prepara_dati_concordate.py dal log
 % log_server/r300/outputs/concordate_5pc_regola_tesi_match_r300.log, controllati contro risultati.md §15).
 
-\paragraph{Che cosa sono i cluster di $G_{\mathrm{n}}$ senza corrispondente.} Tre cluster di $G_{\mathrm{n}}$ senza corrispondente su quattro (13147 su 17354; Tabella~\ref{tab:ris-senza-corrispondente}) stanno accanto a cluster concordati piccoli, esclusi dal riferimento perché hanno meno di 20 valori. Durano poco, meno di quelli di ogni baseline, e cadono nelle stesse stagioni dei cluster di $G_{\mathrm{n}}$ corrispondenti ai cluster concordati. Rispetto ai valori che nessun metodo segnala negli intorni degli stessi cluster piccoli, hanno circa due volte più spesso una variabile oltre due deviazioni standard, e i loro valori moderati sono cambiati circa due volte più in fretta. Gli altri, non vicini ad alcun cluster concordato, durano ancora meno e cadono più spesso in inverno.
+\paragraph{Che cosa sono i cluster di $G_{\mathrm{n}}$ senza corrispondente.} Tre cluster di $G_{\mathrm{n}}$ senza corrispondente su quattro (13147 su 17354; Tabella~\ref{tab:ris-senza-corrispondente}) stanno accanto a cluster concordati piccoli, esclusi dal riferimento perché hanno meno di 20 valori. Durano poco, meno di quelli di ogni baseline, e cadono nelle stesse stagioni dei cluster di $G_{\mathrm{n}}$ corrispondenti ai cluster concordati. Rispetto ai valori che nessun metodo segnala negli intorni degli stessi cluster piccoli, hanno circa due volte più spesso una variabile oltre due deviazioni standard, e i loro valori moderati sono cambiati circa due volte più in fretta. Gli altri 4207, non vicini ad alcun cluster concordato, durano ancora meno, con una mediana di tre ore, e cadono più spesso in inverno, il 32\% contro il 18\% dei cluster di $G_{\mathrm{n}}$ corrispondenti ai cluster concordati.
 % Numeri: risultati.md §15 (match_r300.log, sezioni POD/FAR e \"groups\"; contro C^(-k): r. 95-115 del log), §13 e §17
 % (match_r300_ns_lonely.csv; excess_r300_analysed_ns.csv e log, posizioni \"near small Gn, in zone\"; tutte le segnalazioni
 % di G_n: 70.8% oltre 2 DS contro 35.6%). Durata mediana dei cluster corrispondenti di G_n 21 h; inverno 18.3%, estate 34.6%.
@@ -656,36 +662,30 @@ Un cluster concordato è rilevato da un metodo quando un cluster del metodo gli 
 \begin{table}[!t]
     \centering
     \footnotesize
-    \caption{I cluster di $G_{\mathrm{n}}$ senza corrispondente, sugli anni di test. In alto quelli vicini a cluster concordati piccoli, con i loro valori nell'intorno dei cluster piccoli, contro il termine di confronto: i valori che nessun metodo segnala negli stessi intorni. In basso quelli non vicini ad alcun cluster concordato, contro i cluster di $G_{\mathrm{n}}$ corrispondenti ai cluster concordati. Insolita: nel 5\% più estremo per cella, mese e ora (Sezione~\ref{sec:ris-giudici}).}
+    \caption{I cluster di $G_{\mathrm{n}}$ senza corrispondente vicini a cluster concordati piccoli, sugli anni di test, con i loro valori nell'intorno dei cluster piccoli, contro il termine di confronto: i valori che nessun metodo segnala negli stessi intorni. Insolita: nel 5\% più estremo per cella, mese e ora (Sezione~\ref{sec:ris-giudici}).}
     \label{tab:ris-senza-corrispondente}
     \vspace{0.6em}
     \begin{tabular}{@{}lrr@{}}
         \toprule
-        \multicolumn{3}{@{}l}{\emph{Vicini a cluster concordati piccoli}} \\
          & $G_{\mathrm{n}}$ & Termine di confronto \\
         \midrule
         Cluster & 13147 & -- \\
         Durata mediana [h] & 6 & -- \\
         Con una variabile oltre due deviazioni standard [\%] & 71 & 36 \\
-        Salto più grande in tre ore, valori moderati & 2.50 & 1.29 \\
+        \shortstack[l]{Salto più grande in tre ore, valori moderati\\{}[deviazioni standard]} & 2.50 & 1.29 \\
         Precipitazione convettiva insolita [\%] & 24 & 4 \\
         Indice K insolito [\%] & 17 & 6 \\
         CAPE insolito [\%] & 13 & 6 \\
         Vapore nella colonna insolito [\%] & 11 & 5 \\
-        \midrule
-        \multicolumn{3}{@{}l}{\emph{Non vicini ad alcun cluster concordato}} \\
-         & $G_{\mathrm{n}}$ & \shortstack[r]{Corrispondenti ai\\cluster concordati} \\
-        \midrule
-        Cluster & 4207 & -- \\
-        Durata mediana [h] & 3 & -- \\
-        In inverno [\%] & 32 & 18 \\
         \bottomrule
     \end{tabular}
 \end{table}
 % Tabella: gli stessi numeri del paragrafo qui sopra e del paragrafo sui segni di convezione della Sezione 6.8 (fonti nei
 % commenti di quei paragrafi; risultati.md §13, §17, §17 bis: tutti i valori di G_n nell'intorno dei cluster piccoli).
 
-La Figura~\ref{fig:ris-concordate-sovrapposizione} riporta, per ogni metodo, la copertura, l'eccedenza e l'indice di Jaccard nell'intorno dei cluster concordati. Tutti i metodi concordano di più nei cluster lunghi che nei brevi. L'Appendice~\ref{app:profilo} mostra come lo score di ciascun metodo cala uscendo dai cluster concordati.
+La Figura~\ref{fig:ris-concordate-sovrapposizione} riporta, per ogni metodo, la copertura, l'eccedenza e l'indice di Jaccard nell'intorno dei cluster concordati. Tutti i metodi concordano di più nei cluster lunghi che nei brevi.
+% Profilo attorno ai cluster concordati: App. B e frase tolte il 16/11/2026 (classe C, senza fonte); dati in physiq-pv
+% a7dd5d69, scripts/check_era5_event_profile.py --cube (posizione +1: 78-89; >= 6 celle: 36-41).
 
 \begin{figure}[!t]
     \centering
@@ -776,7 +776,7 @@ Questa sottosezione guarda le segnalazioni non concordate di ogni metodo nell'in
 \begin{figure}[!t]
     \centering
     \includegraphics[width=\textwidth]{era5_concordate_attorno}
-    \caption{Le segnalazioni non concordate di ogni metodo nell'intorno di 300~km dei cluster concordati brevi (al più 72 ore) e il termine di confronto, sugli anni di test. A sinistra, il salto più grande in tre ore prima dei valori moderati e la percentuale di valori con una variabile oltre due deviazioni standard; a destra, lo scarto standardizzato più grande dietro i cluster, dall'istante del valore a 24 ore dopo. Termine di confronto: i valori che nessun metodo segnala, negli stessi intorni; valori moderati: senza variabili oltre due deviazioni standard. Le segnalazioni di $G_{\mathrm{n}}$, come quelle della variazione in tre ore, sono cambiate in fretta e rientrano in poche ore.}
+    \caption{Le segnalazioni non concordate di ogni metodo nell'intorno di 300~km dei cluster concordati brevi (al più 72 ore) e il termine di confronto, sugli anni di test. A sinistra, in ascissa il salto più grande in tre ore prima del valore, per i soli valori moderati, e in ordinata la percentuale di tutti i valori con una variabile oltre due deviazioni standard; il quadrato nero è il termine di confronto. A destra, solo dietro i cluster brevi, lo scarto standardizzato più grande dall'istante del valore a 24 ore dopo. Termine di confronto: i valori che nessun metodo segnala, negli stessi intorni; valori moderati: senza variabili oltre due deviazioni standard. Le segnalazioni di $G_{\mathrm{n}}$, come quelle della variazione in tre ore, sono cambiate in fretta e rientrano in poche ore.}
     \label{fig:ris-concordate-attorno}
 \end{figure}
 % Numeri (15 novembre 2026): Tesi/log_server/r300/outputs/concordate_5pc_regola_tesi/excess_r300_{analysed,long}.csv
@@ -804,7 +804,7 @@ Questa sottosezione guarda le segnalazioni non concordate di ogni metodo nell'in
 \subsection{Probabilità di superamento}
 \label{sec:ris-concordate-probabilita}
 
-Le segnalazioni di $G_{\mathrm{n}}$ con probabilità di superamento almeno pari a ciascun livello di probabilità sono confrontate, cluster concordato per cluster concordato, con il loro controllo, altrettante segnalazioni di $G_{\mathrm{n}}$ prese a caso (Sezione~\ref{sec:exp-concordate}). Le segnalazioni stabili cominciano più tardi e finiscono prima del controllo, e l'effetto cresce con il livello: con il livello 0.95, nei cluster brevi cominciano dopo il controllo nel 24\% dei cluster concordati e prima nel 9\%, e nei cluster lunghi finiscono prima nella metà, il 50.5\%, e dopo nell'8\%. È in gran parte atteso per come la probabilità è costruita (Sezione~\ref{sec:ris-dropout}): ai bordi di un cluster lo score ha appena superato la soglia, e una segnalazione con probabilità alta è soprattutto una segnalazione ben sopra la soglia; il controllo pareggia il numero delle segnalazioni, non la loro distanza dalla soglia. Il risultato dice quindi dove stanno le segnalazioni meno stabili, ai bordi dei cluster e soprattutto alla fine, non qualcosa che il dropout aggiunga a $G_{\mathrm{n}}$.
+Le segnalazioni di $G_{\mathrm{n}}$ con probabilità di superamento almeno pari a ciascun livello di probabilità sono confrontate, cluster concordato per cluster concordato, con il loro campione di controllo, altrettante segnalazioni di $G_{\mathrm{n}}$ prese a caso (Sezione~\ref{sec:exp-concordate}). Le segnalazioni stabili cominciano più tardi e finiscono prima del campione di controllo, e l'effetto cresce con il livello: con il livello 0.95, nei cluster brevi cominciano dopo il controllo nel 24\% dei cluster concordati e prima nel 9\%, e nei cluster lunghi finiscono prima nella metà, il 50.5\%, e dopo nell'8\%. È in gran parte atteso per come la probabilità è costruita (Sezione~\ref{sec:ris-dropout}): ai bordi di un cluster lo score ha appena superato la soglia, e una segnalazione con probabilità alta è soprattutto una segnalazione ben sopra la soglia; il controllo pareggia il numero delle segnalazioni, non la loro distanza dalla soglia. Il risultato dice quindi dove stanno le segnalazioni meno stabili, ai bordi dei cluster e soprattutto alla fine, non qualcosa che il dropout aggiunga a $G_{\mathrm{n}}$.
 % Numeri: Tesi/log_server/r300_ns_p2/outputs, corse _p2 (commit 90319b13 di physiq-pv): match_r300_p2_levels.csv
 % (inizio e fine, Crawford, senza bordo); figures/dati/era5_concordate_livelli.csv. Figura dei livelli e spostamento
 % lungo il moto delle stabili tolti il 15/11/2026 (revisione della commissione: risultato atteso per costruzione).
@@ -836,7 +836,9 @@ Le sezioni precedenti descrivono le segnalazioni con le variabili d'ingresso, ci
 % righe "Gn ahead/behind alone" (CAPE 8.4 / 9.2, indice K 13.6 / 12.4, vapore 14.9 / 13.0, 21/21; rugiada bassa 3.1 / 3.4 e
 % minima 2.9 / 3.8, 0/21).
 
-\paragraph{Dentro i cluster i valori che $G_{\mathrm{n}}$ manca sono più spesso freddi e secchi.} Dentro i cluster concordati lunghi (Tabella~\ref{tab:ris-giudici-dentro}), i valori concordati che $G_{\mathrm{n}}$ segnala hanno CAPE, precipitazione convettiva e vapore nella colonna insoliti circa due volte più spesso di quelli che manca, e l'indice K da due a quasi tre volte. I valori che manca hanno invece più spesso la temperatura minima bassa, circa due volte, la temperatura di rugiada bassa, circa due volte e mezzo, e la raffica insolita, un po' più spesso. Insieme alla Sezione~\ref{sec:ris-concordate-sovrapposizione}, dove gli stessi valori risultano cambiati poco nelle tre ore prima, questo indica che dentro i cluster $G_{\mathrm{n}}$ segnala valori cambiati in fretta, con CAPE, indice K e vapore insolitamente alti più spesso, e manca più spesso quelli freddi e secchi che cambiano lentamente, e un po' più spesso quelli con raffiche insolite; per un errore di previsione è in parte atteso, perché ciò che cambia lentamente si ricostruisce bene.
+\paragraph{Dentro i cluster i valori che $G_{\mathrm{n}}$ manca sono più spesso freddi e secchi.} Dentro i cluster concordati lunghi (Tabella~\ref{tab:ris-giudici-dentro}), i valori concordati che $G_{\mathrm{n}}$ segnala hanno CAPE insolito circa due volte più spesso di quelli che manca e indice K da due a quasi tre volte; fuori dalla tabella, lo stesso vale per precipitazione convettiva e vapore nella colonna, circa due volte.
+% Fuori dalla tabella (risultati.md §11.1, lunghi, davanti / dietro): precipitazione convettiva 20.1 / 21.5 contro 9.4 / 11.2,
+% vapore nella colonna 24.9 / 22.2 contro 12.2 / 10.0. I valori che manca hanno invece più spesso la temperatura minima bassa, circa due volte, la temperatura di rugiada bassa, circa due volte e mezzo, e la raffica insolita, un po' più spesso. Insieme alla Sezione~\ref{sec:ris-concordate-sovrapposizione}, dove gli stessi valori risultano cambiati poco nelle tre ore prima, questo indica che dentro i cluster $G_{\mathrm{n}}$ segnala valori cambiati in fretta, con CAPE, indice K e vapore insoliti più spesso, e manca più spesso quelli freddi e secchi che cambiano lentamente, e un po' più spesso quelli con raffiche insolite; per un errore di previsione è in parte atteso, perché ciò che cambia lentamente si ricostruisce bene.
 % Fonte (2005-2025, passo4_21): risultati.md §11.1 (tabella dei giudici dentro i cluster, davanti / dietro); log full21
 % long, righe "Gn in cluster ahead/behind seen/missed" (CAPE 14.2 / 15.4 contro 7.7 / 8.2, raffica 23.3 / 24.9 contro 27.7 / 32.9).
 
@@ -850,7 +852,7 @@ Le sezioni precedenti descrivono le segnalazioni con le variabili d'ingresso, ci
         \toprule
          & Segnalati & Mancati \\
         \midrule
-        Salto più grande in tre ore & 3.1--3.3 & 1.7--2.2 \\
+        Salto più grande in tre ore [deviazioni standard] & 3.1--3.3 & 1.7--2.2 \\
         \addlinespace
         CAPE insolito [\%] & 14.2--15.4 & 7.7--8.2 \\
         Indice K insolito [\%] & 20.7--23.1 & 8.0--10.0 \\
@@ -872,7 +874,7 @@ Le sezioni precedenti descrivono le segnalazioni con le variabili d'ingresso, ci
 % Fonte: risultati.md §17 (excess_r300_analysed_ns.log, posizione "near small Gn, in zone": prec. conv. 24.1 / 3.8, indice K
 % 17.3 / 5.7, CAPE 12.5 / 5.8, vapore 11.2 / 4.9; solo G_n 21/21 anni; rugiada bassa e minima bassa 0-1/21).
 
-\paragraph{Sintesi del capitolo.} Delle due componenti dello score solo G ha un significato chiaro, e con il min--max scelto lo score combinato è di fatto D; riferito alla climatologia di ogni cella, G diventa $G_{\mathrm{n}}$, che segnala in modo quasi uniforme fra luoghi e stagioni. Insieme alle Sezioni~\ref{sec:ris-concordate-sovrapposizione} e~\ref{sec:ris-concordate-attorno}, i risultati della Sezione~\ref{sec:ris-giudici} indicano che $G_{\mathrm{n}}$ si sovrappone in gran parte ai metodi più semplici e in più segnala qualcosa che i metodi che leggono una cella in un istante, tranne in parte MCD, segnalano meno. Attorno ai cluster concordati, le segnalazioni non concordate dei metodi che leggono una cella in un istante sono soprattutto stati lontani dal normale che durano; quelle di $G_{\mathrm{n}}$, come quelle della variazione in tre ore e in parte di MCD, sono soprattutto cambiamenti rapidi, con CAPE, indice K e vapore insolitamente alti più spesso che negli altri metodi, e nei cluster lunghi sono spostate nella direzione del moto (Sezione~\ref{sec:ris-concordate-inizio}); mancano invece le condizioni fredde e secche che cambiano lentamente. La verifica con le grandezze che nessuno score legge direttamente resta preliminare.
+\paragraph{Sintesi del capitolo.} Delle due componenti dello score solo G ha un significato chiaro, e con il min--max scelto lo score combinato è di fatto D; riferito alla climatologia di ogni cella, G diventa $G_{\mathrm{n}}$, che segnala in modo quasi uniforme fra luoghi e stagioni. Insieme alle Sezioni~\ref{sec:ris-concordate-sovrapposizione} e~\ref{sec:ris-concordate-attorno}, i risultati della Sezione~\ref{sec:ris-giudici} indicano che $G_{\mathrm{n}}$ si sovrappone in gran parte ai metodi più semplici e in più segnala qualcosa che i metodi che leggono una cella in un istante, tranne in parte MCD, segnalano meno. Attorno ai cluster concordati, le segnalazioni non concordate dei metodi che leggono una cella in un istante sono soprattutto stati lontani dal normale che durano; quelle di $G_{\mathrm{n}}$, come quelle della variazione in tre ore e in parte di MCD, sono soprattutto cambiamenti rapidi, con CAPE, indice K e vapore insoliti più spesso che negli altri metodi, e nei cluster lunghi sono spostate nella direzione del moto (Sezione~\ref{sec:ris-concordate-inizio}); mancano invece le condizioni fredde e secche che cambiano lentamente. La verifica con le grandezze che nessuno score legge direttamente resta preliminare.
 
 % La sezione "Limiti dei risultati" (finora in \iffalse, solo segnaposto) è tolta il 14/11/2026: i limiti
 % si scrivono nel Cap. 7 (conclusioni.tex, sezione dei limiti da rimettere in compilazione).

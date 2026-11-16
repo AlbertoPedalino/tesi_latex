@@ -630,7 +630,8 @@ def case_series_figure(number, data):
         axis.tick_params(labelsize=TICKS, length=2)
         clean(axis, "top", "right")
 
-    # Above: the scores, as percentiles of their validation values; above 95 the cell is flagged.
+    # Above: the scores, as percentiles of their test values (quantiles_* of the case files); the band from 95 is near
+    # the threshold of each score but not equal to it, which comes from the validation years.
     scores.axhspan(95, 100, color=FLAGGED, linewidth=0, zorder=0.5)
     scores.axhline(95, color="#c8553d", linewidth=0.7, linestyle="--", zorder=0.6)
     scores.text(0.006, 97.5, "segnalato", transform=scores.get_yaxis_transform(), fontsize=TICKS - 1, color="#b3462a",
