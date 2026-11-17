@@ -174,7 +174,17 @@ w_f=\frac{\bar{m}}{m_f},
 \qquad
 \bar{m}=\frac{1}{F}\sum_{f=1}^{F}m_f,
 \end{equation}
-con $F=15$. Con il fattore $\bar{m}$, un errore quadratico pari a $m_f$ in ogni variabile dà la stessa loss con e senza pesi. Il peso non misura la difficoltà del modello su una variabile: è una misura di quanto la variabile cambia, fissata prima dell'addestramento e senza usare il modello. I pesi vanno da 0.40 per l'umidità specifica a 7.14 per l'umidità del suolo, che cambia lentamente. I pesi moltiplicano l'errore quadratico di ciascuna variabile nel termine di ricostruzione della loss del generatore e nell'errore di ricostruzione del generatore da cui sono calcolati gli score.
+con $F=15$. Con il fattore $\bar{m}$, un errore quadratico pari a $m_f$ in ogni variabile dà la stessa loss con e senza pesi. Il peso non misura la difficoltà del modello su una variabile: è una misura di quanto la variabile cambia, fissata prima dell'addestramento e senza usare il modello. I pesi vanno da 0.40 per l'umidità specifica a 7.14 per l'umidità del suolo, che cambia lentamente. I pesi moltiplicano l'errore quadratico di ciascuna variabile nel termine di ricostruzione della loss del generatore e nell'errore di ricostruzione del generatore da cui sono calcolati gli score. Pesare ogni variabile secondo quanto cambia nel tempo si trova in modelli di previsione basati sui dati: NeuralGCM, nella loss, divide ogni variabile per la deviazione standard della sua differenza su 24 ore~\cite{kochkov2024neuralgcm}, GraphCast pesa l'errore con l'inverso della varianza delle differenze fra passi consecutivi, stimata sui dati di addestramento~\cite{lam2023graphcast}. Usare questi pesi nell'errore di ricostruzione e nello score, calcolarli sugli scarti standardizzati e normalizzarli con media pari a uno è una scelta di questo lavoro.
+% Fonti dei pesi (articolo e supplemento letti per intero il 17/11/2026, passaggi verificati sul testo):
+% NeuralGCM, supplemento Nature Sez. G.3 "Variable rescaling for losses" (p. 24 stampata; arXiv v3 p. 41):
+% "each atmospheric variable by standard deviation of the temporal difference between snapshots that are 24 hours
+% apart, similar to [11]"; scopo "to prevent the loss landscape being dominated by just a few atmospheric
+% variables"; stime da "10-60 snapshots of 24-hour differences in ERA5 data" (anni non detti), globali; poi fattori
+% manuali (geopotenziale 2, umidita' specifica 0.66, ...), non riportati; solo nella loss. [11] = Keisler 2022,
+% non letto e non citato. GraphCast, supplemento Sez. 4.2, eq. (19), pp. 31-32 dell'arXiv: "per-variable-level
+% inverse variance of time differences", "aim to standardize the targets (over consecutive steps) to unit
+% variance. These were estimated from the training data"; passo di 6 h; moltiplicata per pesi per livello e per
+% pesi di superficie scelti a mano (2t 1.0; 10u, 10v, msl, tp 0.1) e per l'area della cella, non riportati.
 
 \paragraph{Sintesi.} Ogni variabile entra nel modello riferita al normale stagionale della propria cella, giorno e ora, con la codifica temporale dell'ora solare locale e della posizione nell'anno, e l'errore di ciascuna variabile pesa in proporzione inversa a quanto la variabile cambia abitualmente.
 
