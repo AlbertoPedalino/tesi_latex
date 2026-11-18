@@ -31,6 +31,7 @@ from genera_figure_eventi import (BASELINES, BLUE, GREEN, GRID, MUTED, ORANGE, S
 HERE = pathlib.Path(__file__).parent
 MOTION = HERE / "dati" / "era5_concordate_moto_r300.csv"
 PR = HERE / "dati" / "era5_concordate_pr.csv"
+MARKED = [80, 97, 99]  # percentiles marked with an open dot on every precision-recall curve, besides the 95th
 from stile import COLOURS, ORDER, TEXT_COLOURS  # one order and one colour for every method, as in the tables
 LABELS = {"Gn": r"$G_\mathrm{n}$", **BASELINES}
 
@@ -99,6 +100,15 @@ def pr_figure():
         at = part[part["percentile"] == 95]
         axis.plot(at["recall"], at["precision"], "o", color=colour, markersize=5 if key == "Gn" else 4,
                   markeredgecolor="white", markeredgewidth=0.6, zorder=order + 1)
+        others = part[part["percentile"].isin(MARKED)]  # open dots: the other marked percentiles
+        axis.plot(others["recall"], others["precision"], "o", markersize=4 if key == "Gn" else 3,
+                  markerfacecolor="white", markeredgecolor=colour, markeredgewidth=1.0, zorder=order + 1)
+        if key == "Gn":  # the percentile written next to each marked point, on the curve of G_n only
+            for _, row in part[part["percentile"].isin(MARKED + [95])].iterrows():
+                low = row["percentile"] == 80  # at the right edge the label goes above, away from the other curves
+                axis.annotate(f"{row['percentile']:g}", (row["recall"], row["precision"]),
+                              xytext=(-4, 3) if low else (-3, -3), textcoords="offset points", ha="right",
+                              va="bottom" if low else "top", fontsize=TICKS - 2, color=BLUE, zorder=order + 2)
     axis.set_xlim(0, 1.02)
     axis.set_ylim(0, 1.02)
     axis.set_xticks([0, 0.25, 0.5, 0.75, 1])
@@ -113,7 +123,9 @@ def pr_figure():
                plt.Line2D([], [], color=ORANGE, linewidth=1.6, label="distanza dal normale"),
                plt.Line2D([], [], color=GREEN, linewidth=1.6, label="variazione in tre ore"),
                plt.Line2D([], [], color=SHALLOW_GREY, linewidth=1.0, label="sei modelli shallow"),
-               plt.Line2D([], [], color=MUTED, marker="o", linestyle="none", markersize=4, label="95-esimo percentile")]
+               plt.Line2D([], [], color=MUTED, marker="o", linestyle="none", markersize=4, label="95-esimo percentile"),
+               plt.Line2D([], [], marker="o", linestyle="none", markersize=3.5, markerfacecolor="white",
+                          markeredgecolor=MUTED, markeredgewidth=1.0, label="80-esimo, 97-esimo, 99-esimo")]
     axis.legend(handles=handles, loc="lower left", fontsize=TICKS - 1, frameon=False, handlelength=1.6)
     figure.savefig(HERE / "era5_concordate_pr.pdf")
     plt.close(figure)
