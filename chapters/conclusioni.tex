@@ -36,7 +36,7 @@ Per rispondere, il lavoro ha portato STGAN sui campi ERA5 con quattro contributi
 
 Le implicazioni sono soprattutto metodologiche e indicano controlli da fare, non regole generali: i risultati riguardano un dominio, una rianalisi e un addestramento.
 
-\paragraph{Per chi riusa STGAN.} Le due lezioni della Sezione~\ref{sec:conc-discussione} sulle componenti e sulla normalizzazione climatologica valgono come controlli da fare prima di usare lo score su dati diversi dal traffico.
+\paragraph{Per chi riusa STGAN.} Prima di adottare lo score combinato, verificare quanto ciascuna componente contribuisce alla somma e se il risultato conserva il segnale d'interesse. Nei dati meteorologici di questo lavoro, l'errore di ricostruzione è stato inoltre normalizzato rispetto al luogo e alla stagione, perché varia abitualmente con entrambi. Queste scelte vanno valutate sul dominio e sui dati a cui si applica il modello.
 
 \paragraph{Per chi valuta un rilevatore senza etichette.} Affiancargli baseline semplici, sia metodi che leggono uno stato sia metodi che leggono un cambiamento, e un riferimento concordato, letto come descrizione e dichiarando che cosa favorisce, permette di dire che cosa il rilevatore segnala anche quando non se ne può misurare l'accuratezza.
 
