@@ -1,7 +1,7 @@
-\chapter{Sensibilità alla soglia e alla chiusura morfologica}
+\chapter{Sensibilità del protocollo}
 \label{app:soglia}
 
-Nel Capitolo~\ref{chap:risultati} un valore è segnalato quando lo score supera il 95-esimo percentile dei propri valori sugli anni di validazione (Sezione~\ref{sec:exp-protocollo}), e le segnalazioni di ogni metodo sono completate con una chiusura che precede il voto (Sezione~\ref{sec:exp-concordate}). Questa appendice verifica quanto i risultati sul riferimento concordato dipendono da queste due scelte: la Sezione~\ref{app:soglia-concordate} lo ricostruisce con il 97-esimo e il 99-esimo percentile e senza la chiusura, la Sezione~\ref{app:soglia-pr} varia la soglia di ogni metodo con il cubo concordato fisso.
+Nel Capitolo~\ref{chap:risultati} un valore è segnalato quando lo score supera il 95-esimo percentile dei propri valori sugli anni di validazione (Sezione~\ref{sec:exp-protocollo}), e il riferimento concordato dipende da alcune scelte del protocollo (Sezione~\ref{sec:exp-concordate}): la chiusura che precede il voto, il minimo di 20 valori dei cluster studiati, l'intorno di 300~km, la sola condizione sui tempi del criterio di Crawford e le 72 ore fra cluster brevi e lunghi. Questa appendice verifica quanto i risultati sul riferimento concordato dipendono da queste scelte. La Sezione~\ref{app:soglia-concordate} lo ricostruisce con il 97-esimo e il 99-esimo percentile e senza la chiusura, la Sezione~\ref{app:soglia-pr} varia la soglia di ogni metodo con il cubo concordato fisso, e le Sezioni~\ref{app:sens-minimo}--\ref{app:sens-durata} variano il minimo dei valori, il raggio dell'intorno e il criterio di Crawford, e la durata dei cluster brevi. Per queste ultime le regole di lettura sono state fissate prima delle corse, una per ciascuna. Per il minimo e per il raggio le conclusioni su $G_{\mathrm{n}}$ restano se (i) nei cluster brevi la sua copertura mediana resta sotto quelle di PCA e MCD, (ii) la sua eccedenza mediana resta sopra quella della distanza dal normale e (iii) nei cluster lunghi al più due metodi ne rilevano più di $G_{\mathrm{n}}$; per il criterio di Crawford per intero se (iv) i test su inizio e fine di $G_{\mathrm{n}}$ contro gli altri metodi non cambiano segno; per le 96 ore se valgono (i)--(iv) e (v) nei cluster lunghi $G_{\mathrm{n}}$ resta davanti lungo il moto più di ogni baseline. Le altre misure riportate sono aggiuntive, fuori dalla regola. Nessuna scelta del Capitolo~\ref{chap:risultati} è stata cambiata dopo queste corse.
 
 \section{Il riferimento concordato a soglie diverse e senza la chiusura}
 \label{app:soglia-concordate}
@@ -89,10 +89,81 @@ Con il cubo concordato fisso, quello del 95-esimo percentile, la soglia di ogni 
 % variazione 0.715 / 0.800 / 0.891; al 99 gli altri cinque 0.908-0.985. Al 99 segnalati 1.30-1.73%, recall 0.191-0.244.
 % Figura: figures/genera_figure_concordate.py, pr_figure.
 
-
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.72\textwidth]{era5_concordate_pr}
     \caption{Precision e recall di ogni metodo al variare della propria soglia, dall'80-esimo al 99.9-esimo percentile, rispetto al cubo concordato al 95-esimo percentile, sugli anni di test; il pallino pieno indica il 95-esimo percentile, quelli vuoti l'80-esimo, il 97-esimo e il 99-esimo; lungo ogni curva la soglia sale da destra a sinistra. Le sei curve grigie sono i modelli shallow. Al 95-esimo $G_{\mathrm{n}}$ è penultimo.}
     \label{fig:app-pr}
 \end{figure}
+
+\FloatBarrier
+\section{Il minimo dei valori dei cluster studiati}
+\label{app:sens-minimo}
+
+Il minimo di 20 valori sotto il quale un cluster concordato non è studiato (Sezione~\ref{sec:exp-concordate}) è una scelta di questo lavoro. Mandonnet et al.\ fissano il proprio minimo aumentandolo a passi di 25 valori e fermandosi quando il numero dei cluster cala di meno dell'1\% fra due passi~\cite{mandonnet2026heatwaves}. Sui cluster concordati degli anni di test lo stesso criterio dà 64 con passi di un valore e 1125 con passi di 25: dipende dal passo. Con lo stesso cubo concordato i cluster sono quindi studiati anche con almeno 10, 64 e 1125 valori (Tabella~\ref{tab:app-sensibilita}). I cluster lunghi cambiano poco, perché un cluster di oltre tre giorni ha quasi sempre molti valori; i brevi passano da 47467 con 10 valori a 801 con 1125.
+
+\paragraph{Con 10 e 64 valori i tre criteri valgono.} Nei cluster brevi la copertura di $G_{\mathrm{n}}$ resta sotto quelle di PCA e MCD, e la sua eccedenza sopra quella della distanza dal normale e vicina a quella di MCD; nei cluster lunghi $G_{\mathrm{n}}$ è fra i tre metodi che ne rilevano di più. Fuori dalla regola, nei cluster lunghi $G_{\mathrm{n}}$ sta davanti lungo il moto di 17.0 e 17.1~km.
+
+\paragraph{Con 1125 valori cade il terzo criterio.} Restano solo i cluster brevi più grandi. Nei cluster lunghi $G_{\mathrm{n}}$ è quarto per cluster rilevati, dopo COPOD, Isolation Forest e HBOS. Cambiano inoltre due letture della Sezione~\ref{sec:ris-concordate-sovrapposizione}: l'eccedenza di $G_{\mathrm{n}}$ nei brevi, 0.46, resta sopra quella della distanza dal normale ma non è più come quella di MCD, 0.31, e HBOS e COPOD superano $G_{\mathrm{n}}$ nella copertura dei brevi, con 0.88 e 0.91 contro 0.73, che resta sotto quelle di PCA e MCD. Fuori dalla regola, la posizione davanti lungo il moto resta e cresce a 20.3~km, con $G_{\mathrm{n}}$ più avanti di ciascuna baseline nel 60--68\% dei cluster lunghi.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \caption{Il riferimento concordato con altri valori del protocollo, sugli anni di test, con la soglia al 95-esimo percentile e la chiusura. Prima colonna: il protocollo del Capitolo~\ref{chap:risultati} (minimo di 20 valori, intorno di 300~km, brevi fino a 72 ore); nelle altre cambia un solo valore. Copertura ed eccedenza: mediane per cluster concordato. Fra parentesi il posto di $G_{\mathrm{n}}$ fra i nove metodi; trattino: non calcolato.}
+    \label{tab:app-sensibilita}
+    \vspace{0.3em}
+    \setlength{\tabcolsep}{2pt}
+    \begin{tabular}{@{}L{0.20}rrrrrrr@{}}
+        \toprule
+        & & \multicolumn{3}{c}{Minimo dei valori} & \multicolumn{2}{c}{Raggio} & Durata \\
+        \cmidrule(lr){3-5}\cmidrule(lr){6-7}\cmidrule(l){8-8}
+        Misura & Cap.~\ref{chap:risultati} & 10 & 64 & 1125 & 100~km & 500~km & 96~h \\
+        \midrule
+        Cluster brevi & 27233 & 47467 & 10972 & 801 & 27233 & 27233 & 27935 \\
+        Cluster lunghi & 2142 & 2142 & 2139 & 1914 & 2142 & 2142 & 1440 \\
+        Valori concordati nei cluster studiati [\%] & 97.3 & 98.0 & 95.9 & 89.5 & 97.3 & 97.3 & 97.3 \\
+        Valori del dominio entro il raggio dal cubo [\%] & 32.9 & 32.9 & 32.9 & 32.9 & 12.6 & 50.8 & 32.9 \\
+        \addlinespace
+        \multicolumn{8}{@{}l}{\emph{Cluster concordati rilevati da $G_{\mathrm{n}}$ [\%]}} \\
+        Brevi & 46 & 43 & 49 & 57 & 44 & 45 & 47 \\
+        Lunghi & 91 (2) & 95 (1) & 82 (3) & 71 (4) & 87 (2) & 94 (1) & 94 (2) \\
+        \addlinespace
+        \multicolumn{8}{@{}l}{\emph{Cluster brevi}} \\
+        Copertura, $G_{\mathrm{n}}$ & 0.69 & 0.69 & 0.71 & 0.73 & 0.69 & 0.69 & 0.69 \\
+        Copertura, PCA / MCD & 0.97/0.96 & 0.99/0.99 & 0.96/0.95 & 0.94/0.88 & 0.97/0.96 & 0.97/0.96 & 0.97/0.96 \\
+        Eccedenza, $G_{\mathrm{n}}$ / MCD & 0.79/0.79 & 0.87/0.87 & 0.69/0.63 & 0.46/0.31 & 0.53/0.53 & 0.86/0.85 & 0.77/0.75 \\
+        \addlinespace
+        \multicolumn{8}{@{}l}{\emph{Cluster lunghi, spostamento lungo il moto di $G_{\mathrm{n}}$}} \\
+        Mediana [km] & 17.0 & 17.0 & 17.1 & 20.3 & -- & -- & 21.7 \\
+        Cluster con $G_{\mathrm{n}}$ davanti [\%] & 63 & 63 & 63 & 64 & -- & -- & 66 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+% Numeri: Tesi/segnalazioni_concordate/risultati.md §13 e §15 (19/11/2026). Minimo: set_era5_cube_min_values.py
+% (physiq-pv 306fce46), log del server outputs/minimo_{match,boxes,lead}_{K}*.log; quote dei valori da
+% log_server/r300_3_1/outputs/concordate_5pc_regola_tesi/clusters.csv (10: 98.0, 20: 97.3, 64: 95.9, 1125: 89.5);
+% lunghi lungo il moto 64: +17.1 km 62.7%, 1125: +20.3 km 64.0%, piu' avanti di ogni baseline 60-68%. Raggio, Crawford,
+% 96 h: log_server/sensibilita_1911/outputs/ (codice 4a434534, 054133ed); eccedenza = mediana di excess/concordant dai
+% boxes_r{100,500}_*.csv e concordate_5pc_regola_tesi_96h/boxes_r300_*.csv. Normale, eccedenza brevi: 0.025 (100 km),
+% 0.080 (500 km), 0.051 (96 h). Lunghi rilevati: 100 km COPOD 0.905 > Gn 0.865; 96 h COPOD 0.942 > Gn 0.937.
+% Crawford: crawford500_match.log; coppie: scratchpad coppie.py su match_r300_crawford500.csv e boxes_r300_long.csv.
+% Arrotondamento a mezzo in su.
+
+\section{Il raggio dell'intorno e il criterio di Crawford per intero}
+\label{app:sens-raggio}
+
+L'intorno di 300~km (Sezione~\ref{sec:exp-concordate}) è ripetuto con 100~km, circa due celle in latitudine, e con 500~km, l'estremo superiore dell'intervallo che Flaounas et al.\ considerano ragionevole~\cite{flaounas2023composite}. Il raggio cambia la larghezza del criterio: i valori del dominio che distano meno del raggio dal cubo concordato, nello stesso istante, sono il 12.6\% con 100~km, il 32.9\% con 300~km e il 50.8\% con 500~km. La copertura non dipende dal raggio, perché è misurata dentro il cluster concordato; cambiano i cluster rilevati e l'eccedenza, per tutti i metodi insieme (Tabella~\ref{tab:app-sensibilita}).
+
+\paragraph{Con 100 e 500~km i tre criteri valgono.} Nei cluster brevi la copertura di $G_{\mathrm{n}}$ resta sotto quelle di PCA e MCD, e la sua eccedenza resta come quella di MCD e sopra quella della distanza dal normale. Nei cluster lunghi con 100~km solo COPOD rileva più cluster di $G_{\mathrm{n}}$, come con 300~km, e con 500~km nessun metodo. Fuori dalla regola, i test su inizio e fine di $G_{\mathrm{n}}$ contro gli altri metodi hanno lo stesso segno che con 300~km, compresa l'eccezione della fine nei cluster lunghi (Sezione~\ref{sec:ris-concordate}).
+
+\paragraph{Il criterio di Crawford per intero.} Con l'intorno di 300~km, inizio e fine sono ripetuti chiedendo anche la seconda condizione di Crawford et al., una distanza media al più di 500~km negli istanti comuni~\cite{crawford2021cyclones}, qui fra i centroidi dei due cluster. La distanza mediana fra i centroidi di $G_{\mathrm{n}}$ e del cluster concordato è di 107~km nei cluster brevi e di 316~km nei lunghi, e la condizione esclude soprattutto coppie di cluster lunghi: i cluster lunghi rilevati da $G_{\mathrm{n}}$ con un cluster corrispondente al cluster concordato che rispetta il criterio scendono dall'80\% al 63\%. Le coppie escluse non sono abbinamenti peggiori. Per $G_{\mathrm{n}}$ hanno in mediana la stessa copertura e lo stesso indice di Jaccard delle coppie tenute, 0.70 contro 0.70 e 0.52 contro 0.50, misurati come nella Sezione~\ref{sec:ris-concordate} su tutte le segnalazioni del metodo nell'intorno, ma cluster concordati quattro o cinque volte più grandi, con 21799 valori contro 4702; la distanza fra i centroidi cresce con la dimensione del cluster (correlazione di Spearman 0.55). Per cluster estesi la condizione separa cluster grandi da piccoli più che abbinamenti buoni da cattivi, ed è quindi usata solo come controllo. Le conclusioni su inizio e fine restano, e nei cluster lunghi spariscono le due eccezioni della fine: $G_{\mathrm{n}}$ finisce prima di CBLOF (59\% contro 36\% dei cluster concordati) e non differisce dalla distanza dal normale (50\% contro 41\%, test dei segni non significativo all'1\%).
+% Crawford per intero: crawford500_match.log, test dei segni lunghi "ends later": CBLOF 36.2 / 5.2 / 58.6 p 2.42e-06;
+% normale 40.6 / 9.25 / 50.1 p 0.0362 (non significativo all'1%). Coppie lunghe che passano il criterio sui tempi:
+% Gn 80.2% -> 63.3% con anche quello nello spazio; escluse 21.1% delle coppie di Gn; copertura 0.703 / 0.696,
+% Jaccard 0.519 / 0.498, valori 21799 / 4702 (escluse / tenute). Centroidi: Gn brevi 107 (60-199), lunghi 316 (184-580).
+
+\section{La durata dei cluster brevi}
+\label{app:sens-durata}
+
+Le 72 ore fra cluster brevi e lunghi sono, in modo approssimato, la distanza fra il primo e l'ultimo di quattro giorni consecutivi di Francis et al.~\cite{francis2018regimes,francis2020asia}; quattro giorni interi coprono invece 96 ore. Con lo stesso cubo concordato e lo stesso minimo, a 96 ore 702 cluster lunghi diventano brevi e ne restano 1440, con l'80.4\% dei valori concordati (Tabella~\ref{tab:app-sensibilita}). I cinque criteri valgono. Nei brevi la copertura di $G_{\mathrm{n}}$ resta sotto quelle di PCA e MCD e l'eccedenza è come quella di MCD; nei lunghi solo COPOD ne rileva di più. I test su inizio e fine hanno lo stesso segno che con 72 ore, eccezione dei lunghi compresa. Nei lunghi $G_{\mathrm{n}}$ sta davanti lungo il moto di 21.7~km, più avanti di ciascuna baseline nel 58.5--68.6\% dei cluster concordati.
+% 96 h: durata96_{set,match,boxes_*,lead_*}.log; set: analysed 27935 (16.9%), long 1440 (80.4%), small 419566 (2.7%).
