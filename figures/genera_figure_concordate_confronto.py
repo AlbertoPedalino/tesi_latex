@@ -4,7 +4,7 @@ Run from the thesis folder, after figures/prepara_dati_concordate.py:
     python figures/genera_figure_concordate_confronto.py
 which writes
 - figures/era5_concordate_sovrapposizione.pdf: coverage against eccedenza of every method, short and long clusters,
-  with the curves of constant Jaccard index J = cop / (1 + ecc) (equation of Section 5.5);
+  with the curves of constant Jaccard index I/U = cop / (1 + ecc) (equation of Section 5.5);
 - figures/era5_concordate_giudici.pdf: for each quantity that no score reads, the share of the non-concordant flags of
   every method around the long concordant clusters in which it is unusual, coloured by its ratio to the reference.
 Order and colours of the methods from figures/stile.py.
@@ -55,9 +55,9 @@ def overlap_figure():
                 last = np.flatnonzero(keep)[-1]
                 x, y = cover[last], excess[last]
                 if y > 1.45:
-                    axis.text(x, 1.47, f"J = {level:.1f}", fontsize=TICKS - 2, color=MUTED, ha="center", va="bottom")
+                    axis.text(x, 1.47, f"I/U = {level:.1f}", fontsize=TICKS - 2, color=MUTED, ha="center", va="bottom")
                 else:
-                    axis.text(1.005, y, f"J = {level:.1f}", fontsize=TICKS - 2, color=MUTED, ha="left", va="center")
+                    axis.text(1.005, y, f"I/U = {level:.1f}", fontsize=TICKS - 2, color=MUTED, ha="left", va="center")
         for method in reversed(ORDER):
             cop, ecc = table.loc[(kind, method), ["copertura", "eccedenza"]]
             big = method == "Gn"
