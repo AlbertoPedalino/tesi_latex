@@ -8,8 +8,8 @@
     % Prima riga: dall'ingresso all'errore.
     \node[fase] (era5) at (0,0) {\textbf{Campi ERA5}\\[2pt]\scriptsize $F$ variabili};
     \node[fase] (stagionale) at (3.45,0) {\textbf{Normalizzazione}\\\textbf{stagionale}\\[2pt]\scriptsize cella, ora,\\finestra sul giorno\\\emph{addestramento}};
-    \node[fase] (generatore) at (6.9,0) {\textbf{Generatore}\\[2pt]\scriptsize ricostruzione\\$J$ estrazioni Monte Carlo};
-    \node[fase] (errore) at (10.35,0) {\textbf{Errore per estrazione}\\[2pt]\scriptsize pesi $w_f$ per variabile,\\media sulla patch $P\times P$\\\emph{addestramento}};
+    \node[fase] (generatore) at (6.9,0) {\textbf{Generatore}\\[2pt]\scriptsize ricostruzione\\estrazioni Monte Carlo};
+    \node[fase] (errore) at (10.35,0) {\textbf{Errore per estrazione}\\[2pt]\scriptsize pesi $w_f$ per variabile,\\media sulla patch della cella\\\emph{addestramento}};
     % Seconda riga, da destra a sinistra: dallo score alla soglia.
     \node[fase] (score) at (10.35,-2.6) {\textbf{Errore di}\\\textbf{ricostruzione}\\\textbf{del generatore}\\[2pt]\scriptsize media sulle estrazioni};
     \node[fase] (climatologia) at (6.9,-2.6) {\textbf{Score del}\\\textbf{rilevatore $G_{\mathrm{n}}$}\\[2pt]\scriptsize climatologia: cella, ora,\\finestra sul giorno\\\emph{validazione}};
