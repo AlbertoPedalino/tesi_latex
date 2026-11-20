@@ -34,7 +34,7 @@ Le anomalie meteorologiche, cioè le condizioni dell'atmosfera lontane da quelle
 
 Il compito ha tre difficoltà. Senza etichette il rilevamento è \emph{unsupervised} e la valutazione indiretta. Gli anni di addestramento non sono garantiti privi di anomalie meteorologiche, quindi si cercano le condizioni nuove rispetto a quel periodo. Infine ciò che è normale cambia con il luogo e la stagione, e su una griglia non è dato quali celle siano collegate.
 
-La tesi parte da STGAN, una rete generativa avversaria spazio-temporale proposta per il traffico stradale, dove i sensori sono collegati dalle strade; il suo score somma l'errore di ricostruzione del generatore e la componente del discriminatore. La tesi non propone un algoritmo nuovo: adatta STGAN ai campi ERA5 e si chiede quale delle due componenti usare come score del rilevatore, se abbia senso sommarle e come rendere lo score confrontabile fra luoghi e stagioni.
+La tesi parte da STGAN, una rete generativa avversaria spazio-temporale proposta per il traffico stradale, dove i sensori sono collegati dalle strade; il suo score somma l'errore di ricostruzione del generatore e la componente del discriminatore. La tesi non propone un algoritmo nuovo: adatta STGAN ai campi ERA5 e si chiede quale delle due componenti usare come score del rilevatore, se abbia senso sommarle, come rendere lo score confrontabile fra luoghi e stagioni e, scelto lo score, che cosa rilevi rispetto a metodi più semplici.
 
 \section{Metodologia}
 
@@ -64,13 +64,13 @@ $G_{\mathrm{n}}$ è confrontato con otto baseline, ciascuna con la propria norma
 
 \subsection{Generatore e discriminatore non concordano}
 
-Sugli anni di validazione G e D ordinano i luoghi quasi senza legame: la correlazione di Spearman, calcolata in ogni istante sulle celle, vale in media 0.015. Quando G sale, il discriminatore giudica più reali di quanto è abituale sia l'osservazione sia la sua ricostruzione (correlazione temporale di Spearman mediana $-0.73$ e $-0.69$): i due giudizi si compensano, e da D non si capisce che cosa il rilevatore segnali. Sugli anni di test le correlazioni cambiano di al più tre centesimi.
+Sugli anni di validazione G e D ordinano i luoghi quasi senza legame: la correlazione di Spearman, calcolata in ogni istante sulle celle, vale in media 0.015. Quando G sale, il discriminatore giudica più reali di quanto è abituale sia l'osservazione sia la sua ricostruzione (correlazione temporale di Spearman mediana $-0.73$ e $-0.69$): i due giudizi si compensano, e da D non si capisce che cosa segnali il discriminatore. Sugli anni di test le correlazioni cambiano di al più tre centesimi.
 
 Con la scala comune usata qui (min--max), lo score combinato dell'articolo ordina i valori quasi come D (Spearman \textbf{0.99}, contro 0.13 con G): sommare le due componenti mescola due segnali in disaccordo e, di fatto, equivale a usare D. Poiché G ha un significato chiaro, quanto un campo si allontana da ciò che il modello si aspetta, mentre il comportamento di D si spiega solo in parte, il rilevatore usa $G_{\mathrm{n}}$. La normalizzazione climatologica rende quasi uniforme la percentuale di valori segnalati: sugli anni di validazione, per fascia di latitudine e mese, senza normalizzazione climatologica va dall'1.6\% (50--60$^\circ$N, dicembre) all'11.1\% (20--30$^\circ$N, agosto); con essa resta fra il \textbf{3.7\%} e il \textbf{6.3\%}, contro il 5\% atteso.
 
 \subsection{Confronto con le baseline}
 
-Il confronto è un controllo di coerenza, non una misura di accuratezza: senza etichette, l'accordo non dice quale metodo abbia ragione. Sugli anni di test i metodi che leggono una cella in un istante segnalano in larga parte gli stessi valori, mentre la variazione in tre ore ne segnala soprattutto altri. $G_{\mathrm{n}}$ si sovrappone a entrambi senza coincidere con nessuno: la variazione in tre ore segnala il \textbf{54\%} dei valori segnalati da $G_{\mathrm{n}}$, ciascuno dei metodi che leggono una cella in un istante fra il 39\% e il 52\%, contro il 5\% atteso fra metodi indipendenti. Il 18.1\% delle segnalazioni di $G_{\mathrm{n}}$ sono \emph{segnalazioni esclusive}, che nessuna baseline segnala: può indicare ciò che solo il generatore coglie, per esempio perché legge le celle vicine, oppure un suo errore. Dei valori segnalati da $G_{\mathrm{n}}$, infine, solo il 41\% supera la soglia della distanza dal normale: $G_{\mathrm{n}}$ segnala anche valori che, presi uno per uno, non sono fra i più lontani dal normale.
+Il confronto è un controllo di coerenza, non una misura di accuratezza: senza etichette, l'accordo non dice quale metodo abbia ragione. Sugli anni di test i metodi che leggono una cella in un istante segnalano in larga parte gli stessi valori, mentre la variazione in tre ore ne segnala soprattutto altri. $G_{\mathrm{n}}$ si sovrappone a entrambi senza coincidere con nessuno: la variazione in tre ore segnala il \textbf{54\%} dei valori segnalati da $G_{\mathrm{n}}$, ciascuno dei metodi che leggono una cella in un istante fra il 39\% e il 52\%, contro il 5\% atteso fra metodi indipendenti. Il 18.1\% delle segnalazioni di $G_{\mathrm{n}}$ sono \emph{segnalazioni esclusive}, che nessuna baseline segnala; una segnalazione esclusiva può indicare ciò che solo il generatore coglie, per esempio perché legge le celle vicine, oppure un suo errore. Dei valori segnalati da $G_{\mathrm{n}}$, infine, solo il 41\% supera la soglia della distanza dal normale: $G_{\mathrm{n}}$ segnala anche valori che, presi uno per uno, non sono fra i più lontani dal normale.
 
 Come riferimento comune sono usate le segnalazioni concordate, i valori che almeno cinque metodi su nove segnalano, raggruppate in cluster concordati: non una verità, ma l'accordo dei metodi. $G_{\mathrm{n}}$ rileva il 46\% dei cluster concordati brevi, di al più tre giorni, e, con un criterio largo, il 91\% dei lunghi; tre suoi cluster senza corrispondente su quattro stanno accanto a cluster concordati piccoli, con meno di 20 valori; anche senza di essi la percentuale dei suoi cluster senza corrispondente, il 22.5\%, resta la più alta dopo quella della variazione in tre ore. Nei cluster brevi, a ogni soglia, comincia più spesso prima della distanza dal normale e di CBLOF e dopo PCA, MCD e la variazione in tre ore, e nei cluster lunghi le sue segnalazioni sono spostate nella direzione del moto medio del cluster concordato, in mediana di 17~km. Attorno ai cluster concordati le sue segnalazioni non concordate sono soprattutto cambiamenti rapidi; attorno ai lunghi, con la soglia al 95-esimo e al 97-esimo percentile, hanno CAPE, indice K e vapore nella colonna insoliti più spesso di quelle degli altri metodi, di poco rispetto a MCD e, per il CAPE, alla variazione in tre ore.
 
@@ -82,17 +82,9 @@ Con la soglia al 99-esimo percentile, cioè l'1\% dei valori, la normalizzazione
 
 \section{Conclusioni}
 
-\subsection{Sintesi dei risultati}
+Sommate, le due componenti danno di fatto D; il rilevatore usa quindi G, riferito alla climatologia di ogni cella. $G_{\mathrm{n}}$ si sovrappone solo in parte ai metodi più semplici: attorno ai cluster concordati segnala soprattutto cambiamenti rapidi, come la variazione in tre ore e in parte MCD; nei cluster lunghi finisce prima di PCA, MCD e della variazione in tre ore e, con la chiusura, dopo COPOD. I limiti principali sono l'assenza di una verità di riferimento e un solo addestramento. Un catalogo esterno di anomalie misurerebbe il recall; le segnalazioni potrebbero poi servire a valutare o ad addestrare un previsore fotovoltaico.
 
-% Da scrivere con il Capitolo 7 della tesi.
-
-\subsection{Limiti}
-
-% Da scrivere con il Capitolo 7 della tesi.
-
-\subsection{Sviluppi futuri}
-
-% Da scrivere con il Capitolo 7 della tesi. Testo della versione del 6 novembre 2026, da rivedere:
+% Testo della versione del 6 novembre 2026, sostituito dal paragrafo qui sopra (dal Capitolo 7):
 % Il primo sviluppo è ripetere la configurazione scelta con più semi, per avere un riferimento con cui leggere le
 % differenze fra configurazioni. Aggiornare periodicamente soglie e normalizzazione climatologica su anni recenti
 % ridurrebbe l'effetto della deriva del clima sulla quota segnalata. Un catalogo esterno di eventi su tutto il
