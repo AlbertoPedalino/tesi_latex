@@ -11,7 +11,7 @@ Le segnalazioni concordate della Sezione~\ref{sec:ris-concordate} sono ricostrui
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Il riferimento concordato con la soglia di ogni metodo al 95-esimo, 97-esimo e 99-esimo percentile e, al 95-esimo, senza la chiusura, sugli anni di test. Inizio e fine: percentuale dei cluster concordati; asterisco, test dei segni significativo all'1\%. Attorno ai cluster lunghi: $G_{\mathrm{n}}$ / termine di confronto. Voto decisivo: percentuale del cubo concordato che senza il voto di $G_{\mathrm{n}}$ non sarebbe concordata; chiusura: il riempimento delle piccole lacune delle segnalazioni di ogni metodo prima del voto.}
+    \caption{Il riferimento concordato con la soglia di ogni metodo al 95-esimo, 97-esimo e 99-esimo percentile e, al 95-esimo, senza la chiusura, sugli anni di test. Inizio e fine: percentuale dei cluster concordati; asterisco, test dei segni significativo all'1\%. Attorno ai cluster lunghi: $G_{\mathrm{n}}$ / termine di confronto. Voto decisivo: percentuale del cubo concordato.}
     \label{tab:app-soglia-concordate}
     \vspace{0.3em}
     \setlength{\tabcolsep}{4pt}
@@ -75,7 +75,7 @@ Le segnalazioni concordate della Sezione~\ref{sec:ris-concordate} sono ricostrui
 \section{Curve precision--recall rispetto al cubo concordato}
 \label{app:soglia-pr}
 
-Con il cubo concordato fisso, quello del 95-esimo percentile, la soglia di ogni metodo varia dall'80-esimo al 99.9-esimo percentile del suo score sugli anni di validazione. A ogni soglia le segnalazioni del metodo sono chiuse come nel cubo concordato, e se ne calcolano la precision e il recall (Sezione~\ref{sec:exp-baseline}) rispetto al cubo concordato, sugli anni di test (Figura~\ref{fig:app-pr}). Un metodo che segnalasse a caso avrebbe una precision pari alla frazione di valori concordati, 0.062. Precision e recall misurano l'accordo con il cubo concordato, che per costruzione favorisce i metodi simili fra loro.
+Con il cubo concordato fisso, quello del 95-esimo percentile, la soglia di ogni metodo varia dall'80-esimo al 99.9-esimo percentile del suo score sugli anni di validazione. A ogni soglia le segnalazioni del metodo sono chiuse come nel cubo concordato, e se ne calcolano la precision e il recall (Sezione~\ref{sec:exp-baseline}) rispetto al cubo concordato, sugli anni di test (Figura~\ref{fig:app-pr}); lungo ogni curva la soglia sale da destra a sinistra. Un metodo che segnalasse a caso avrebbe una precision pari alla frazione di valori concordati, 0.062. Precision e recall misurano l'accordo con il cubo concordato, che per costruzione favorisce i metodi simili fra loro.
 \paragraph{Al 95-esimo percentile $G_{\mathrm{n}}$ è penultimo.} Alla soglia del cubo concordato $G_{\mathrm{n}}$ ha precision 0.594 e recall 0.697, contando anche il suo voto nel cubo concordato, le più basse dopo quelle della variazione in tre ore. È atteso: sette dei nove metodi leggono una cella in un istante e segnalano in gran parte gli stessi valori, mentre $G_{\mathrm{n}}$ si sovrappone anche alla variazione in tre ore (Sezione~\ref{sec:ris-confronti}).
 
 \paragraph{Ai percentili più alti la precision di $G_{\mathrm{n}}$ sale.} Arriva a 0.95 al 99.9-esimo percentile: i suoi valori più estremi sono quasi sempre nel cubo concordato. Al 99-esimo e al 99.5-esimo percentile supera quella di CBLOF, della distanza dal normale e della variazione in tre ore, fra 0.76 e 0.86; PCA, HBOS, COPOD, Isolation Forest e MCD arrivano fra 0.96 e 1.00.
@@ -92,7 +92,7 @@ Con il cubo concordato fisso, quello del 95-esimo percentile, la soglia di ogni 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.72\textwidth]{era5_concordate_pr}
-    \caption{Precision e recall di ogni metodo al variare della propria soglia, dall'80-esimo al 99.9-esimo percentile, rispetto al cubo concordato al 95-esimo percentile, sugli anni di test; il pallino pieno indica il 95-esimo percentile, quelli vuoti l'80-esimo, il 97-esimo e il 99-esimo; lungo ogni curva la soglia sale da destra a sinistra. Le sei curve grigie sono i modelli shallow. Al 95-esimo $G_{\mathrm{n}}$ è penultimo.}
+    \caption{Precision e recall di ogni metodo al variare della propria soglia, dall'80-esimo al 99.9-esimo percentile, rispetto al cubo concordato al 95-esimo percentile, sugli anni di test; il pallino pieno indica il 95-esimo percentile, quelli vuoti l'80-esimo, il 97-esimo e il 99-esimo. Le sei curve grigie sono i modelli shallow. Al 95-esimo $G_{\mathrm{n}}$ è penultimo.}
     \label{fig:app-pr}
 \end{figure}
 
@@ -109,7 +109,7 @@ Il minimo di 20 valori sotto il quale un cluster concordato non è studiato (Sez
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Il riferimento concordato con altri valori del protocollo, sugli anni di test, con la soglia al 95-esimo percentile e la chiusura. Prima colonna: il protocollo del Capitolo~\ref{chap:risultati} (minimo di 20 valori, intorno di 300~km, brevi fino a 72 ore); nelle altre cambia un solo valore. Copertura ed eccedenza: mediane per cluster concordato. Fra parentesi il posto di $G_{\mathrm{n}}$ fra i nove metodi; trattino: non calcolato.}
+    \caption{Il riferimento concordato con altri valori del protocollo, sugli anni di test, con la soglia al 95-esimo percentile e la chiusura. Prima colonna: il protocollo dei risultati (minimo di 20 valori, intorno di 300~km, brevi fino a 72 ore); nelle altre cambia un solo valore. Copertura ed eccedenza: mediane per cluster concordato. Fra parentesi il posto di $G_{\mathrm{n}}$ fra i nove metodi; trattino: non calcolato.}
     \label{tab:app-sensibilita}
     \vspace{0.3em}
     \setlength{\tabcolsep}{2pt}
