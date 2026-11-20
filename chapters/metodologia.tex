@@ -69,8 +69,6 @@ dove $\operatorname{MSE}_w$ è l'errore quadratico medio sulle celle valide e su
 
 Generatore e discriminatore hanno ciascuno un proprio ottimizzatore Adam~\cite{kingma2015adam}. Nell'aggiornamento del generatore, i parametri del discriminatore sono congelati ma viene mantenuto il gradiente rispetto alla ricostruzione; la storia della patch è codificata di nuovo, con i parametri del discriminatore appena aggiornati. Il peso di ricostruzione $\lambda_G$ è un iperparametro. I tassi di apprendimento dei due ottimizzatori sono distinti e fissati separatamente. Con gli \emph{aggiornamenti D:G} $n_D{:}n_G$, sullo stesso batch vengono eseguiti prima $n_D$ aggiornamenti del discriminatore e poi $n_G$ del generatore, ciascuno con un proprio passaggio in avanti; è un conteggio di aggiornamenti e non riguarda i tassi di apprendimento. Tassi, aggiornamenti e peso di ricostruzione sono gli strumenti con cui si regola l'equilibrio fra le due reti; i valori di questi iperparametri sono scelti nel Capitolo~\ref{chap:esperimenti}.
 
-\paragraph{Sintesi.} Il generatore ricostruisce il campo di un istante su tutta la griglia, a partire dalla storia recente, dal trend di ogni cella e dalla codifica temporale; il discriminatore giudica ogni cella sulla propria patch. Le due reti sono addestrate con gli obiettivi dell'articolo, nella forma del codice degli autori.
-
 \section{Ingresso: storia recente, codifica temporale e normalizzazione stagionale}
 \label{sec:ingresso-normalizzazione-era5}
 
@@ -151,8 +149,6 @@ con $F$ il numero delle variabili. Con il fattore $\bar{m}$, un errore quadratic
 % inverse variance of time differences", "aim to standardize the targets (over consecutive steps) to unit
 % variance. These were estimated from the training data"; passo di 6 h; moltiplicata per pesi per livello e per
 % pesi di superficie scelti a mano (2t 1.0; 10u, 10v, msl, tp 0.1) e per l'area della cella, non riportati.
-
-\paragraph{Sintesi.} Ogni variabile entra nel modello riferita al normale stagionale della propria cella, giorno e ora, con la codifica temporale dell'ora solare locale e della posizione nell'anno, e l'errore di ciascuna variabile pesa in proporzione inversa a quanto la variabile cambia abitualmente.
 
 \section{Valori esclusi negli anni di validazione}
 \label{sec:maschere-validazione}
