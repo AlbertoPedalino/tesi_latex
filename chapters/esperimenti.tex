@@ -32,45 +32,109 @@ con la banda $\gamma$ uguale alla distanza euclidea mediana fra le coordinate de
 \section{Configurazione e ricerca degli iperparametri}
 \label{sec:exp-configurazioni}
 
-La configurazione del rilevatore è fissata, a eccezione di quattro iperparametri che regolano l'equilibrio fra generatore e discriminatore, scelti con una ricerca bayesiana. La Tabella~\ref{tab:configurazioni} riporta i valori fissati e gli iperparametri cercati, con la sezione del Capitolo~\ref{chap:metodologia} che li descrive.
+La configurazione del rilevatore è fissata, a eccezione di quattro iperparametri che regolano l'equilibrio fra generatore e discriminatore, scelti con una ricerca bayesiana. La Tabella~\ref{tab:configurazioni} riassume i valori fissati e gli iperparametri cercati.
+
+Gli anni di addestramento, di validazione e di test sono quelli della Sezione~\ref{sec:dati-split}: 1980--1999, 2000--2004 e 2005--2025. Ogni batch contiene un istante, cioè un campo intero. La storia recente comprende $R=16$ istanti, cioè 48 ore, e il trend $L=56$ istanti, cioè 168 ore, la stessa durata dell'articolo. Il generatore ha due strati ConvGRU da 32 canali con kernel $3\times3$, una LSTM del trend a due strati con stato nascosto di dimensione 64 e, nel ramo del calendario, uno strato lineare di dimensione 64. Il discriminatore giudica ogni cella sulla patch con $P=3$, che comprende la cella e le sue otto vicine dirette; la sua ConvGRU ha due strati da 32 canali e il suo strato nascosto ha dimensione 64.
+
+Nella normalizzazione stagionale e nella normalizzazione climatologica dello score la finestra è di 31 giorni, i quindici che precedono il giorno e i quindici che lo seguono: è la finestra con cui Russo et al.\ stimano le soglie giornaliere della temperatura massima~\cite{russo2015heatwaves}, mentre WeatherBench~2 usa per la sola media una finestra mobile di 61 giorni~\cite{rasp2024weatherbench2}. Il minimo della deviazione standard è 0.1 della deviazione standard complessiva per la precipitazione e per l'umidità del suolo, 0.01 per le altre tredici variabili; i due valori sono una scelta di questo lavoro.
+% Limiti allineati alla configurazione dello sweep (seasonal_std_floors in
+% sweeps/stgan_era5_normal_validation.yaml: tp 0.1, swvl1 0.1, le altre il
+% valore predefinito 0.01). Il testo precedente (0.3 / 0.1 / 0.01, scelti con il
+% controllo su 1980-1994 contro 1995-2004) descriveva limiti mai usati in una
+% run: è nel backup del 16 ottobre 2026. Se si torna a quei limiti, ripristinare
+% anche il paragrafo sulla loro scelta.
+
+La tendenza lineare è sottratta a tre variabili: temperatura a due metri, temperatura a 850~hPa e umidità del suolo. Sono le tre variabili in cui la media sull'intero dominio deriva di più negli anni di validazione, 2000--2004: $+0.22$ e $+0.12$ deviazioni standard per le due temperature, $-0.09$ per l'umidità del suolo, al più 0.05 in valore assoluto per le altre; la precipitazione, che deriva di $+0.14$, è esclusa perché il suo scostamento è un effetto della normalizzazione stagionale e non una deriva del clima (Sezione~\ref{sec:dati-limiti}). Negli anni successivi, fra le altre variabili controllate la deriva resta piccola, con le eccezioni dell'umidità specifica e della precipitazione. Fra le dodici variabili senza tendenza c'è l'umidità specifica: la sua deriva inizia dopo gli anni di addestramento, e una tendenza lineare stimata su quegli anni non la descrive. Per questa variabile la correzione non può quindi essere applicata senza usare gli anni di test.
+% Fonte della scelta sulla validazione (18/11/2026): scripts/check_era5_climate_drift.py --train-end-year 1999,
+% tutte le 15 variabili, normale per mese e ora 1980-1999; log sul server outputs/deriva_annuale_15.log, copia
+% locale Tesi/log_server/deriva/deriva_annuale_15.log. Media 2000-2004 in deviazioni standard: t2m +0.224,
+% precipitazione +0.140, t850 +0.116, umidità del suolo -0.094, pressione -0.046, strato limite +0.036, tutte
+% le altre entro +-0.03 (umidità specifica -0.010). Esclusa la precipitazione (effetto della normalizzazione,
+% Sezione 3.5 e prova con la norma 1980-1994 qui sotto), le tre più grandi sono le tre scelte.
+% Controllo del 13 ottobre 2026 (scripts/check_era5_seasonal_normalization.py,
+% controllo_normalizzazione.log), con la divisione degli anni di allora: deriva della
+% media sul dominio +0.59 per la temperatura a 2 m (estate +0.80), +0.36 a 850 hPa,
+% -0.16 per l'umidità del suolo, +0.17 per l'umidità specifica (piatta fino al 2010
+% circa), tutte le altre sotto 0.1. Rifatto con la divisione 1980-1999 il 10 novembre
+% 2026: numeri nella Sezione 3.5 (deriva_clima_1999.log).
+% Misura della deriva per variabile (controllo_deriva_clima.log) e deriva che
+% resta dopo la retta: da riportare con i numeri riletti nel log.
+% Umidità specifica, riletta il 21 ottobre 2026 in deriva_clima_1999.log
+% (scripts/check_era5_climate_drift.py --train-end-year 1999, tabella "all
+% months", norma 1980-1999, medie annuali sul dominio in deviazioni standard):
+% negli anni 1980-1999 fra -0.13 e +0.06, pendenza della retta +0.0014 per anno;
+% validazione 2000-2004 fra -0.07 e +0.04; 2005-2009 +0.03, 2010-2014 +0.08,
+% 2015-2019 +0.15, ultimi cinque anni +0.17. La retta stimata su 1980-1999
+% lascia +0.13 negli ultimi cinque anni. Nello stesso log la precipitazione
+% totale passa da circa 0 negli anni di addestramento a +0.09/+0.26 dal 2000 in
+% poi. Non è nei dati: gradino_precipitazione.log (21 ottobre 2026,
+% scripts/check_era5_precipitation_step.py) mostra per anno media, quota di zeri,
+% di valori minimi e di ore piovose senza salto nel 2000, file grezzi salvati
+% allo stesso modo (float32, stessa conversione) e identici ai dati preparati.
+% Il salto compare in gennaio 2000 a ogni ora ed è più forte nelle celle più
+% secche (+0.2/+0.5 contro +0.1): è la media della distanza di una variabile
+% asimmetrica fuori dagli anni su cui è stimata la sua norma, non un cambiamento
+% del clima. Conferma in deriva_clima_1994.log: con la norma 1980-1994 la
+% precipitazione salta a +0.28 nel 1995, il primo anno fuori, e resta fra +0.14
+% e +0.38; l'umidità specifica resta fra -0.06 e +0.09 fino al 2009 e sale dopo.
+% Il rilevatore usa la radice quarta e una soglia minima di 0.1 per la
+% deviazione standard della precipitazione.
+
+I pesi delle variabili (Sezione~\ref{sec:pesi-variabili-ricostruzione}) vanno da 0.40 per l'umidità specifica a 7.14 per l'umidità del suolo, che cambia lentamente. La soglia del criterio dei valori esclusi (Sezione~\ref{sec:maschere-validazione}) è oltrepassata dal 5\% dei valori degli anni di addestramento. È una scelta, ed esclude l'8.62\% dei valori degli anni di addestramento e il 9.75\% di quelli degli anni di validazione: più del 5\%, perché basta che una delle due distanze superi la propria soglia del criterio.
+% Fonte: physiq_pv/anomaly_detection/stgan/normal_masks.py. Quote misurate alla
+% preparazione dello sweep (14 ottobre 2026, outputs/era5_sweep_1999/normal_masks):
+% addestramento 8.62%, validazione 9.75% (distanza dal normale 5.9%, variazione
+% 5.3%). Pesi delle due distanze: quelli dello sweep attuale (variazione su 24
+% ore), indicazione dell'autore del 16 ottobre 2026.
+
+La probabilità di dropout è 0.2 in entrambe le reti, fissata e non ottimizzata. Per ogni istante sono fatte $J=20$ estrazioni, come le 20 previsioni campionate con cui Monaco et al.~\cite{monaco2025sdeunet} valutano la loro U-Net con dropout Monte Carlo; il numero è fissato e non ottimizzato.
+% Fonte J=20: Monaco et al. 2025, Computers & Geosciences 205, p. 7 ("We compute all metrics
+% using 20 sampled predictions for MCD U-Net"). Anche Kong et al. 2020 (SDE-Net), appendice,
+% compito di regressione: "20 posterior samples are used for MC-dropout ... at test time".
+Nella normalizzazione climatologica dello score una combinazione di cella, giorno dell'anno e ora riceve uno score solo se ha almeno trenta valori di riferimento; sugli anni di validazione le stime di un anno sono calcolate sugli altri quattro. Gli ottimizzatori Adam hanno $\beta_1=0.9$, il valore del codice degli autori, e $\beta_2=0.999$, con un tasso di apprendimento costante. L'addestramento dura sei epoche, come nel codice degli autori di STGAN; i calcoli sono in bfloat16 (BF16) e i parametri a 32 bit (FP32).
 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Configurazione del rilevatore su ERA5. Nella parte superiore i valori fissati, nella parte inferiore gli iperparametri della ricerca, con l'intervallo esplorato e il valore della configurazione scelta.}
+    \caption{Configurazione del rilevatore su ERA5: valori fissati e iperparametri cercati, con il valore scelto e l'intervallo esplorato.}
     \label{tab:configurazioni}
     \vspace{0.6em}
-    \begin{tabular}{@{}L{0.36}L{0.48}L{0.09}@{}}
+    \begin{tabular}{@{}L{0.42}L{0.52}@{}}
         \toprule
-        Elemento & Valore & Sezione \\
+        Parametro & Valore \\
         \midrule
-        Anni di addestramento, validazione, test & 1980--1999, 2000--2004, 2005--2025 & \ref{sec:dati-split} \\
-        Unità del campione e batch & Campo intero, un istante per batch & \ref{sec:stgan-convgru} \\
-        Generatore & ConvGRU a due strati da 32 canali, kernel $3\times3$; LSTM del trend a due strati da 64 & \ref{sec:stgan-convgru} \\
-        Discriminatore & Patch $3\times3$; ConvGRU a due strati da 32 canali; strato nascosto da 64 & \ref{sec:stgan-discriminatore} \\
-        Storia recente e trend & 16 e 56 istanti, cioè 48 e 168 ore & \ref{sec:ingresso-normalizzazione-era5} \\
-        Codifica temporale & Ora solare locale e posizione nell'anno, per cella & \ref{sec:ingresso-normalizzazione-era5} \\
-        Ingresso del modello & Rispetto al normale di cella, giorno e ora; tendenza lineare tolta a tre variabili; poi min--max & \ref{sec:ingresso-normalizzazione-era5} \\
-        Pesi delle variabili & Inversi della variazione quadratica media su 24 ore & \ref{sec:pesi-variabili-ricostruzione} \\
-        Dropout & 0.2, nel generatore e nel discriminatore & \ref{sec:score-dropout-montecarlo} \\
-        Estrazioni Monte Carlo negli score & 20 & \ref{sec:score-dropout-montecarlo} \\
-        Ottimizzatore & Adam, $\beta_1=0.9$, $\beta_2=0.999$, tasso costante & \ref{sec:stgan} \\
-        Epoche & 6, come nel codice degli autori di STGAN & -- \\
-        Precisione & bfloat16 (BF16) nei calcoli, parametri a 32 bit (FP32) & -- \\
+        \multicolumn{2}{@{}l}{\emph{Valori fissati}} \\
+        Anni di addestramento, validazione, test & 1980--1999, 2000--2004, 2005--2025 \\
+        Istanti per batch & 1 \\
+        Storia recente $R$ e trend $L$ & 16 e 56 istanti (48 e 168 ore) \\
+        Generatore & ConvGRU a 2 strati da 32 canali, kernel $3\times3$; LSTM a 2 strati da 64; strato lineare da 64 \\
+        Discriminatore & patch con $P=3$; ConvGRU a 2 strati da 32 canali; strato nascosto da 64 \\
+        Finestra delle due normalizzazioni & 31 giorni \\
+        Minimo della deviazione standard & 0.1 per precipitazione e umidità del suolo, 0.01 per le altre \\
+        Variabili con tendenza sottratta & temperatura a due metri e a 850~hPa, umidità del suolo \\
+        Soglia del criterio dei valori esclusi & 5\% dei valori degli anni di addestramento \\
+        Probabilità di dropout $p$ & 0.2 \\
+        Estrazioni Monte Carlo $J$ & 20 \\
+        Valori minimi della climatologia dello score & 30 \\
+        Soglia $\tau$ & 95-esimo percentile \\
+        Ottimizzatore & Adam, $\beta_1=0.9$, $\beta_2=0.999$, tasso costante \\
+        Epoche & 6 \\
+        Precisione & BF16 nei calcoli, parametri FP32 \\
         \addlinespace
-        Tasso di apprendimento del generatore & da $10^{-4}$ a $3\times10^{-3}$, in scala logaritmica; scelto $7.65\times10^{-4}$ & \ref{sec:stgan} \\
-        Tasso di apprendimento del discriminatore & da $2.5\times10^{-5}$ a $5\times10^{-3}$, in scala logaritmica; scelto $3.06\times10^{-3}$ & \ref{sec:stgan} \\
-        Peso di ricostruzione $\lambda_G$ & da 25 a 2000, in scala logaritmica; scelto 63.7 & \ref{sec:stgan} \\
-        Aggiornamenti D:G, $n_D{:}n_G$ & 1:1, 2:1 oppure 1:2; scelto 1:1 & \ref{sec:stgan} \\
+        \multicolumn{2}{@{}l}{\emph{Iperparametri cercati: valore scelto (intervallo, in scala logaritmica)}} \\
+        Tasso di apprendimento del generatore & $7.65\times10^{-4}$ (da $10^{-4}$ a $3\times10^{-3}$) \\
+        Tasso di apprendimento del discriminatore & $3.06\times10^{-3}$ (da $2.5\times10^{-5}$ a $5\times10^{-3}$) \\
+        Peso di ricostruzione $\lambda_G$ & 63.7 (da 25 a 2000) \\
+        Aggiornamenti D:G, $n_D{:}n_G$ & 1:1 (1:1, 2:1 oppure 1:2) \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\paragraph{Obiettivo.} L'obiettivo della ricerca è la distanza MMD fra campi osservati e ricostruiti nello spazio delle componenti principali (Sezione~\ref{sec:monitoraggio-senza-etichette}), mediata sulle ultime cinque epoche, da minimizzare: la prima epoca è esclusa perché, all'inizio dell'addestramento, è poco indicativa della configurazione. Ogni prova è addestrata sugli anni 1980--1999 e misurata sugli anni di validazione, senza calcolare score sugli anni di test. Ogni configurazione è addestrata una sola volta, con lo stesso seme per tutte le prove. Le prove interrotte perché una loss ha assunto valori infiniti o indefiniti (NaN) non hanno una distanza MMD e sono escluse dalla scelta.
+L'obiettivo della ricerca è la distanza MMD fra campi osservati e ricostruiti nello spazio delle componenti principali (Sezione~\ref{sec:monitoraggio-senza-etichette}), mediata sulle ultime cinque epoche, da minimizzare: la prima epoca è esclusa perché, all'inizio dell'addestramento, è poco indicativa della configurazione. Ogni prova è addestrata sugli anni 1980--1999 e misurata sugli anni di validazione, senza calcolare score sugli anni di test. Ogni configurazione è addestrata una sola volta, con lo stesso seme per tutte le prove. Le prove interrotte perché una loss ha assunto valori infiniti o indefiniti (NaN) non hanno una distanza MMD e sono escluse dalla scelta.
 
-\paragraph{La ricerca.} Le prove sono gestite con la libreria Optuna~\cite{akiba2019optuna} e proposte con un metodo bayesiano: un processo gaussiano stima la distanza MMD in funzione degli iperparametri, a partire dalle prove già completate, e la prova successiva è scelta dove il miglioramento atteso è più alto. La ricerca è stata fermata quando le ultime prove non abbassavano di almeno 0.0004 la distanza MMD più bassa trovata fino ad allora, un valore vicino al rumore stimato dal processo gaussiano, senza un numero di prove fissato per tutta la ricerca; il criterio di arresto è una scelta di questo lavoro. È scelta la configurazione con la distanza MMD più bassa fra le prove completate. Le prove della ricerca e la configurazione scelta sono riportate nella Sezione~\ref{sec:ris-ricerca}.
+Le prove sono gestite con la libreria Optuna~\cite{akiba2019optuna} e proposte con un metodo bayesiano: un processo gaussiano stima la distanza MMD in funzione degli iperparametri, a partire dalle prove già completate, e la prova successiva è scelta dove il miglioramento atteso è più alto. La ricerca è stata fermata quando le ultime prove non abbassavano di almeno 0.0004 la distanza MMD più bassa trovata fino ad allora, un valore vicino al rumore stimato dal processo gaussiano, senza un numero di prove fissato per tutta la ricerca; il criterio di arresto è una scelta di questo lavoro. È scelta la configurazione con la distanza MMD più bassa fra le prove completate. Le prove della ricerca e la configurazione scelta sono riportate nella Sezione~\ref{sec:ris-ricerca}.
 
-\paragraph{Parametri e calcolo.} Del modello scelto si usano i parametri dell'ultima epoca, come nel codice degli autori\footnote{\url{https://github.com/dleyan/STGAN}}, che salva i parametri a ogni epoca e valuta quelli dell'ultima: nessuna epoca è scelta in base al risultato. Un'epoca comprende 58384 batch di un istante, cioè gli istanti degli anni di addestramento meno i primi 56, che servono al trend. Nella configurazione scelta un'epoca dura circa 2.4 ore, quindi un addestramento di sei epoche dura poco più di 14 ore. I modelli sono implementati in PyTorch~\cite{paszke2019pytorch}. Nella preparazione dei dati (Sezione~\ref{sec:dati-pipeline}) i file mensili in formato NetCDF~\cite{rew1990netcdf} sono letti con xarray~\cite{hoyer2017xarray}; durante l'addestramento e il calcolo degli score i file \texttt{.npy} sono letti con NumPy~\cite{harris2020numpy} in mappatura di memoria; le tabelle di score sono elaborate con pandas~\cite{mckinney2010pandas}; il Capitolo~\ref{chap:risultati} usa anche SciPy~\cite{virtanen2020scipy}. Tutti i modelli sono addestrati su una scheda NVIDIA RTX PRO 6000 Blackwell.
+Del modello scelto si usano i parametri dell'ultima epoca, come nel codice degli autori\footnote{\url{https://github.com/dleyan/STGAN}}, che salva i parametri a ogni epoca e valuta quelli dell'ultima: nessuna epoca è scelta in base al risultato. Un'epoca comprende 58384 batch di un istante, cioè gli istanti degli anni di addestramento meno i primi 56, che servono al trend. Nella configurazione scelta un'epoca dura circa 2.4 ore, quindi un addestramento di sei epoche dura poco più di 14 ore. I modelli sono implementati in PyTorch~\cite{paszke2019pytorch}. Nella preparazione dei dati (Sezione~\ref{sec:dati-pipeline}) i file mensili in formato NetCDF~\cite{rew1990netcdf} sono letti con xarray~\cite{hoyer2017xarray}; durante l'addestramento e il calcolo degli score i file \texttt{.npy} sono letti con NumPy~\cite{harris2020numpy} in mappatura di memoria; le tabelle di score sono elaborate con pandas~\cite{mckinney2010pandas}; il Capitolo~\ref{chap:risultati} usa anche SciPy~\cite{virtanen2020scipy}. Tutti i modelli sono addestrati su una scheda NVIDIA RTX PRO 6000 Blackwell.
 % Ricerca, prima fase: sweep W&B 913ez3rt, creato il 16 ottobre 2026 da
 % sweeps/stgan_era5_normal_validation.yaml (sostituisce hk81wr16, senza dropout
 % nel discriminatore). Seconda fase: scripts/optuna_era5_stgan.py, studio era5-gan
