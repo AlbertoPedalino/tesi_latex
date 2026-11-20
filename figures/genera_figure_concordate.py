@@ -3,11 +3,11 @@ precision-recall curves of Appendix A.3.
 
 Run from the thesis folder:
     python figures/genera_figure_concordate.py
-which writes figures/era5_concordate_moto.pdf from figures/dati/era5_concordate_moto_r300.csv and
-figures/era5_concordate_pr.pdf (Appendix A.3) from figures/dati/era5_concordate_pr.csv.
+which writes figures/era5_concordate_moto.pdf from figures/dati/era5_concordate_moto_quartili.csv (written by
+figures/prepara_dati_moto.py) and figures/era5_concordate_pr.pdf (Appendix A.3) from figures/dati/era5_concordate_pr.csv.
 
-Motion data: for every method, the median over the matched concordant clusters of the along-motion displacement of the
-flags of its matching cluster (km, positive = ahead along the motion of the concordant cluster), short and long
+Motion data: for every method, the quartiles over the matched concordant clusters of the along-motion displacement of
+the flags of its matching cluster (km, positive = ahead along the motion of the concordant cluster), short and long
 clusters, from the column along_km of lead_r300.csv and lead_r300_long.csv (scripts/check_era5_concordant_lead.py of
 the code repository, zone of 300 km, cube at the 95th percentile; downloaded in Tesi/log_server/r300/outputs/
 concordate_5pc_regola_tesi; the rows of the probability levels, Gn_p and Gn_rand, left out). Run optuna-27, test years
@@ -24,12 +24,13 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.legend_handler import HandlerTuple
 
 from genera_figure_eventi import (BASELINES, BLUE, GREEN, GRID, MUTED, ORANGE, SHALLOW_GREY, SHALLOW_KEYS, TEXT, TICKS,
                                   clean, size)
 
 HERE = pathlib.Path(__file__).parent
-MOTION = HERE / "dati" / "era5_concordate_moto_r300.csv"
+MOTION = HERE / "dati" / "era5_concordate_moto_quartili.csv"  # written by figures/prepara_dati_moto.py
 PR = HERE / "dati" / "era5_concordate_pr.csv"
 MARKED = [80, 97, 99]  # percentiles marked with an open dot on every precision-recall curve, besides the 95th
 from stile import COLOURS, ORDER, TEXT_COLOURS  # one order and one colour for every method, as in the tables
@@ -38,49 +39,57 @@ LABELS = {"Gn": r"$G_\mathrm{n}$", **BASELINES}
 
 def motion_figure():
     """On the long clusters G_n is ahead along the motion, more than every baseline; on the short ones a little behind.
-    One row per method, G_n on top; open dot = short clusters, filled dot = long clusters."""
+    One row per method, G_n on top. Long clusters: thick pale band from the 25th to the 75th percentile and filled dot
+    on the median; short clusters, drawn over it: thin line and open dot. The two ranges overlap on the same row, so
+    the distance between the two dots of a kind can be read across the rows."""
     frame = pd.read_csv(MOTION, comment="#").set_index(["kind", "detector"])
-    table, ahead = frame["median_km"], frame["ahead_pct"]
-    figure, axis = plt.subplots(figsize=size(0.42), constrained_layout=True)
+    figure, axis = plt.subplots(figsize=size(0.46), constrained_layout=True)
     ys = [len(ORDER)] + list(range(len(ORDER) - 1, 0, -1))  # G_n on top, a row of space below it
     axis.axvline(0, color=TEXT, linewidth=0.8, zorder=1)
-    # One cell of the grid, 28-55 km (less in longitude than in latitude): the shifts are a fraction of it.
-    axis.axvspan(28, 55, color=GRID, alpha=0.7, linewidth=0, zorder=0)
-    axis.text(41.5, len(ORDER) + 0.9, "una cella\n(28–55 km)", fontsize=TICKS - 1, color=MUTED, ha="center",
-              va="top", linespacing=0.95)
+    # One cell of the grid, 28-55 km (less in longitude than in latitude), between two dashed lines: drawn as lines and
+    # not as a band, so that it does not mix with the bands of the long clusters.
+    for edge in (28, 55):
+        axis.axvline(edge, color=MUTED, linewidth=0.8, linestyle=(0, (3, 2)), zorder=1)
+    axis.text(55, len(ORDER) + 1.75, "larghezza di una cella: 28–55 km", fontsize=TICKS - 1, color=MUTED, ha="right",
+              va="top", bbox=dict(facecolor="white", edgecolor="none", pad=0.8), zorder=6)
     for y, key in zip(ys, ORDER):
         colour = COLOURS[key]
-        short, long = table[("brevi", key)], table[("lunghi", key)]
-        axis.plot([short, long], [y, y], color=colour, linewidth=1.0, alpha=0.5, zorder=2)
-        axis.plot(short, y, "o", markersize=6, markerfacecolor="white", markeredgecolor=colour, markeredgewidth=1.4,
-                  zorder=3)
-        axis.plot(long, y, "o", markersize=6, color=colour, markeredgecolor="white", markeredgewidth=0.6, zorder=4)
+        long, short = frame.loc[("lunghi", key)], frame.loc[("brevi", key)]
+        axis.plot([long["q25_km"], long["q75_km"]], [y, y], color=colour, linewidth=7, alpha=0.3,
+                  solid_capstyle="butt", zorder=2)
+        axis.plot([short["q25_km"], short["q75_km"]], [y, y], color=colour, linewidth=1.3, zorder=3)
+        axis.plot(short["median_km"], y, "o", markersize=6, markerfacecolor="white", markeredgecolor=colour,
+                  markeredgewidth=1.4, zorder=4)
+        axis.plot(long["median_km"], y, "o", markersize=6, color=colour, markeredgecolor="white",
+                  markeredgewidth=0.6, zorder=5)
     axis.set_yticks(ys, [LABELS[key] for key in ORDER])
     for label, key in zip(axis.get_yticklabels(), ORDER):
         label.set_color(TEXT_COLOURS[key])
-    axis.set_ylim(0.4, len(ORDER) + 1.0)
-    # G_n: the share of the concordant clusters in which it is ahead, short and long.
+    axis.set_ylim(0.3, len(ORDER) + 1.8)
+    # G_n: the share of the concordant clusters in which it is ahead, short and long, above its two dots.
     top = len(ORDER)
-    axis.annotate(f"davanti nel {ahead[('brevi', 'Gn')]:.0f}%", (-1.0, top), xytext=(0, 6),
-                  textcoords="offset points", fontsize=TICKS - 1, color=TEXT_COLOURS["Gn"], ha="right", va="bottom",
-                  bbox=dict(facecolor="white", edgecolor="none", pad=0.6), zorder=6)
-    axis.annotate(f"davanti nel {ahead[('lunghi', 'Gn')]:.0f}%", (table[("lunghi", "Gn")], top), xytext=(0, 6),
-                  textcoords="offset points", fontsize=TICKS - 1, color=TEXT_COLOURS["Gn"], ha="center", va="bottom",
-                  bbox=dict(facecolor="white", edgecolor="none", pad=0.6), zorder=6)
-    axis.set_xlim(-15, 58)
-    axis.set_xticks([-10, 0, 10, 20, 30, 40, 50])
-    axis.set_xlabel("spostamento lungo il moto, mediana (km)", fontsize=TICKS)
+    for kind, align in (("brevi", "right"), ("lunghi", "left")):
+        row = frame.loc[(kind, "Gn")]
+        axis.annotate(f"davanti nel {row['ahead_pct']:.0f}%", (row["median_km"], top), xytext=(0, 6),
+                      textcoords="offset points", fontsize=TICKS - 1, color=TEXT_COLOURS["Gn"], ha=align,
+                      va="bottom", bbox=dict(facecolor="white", edgecolor="none", pad=0.6), zorder=6)
+    axis.set_xlim(-52, 60)
+    axis.set_xticks([-40, -20, 0, 20, 40])
+    axis.set_xlabel("spostamento lungo il moto (km)", fontsize=TICKS)
     axis.tick_params(labelsize=TICKS, length=0)
     axis.grid(axis="x", color=GRID, linewidth=0.6)
     axis.set_axisbelow(True)
     clean(axis, "top", "right", "left")
-    axis.text(57, 0.55, "davanti", fontsize=TICKS - 1, color=MUTED, ha="right", va="bottom")
-    axis.text(-14.5, 0.55, "dietro", fontsize=TICKS - 1, color=MUTED, ha="left", va="bottom")
-    handles = [plt.Line2D([], [], marker="o", linestyle="none", markersize=6, markerfacecolor="white",
-                          markeredgecolor=MUTED, markeredgewidth=1.4, label="cluster brevi"),
-               plt.Line2D([], [], marker="o", linestyle="none", markersize=6, color=MUTED, label="cluster lunghi")]
-    axis.legend(handles=handles, loc="lower right", bbox_to_anchor=(1.0, 0.08), fontsize=TICKS - 1, frameon=False,
-                handletextpad=0.3)
+    axis.text(59, 0.35, "davanti", fontsize=TICKS - 1, color=MUTED, ha="right", va="bottom")
+    axis.text(-51, 0.35, "dietro", fontsize=TICKS - 1, color=MUTED, ha="left", va="bottom")
+    short_handle = plt.Line2D([], [], color=MUTED, linewidth=1.3, marker="o", markersize=6, markerfacecolor="white",
+                              markeredgecolor=MUTED, markeredgewidth=1.4)
+    long_handle = (plt.Line2D([], [], color=MUTED, linewidth=7, alpha=0.3, solid_capstyle="butt"),
+                   plt.Line2D([], [], color=MUTED, marker="o", linestyle="none", markersize=6,
+                              markeredgecolor="white", markeredgewidth=0.6))
+    figure.legend([short_handle, long_handle], ["cluster brevi", "cluster lunghi"],
+                  handler_map={tuple: HandlerTuple(ndivide=None, pad=0)}, loc="outside lower center", ncol=2,
+                  fontsize=TICKS - 1, frameon=False, handletextpad=0.5, handlelength=2.2, columnspacing=2.0)
     figure.savefig(HERE / "era5_concordate_moto.pdf")
     plt.close(figure)
 
