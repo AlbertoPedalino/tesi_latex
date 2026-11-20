@@ -1,0 +1,88 @@
+\chapter{La dispersione del dropout}
+\label{app:dropout}
+
+Questa appendice riporta prima le misure, poi i risultati sugli anni di test e attorno al riferimento concordato.
+
+$G_{\mathrm{n}}$ è calcolato dalla media delle 20 estrazioni Monte Carlo (Sezione~\ref{sec:score-dropout-montecarlo}). La dispersione delle estrazioni, divisa per la deviazione standard della climatologia dello score, è indicata con $s(t,n)$ ed è nelle stesse unità di $G_{\mathrm{n}}$. Le estrazioni sono approssimate con una gaussiana di media $G_{\mathrm{n}}$ e deviazione standard $s$, come si fa per un insieme di modelli~\cite{lakshminarayanan2017ensembles}; nelle previsioni d'insieme si usa allo stesso modo una gaussiana costruita dalla media e dalla varianza dei membri, con coefficienti stimati~\cite{gneiting2005emos}. La \emph{probabilità di superamento} di un valore è la probabilità che un'estrazione superi la soglia $\tau$:
+\begin{equation}
+p(t,n)=\Phi\!\left(\frac{G_{\mathrm{n}}(t,n)-\tau}{s(t,n)}\right),
+\end{equation}
+con $\Phi$ la funzione di ripartizione della normale standard. Ogni segnalazione di $G_{\mathrm{n}}$ ha $p>0.5$, perché la media delle estrazioni è sopra la soglia. La probabilità riguarda una singola estrazione. La segnalazione usa invece la media delle 20, che varia molto meno; poiché la dispersione delle estrazioni è circa proporzionale a G, la probabilità cresce soprattutto con quanto G supera la soglia. Per brevità le segnalazioni con probabilità alta sono dette \emph{stabili}. Nessun valore della probabilità è fissato come taglio: i risultati sono letti a più livelli.
+
+Il \emph{rapporto} di un valore è la dispersione di G fra le estrazioni (Sezione~\ref{sec:score-dropout-montecarlo}) divisa per G stesso, senza normalizzazione climatologica: è il coefficiente di variazione delle estrazioni.
+
+Per ogni livello di probabilità $\ell$, uguale a 0.6, 0.7, 0.8, 0.9 o 0.95 (una scelta di questo lavoro), le segnalazioni di $G_{\mathrm{n}}$ con probabilità di superamento $p\ge\ell$ sono trattate come un metodo che non vota nel cubo concordato (Sezione~\ref{sec:exp-concordate}). Un insieme più piccolo tende per questo solo motivo a cominciare dopo e a finire prima, e ogni livello ha quindi un controllo. Il controllo estrae a caso, fra le segnalazioni di $G_{\mathrm{n}}$, tanti valori quanti ne tiene il livello. Restano fuori i valori aggiunti dalla chiusura: hanno uno score sotto la soglia, quindi $p\le0.5$, e nessun livello li tiene. Il controllo pareggia il numero delle segnalazioni, non la loro distanza dalla soglia.
+
+\section{La dispersione delle estrazioni}
+\label{app:dropout-dispersione}
+
+La sezione guarda quanto le segnalazioni di $G_{\mathrm{n}}$ dipendono dalle maschere di dropout: prima la probabilità di superamento, poi la dispersione delle estrazioni. Con una probabilità di superamento di almeno 0.6, 0.7, 0.8, 0.9 e 0.95 resta rispettivamente il 93.1, l'86.1, il 78.4, il 68.7 e il 61.4\% delle segnalazioni di $G_{\mathrm{n}}$: la percentuale scende in modo regolare con il livello di probabilità. Stabile non vuol dire giusta: dice solo che una singola estrazione supera la soglia con probabilità alta. Il resto della sezione guarda quanto le estrazioni differiscono fra loro. La dispersione delle 20 estrazioni (Sezione~\ref{sec:score-dropout-montecarlo}) non è una probabilità di anomalia: senza etichette non si può stabilire se una segnalazione con estrazioni concordi sia più giusta di una con estrazioni discordi. Si può però vedere dove le estrazioni si separano. La dispersione di G cresce con G, con una correlazione di Spearman di 0.86 su tutti i valori, in parte attesa perché G e la sua dispersione vengono dalle stesse estrazioni; per questo è letta in proporzione%
+% Spearman 0.861 fra errore grezzo e dispersione: outputs/finale_optuna27/logs/dropout_rapporto_bande.log
+% ("rank correlation between score and spread"), optuna-27, 5 novembre 2026.
+, con il rapporto, cioè la dispersione divisa per G. La sezione riguarda gli anni di test.
+
+% Figura era5_dropout_mappe_b (rapporto per cella) tolta il 16/11/2026: i numeri sono nel testo.
+
+Aggiungendo a $G_{\mathrm{n}}$ una volta la sua dispersione, $s$, supererebbe la soglia l'1.8\% dei valori che $G_{\mathrm{n}}$ non segnala. Da qui in poi ``dispersione'' indica quella di G.
+
+In valore assoluto la dispersione cresce con G, ma in proporzione resta quasi costante: in ogni fascia di G, la dispersione media divisa per G medio è fra l'11.1\% e l'11.8\% fino al 99-esimo percentile di G, e scende solo oltre, al 9.7\% fra il 99-esimo e il 99.9-esimo percentile e al 9.1\% nello 0.1\% più alto. Le maschere di dropout incidono quindi su G in proporzione quasi uguale, tranne sui valori più alti, su cui incidono un po' meno.
+
+% Figura era5_dropout_a tolta il 15/11/2026 (revisione: i numeri sono nel testo).
+
+In media sugli anni di test la dispersione è più alta a sud, dove è più alto anche G: circa il 23\% in più fra 20$^\circ$ e 30$^\circ$N che fra 50$^\circ$ e 60$^\circ$N. Il rapporto medio invece varia poco in tutto il dominio, fra l'11.0\% e l'11.4\% da una fascia all'altra, ed è più basso sul mare che sulla terra. Lungo il margine del dominio si vede una cornice, con una dispersione in media 1.8 volte quella delle celle interne, come la cornice della Sezione~\ref{sec:ris-correlazione-temporale}. Negli istanti dei tre esempi della Sezione~\ref{sec:ris-esempi} la dispersione nelle celle del cluster è in mediana da 3.4 a 5 volte quella delle altre celle, la più alta nella copertura nuvolosa; in proporzione a G, invece, il rapporto mediano nelle celle del cluster resta vicino a quello delle altre, fra l'8\% e il 13\% contro il 10--11\%.
+% Esempi: figures/dati/era5_dropout_mappe.npz (deviazione standard e rapporto negli istanti) e era5_caso_NN.npz (nucleo), 10 novembre 2026: mediane nel nucleo e fuori 6.0/1.3, 4.1/1.2, 8.4/1.7 x 1e-4 (velocità verticale, precipitazione, copertura nuvolosa); rapporto 13.2/10.7, 10.3/10.6, 8.3/9.6%. Quota a sud e a nord con l'1%: media dei 12 mesi di luogo_g_clim_1pc.log (validazione), 1.43% e 0.68%.
+% Testo completo prima del taglio del 9 novembre 2026: \paragraph{La dispersione cella per cella.} La Figura~\ref{fig:ris-dropout-mappe} mostra la dispersione di G in ogni cella. In media sugli anni di test è più alta a sud, dove è più alto anche G: $2.28\times10^{-4}$ fra 20$^\circ$ e 30$^\circ$N contro $1.85\times10^{-4}$ fra 50$^\circ$ e 60$^\circ$N, circa il 23\% in più a sud. Il rapporto medio varia poco, fra l'11.0\% e l'11.4\% da una fascia all'altra, senza un andamento con la latitudine. Lungo il margine del dominio si vede una cornice: sulla fila di celle più esterna la deviazione standard è in media 1.8 volte quella delle celle a otto o più celle dal bordo, probabilmente un effetto del modello simile a quello della Sezione~\ref{sec:ris-correlazione-temporale}. Due terzi delle celle sopra il 97-esimo percentile della media stanno entro tre celle dal bordo. All'interno i valori più alti cadono in poche aree che, a una lettura della mappa, sembrano corrispondere a rilievi come Alpi, Caucaso, Anatolia orientale e Zagros; il legame con l'orografia non è misurato. Negli istanti dei tre esempi della Sezione~\ref{sec:ris-esempi}, uno per ciascuno dei tre tipi evidenziati, la deviazione standard è più alta nel nucleo, come ci si aspetta dal fatto che segue G: in mediana da quattro a sei volte e mezzo quella della zona lontana.
+
+
+
+Poiché la dispersione è circa una frazione costante $r\approx0.11$ di G, la probabilità di superamento dipende soprattutto da quanto G supera la soglia, in proporzione a G stesso. Con $\mu$ e $\sigma$ la climatologia della cella, del giorno e dell'ora, $G_{\mathrm{n}}=(G-\mu)/\sigma$ e la soglia $\tau$ corrisponde a $G^{*}=\mu+\tau\sigma$; la dispersione divisa per $\sigma$ è circa $rG/\sigma$, e quindi
+\begin{equation}
+p\approx\Phi\!\left(\frac{1-G^{*}/G}{r}\right).
+\end{equation}
+La relazione non è esatta, perché il rapporto cala sui valori di G più alti e varia da un valore all'altro; ma una segnalazione stabile è soprattutto una segnalazione ben sopra la soglia della propria cella, e la dispersione aggiunge poco a quanto G già dice.
+
+% Numeri (5 novembre 2026, test, optuna-27, run_era5_final_analyses.sh): scripts/check_era5_dropout_spread.py
+% (--score-component generator, un istante ogni 9, rapporto delle medie per fascia: log
+% outputs/finale_optuna27/logs/dropout_rapporto_bande.log) e scripts/check_era5_dropout_flags.py
+% (logs/dropout_5pc.log, dropout_rapporto_5pc.log, dropout_tipi_5pc.log); figures/dati/era5_dropout.json.
+% Dispersione di G+clim: physiq_pv/era5/seasonality.py, climatology_zscores, uncertainty / std (in unità di z).
+% Valori segnalati da G+clim: 36093783. Restano segnalati togliendo una e due deviazioni 74.8 e 55.0%; non
+% segnalati che lo diventano aggiungendone una 1.8%; dispersione mediana dei valori segnalati 0.222 volte la
+% soglia. Errore grezzo (dropout_rapporto_bande.log): 76.0 e 57.4% restano una e due deviazioni sotto.
+% Rapporto per fascia di percentile dell'errore 0-50, 50-90, 90-95, 95-99, 99-99.9, 99.9-100: 11.11, 11.36,
+% 11.83, 11.58, 9.73, 9.05%. Rapporto per posizione -8..-1, 1..8: 11.20, 10.42, 10.26, 10.02, 9.86, 9.63,
+% 9.55, 10.02 | 10.18, 10.26, 10.34, 10.34, 10.34, 10.34, 10.34, 10.50 (valore al percentile mediano).
+% Percentile mediano della dispersione assoluta (grezza) -1, 1, 6: 94, 85, 49. Classi del rapporto a parità
+% di errore grezzo: rapporto mediano 5.4, 7.9, 10.0, 12.7, 18.7%; oltre soglia 24.3, 38.3, 46.2, 49.7,
+% 45.3%; nessuna variabile oltre 2: 13.5, 10.2, 9.3, 9.4, 12.4%; a parità di G: oltre soglia 27.2, 37.7,
+% 45.1, 49.0, 44.9%. Valori a 8 o più celle dentro: 30865 su 36093783 (0.09%).
+% Per tipo e mappe (dropout_tipi_5pc*, in figures/dati/era5_dropout_*): rapporto per posizione -2, 1, 7:
+% velocità verticale 9.32, 9.86, 10.18; precipitazione 9.55, 10.10, 10.18; copertura nuvolosa 8.45, 9.32,
+% 10.02; radiazione -2 7.11; umidità del suolo 12.34, 12.99, 11.48 (-8 13.61). Oltre soglia, classi 1, 4, 5 a
+% parità di errore: velocità verticale 20.5, 44.5, 39.9; precipitazione 25.5, 49.9, 49.9; copertura
+% nuvolosa 33.5, 48.8 (classe 3 51.2), 36.5; umidità del suolo 39.1, 77.5, 77.2; pressione 37.5, 63.0,
+% 49.7. Classe con la quota più alta: 4 in tutti i tipi tranne copertura nuvolosa e temperatura a 850 hPa
+% (3); precipitazione 4 e 5 alla pari.
+% Mappe (figures/dati/era5_dropout_mappe.npz = outputs/finale_optuna27/dropout_tipi_5pc_maps.npz):
+% deviazione standard media per fascia di latitudine S->N ([20,30), [30,40), [40,50), [50,60]) 2.28, 2.05,
+% 1.99, 1.85 x 1e-4; rapporto medio 11.43, 10.98, 11.17, 11.39%. Anello più esterno 3.47 contro 1.96 x
+% 1e-4 a 8 o più celle dal bordo (1.77 volte); anelli 1 e 2: 2.50, 2.47. Sopra il 97-esimo percentile della
+% media (3.26 x 1e-4): 66% delle celle entro tre celle dal bordo; all'interno (celle) 39.5-42N 39-43.5E 35;
+% 44.5-46.5N 6.5-8E 12; 43.5-44.5N 41-42.5E 12; 46-47N 10-11.5E 9; 42-43N 46.5-47.5E 9; 36.5-37.5N
+% 45.5-46.5E 9; 32-33N 36-37E 9; 37-38N 43-44E 6; 45.5-46.5N 24.5-25.5E 5. La lettura come rilievi è
+% geografica, non misurata.
+% Istanti degli esempi (mediana della deviazione standard x 1e-4 nucleo, contorno, lontana, dalle mappe degli
+% istanti in era5_dropout_mappe.npz e dalle zone di era5_caso_NN.npz): velocità verticale 5.95, 2.97, 1.06;
+% precipitazione 4.06, 2.83, 1.02; copertura nuvolosa 8.40, 2.98, 1.28 (nucleo/lontana 5.6, 4.0, 6.5).
+
+\section{Probabilità di superamento e riferimento concordato}
+\label{app:dropout-concordate}
+
+Le segnalazioni di $G_{\mathrm{n}}$ con probabilità di superamento almeno pari a ciascun livello di probabilità sono confrontate, cluster concordato per cluster concordato, con il loro campione di controllo, altrettante segnalazioni di $G_{\mathrm{n}}$ prese a caso. Le segnalazioni stabili cominciano più tardi e finiscono prima del campione di controllo, e l'effetto cresce con il livello: con il livello 0.95, nei cluster brevi cominciano dopo il controllo nel 24\% dei cluster concordati e prima nel 9\%, e nei cluster lunghi finiscono prima nella metà, il 50.5\%, e dopo nell'8\%. È in gran parte atteso per come la probabilità è costruita (Sezione~\ref{app:dropout-dispersione}): ai bordi di un cluster lo score ha appena superato la soglia; il controllo pareggia il numero delle segnalazioni, non la loro distanza dalla soglia. Il risultato dice quindi dove stanno le segnalazioni meno stabili, ai bordi dei cluster e soprattutto alla fine, non qualcosa che il dropout aggiunga a $G_{\mathrm{n}}$.
+% Numeri: Tesi/log_server/r300_ns_p2/outputs, corse _p2 (commit 90319b13 di physiq-pv): match_r300_p2_levels.csv
+% (inizio e fine, Crawford, senza bordo); figures/dati/era5_concordate_livelli.csv. Figura dei livelli e spostamento
+% lungo il moto delle stabili tolti il 15/11/2026 (revisione della commissione: risultato atteso per costruzione).
+
+
+% Numeri: risultati.md §16 bis (livelli contro il controllo corretto, 15 novembre 2026).
+% Spostamento mediano lungo il moto a 0.95 (lead _p2): lunghi Gn_p0.95 18.9 km, Gn_rand0.95 15.3; brevi -0.7 e -4.6.

@@ -194,14 +194,6 @@ Le misure e le regole seguenti descrivono dove e come segnalano gli score; sono 
 
 \paragraph{Esempi per tipo.} Per i tipi con più valori segnalati, un cluster di $G_{\mathrm{n}}$ è mostrato su una mappa come esempio. Con una regola fissata prima di guardare i cluster, l'esempio di un tipo è il cluster con più valori fra quelli che durano al massimo tre giorni, letto nell'istante in cui conta più celle; il limite di durata esclude le catene. Gli esempi non sono quindi i cluster più importanti né i più tipici, ma cluster compatti. La \emph{cella seguita} nel tempo è quella del cluster con $G_{\mathrm{n}}$ più alto nell'istante della mappa.
 
-\paragraph{Rapporto.} Il \emph{rapporto} di un valore è la dispersione di G fra le estrazioni (Sezione~\ref{sec:score-dropout-montecarlo}) divisa per G stesso, senza normalizzazione climatologica: è il coefficiente di variazione delle estrazioni.
-
-\paragraph{Probabilità di superamento.} $G_{\mathrm{n}}$ è calcolato dalla media delle 20 estrazioni Monte Carlo (Sezione~\ref{sec:score-dropout-montecarlo}). La dispersione delle estrazioni, divisa per la deviazione standard della climatologia dello score, è indicata con $s(t,n)$ ed è nelle stesse unità di $G_{\mathrm{n}}$. Le estrazioni sono approssimate con una gaussiana di media $G_{\mathrm{n}}$ e deviazione standard $s$, come si fa per un insieme di modelli~\cite{lakshminarayanan2017ensembles}; nelle previsioni d'insieme si usa allo stesso modo una gaussiana costruita dalla media e dalla varianza dei membri, con coefficienti stimati~\cite{gneiting2005emos}. La \emph{probabilità di superamento} di un valore è la probabilità che un'estrazione superi la soglia $\tau$:
-\begin{equation}
-p(t,n)=\Phi\!\left(\frac{G_{\mathrm{n}}(t,n)-\tau}{s(t,n)}\right),
-\end{equation}
-con $\Phi$ la funzione di ripartizione della normale standard. Ogni segnalazione di $G_{\mathrm{n}}$ ha $p>0.5$, perché la media delle estrazioni è sopra la soglia. La probabilità riguarda una singola estrazione. La segnalazione usa invece la media delle 20, che varia molto meno; poiché la dispersione delle estrazioni è circa proporzionale a G, la probabilità cresce soprattutto con quanto G supera la soglia. Per brevità le segnalazioni con probabilità alta sono dette \emph{stabili}. Nessun valore della probabilità è fissato come taglio: i risultati sono letti a più livelli.
-
 \section{Baseline}
 \label{sec:exp-baseline}
 
@@ -294,8 +286,6 @@ in ore: $\Delta_0<0$ se il metodo comincia prima del cluster concordato, $\Delta
 \mathbf{u}=\frac{\mathbf{x}_c(t_1^c)-\mathbf{x}_c(t_0^c)}{\lVert\mathbf{x}_c(t_1^c)-\mathbf{x}_c(t_0^c)\rVert},
 \end{equation}
 e lo \emph{spostamento lungo il moto} è la media, sugli istanti in cui il metodo ha segnalazioni nell'intorno del cluster concordato, di $(\mathbf{x}_s(t)-\mathbf{x}_c(t))\cdot\mathbf{u}$. È la componente lungo il moto con cui Leonardo e Colle scompongono l'errore di posizione delle tracce dei cicloni, separata da quella perpendicolare~\cite{leonardo2020alongtrack}, qui rispetto alla direzione media del cluster: uno spostamento lungo il moto positivo indica che il metodo segnala più dove il cluster va che dove è stato. Anche qui due metodi sono confrontati cluster per cluster: si conta in quanti cluster concordati l'uno sta più avanti dell'altro, con lo stesso test dei segni.
-
-\paragraph{Livelli di probabilità di superamento.} Per ogni livello di probabilità $L$, uguale a 0.6, 0.7, 0.8, 0.9 o 0.95 (una scelta di questo lavoro), le segnalazioni di $G_{\mathrm{n}}$ con probabilità di superamento $p\ge L$ (Sezione~\ref{sec:exp-misure}) sono trattate come un metodo che non vota. Un insieme più piccolo tende per questo solo motivo a cominciare dopo e a finire prima, e ogni livello ha quindi un controllo. Il controllo estrae a caso, fra le segnalazioni di $G_{\mathrm{n}}$, tanti valori quanti ne tiene il livello. Restano fuori i valori aggiunti dalla chiusura: hanno uno score sotto la soglia, quindi $p\le0.5$, e nessun livello li tiene. Il controllo pareggia il numero delle segnalazioni, non la loro distanza dalla soglia.
 
 \paragraph{Che cosa c'è attorno ai cluster.} Le segnalazioni non concordate di un metodo nell'intorno di un cluster concordato sono lette così:
 \begin{itemize}
