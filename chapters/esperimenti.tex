@@ -160,22 +160,22 @@ Del modello scelto si usano i parametri dell'ultima epoca, come nel codice degli
 \section{Protocollo di valutazione}
 \label{sec:exp-protocollo}
 
-\paragraph{Che cosa si calcola.} Gli score della configurazione scelta sono calcolati sugli anni di validazione 2000--2004 e di test 2005--2025, su tutti gli istanti e tutte le celle: $14616\times10611$ coppie cella--istante sugli anni di validazione e $61360\times10611$ sugli anni di test, ciascuna con le 20 estrazioni Monte Carlo della Sezione~\ref{sec:score-dropout-montecarlo}. In entrambi i periodi la storia recente non è ripulita e comprende i valori esclusi, e per i primi istanti viene dal periodo precedente (Sezione~\ref{sec:dati-split}).
+Gli score della configurazione scelta sono calcolati sugli anni di validazione 2000--2004 e di test 2005--2025, su tutti gli istanti e tutte le celle: $14616\times10611$ coppie cella--istante sugli anni di validazione e $61360\times10611$ sugli anni di test, ciascuna con le 20 estrazioni Monte Carlo della Sezione~\ref{sec:score-dropout-montecarlo}. In entrambi i periodi la storia recente non è ripulita e comprende i valori esclusi, e per i primi istanti viene dal periodo precedente (Sezione~\ref{sec:dati-split}).
 
-\paragraph{Che cosa si stima sugli anni di validazione.} Le quantità che descrivono il comportamento abituale degli score sono stimate sugli anni di validazione e restano fisse per gli anni di test: la climatologia degli score (Sezione~\ref{sec:normalizzazione-climatologica-score}) e la soglia. La soglia di uno score è il 95-esimo percentile dello stesso score sugli anni di validazione,
+Le quantità che descrivono il comportamento abituale degli score sono stimate sugli anni di validazione e restano fisse per gli anni di test: la climatologia degli score (Sezione~\ref{sec:normalizzazione-climatologica-score}) e la soglia. La soglia di uno score è il 95-esimo percentile dello stesso score sugli anni di validazione,
 \begin{equation}
 \tau=Q_{0.95}\bigl\{z_{tn}\,:\,t\in\text{validazione},\;n=1,\dots,N\bigr\},
 \label{eq:soglia}
 \end{equation}
 calcolato su un istante ogni dieci degli anni di validazione e su tutte le celle, una soglia per ciascuno score confrontato. Il 95-esimo percentile è una scelta di questo lavoro, non ottimizzata. Sugli anni di validazione lo score normalizzato $z$ di ogni anno è calcolato con la climatologia degli altri quattro (Sezione~\ref{sec:normalizzazione-climatologica-score}), e i valori senza score non entrano nella soglia. Nella soglia entrano anche i valori esclusi dalle altre misure (Sezione~\ref{sec:maschere-validazione}), perché valori come questi sono presenti anche negli anni di test. Sugli anni di test la soglia segnala una percentuale di valori che può differire dal 5\%, ed è riportata nei risultati.
 
-\paragraph{Altre soglie.} Per G e D senza normalizzazione climatologica dello score, usati nel Capitolo~\ref{chap:risultati} per studiare le due componenti, la soglia è allo stesso modo il 95-esimo percentile della componente stessa sugli anni di validazione. Il riferimento concordato è ricostruito anche con il 97-esimo e il 99-esimo percentile e senza la chiusura morfologica (Sezione~\ref{sec:exp-concordate}), per verificare quanto le conclusioni dipendano da queste scelte (Appendice~\ref{app:soglia}).
+Per G e D senza normalizzazione climatologica dello score, usati nel Capitolo~\ref{chap:risultati} per studiare le due componenti, la soglia è allo stesso modo il 95-esimo percentile della componente stessa sugli anni di validazione. Il riferimento concordato è ricostruito anche con il 97-esimo e il 99-esimo percentile e senza la chiusura morfologica (Sezione~\ref{sec:exp-concordate}), per verificare quanto le conclusioni dipendano da queste scelte (Appendice~\ref{app:soglia}).
 % La soglia è letta su un istante ogni dieci della validazione (THRESHOLD_STRIDE
 % in scripts/check_era5_dust_lead.py, riga 114: nanpercentile di values[::10]), da
 % tutte le celle, senza escludere i valori segnati come insoliti. Verificato il 29
 % ottobre 2026.
 
-\paragraph{Score usato e baseline.} Lo score del rilevatore è $G_{\mathrm{n}}$, dell'equazione~\eqref{eq:score-finale}, cioè G con la normalizzazione climatologica. Lo score combinato dell'articolo serve solo al confronto (Sezione~\ref{sec:score-dropout-montecarlo}). La scelta di $G_{\mathrm{n}}$ è fatta sugli anni di validazione ed è motivata nelle Sezioni~\ref{sec:ris-correlazione-spaziale}--\ref{sec:ris-conferma}. Gli anni di test non intervengono né nell'addestramento né nella scelta della configurazione; il comportamento degli score e il loro confronto con otto baseline, metodi più semplici (Sezione~\ref{sec:exp-baseline}), sono descritti nel Capitolo~\ref{chap:risultati}.
+Lo score del rilevatore è $G_{\mathrm{n}}$, dell'equazione~\eqref{eq:score-finale}, cioè G con la normalizzazione climatologica. Lo score combinato dell'articolo serve solo al confronto (Sezione~\ref{sec:score-dropout-montecarlo}). La scelta di $G_{\mathrm{n}}$ è fatta sugli anni di validazione ed è motivata nelle Sezioni~\ref{sec:ris-correlazione-spaziale}--\ref{sec:ris-conferma}. Gli anni di test non intervengono né nell'addestramento né nella scelta della configurazione; il comportamento degli score e il loro confronto con otto baseline, metodi più semplici (Sezione~\ref{sec:exp-baseline}), sono descritti nel Capitolo~\ref{chap:risultati}.
 
 \subsection{Misure usate nei risultati}
 \label{sec:exp-misure}
@@ -220,7 +220,7 @@ Le baseline sono otto. Sei sono modelli shallow, scelti fra i metodi valutati in
     \end{itemize}
 \end{itemize}
 
-\paragraph{Soglie e misure di accordo.} Ogni metodo è trattato come il rilevatore: il suo score è espresso rispetto alla propria climatologia per cella, giorno dell'anno e ora (Sezione~\ref{sec:normalizzazione-climatologica-score}), e la sua soglia è il 95-esimo percentile dello stesso score sugli anni di validazione (equazione~\eqref{eq:soglia}). Se due metodi segnalano gli insiemi di valori $A$ e $B$, la percentuale delle segnalazioni di $A$ condivise con $B$ è $100\,|A\cap B|/|A|$; l'indice di Jaccard,
+Ogni metodo è trattato come il rilevatore: il suo score è espresso rispetto alla propria climatologia per cella, giorno dell'anno e ora (Sezione~\ref{sec:normalizzazione-climatologica-score}), e la sua soglia è il 95-esimo percentile dello stesso score sugli anni di validazione (equazione~\eqref{eq:soglia}). Se due metodi segnalano gli insiemi di valori $A$ e $B$, la percentuale delle segnalazioni di $A$ condivise con $B$ è $100\,|A\cap B|/|A|$; l'indice di Jaccard,
 \begin{equation}
 \mathrm{Jac}(A,B)=\frac{|A\cap B|}{|A\cup B|},
 \label{eq:jaccard}
