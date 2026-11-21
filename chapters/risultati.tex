@@ -28,7 +28,7 @@ La ricerca della Sezione~\ref{sec:exp-configurazioni} conta 29 prove, quattro de
 \begin{figure}[!t]
     \centering
     \includegraphics[width=\textwidth]{era5_optuna_pca}
-    \caption{Le prove della ricerca degli iperparametri nel piano delle prime due componenti principali dei quattro iperparametri, colorate secondo la distanza MMD sugli anni di validazione, più scura dove è più bassa. I cerchi arancioni indicano le tre prove del gruppo migliore, vicine fra loro, il riquadro sotto il grafico la direzione in cui cresce ciascun iperparametro. Le croci sono le prove interrotte per una loss non finita.}
+    \caption{Le prove della ricerca degli iperparametri nel piano delle prime due componenti principali dei quattro iperparametri, colorate secondo la distanza MMD sugli anni di validazione, più scura dove è più bassa; gli iperparametri sono presi in scala logaritmica e standardizzati, e fra parentesi sugli assi c'è la varianza spiegata. I cerchi arancioni indicano le tre prove del gruppo migliore, vicine fra loro, il riquadro sotto il grafico la direzione in cui cresce ciascun iperparametro. Le croci sono le prove interrotte per una loss non finita.}
     \label{fig:ris-ricerca}
 \end{figure}
 
@@ -88,12 +88,12 @@ Fra G e D la correlazione spaziale di Spearman vale in media $0.015$ ed è negat
 \end{figure}
 
 \label{sec:ris-correlazione-temporale}
-Fra G e D la correlazione temporale di Spearman ha mediana $-0.05$ ed è negativa nel 67\% delle celle (Figura~\ref{fig:ris-g-d-temporale}). Il legame è un po' più forte nel sud del dominio, con una mediana di $-0.11$ fra 20$^\circ$ e 30$^\circ$N, e più debole fra 40$^\circ$ e 50$^\circ$N, con $-0.02$. Escludendo le tre file vicino al margine del dominio, la correlazione è negativa nel 74\% delle celle; le positive stanno per lo più fra 35$^\circ$ e 50$^\circ$N. Nelle tre file di celle più vicine al margine la correlazione è in genere positiva, fra $0.08$ e $0.17$ in mediana: è la cornice della Figura~\ref{fig:ris-g-d-temporale}, probabilmente un effetto del modello, che lungo il margine completa il campo con zeri. Anche nel tempo, quindi, le due componenti sono quasi indipendenti, e il segno del loro legame dipende dal luogo.
+Fra G e D la correlazione temporale di Spearman ha mediana $-0.05$ ed è negativa nel 67\% delle celle (Figura~\ref{fig:ris-g-d-temporale}). Il legame è un po' più forte nel sud del dominio, con una mediana di $-0.11$ fra 20$^\circ$ e 30$^\circ$N, e più debole fra 40$^\circ$ e 50$^\circ$N, con $-0.02$. Escludendo le tre file vicino al margine del dominio, la correlazione è negativa nel 74\% delle celle; le positive stanno per lo più fra 35$^\circ$ e 50$^\circ$N, in parte sopra alcuni rilievi. Nelle tre file di celle più vicine al margine la correlazione è in genere positiva, fra $0.08$ e $0.17$ in mediana: è la cornice della Figura~\ref{fig:ris-g-d-temporale}, probabilmente un effetto del modello, che lungo il margine completa il campo con zeri. Anche nel tempo, quindi, le due componenti sono quasi indipendenti, e il segno del loro legame dipende dal luogo.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{era5_g_d_correlazione_temporale}
-    \caption{Correlazione temporale di Spearman fra G e D in ogni cella, sugli anni di validazione: blu dove D scende quando G sale, rosso dove salgono insieme; il triangolo della scala indica correlazioni oltre $0.3$. Il legame è debole quasi ovunque; la cornice rossa lungo il margine del dominio è probabilmente un effetto del modello, che lì completa il campo con zeri; macchie rosse anche su alcuni rilievi.}
+    \caption{Correlazione temporale di Spearman fra G e D in ogni cella, sugli anni di validazione: blu dove D scende quando G sale, rosso dove salgono insieme; il triangolo della scala indica correlazioni oltre $0.3$. Il legame è debole quasi ovunque; la cornice rossa lungo il margine del dominio è probabilmente un effetto del modello, che lì completa il campo con zeri.}
     \label{fig:ris-g-d-temporale}
 \end{figure}
 
@@ -236,7 +236,7 @@ La scelta dello score del rilevatore poggia sul significato delle due componenti
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Le principali misure del confronto fra G e D e della normalizzazione climatologica sugli anni di validazione, dove si sceglie lo score, e sugli anni di test. Fra parentesi, per G e $D_{\mathrm{oss}}$, la correlazione di Pearson.}
+    \caption{Le principali misure del confronto fra G e D e della normalizzazione climatologica sugli anni di validazione, dove si sceglie lo score, e sugli anni di test. Fra parentesi, per la correlazione temporale fra G e $D_{\mathrm{oss}}$, quella di Pearson.}
     \label{tab:ris-conferma-test}
     \vspace{0.6em}
     \begin{tabular}{@{}L{0.56}rr@{}}
@@ -290,11 +290,11 @@ Divisi per tipo (Sezione~\ref{sec:exp-misure}), i cluster di velocità verticale
 \begin{figure}[!t]
     \centering
     \includegraphics[width=\textwidth]{era5_eventi_tipo}
-    \caption{Percentuale dei valori segnalati per tipo di cluster, sugli anni di test, nei cluster di $G_{\mathrm{n}}$ (prima colonna) e in quelli di ciascuna baseline; ogni colonna somma a 100. Il tipo principale dipende dal metodo.}
+    \caption{Percentuale dei valori segnalati per tipo di cluster, cioè per la variabile che nel cluster si allontana di più dal normale (Sezione~\ref{sec:exp-misure}), sugli anni di test, nei cluster di $G_{\mathrm{n}}$ (prima colonna) e in quelli di ciascuna baseline; ogni colonna somma a 100. Il tipo principale dipende dal metodo.}
     \label{fig:ris-eventi-tipo}
 \end{figure}
 
-Quando è segnalato il 5\% dei valori, segnalazioni dovute ad anomalie meteorologiche diverse possono toccarsi e unirsi in un solo cluster; i più grandi durano settimane: il più grande di precipitazione dura 40 giorni, quello di velocità verticale 23, e in quasi tutti i loro istanti contano centinaia di celle, con una mediana rispettivamente di 472 e 723. Un cluster così lungo difficilmente corrisponde a un'unica anomalia: è piuttosto una catena (Sezione~\ref{sec:exp-misure}), e la sua dimensione dice quanto si estende la catena. Le catene non sono una particolarità di $G_{\mathrm{n}}$: si formano in tutti i metodi (Figura~\ref{fig:ris-eventi-dimensione}). Con le varianti della regola di contatto (Sezione~\ref{sec:exp-misure}), le catene dipendono poco dal collegamento nello spazio e molto da quello nel tempo: senza le diagonali la percentuale dei valori nei cluster con almeno 1000 valori resta al 74\%; con almeno metà delle celle in comune la percentuale scende al 57\%, e senza alcun collegamento nel tempo sarebbe l'1\%. Vengono quindi soprattutto dalla persistenza nel tempo delle aree segnalate, e in parte dalla percentuale segnalata: con la soglia al 99-esimo percentile si accorciano, e i cluster più grandi dei tre tipi con più valori durano fra 8 e 24 giorni, contro 23--40 con il 5\%; i cluster con almeno 20 valori contengono l'85\% dei valori segnalati, contro il 93\%.
+Quando è segnalato il 5\% dei valori, segnalazioni dovute ad anomalie meteorologiche diverse possono toccarsi e unirsi in un solo cluster; i più grandi durano settimane: il più grande di precipitazione dura 40 giorni, quello di velocità verticale 23, e in quasi tutti i loro istanti contano centinaia di celle, con una mediana rispettivamente di 472 e 723. Un cluster così lungo difficilmente corrisponde a un'unica anomalia: è piuttosto una catena (Sezione~\ref{sec:exp-misure}), e la sua dimensione dice quanto si estende la catena. Le catene non sono una particolarità di $G_{\mathrm{n}}$: in tutti i metodi pochi cluster enormi contengono la maggior parte dei valori segnalati (Figura~\ref{fig:ris-eventi-dimensione}). Con le varianti della regola di contatto (Sezione~\ref{sec:exp-misure}), le catene dipendono poco dal collegamento nello spazio e molto da quello nel tempo: senza le diagonali la percentuale dei valori nei cluster con almeno 1000 valori resta al 74\%; con almeno metà delle celle in comune la percentuale scende al 57\%, e senza alcun collegamento nel tempo sarebbe l'1\%. Vengono quindi soprattutto dalla persistenza nel tempo delle aree segnalate, e in parte dalla percentuale segnalata: con la soglia al 99-esimo percentile si accorciano, e i cluster più grandi dei tre tipi con più valori durano fra 8 e 24 giorni, contro 23--40 con il 5\%; i cluster con almeno 20 valori contengono l'85\% dei valori segnalati, contro il 93\%.
 % Regole di contatto: scripts/check_era5_cluster_rules.py (commit b7a26698), outputs/optuna27/regole_cluster.csv, anni di test, 5%: quota nei cluster >= 1000 valori 75.5 (regola della tesi), 73.9 (4 vicine), 69.3 (sovrapposizione >= 25%), 56.6 (>= 50%), 1.1 (nessun collegamento nel tempo).
 
 Dei valori segnalati da $G_{\mathrm{n}}$ solo il 41\% supera la soglia della distanza dal normale. Il restante 59\% è sotto quella soglia: $G_{\mathrm{n}}$ segnala anche valori che, presi uno per uno, non sono fra i più lontani dal clima. In parte è atteso, perché i due score misurano cose diverse. Anche la dimensione conta: il percentile mediano della distanza dal normale nei valori segnalati va da 79--80 nei cluster con meno di 20 valori a 95 in quelli con almeno 10000, quindi i cluster piccoli sono i meno estremi.
@@ -363,7 +363,7 @@ Il cluster di velocità verticale dura 63 ore. Il 23 novembre 2017 le sue 549 ce
         \caption{}
         \label{fig:ris-caso-velocita-c}
     \end{subfigure}
-    \caption{Il cluster di velocità verticale il 23 novembre 2017 alle 00~UTC, con le celle del cluster nel contorno nero e la cella seguita nel cerchio: (a) scarto standardizzato della velocità verticale, negativo se l'aria sale; (b) $G_{\mathrm{n}}$ come percentile, con la linea rossa attorno alle celle oltre la soglia; (c) nella cella seguita ($58.5^\circ$N, $8.5^\circ$E), percentile degli score e scarto standardizzato, in azzurro gli istanti nel cluster.}
+    \caption[Il cluster di velocità verticale il 23 novembre 2017 alle 00~UTC.]{Il cluster di velocità verticale il 23 novembre 2017 alle 00~UTC, con le celle del cluster nel contorno nero e la cella seguita nel cerchio: (a) scarto standardizzato della velocità verticale, negativo se l'aria sale; (b) $G_{\mathrm{n}}$ come percentile, con la linea rossa attorno alle celle oltre la soglia; (c) nella cella seguita ($58.5^\circ$N, $8.5^\circ$E), percentile degli score e scarto standardizzato, in azzurro gli istanti nel cluster; la fascia ``segnalato'' parte dal 95-esimo percentile dello score sugli anni di test, vicino alla soglia ma non uguale.}
     \label{fig:ris-caso-velocita}
 \end{figure}
 
@@ -393,7 +393,7 @@ Il cluster di precipitazione dura 72 ore. Il 19 maggio 2006 le sue 576 celle son
         \caption{}
         \label{fig:ris-caso-precipitazione-c}
     \end{subfigure}
-    \caption{Il cluster di precipitazione il 19 maggio 2006 alle 03~UTC, con le celle del cluster nel contorno nero e la cella seguita nel cerchio: (a) scarto standardizzato della radice quarta della precipitazione, in cui le zone senza pioggia appaiono come scarti standardizzati negativi; (b) $G_{\mathrm{n}}$ come percentile, con la linea rossa attorno alle celle oltre la soglia; (c) nella cella seguita ($56.5^\circ$N, $23^\circ$E), percentile degli score e scarto standardizzato, in azzurro gli istanti nel cluster.}
+    \caption[Il cluster di precipitazione il 19 maggio 2006 alle 03~UTC.]{Il cluster di precipitazione il 19 maggio 2006 alle 03~UTC, con le celle del cluster nel contorno nero e la cella seguita nel cerchio: (a) scarto standardizzato della radice quarta della precipitazione, in cui le zone senza pioggia appaiono come scarti standardizzati negativi; (b) $G_{\mathrm{n}}$ come percentile, con la linea rossa attorno alle celle oltre la soglia; (c) nella cella seguita ($56.5^\circ$N, $23^\circ$E), percentile degli score e scarto standardizzato, in azzurro gli istanti nel cluster; la fascia ``segnalato'' come nella Figura~\ref{fig:ris-caso-velocita}.}
     \label{fig:ris-caso-precipitazione}
 \end{figure}
 
@@ -421,7 +421,7 @@ Il cluster di precipitazione dura 72 ore. Il 19 maggio 2006 le sue 576 celle son
         \caption{}
         \label{fig:ris-caso-nuvole-c}
     \end{subfigure}
-    \caption{Il cluster di copertura nuvolosa il 15 giugno 2024 alle 12~UTC, con le celle del cluster nel contorno nero e la cella seguita nel cerchio: (a) scarto standardizzato della copertura nuvolosa; (b) $G_{\mathrm{n}}$ come percentile, con la linea rossa attorno alle celle oltre la soglia; (c) nella cella seguita ($23.5^\circ$N, $13^\circ$W), percentile degli score e scarto standardizzato, in azzurro gli istanti nel cluster.}
+    \caption[Il cluster di copertura nuvolosa il 15 giugno 2024 alle 12~UTC.]{Il cluster di copertura nuvolosa il 15 giugno 2024 alle 12~UTC, con le celle del cluster nel contorno nero e la cella seguita nel cerchio: (a) scarto standardizzato della copertura nuvolosa; (b) $G_{\mathrm{n}}$ come percentile, con la linea rossa attorno alle celle oltre la soglia; (c) nella cella seguita ($23.5^\circ$N, $13^\circ$W), percentile degli score e scarto standardizzato, in azzurro gli istanti nel cluster; la fascia ``segnalato'' come nella Figura~\ref{fig:ris-caso-velocita}.}
     \label{fig:ris-caso-nuvole}
 \end{figure}
 
@@ -578,7 +578,7 @@ La Tabella~\ref{tab:ris-concordate-rilevati} riporta le percentuali di tutti i m
         \toprule
          & \multicolumn{2}{c}{\shortstack{Cluster concordati\\rilevati dal metodo [\%]}} & \multicolumn{2}{c}{\shortstack{Cluster del metodo\\senza corrispondente [\%]}} \\
         \cmidrule(lr){2-3}\cmidrule(l){4-5}
-        Metodo & Brevi & Lunghi & \shortstack[r]{Come\\Bourdin} & \shortstack[r]{Senza vicini\\a piccoli} \\
+        Metodo & Brevi & Lunghi & Tutti & \shortstack[r]{Senza vicini\\a piccoli} \\
         \midrule
         $G_{\mathrm{n}}$ & 46 & 91 & 54.5 & 22.5 \\
         \addlinespace
@@ -604,7 +604,7 @@ Tre cluster di $G_{\mathrm{n}}$ senza corrispondente su quattro (13147 su 17354;
 \begin{table}[!t]
     \centering
     \footnotesize
-    \caption{I cluster di $G_{\mathrm{n}}$ senza corrispondente vicini a cluster concordati piccoli, sugli anni di test, con i loro valori nell'intorno dei cluster piccoli, contro il termine di confronto.}
+    \caption{I cluster di $G_{\mathrm{n}}$ senza corrispondente vicini a cluster concordati piccoli, sugli anni di test, con i loro valori nell'intorno dei cluster piccoli, contro il termine di confronto, cioè i valori che nessun metodo segnala negli stessi intorni. Valori moderati: nessuna variabile oltre due deviazioni standard.}
     \label{tab:ris-senza-corrispondente}
     \vspace{0.6em}
     \begin{tabular}{@{}lrr@{}}
@@ -632,7 +632,7 @@ La Figura~\ref{fig:ris-concordate-sovrapposizione} riporta, per ogni metodo, la 
 \begin{figure}[!t]
     \centering
     \includegraphics[width=\textwidth]{era5_concordate_sovrapposizione}
-    \caption{Copertura ed eccedenza di ogni metodo nell'intorno dei cluster concordati brevi e lunghi, mediane sui cluster concordati degli anni di test. Le linee grigie hanno indice di Jaccard costante.}
+    \caption{Copertura ed eccedenza di ogni metodo nell'intorno dei cluster concordati brevi e lunghi, mediane sui cluster concordati degli anni di test. Le linee grigie hanno indice di Jaccard costante; poiché i punti sono mediane, l'indice di Jaccard mediano di un metodo può non coincidere con quello della linea su cui cade il suo punto.}
     \label{fig:ris-concordate-sovrapposizione}
 \end{figure}
 % Numeri: Tesi/log_server/r300/outputs/concordate_5pc_regola_tesi/boxes_r300{,_long}.csv (15 novembre 2026): mediane
@@ -705,7 +705,7 @@ Nei cluster brevi lo spostamento lungo il moto di $G_{\mathrm{n}}$ è in media d
 \begin{figure}[!t]
     \centering
     \includegraphics[width=\textwidth]{era5_concordate_moto}
-    \caption{Spostamento lungo il moto medio delle segnalazioni di ogni metodo rispetto ai cluster concordati brevi (cerchio vuoto) e lunghi (cerchio pieno), positivo davanti al cluster concordato, sugli anni di test: media sui cluster concordati (cerchio) e intervallo di confidenza al 95\% (fascia; nei cluster brevi più stretta del cerchio). A destra, la percentuale dei cluster concordati in cui il metodo sta davanti; le linee tratteggiate delimitano una cella della griglia, 28--55~km. Nei cluster lunghi $G_{\mathrm{n}}$ sta in media più avanti di ogni baseline.}
+    \caption{Spostamento lungo il moto medio delle segnalazioni di ogni metodo rispetto ai cluster concordati brevi (cerchio vuoto) e lunghi (cerchio pieno), positivo davanti al cluster concordato, sugli anni di test: media sui cluster concordati (cerchio) e intervallo di confidenza al 95\% (fascia; nei cluster brevi più stretta del cerchio). A destra, la percentuale dei cluster concordati in cui il metodo sta davanti; le linee tratteggiate delimitano una cella della griglia, 28--55~km.}
     \label{fig:ris-concordate-moto}
 \end{figure}
 % Figura: figures/genera_figure_concordate.py (motion_figure), dati figures/dati/era5_concordate_moto_medie.csv scritti da
@@ -722,7 +722,7 @@ Nei cluster brevi lo spostamento lungo il moto di $G_{\mathrm{n}}$ è in media d
 \begin{figure}[!t]
     \centering
     \includegraphics[width=\textwidth]{era5_concordate_moto_distribuzione}
-    \caption{Distribuzione dello spostamento lungo il moto di $G_{\mathrm{n}}$, della variazione in tre ore e di MCD sui cluster concordati brevi e lunghi, sugli anni di test: percentuale dei cluster concordati per intervalli di 10~km, media (linea spessa), zero (linea nera sottile), 20-esimo e 80-esimo percentile (linee tratteggiate). In alto, la percentuale dei cluster oltre $-150$ e $+150$~km.}
+    \caption{Distribuzione dello spostamento lungo il moto medio di $G_{\mathrm{n}}$, della variazione in tre ore e di MCD sui cluster concordati brevi e lunghi, sugli anni di test: percentuale dei cluster concordati per intervalli di 10~km, media (linea spessa), zero (linea nera sottile), 20-esimo e 80-esimo percentile (linee tratteggiate). In alto, la percentuale dei cluster oltre $-150$ e $+150$~km.}
     \label{fig:ris-concordate-moto-distribuzione}
 \end{figure}
 % Figura: figures/genera_figure_concordate.py (spread_figure), dati figures/dati/era5_concordate_moto_distribuzione.csv
@@ -738,7 +738,7 @@ Questa sottosezione guarda le segnalazioni non concordate di ogni metodo nell'in
 \begin{figure}[!t]
     \centering
     \includegraphics[width=\textwidth]{era5_concordate_attorno}
-    \caption{Le segnalazioni non concordate di ogni metodo nell'intorno dei cluster concordati brevi e il termine di confronto, sugli anni di test. A sinistra, in ascissa il salto più grande in tre ore prima del valore, per i soli valori moderati, e in ordinata la percentuale di tutti i valori con una variabile oltre due deviazioni standard; il quadrato nero è il termine di confronto. A destra, solo dietro i cluster brevi, lo scarto standardizzato più grande dall'istante del valore a 24 ore dopo. Le segnalazioni di $G_{\mathrm{n}}$, come quelle della variazione in tre ore, sono cambiate in fretta e rientrano in poche ore.}
+    \caption{Le segnalazioni non concordate di ogni metodo nell'intorno dei cluster concordati brevi e il termine di confronto, sugli anni di test. A sinistra, in ascissa il salto più grande in tre ore prima del valore, per i soli valori moderati, e in ordinata la percentuale di tutti i valori con una variabile oltre due deviazioni standard; il quadrato nero è il termine di confronto. A destra, solo dietro i cluster brevi, lo scarto standardizzato più grande dall'istante del valore a 24 ore dopo.}
     \label{fig:ris-concordate-attorno}
 \end{figure}
 % Numeri (15 novembre 2026): Tesi/log_server/r300/outputs/concordate_5pc_regola_tesi/excess_r300_{analysed,long}.csv
@@ -771,7 +771,7 @@ Le sezioni precedenti descrivono le segnalazioni con le variabili d'ingresso, ci
 \begin{figure}[!t]
     \centering
     \includegraphics[width=\textwidth]{era5_concordate_giudici}
-    \caption{Percentuale di valori in cui ciascuna grandezza che nessuno score legge direttamente è insolita, per le segnalazioni non concordate di ogni metodo attorno ai cluster concordati lunghi e per il termine di confronto, sugli anni di test. Il colore è il rapporto fra la percentuale e quella del termine di confronto: blu sotto 1, rosso sopra. Colonne: prec. conv.\ = precipitazione convettiva; rugiada, minima e massima = temperatura di rugiada, minima e massima a due metri; vapore colonna = vapore acqueo nella colonna. $G_{\mathrm{n}}$ ha CAPE, indice K e vapore insoliti più spesso degli altri metodi.}
+    \caption{Percentuale di valori in cui ciascuna grandezza che nessuno score legge direttamente è insolita, per le segnalazioni non concordate di ogni metodo attorno ai cluster concordati lunghi e per il termine di confronto, sugli anni di test. Il colore è il rapporto fra la percentuale e quella del termine di confronto: blu sotto 1, rosso sopra. Colonne: prec. conv.\ = precipitazione convettiva; rugiada, minima e massima = temperatura di rugiada, minima e massima a due metri; vapore colonna = vapore acqueo nella colonna.}
     \label{fig:ris-giudici}
 \end{figure}
 % Giudici sugli anni 2005-2025, intorno di 300 km (15 novembre 2026): Tesi/log_server/r300/outputs/concordate_5pc_regola_tesi/
@@ -787,7 +787,7 @@ Davanti e dietro i cluster lunghi, le segnalazioni esclusive di $G_{\mathrm{n}}$
 \begin{table}[!t]
     \centering
     \footnotesize
-    \caption{I valori concordati che $G_{\mathrm{n}}$ segnala e quelli che manca, dentro i cluster concordati, sugli anni di test. $G_{\mathrm{n}}$ segnala il 65.7\% dei valori concordati dei cluster brevi e il 70.8\% di quelli dei lunghi.}
+    \caption{I valori concordati che $G_{\mathrm{n}}$ segnala e quelli che manca, dentro i cluster concordati, sugli anni di test. Il salto più grande in tre ore riunisce cluster brevi e lunghi, valori lontani dal normale e moderati; le altre righe sono la percentuale di valori con la grandezza insolita nei soli cluster lunghi, e ogni intervallo va dalla parte del cluster davanti lungo il moto a quella dietro.}
     \label{tab:ris-giudici-dentro}
     \vspace{0.6em}
     \begin{tabular}{@{}lrr@{}}
@@ -808,7 +808,7 @@ Davanti e dietro i cluster lunghi, le segnalazioni esclusive di $G_{\mathrm{n}}$
 Dentro i cluster concordati lunghi (Tabella~\ref{tab:ris-giudici-dentro}), i valori concordati che $G_{\mathrm{n}}$ segnala hanno CAPE insolito circa due volte più spesso di quelli che manca e indice K da due a quasi tre volte; fuori dalla tabella, lo stesso vale per precipitazione convettiva e vapore nella colonna, circa due volte.
 % Fuori dalla tabella (risultati.md §11.1, lunghi, davanti / dietro): precipitazione convettiva 20.1 / 21.5 contro 9.4 / 11.2,
 % vapore nella colonna 24.9 / 22.2 contro 12.2 / 10.0.
-I valori che manca hanno invece più spesso la temperatura minima bassa, circa due volte, la temperatura di rugiada bassa, circa due volte e mezzo, e la raffica insolita, un po' più spesso. Con la Sezione~\ref{sec:ris-concordate-sovrapposizione}, dove gli stessi valori risultano cambiati poco nelle tre ore prima, questo indica che dentro i cluster $G_{\mathrm{n}}$ segnala valori cambiati in fretta, con CAPE, indice K e vapore insoliti più spesso. Manca invece più spesso i valori con temperatura minima e temperatura di rugiada basse e, un po' più spesso, quelli con raffiche insolite. Per un errore di ricostruzione, che è una previsione a tre ore, è in parte atteso, perché ciò che cambia lentamente si ricostruisce bene. Nella tabella il salto più grande in tre ore riunisce cluster brevi e lunghi, valori lontani dal normale e moderati; le altre righe sono la percentuale di valori con la grandezza insolita nei cluster lunghi, e ogni intervallo va dalla parte del cluster davanti lungo il moto a quella dietro.
+I valori che manca hanno invece più spesso la temperatura minima bassa, circa due volte, la temperatura di rugiada bassa, circa due volte e mezzo, e la raffica insolita, un po' più spesso. Con la Sezione~\ref{sec:ris-concordate-sovrapposizione}, dove gli stessi valori risultano cambiati poco nelle tre ore prima, questo indica che dentro i cluster $G_{\mathrm{n}}$ segnala valori cambiati in fretta, con CAPE, indice K e vapore insoliti più spesso. Manca invece più spesso i valori con temperatura minima e temperatura di rugiada basse e, un po' più spesso, quelli con raffiche insolite. Per un errore di ricostruzione, che è una previsione a tre ore, è in parte atteso, perché ciò che cambia lentamente si ricostruisce bene.
 % Fonte (2005-2025, passo4_21): risultati.md §11.1 (tabella dei giudici dentro i cluster, davanti / dietro); log full21
 % long, righe "Gn in cluster ahead/behind seen/missed" (CAPE 14.2 / 15.4 contro 7.7 / 8.2, raffica 23.3 / 24.9 contro 27.7 / 32.9).
 

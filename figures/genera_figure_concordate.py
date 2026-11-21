@@ -122,8 +122,9 @@ def spread_figure():
             axis.text(0.99, 0.97, f"{first['above_pct']:.1f}% →", transform=axis.transAxes, ha="right",
                       va="top", fontsize=TICKS - 2, color=MUTED)
             if col == 0:
-                axis.text(-0.13, 0.5, LABELS[key], transform=axis.transAxes, ha="right", va="center", fontsize=TICKS,
+                axis.text(-0.3, 0.5, LABELS[key], transform=axis.transAxes, ha="right", va="center", fontsize=TICKS,
                           color=TEXT_COLOURS[key])
+                axis.set_ylabel("cluster\nconcordati (%)", fontsize=TICKS - 2)
             axis.tick_params(labelsize=TICKS - 1, length=0)
             axis.grid(axis="y", color=GRID, linewidth=0.5)
             axis.set_axisbelow(True)

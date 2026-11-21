@@ -117,7 +117,7 @@ Gli ottimizzatori Adam hanno $\beta_1=0.9$, il valore del codice degli autori, e
         Probabilità di dropout $p$ & 0.2 \\
         Estrazioni Monte Carlo $J$ & 20 \\
         Numero minimo di valori della climatologia dello score & 30 \\
-        Soglia $\tau$ & 95-esimo percentile \\
+        Soglia $\tau$ & 95-esimo percentile di ogni score sugli anni di validazione \\
         Ottimizzatore & Adam, $\beta_1=0.9$, $\beta_2=0.999$, tasso costante \\
         Epoche & 6 \\
         Precisione & BF16 nei calcoli, parametri FP32 \\
@@ -255,7 +255,7 @@ che differisce da $C$ solo nel voto decisivo di $k$. Il procedimento riprende il
 \begin{figure}[htbp]
     \centering
     \input{figures/schema_intorno}
-    \caption{Schema di un cluster concordato in un istante e del suo intorno di 300~km, con le segnalazioni di un metodo: concordate dentro il cluster, non concordate attorno, davanti e dietro rispetto al moto del cluster.}
+    \caption{Schema di un cluster concordato in un istante e del suo intorno di 300~km, con le segnalazioni di un metodo: concordate dentro il cluster, non concordate attorno, davanti e dietro rispetto al moto medio del cluster ($\mathbf{u}$); la linea punteggiata, perpendicolare al moto, passa per il centroide del cluster (pallino nero).}
     \label{fig:exp-intorno}
 \end{figure}
 
@@ -303,19 +303,19 @@ Una grandezza è \emph{insolita} in un valore quando sta nel suo 5\% più estrem
 \begin{table}[!htb]
     \centering
     \footnotesize
-    \caption{Le otto grandezze di ERA5 che nessuno score legge direttamente, con la sigla e l'unità del dataset, il periodo a cui si riferiscono e le variabili d'ingresso a cui sono legate.}
+    \caption{Le otto grandezze di ERA5 che nessuno score legge direttamente, con la sigla e l'unità del dataset, il valore (istantaneo, accumulo o estremo dell'ultima ora) e le variabili d'ingresso a cui sono legate.}
     \label{tab:exp-giudici}
     \vspace{0.6em}
     \begin{tabular}{@{}L{0.26}L{0.07}L{0.11}L{0.16}L{0.27}@{}}
         \toprule
-        Grandezza & Sigla & Unità & Periodo & Legata a \\
+        Grandezza & Sigla & Unità & Valore & Legata a \\
         \midrule
-        CAPE & cape & $\mathrm{J\,kg^{-1}}$ & istantanea & temperatura a due metri e a 850~hPa, umidità specifica a 850~hPa \\
-        Raffica a dieci metri & i10fg & $\mathrm{m\,s^{-1}}$ & istantanea & vento a dieci metri, velocità d'attrito; con la convezione, vento a 850~hPa \\
+        CAPE & cape & $\mathrm{J\,kg^{-1}}$ & istantaneo & temperatura a due metri e a 850~hPa, umidità specifica a 850~hPa \\
+        Raffica a dieci metri & i10fg & $\mathrm{m\,s^{-1}}$ & istantaneo & vento a dieci metri, velocità d'attrito; con la convezione, vento a 850~hPa \\
         Precipitazione convettiva & cp & m & accumulo di un'ora & precipitazione, di cui è una parte \\
-        Vapore acqueo nella colonna & tcwv & $\mathrm{kg\,m^{-2}}$ & istantanea & umidità specifica a 850~hPa \\
-        Indice K & kx & K & istantanea & temperatura a 850~hPa, umidità specifica a 850~hPa \\
-        Temperatura di rugiada a due metri & d2m & K & istantanea & temperatura a due metri \\
+        Vapore acqueo nella colonna & tcwv & $\mathrm{kg\,m^{-2}}$ & istantaneo & umidità specifica a 850~hPa \\
+        Indice K & kx & K & istantaneo & temperatura a 850~hPa, umidità specifica a 850~hPa \\
+        Temperatura di rugiada a due metri & d2m & K & istantaneo & temperatura a due metri \\
         Temperatura massima a due metri & mx2t & K & massimo dell'ultima ora & temperatura a due metri \\
         Temperatura minima a due metri & mn2t & K & minimo dell'ultima ora & temperatura a due metri \\
         \bottomrule
