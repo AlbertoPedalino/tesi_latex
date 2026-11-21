@@ -133,9 +133,9 @@ def change_figure(data, weights):
     order = np.argsort(article)
     rows = np.arange(len(order))
     figure, axis = plt.subplots(figsize=(9.0 / 2.54, 8.0 / 2.54))
-    axis.barh(rows + 0.19, article[order], height=0.36, color=ORANGE, label="min–max di STGAN")
+    axis.barh(rows + 0.19, article[order], height=0.36, color=ORANGE, label="min–max delle variabili di STGAN")
     axis.barh(rows - 0.19, detector[order], height=0.36, color=BLUE,
-              label="normalizzazione stagionale e min–max del rilevatore")
+              label="normalizzazione stagionale e min–max delle variabili del rilevatore")
     axis.set_yticks(rows, [NAMES.get(features[i], features[i]) for i in order])
     # A logarithmic axis: on a linear one the cloud cover (84%) hides every other bar.
     axis.set_xscale("log")

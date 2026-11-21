@@ -11,7 +11,7 @@ Le segnalazioni concordate della Sezione~\ref{sec:ris-concordate} sono ricostrui
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Il riferimento concordato con la soglia di ogni metodo al 95-esimo, 97-esimo e 99-esimo percentile e, al 95-esimo, senza la chiusura, sugli anni di test. Inizio e fine: percentuale dei cluster concordati; asterisco, test dei segni significativo all'1\%. Attorno ai cluster lunghi: $G_{\mathrm{n}}$ / termine di confronto. Voto decisivo: percentuale del cubo concordato.}
+    \caption{Il riferimento concordato con la soglia di ogni metodo al 95-esimo, 97-esimo e 99-esimo percentile e, al 95-esimo, senza la chiusura, sugli anni di test. Inizio e fine: percentuale dei cluster concordati; asterisco, test dei segni significativo all'1\%. Attorno ai cluster lunghi: $G_{\mathrm{n}}$ / termine di confronto.}
     \label{tab:app-soglia-concordate}
     \vspace{0.3em}
     \setlength{\tabcolsep}{4pt}
@@ -23,12 +23,10 @@ Le segnalazioni concordate della Sezione~\ref{sec:ris-concordate} sono ricostrui
         Valori concordati [\%] & 6.20 & 3.54 & 1.05 & 4.22 \\
         Cluster brevi / lunghi & 27233\,/\,2142 & 25392\,/\,1850 & 16549\,/\,785 & 42304\,/\,1956 \\
         Valori nei cluster lunghi [\%] & 85.4 & 74.5 & 50.6 & 67.4 \\
-        Voto decisivo di $G_{\mathrm{n}}$ [\% del cubo] & 8.4 & 9.2 & 11.5 & 8.9 \\
         \addlinespace
         \multicolumn{5}{@{}l}{\emph{Cluster concordati rilevati da $G_{\mathrm{n}}$}} \\
         Brevi [\%] & 46 & 52 & 63 & 51 \\
         Lunghi [\%] & 91 & 94 & 96 & 98 \\
-        Copertura / Jaccard dei brevi, mediana & 0.69/0.30 & 0.69/0.32 & 0.69/0.34 & 0.65/0.30 \\
         \addlinespace
         \multicolumn{5}{@{}l}{\emph{Cluster di $G_{\mathrm{n}}$ senza corrispondente}} \\
         Tutti i cluster [\%] & 54.5 & 53.5 & 54.9 & 56.2 \\
@@ -45,12 +43,10 @@ Le segnalazioni concordate della Sezione~\ref{sec:ris-concordate} sono ricostrui
         Distanza dal normale & 52/41\,* & 42/52\,* & 26/67\,* & 43/52\,* \\
         CBLOF & 46/50 & 36/57\,* & 24/66\,* & 41/54\,* \\
         \addlinespace
-        \multicolumn{5}{@{}l}{\emph{Spostamento lungo il moto di $G_{\mathrm{n}}$ (positivo = davanti)}} \\
-        Brevi, media [km] & $-4.4$ & $-3.9$ & $-3.7$ & $-4.4$ \\
-        Brevi con $G_{\mathrm{n}}$ davanti [\%] & 46 & 46 & 46 & 45 \\
-        Lunghi, media [km] & 19.1 & 23.2 & 17.5 & 21.1 \\
-        Lunghi con $G_{\mathrm{n}}$ davanti [\%] & 63 & 63 & 61 & 63 \\
-        Lunghi, $G_{\mathrm{n}}$ più avanti della baseline [\%] & 58.5--65.8 & 58.7--67.3 & 55.4--67.7 & 57.2--68.4 \\
+        \multicolumn{5}{@{}l}{\emph{Cluster lunghi, spostamento lungo il moto di $G_{\mathrm{n}}$ (positivo = davanti)}} \\
+        Media [km] & 19.1 & 23.2 & 17.5 & 21.1 \\
+        Con $G_{\mathrm{n}}$ davanti [\%] & 63 & 63 & 61 & 63 \\
+        Più avanti di ciascuna baseline [\%] & 58.5--65.8 & 58.7--67.3 & 55.4--67.7 & 57.2--68.4 \\
         \addlinespace
         \multicolumn{5}{@{}l}{\emph{Attorno ai cluster lunghi}} \\
         Salto più grande in tre ore, moderati & 2.72/1.27 & 3.16/1.34 & 3.99/1.43 & 2.87/1.29 \\
@@ -64,6 +60,9 @@ Le segnalazioni concordate della Sezione~\ref{sec:ris-concordate} sono ricostrui
 Con soglie più alte il cubo concordato si riduce insieme alle segnalazioni di ogni metodo, dal 6.20\% dei valori al 3.54\% e all'1.05\%, e i cluster lunghi si accorciano: contengono l'85.4\%, il 74.5\% e il 50.6\% dei valori concordati. A ogni soglia la percentuale dei cluster di $G_{\mathrm{n}}$ senza corrispondente è la più alta dopo quella della variazione in tre ore; nei cluster brevi $G_{\mathrm{n}}$ comincia prima della distanza dal normale e di CBLOF e dopo PCA, MCD e la variazione in tre ore; nei cluster lunghi sta davanti lungo il moto medio più di ogni baseline; attorno ai cluster lunghi le sue segnalazioni non concordate sono cambiate in fretta, prime dei nove metodi o seconde dopo la variazione in tre ore. Dipendono invece dalla soglia i confronti vicini alla parità, cioè l'inizio contro COPOD e Isolation Forest e la fine nei cluster brevi contro HBOS e PCA, e la fine nei cluster lunghi: con il 97-esimo e il 99-esimo percentile $G_{\mathrm{n}}$ finisce prima della distanza dal normale e di CBLOF, e con il 99-esimo dopo HBOS e Isolation Forest; a ogni soglia finisce dopo COPOD. Dipende dalla soglia anche il risultato su CAPE, indice K e vapore: con il 99-esimo percentile CAPE, indice K e vapore nella colonna restano insoliti più spesso che nel termine di confronto, ma $G_{\mathrm{n}}$ non è più il primo dei nove metodi.
 
 Senza la chiusura le conclusioni su $G_{\mathrm{n}}$ restano le stesse: cambia il numero dei cluster concordati, più piccoli e più numerosi, non la direzione dei confronti all'inizio e lungo il moto né il quadro di ciò che $G_{\mathrm{n}}$ segnala attorno ai cluster lunghi. Nei cluster lunghi lo spostamento lungo il moto di $G_{\mathrm{n}}$ passa da 19.1 a 21.1~km e resta il più grande dei nove metodi, davanti alla variazione in tre ore (13.6~km) e a MCD (10.6~km). Come con le soglie più alte, nei cluster lunghi $G_{\mathrm{n}}$ finisce prima della distanza dal normale e di CBLOF; da COPOD non differisce più.
+% Righe tolte dalla tabella il 21/11/2026 (non commentate nel testo), valori 95 / 97 / 99 / senza chiusura:
+% voto decisivo di Gn [% del cubo] 8.4 / 9.2 / 11.5 / 8.9; copertura / Jaccard dei brevi, mediana 0.69/0.30 /
+% 0.69/0.32 / 0.69/0.34 / 0.65/0.30; brevi, spostamento medio -4.4 / -3.9 / -3.7 / -4.4 km, con Gn davanti 46 / 46 / 46 / 45%.
 % Numeri: Tesi/segnalazioni_concordate/risultati.md §15, §18, §20. 95/97/99: log_server/r300/outputs/
 % concordate_{5,3,1}pc_regola_tesi_{match,boxes,lead}_r300\,*.log e r300_3_1/outputs/*excess_r300_long.log; senza chiusura:
 % log_server/senza_chiusura/outputs/concordate_5pc_senza_chiusura_*.log (codice 90319b13, --closure none). Cluster
@@ -114,33 +113,37 @@ Con 1125 valori cade il terzo criterio. Restano solo i cluster brevi più grandi
     \caption{Il riferimento concordato con altri valori del protocollo, sugli anni di test, con la soglia al 95-esimo percentile e la chiusura. Prima colonna: il protocollo dei risultati (minimo di 20 valori, intorno di 300~km, brevi fino a 72 ore); nelle altre cambia un solo valore. Copertura ed eccedenza: mediane per cluster concordato. Fra parentesi il posto di $G_{\mathrm{n}}$ fra i nove metodi; trattino: non calcolato.}
     \label{tab:app-sensibilita}
     \vspace{0.3em}
-    \setlength{\tabcolsep}{2pt}
-    \begin{tabular}{@{}L{0.20}rrrrrrr@{}}
+    \setlength{\tabcolsep}{3pt}
+    \begin{tabular}{@{}L{0.15}rrrrrrr@{}}
         \toprule
         & & \multicolumn{3}{c}{Minimo dei valori} & \multicolumn{2}{c}{Raggio} & Durata \\
         \cmidrule(lr){3-5}\cmidrule(lr){6-7}\cmidrule(l){8-8}
         Misura & Cap.~\ref{chap:risultati} & 10 & 64 & 1125 & 100~km & 500~km & 96~h \\
         \midrule
-        Cluster brevi & 27233 & 47467 & 10972 & 801 & 27233 & 27233 & 27935 \\
-        Cluster lunghi & 2142 & 2142 & 2139 & 1914 & 2142 & 2142 & 1440 \\
-        Valori concordati nei cluster studiati [\%] & 97.3 & 98.0 & 95.9 & 89.5 & 97.3 & 97.3 & 97.3 \\
-        Valori del dominio entro il raggio dal cubo [\%] & 32.9 & 32.9 & 32.9 & 32.9 & 12.6 & 50.8 & 32.9 \\
+        \multicolumn{8}{@{}l}{\emph{Cluster concordati studiati}} \\
+        Brevi & 27233 & 47467 & 10972 & 801 & 27233 & 27233 & 27935 \\
+        Lunghi & 2142 & 2142 & 2139 & 1914 & 2142 & 2142 & 1440 \\
         \addlinespace
         \multicolumn{8}{@{}l}{\emph{Cluster concordati rilevati da $G_{\mathrm{n}}$ [\%]}} \\
         Brevi & 46 & 43 & 49 & 57 & 44 & 45 & 47 \\
         Lunghi & 91 (2) & 95 (1) & 82 (3) & 71 (4) & 87 (2) & 94 (1) & 94 (2) \\
         \addlinespace
-        \multicolumn{8}{@{}l}{\emph{Cluster brevi}} \\
-        Copertura, $G_{\mathrm{n}}$ & 0.69 & 0.69 & 0.71 & 0.73 & 0.69 & 0.69 & 0.69 \\
-        Copertura, PCA / MCD & 0.97/0.96 & 0.99/0.99 & 0.96/0.95 & 0.94/0.88 & 0.97/0.96 & 0.97/0.96 & 0.97/0.96 \\
-        Eccedenza, $G_{\mathrm{n}}$ / MCD & 0.79/0.77 & 0.87/0.87 & 0.69/0.63 & 0.46/0.31 & 0.53/0.53 & 0.86/0.85 & 0.77/0.75 \\
+        \multicolumn{8}{@{}l}{\emph{Cluster brevi, copertura}} \\
+        $G_{\mathrm{n}}$ & 0.69 & 0.69 & 0.71 & 0.73 & 0.69 & 0.69 & 0.69 \\
+        PCA / MCD & 0.97/0.96 & 0.99/0.99 & 0.96/0.95 & 0.94/0.88 & 0.97/0.96 & 0.97/0.96 & 0.97/0.96 \\
+        \addlinespace
+        \multicolumn{8}{@{}l}{\emph{Cluster brevi, eccedenza}} \\
+        $G_{\mathrm{n}}$ / MCD & 0.79/0.77 & 0.87/0.87 & 0.69/0.63 & 0.46/0.31 & 0.53/0.53 & 0.86/0.85 & 0.77/0.75 \\
         \addlinespace
         \multicolumn{8}{@{}l}{\emph{Cluster lunghi, spostamento lungo il moto di $G_{\mathrm{n}}$}} \\
         Media [km] & 19.1 & 19.1 & 19.1 & 21.4 & -- & -- & 22.6 \\
-        Cluster con $G_{\mathrm{n}}$ davanti [\%] & 63 & 63 & 63 & 64 & -- & -- & 66 \\
+        Davanti [\%] & 63 & 63 & 63 & 64 & -- & -- & 66 \\
         \bottomrule
     \end{tabular}
 \end{table}
+% Righe tolte dalla tabella il 21/11/2026, colonne Cap. 6 / 10 / 64 / 1125 / 100 km / 500 km / 96 h: valori
+% concordati nei cluster studiati 97.3 / 98.0 / 95.9 / 89.5 / 97.3 / 97.3 / 97.3% (non commentati nel testo); valori del
+% dominio entro il raggio dal cubo 32.9 / 32.9 / 32.9 / 32.9 / 12.6 / 50.8 / 32.9% (restano nel testo della A.4).
 % Numeri: Tesi/segnalazioni_concordate/risultati.md §13 e §15 (19/11/2026). Minimo: set_era5_cube_min_values.py
 % (physiq-pv 306fce46), log del server outputs/minimo_{match,boxes,lead}_{K}*.log; quote dei valori da
 % log_server/r300_3_1/outputs/concordate_5pc_regola_tesi/clusters.csv (10: 98.0, 20: 97.3, 64: 95.9, 1125: 89.5);
