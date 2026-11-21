@@ -97,43 +97,51 @@ Gli ottimizzatori Adam hanno $\beta_1=0.9$, il valore del codice degli autori, e
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \caption{Configurazione del rilevatore su ERA5: valori fissati e iperparametri cercati, con il valore scelto e l'intervallo esplorato.}
+    \caption[Configurazione del rilevatore su ERA5.]{Configurazione del rilevatore su ERA5: valori fissati e iperparametri cercati, con il valore scelto e, fra parentesi, l'intervallo esplorato.}
     \label{tab:configurazioni}
     \vspace{0.6em}
-    \begin{tabular}{@{}L{0.42}L{0.52}@{}}
+    \begin{tabular}{@{}L{0.18}L{0.38}L{0.36}@{}}
         \toprule
-        Parametro & Valore \\
+        & Parametro & Valore \\
         \midrule
-        \multicolumn{2}{@{}l}{\emph{Valori fissati}} \\
-        Anni di addestramento, validazione, test & 1980--1999, 2000--2004, 2005--2025 \\
-        Istanti per batch & 1 \\
-        Storia recente $R$ e trend $L$ & 16 e 56 istanti (48 e 168 ore) \\
-        Generatore & ConvGRU a 2 strati da 32 canali, kernel $3\times3$; LSTM a 2 strati da 64; strato lineare da 64 \\
-        Discriminatore & patch con $P=3$; ConvGRU a 2 strati da 32 canali; strato nascosto da 64 \\
-        Finestra delle due normalizzazioni & 31 giorni \\
-        Minimo della deviazione standard & 0.1 per precipitazione e umidità del suolo, 0.01 per le altre \\
-        Variabili con tendenza sottratta & temperatura a due metri e a 850~hPa, umidità del suolo \\
-        Soglia del criterio dei valori esclusi & 5\% dei valori degli anni di addestramento \\
-        Probabilità di dropout $p$ & 0.2 \\
-        Estrazioni Monte Carlo $J$ & 20 \\
-        Numero minimo di valori della climatologia dello score & 30 \\
-        Soglia $\tau$ & 95-esimo percentile di ogni score sugli anni di validazione \\
-        Ottimizzatore & Adam, $\beta_1=0.9$, $\beta_2=0.999$, tasso costante \\
-        Epoche & 6 \\
-        Precisione & BF16 nei calcoli, parametri FP32 \\
+        Dati & Anni di addestramento, validazione, test & 1980--1999, 2000--2004, 2005--2025 \\
+             & Istanti per batch & 1 \\
+             & Storia recente $R$, trend $L$ & 16 e 56 istanti (48 e 168 ore) \\
         \addlinespace
-        \multicolumn{2}{@{}l}{\emph{Iperparametri cercati: valore scelto (intervallo esplorato)}} \\
-        Tasso di apprendimento del generatore & $7.65\times10^{-4}$ (da $10^{-4}$ a $3\times10^{-3}$, in scala logaritmica) \\
-        Tasso di apprendimento del discriminatore & $3.06\times10^{-3}$ (da $2.5\times10^{-5}$ a $5\times10^{-3}$, in scala logaritmica) \\
-        Peso di ricostruzione $\lambda_G$ & 63.7 (da 25 a 2000, in scala logaritmica) \\
-        Aggiornamenti D:G, $n_D{:}n_G$ & 1:1 (1:1, 2:1 oppure 1:2) \\
+        Generatore & ConvGRU & 2 strati da 32 canali, kernel $3\times3$ \\
+                   & LSTM del trend & 2 strati da 64 \\
+                   & Ramo del calendario & strato lineare da 64 \\
+        \addlinespace
+        Discriminatore & Patch & $P=3$ \\
+                       & ConvGRU & 2 strati da 32 canali \\
+                       & Strato nascosto & 64 \\
+        \addlinespace
+        Normalizzazioni & Finestra delle due normalizzazioni & 31 giorni \\
+                        & Minimo della deviazione standard & 0.1 per precipitazione e umidità del suolo, 0.01 per le altre \\
+                        & Variabili con tendenza sottratta & temperatura a due metri e a 850~hPa, umidità del suolo \\
+                        & Numero minimo di valori della climatologia dello score & 30 \\
+        \addlinespace
+        Valori esclusi e soglia & Soglia del criterio dei valori esclusi & 5\% dei valori degli anni di addestramento \\
+                                & Soglia $\tau$ & 95-esimo percentile di ogni score sugli anni di validazione \\
+        \addlinespace
+        Dropout & Probabilità di dropout $p$ & 0.2 \\
+                & Estrazioni Monte Carlo $J$ & 20 \\
+        \addlinespace
+        Addestramento & Ottimizzatore & Adam, $\beta_1=0.9$, $\beta_2=0.999$, tasso costante \\
+                      & Epoche & 6 \\
+                      & Precisione & BF16 nei calcoli, parametri FP32 \\
+        \midrule
+        Iperparametri cercati & Tasso di apprendimento del generatore & $7.65\times10^{-4}$ (da $10^{-4}$ a $3\times10^{-3}$) \\
+        & Tasso di apprendimento del discriminatore & $3.06\times10^{-3}$ (da $2.5\times10^{-5}$ a $5\times10^{-3}$) \\
+        & Peso di ricostruzione $\lambda_G$ & 63.7 (da 25 a 2000) \\
+        & Aggiornamenti D:G, $n_D{:}n_G$ & 1:1 (1:1, 2:1, 1:2) \\
         \bottomrule
     \end{tabular}
 \end{table}
 
 L'obiettivo della ricerca è la distanza MMD fra campi osservati e ricostruiti nello spazio delle componenti principali (Sezione~\ref{sec:monitoraggio-senza-etichette}), mediata sulle ultime cinque epoche, da minimizzare: la prima epoca è esclusa perché, all'inizio dell'addestramento, è poco indicativa della configurazione. Ogni prova è addestrata sugli anni 1980--1999 e misurata sugli anni di validazione, senza calcolare score sugli anni di test. Ogni configurazione è addestrata una sola volta, con lo stesso seme per tutte le prove. Le prove interrotte perché una loss ha assunto valori infiniti o indefiniti (NaN) non hanno una distanza MMD e sono escluse dalla scelta.
 
-Le prove sono gestite con la libreria Optuna~\cite{akiba2019optuna} e proposte con un metodo bayesiano: un processo gaussiano stima la distanza MMD in funzione degli iperparametri, a partire dalle prove già completate, e la prova successiva è scelta dove il miglioramento atteso è più alto. La ricerca è stata fermata quando le ultime prove non abbassavano di almeno 0.0004 la distanza MMD più bassa trovata fino ad allora, un valore vicino al rumore stimato dal processo gaussiano, senza un numero di prove fissato per tutta la ricerca; il criterio di arresto è una scelta di questo lavoro. È scelta la configurazione con la distanza MMD più bassa fra le prove completate. Le prove della ricerca e la configurazione scelta sono riportate nella Sezione~\ref{sec:ris-ricerca}.
+Le prove sono gestite con la libreria Optuna~\cite{akiba2019optuna} e proposte con un metodo bayesiano: un processo gaussiano stima la distanza MMD in funzione degli iperparametri, a partire dalle prove già completate, e la prova successiva è scelta dove il miglioramento atteso è più alto. Il tasso di apprendimento del generatore è cercato fra $10^{-4}$ e $3\times10^{-3}$, quello del discriminatore fra $2.5\times10^{-5}$ e $5\times10^{-3}$ e il peso di ricostruzione $\lambda_G$ fra 25 e 2000, tutti in scala logaritmica, e gli aggiornamenti D:G fra 1:1, 2:1 e 1:2. La ricerca è stata fermata quando le ultime prove non abbassavano di almeno 0.0004 la distanza MMD più bassa trovata fino ad allora, un valore vicino al rumore stimato dal processo gaussiano, senza un numero di prove fissato per tutta la ricerca; il criterio di arresto è una scelta di questo lavoro. È scelta la configurazione con la distanza MMD più bassa fra le prove completate. Le prove della ricerca e la configurazione scelta sono riportate nella Sezione~\ref{sec:ris-ricerca}.
 
 Del modello scelto si usano i parametri dell'ultima epoca, come nel codice degli autori\footnote{\url{https://github.com/dleyan/STGAN}}, che salva i parametri a ogni epoca e valuta quelli dell'ultima: nessuna epoca è scelta in base al risultato. Un'epoca comprende 58384 batch di un istante, cioè gli istanti degli anni di addestramento meno i primi 56, che servono al trend. I modelli sono implementati in PyTorch~\cite{paszke2019pytorch}. Nella preparazione dei dati (Sezione~\ref{sec:dati-pipeline}) i file mensili in formato NetCDF~\cite{rew1990netcdf} sono letti con xarray~\cite{hoyer2017xarray}; durante l'addestramento e il calcolo degli score i file \texttt{.npy} sono letti con NumPy~\cite{harris2020numpy} in mappatura di memoria; le tabelle di score sono elaborate con pandas~\cite{mckinney2010pandas}; il Capitolo~\ref{chap:risultati} usa anche SciPy~\cite{virtanen2020scipy}. Tutti i modelli sono addestrati su una scheda NVIDIA RTX PRO 6000 Blackwell.
 % Ricerca, prima fase: sweep W&B 913ez3rt, creato il 16 ottobre 2026 da
