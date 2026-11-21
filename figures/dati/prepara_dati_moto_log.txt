@@ -1,0 +1,53 @@
+prepara_dati_moto.py: B = 10000, seed = 0, percentile intervals at 95%
+brevi Gn: n 25340, r1 -0.001, r2 0.002, V' 1.00, Wilks l 1
+brevi change_3h: n 25979, r1 0.006, r2 0.007, V' 1.03, Wilks l 1
+brevi normal: n 26047, r1 0.005, r2 0.004, V' 1.02, Wilks l 1
+brevi pca: n 26288, r1 0.014, r2 0.001, V' 1.03, Wilks l 1
+brevi cblof: n 26158, r1 0.010, r2 0.015, V' 1.05, Wilks l 1
+brevi mcd: n 26187, r1 0.005, r2 0.006, V' 1.02, Wilks l 1
+brevi hbos: n 25723, r1 0.002, r2 0.004, V' 1.01, Wilks l 1
+brevi copod: n 24720, r1 0.006, r2 0.008, V' 1.03, Wilks l 1
+brevi iforest: n 25914, r1 0.002, r2 0.000, V' 1.00, Wilks l 1
+brevi: 27233 clusters, block length (mean of the rule) 1; check with circular blocks of 165
+brevi: largest change of an end of the interval with circular blocks 0.07 km
+brevi Gn - change_3h: 25196 pairs, l 1, mean 7.39 [6.61, 8.18]; circular blocks [6.62, 8.17]
+brevi Gn - normal: 25107 pairs, l 1, mean -2.37 [-3.42, -1.30]; circular blocks [-3.42, -1.31]
+brevi Gn - pca: 25336 pairs, l 1, mean -4.30 [-5.19, -3.43]; circular blocks [-5.20, -3.45]
+brevi Gn - cblof: 25237 pairs, l 1, mean -0.37 [-1.36, 0.63]; circular blocks [-1.41, 0.66]
+brevi Gn - mcd: 25287 pairs, l 1, mean -5.62 [-6.46, -4.78]; circular blocks [-6.47, -4.79]
+brevi Gn - hbos: 24771 pairs, l 1, mean -1.96 [-3.06, -0.84]; circular blocks [-3.16, -0.77]
+brevi Gn - copod: 23899 pairs, l 1, mean -2.88 [-3.96, -1.81]; circular blocks [-3.98, -1.77]
+brevi Gn - iforest: 24964 pairs, l 1, mean -4.03 [-5.02, -3.05]; circular blocks [-5.09, -2.99]
+lunghi Gn: n 2137, r1 0.033, r2 -0.035, V' 1.00, Wilks l 1
+lunghi change_3h: n 2137, r1 0.004, r2 -0.001, V' 1.01, Wilks l 1
+lunghi normal: n 2137, r1 -0.000, r2 -0.010, V' 0.98, Wilks l 1
+lunghi pca: n 2137, r1 -0.018, r2 -0.010, V' 0.95, Wilks l 1
+lunghi cblof: n 2137, r1 -0.040, r2 -0.038, V' 0.85, Wilks l 1
+lunghi mcd: n 2137, r1 0.005, r2 -0.013, V' 0.99, Wilks l 1
+lunghi hbos: n 2137, r1 -0.005, r2 -0.029, V' 0.94, Wilks l 1
+lunghi copod: n 2133, r1 -0.004, r2 -0.015, V' 0.96, Wilks l 1
+lunghi iforest: n 2137, r1 0.004, r2 -0.021, V' 0.97, Wilks l 1
+lunghi: 2142 clusters, block length (mean of the rule) 1; check with circular blocks of 46
+lunghi: largest change of an end of the interval with circular blocks 0.75 km
+lunghi Gn - change_3h: 2137 pairs, l 1, mean 7.27 [4.72, 9.80]; circular blocks [4.74, 9.74]
+lunghi Gn - normal: 2137 pairs, l 1, mean 28.80 [24.11, 33.52]; circular blocks [23.32, 34.22]
+lunghi Gn - pca: 2137 pairs, l 1, mean 25.16 [21.55, 28.83]; circular blocks [21.74, 28.62]
+lunghi Gn - cblof: 2137 pairs, l 1, mean 30.37 [26.28, 34.52]; circular blocks [25.75, 35.15]
+lunghi Gn - mcd: 2137 pairs, l 1, mean 10.79 [8.11, 13.60]; circular blocks [8.01, 13.66]
+lunghi Gn - hbos: 2137 pairs, l 1, mean 25.82 [21.05, 30.42]; circular blocks [21.06, 30.54]
+lunghi Gn - copod: 2133 pairs, l 1, mean 25.39 [20.40, 30.28]; circular blocks [20.79, 30.09]
+lunghi Gn - iforest: 2137 pairs, l 1, mean 25.30 [21.25, 29.48]; circular blocks [21.30, 29.43]
+lunghi Gn along_far_km: 2137 clusters, mean 19.77 km, median 16.88 km
+lunghi Gn along_moderate_km: 2122 clusters, mean 17.80 km, median 16.56 km
+Appendix A, 95-esimo, brevi: 25340 clusters, mean -4.39 km [-5.20, -3.58], Wilks l 1, median -4.72 km, ahead 45.6%; largest mean of the nine: mcd
+Appendix A, 95-esimo, lunghi: 2137 clusters, mean 19.06 km [15.89, 22.16], Wilks l 1, median 17.02 km, ahead 62.7%; largest mean of the nine: Gn
+Appendix A, 97-esimo, brevi: 23527 clusters, mean -3.90 km [-4.70, -3.10], Wilks l 1, median -4.45 km, ahead 45.6%; largest mean of the nine: mcd
+Appendix A, 97-esimo, lunghi: 1843 clusters, mean 23.19 km [19.74, 26.52], Wilks l 1, median 17.17 km, ahead 63.3%; largest mean of the nine: Gn
+Appendix A, 99-esimo, brevi: 15287 clusters, mean -3.66 km [-4.62, -2.68], Wilks l 1, median -3.54 km, ahead 46.2%; largest mean of the nine: mcd
+Appendix A, 99-esimo, lunghi: 774 clusters, mean 17.53 km [13.46, 21.83], Wilks l 1, median 9.44 km, ahead 60.9%; largest mean of the nine: Gn
+Appendix A, senza chiusura, brevi: 39841 clusters, mean -4.41 km [-5.00, -3.79], Wilks l 1, median -4.92 km, ahead 44.7%; largest mean of the nine: mcd
+Appendix A, senza chiusura, lunghi: 1945 clusters, mean 21.07 km [18.05, 24.01], Wilks l 1, median 15.83 km, ahead 63.0%; largest mean of the nine: Gn
+Appendix A, minimo 10, lunghi: 2137 clusters, mean 19.06 km [15.92, 22.24], Wilks l 1, median 17.02 km, ahead 62.7%; largest mean of the nine: Gn
+Appendix A, minimo 64, lunghi: 2136 clusters, mean 19.07 km [15.89, 22.26], Wilks l 1, median 17.08 km, ahead 62.7%; largest mean of the nine: Gn
+Appendix A, minimo 1125, lunghi: 1912 clusters, mean 21.36 km [17.92, 24.71], Wilks l 1, median 20.31 km, ahead 64.0%; largest mean of the nine: Gn
+Appendix A, 96 h, lunghi: 1438 clusters, mean 22.56 km [18.73, 26.52], Wilks l 1, median 21.75 km, ahead 65.7%; largest mean of the nine: Gn

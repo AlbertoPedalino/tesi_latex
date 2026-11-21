@@ -3,15 +3,16 @@ precision-recall curves of Appendix A.3.
 
 Run from the thesis folder:
     python figures/genera_figure_concordate.py
-which writes figures/era5_concordate_moto.pdf from figures/dati/era5_concordate_moto_quartili.csv (written by
+which writes figures/era5_concordate_moto.pdf from figures/dati/era5_concordate_moto_medie.csv,
+figures/era5_concordate_moto_distribuzione.pdf from figures/dati/era5_concordate_moto_distribuzione.csv (both written by
 figures/prepara_dati_moto.py) and figures/era5_concordate_pr.pdf (Appendix A.3) from figures/dati/era5_concordate_pr.csv.
 
-Motion data: for every method, the quartiles over the matched concordant clusters of the along-motion displacement of
-the flags of its matching cluster (km, positive = ahead along the motion of the concordant cluster), short and long
-clusters, from the column along_km of lead_r300.csv and lead_r300_long.csv (scripts/check_era5_concordant_lead.py of
-the code repository, zone of 300 km, cube at the 95th percentile; downloaded in Tesi/log_server/r300/outputs/
-concordate_5pc_regola_tesi; the rows of the probability levels, Gn_p and Gn_rand, left out). Run optuna-27, test years
-2005-2025, thresholds at the 95th percentile of the validation years.
+Motion data: for every method, the mean over the matched concordant clusters of the along-motion displacement of its
+flags (km, positive = ahead along the mean motion of the concordant cluster), with its 95% bootstrap interval, and the
+histogram of the displacement of G_n, three-hour change and MCD with the 20th and 80th percentiles, short and long
+clusters (figures/prepara_dati_moto.py, from the column along_km of lead_r300.csv and lead_r300_long.csv of
+scripts/check_era5_concordant_lead.py of the code repository, zone of 300 km, cube at the 95th percentile). Run
+optuna-27, test years 2005-2025, thresholds at the 95th percentile of the validation years.
 
 Precision-recall data: precision and recall of every detector against the concordant cube as its own threshold goes from
 the 80th to the 99.9th percentile of the validation years (scripts/check_era5_concordant_pr.py of the code repository,
@@ -30,7 +31,8 @@ from genera_figure_eventi import (BASELINES, BLUE, GREEN, GRID, MUTED, ORANGE, S
                                   clean, size)
 
 HERE = pathlib.Path(__file__).parent
-MOTION = HERE / "dati" / "era5_concordate_moto_quartili.csv"  # written by figures/prepara_dati_moto.py
+MOTION = HERE / "dati" / "era5_concordate_moto_medie.csv"  # written by figures/prepara_dati_moto.py
+SPREAD = HERE / "dati" / "era5_concordate_moto_distribuzione.csv"  # idem
 PR = HERE / "dati" / "era5_concordate_pr.csv"
 MARKED = [80, 97, 99]  # percentiles marked with an open dot on every precision-recall curve, besides the 95th
 from stile import COLOURS, ORDER, TEXT_COLOURS  # one order and one colour for every method, as in the tables
@@ -39,49 +41,51 @@ LABELS = {"Gn": r"$G_\mathrm{n}$", **BASELINES}
 
 def motion_figure():
     """On the long clusters G_n is ahead along the motion, more than every baseline; on the short ones a little behind.
-    One row per method, G_n on top. Long clusters: thick pale band from the 25th to the 75th percentile and filled dot
-    on the median; short clusters, drawn over it: thin line and open dot. The two ranges overlap on the same row, so
-    the distance between the two dots of a kind can be read across the rows."""
-    frame = pd.read_csv(MOTION, comment="#").set_index(["kind", "detector"])
-    figure, axis = plt.subplots(figsize=size(0.46), constrained_layout=True)
-    ys = [len(ORDER)] + list(range(len(ORDER) - 1, 0, -1))  # G_n on top, a row of space below it
+    One row per method, G_n on top: the mean over the clusters (open dot: short clusters; filled dot: long clusters)
+    with its 95% bootstrap interval (thin line: short; pale band: long), as the mean along-track errors with their
+    bootstrap intervals of Leonardo and Colle (2017, Fig. 4). On the right, the share of the clusters in which the
+    method is ahead."""
+    frame = pd.read_csv(MOTION).set_index(["kind", "detector"])
+    figure, (axis, side) = plt.subplots(1, 2, figsize=size(0.46), constrained_layout=True, sharey=True,
+                                        gridspec_kw={"width_ratios": [4.2, 1]})
+    ys = [len(ORDER)] + list(range(len(ORDER) - 1, 0, -1))  # G_n on top
     axis.axvline(0, color=TEXT, linewidth=0.8, zorder=1)
-    # One cell of the grid, 28-55 km (less in longitude than in latitude), between two dashed lines: drawn as lines and
-    # not as a band, so that it does not mix with the bands of the long clusters.
+    # One cell of the grid, 28-55 km (less in longitude than in latitude), between two dashed lines.
     for edge in (28, 55):
         axis.axvline(edge, color=MUTED, linewidth=0.8, linestyle=(0, (3, 2)), zorder=1)
-    axis.text(55, len(ORDER) + 1.75, "larghezza di una cella: 28–55 km", fontsize=TICKS - 1, color=MUTED, ha="right",
-              va="top", bbox=dict(facecolor="white", edgecolor="none", pad=0.8), zorder=6)
+    axis.text(55, len(ORDER) + 1.75, "larghezza di una cella: 28–55 km", fontsize=TICKS - 1, color=MUTED,
+              ha="right", va="top", bbox=dict(facecolor="white", edgecolor="none", pad=0.8), zorder=6)
     for y, key in zip(ys, ORDER):
         colour = COLOURS[key]
         long, short = frame.loc[("lunghi", key)], frame.loc[("brevi", key)]
-        axis.plot([long["q25_km"], long["q75_km"]], [y, y], color=colour, linewidth=7, alpha=0.3,
+        axis.plot([long["ci_low_km"], long["ci_high_km"]], [y, y], color=colour, linewidth=7, alpha=0.3,
                   solid_capstyle="butt", zorder=2)
-        axis.plot([short["q25_km"], short["q75_km"]], [y, y], color=colour, linewidth=1.3, zorder=3)
-        axis.plot(short["median_km"], y, "o", markersize=6, markerfacecolor="white", markeredgecolor=colour,
+        axis.plot([short["ci_low_km"], short["ci_high_km"]], [y, y], color=colour, linewidth=1.3, zorder=3)
+        axis.plot(short["mean_km"], y, "o", markersize=6, markerfacecolor="white", markeredgecolor=colour,
                   markeredgewidth=1.4, zorder=4)
-        axis.plot(long["median_km"], y, "o", markersize=6, color=colour, markeredgecolor="white",
-                  markeredgewidth=0.6, zorder=5)
+        axis.plot(long["mean_km"], y, "o", markersize=6, color=colour, markeredgecolor="white", markeredgewidth=0.6,
+                  zorder=5)
+        for x, kind in ((0.28, "brevi"), (0.78, "lunghi")):
+            side.text(x, y, f"{frame.loc[(kind, key), 'ahead_pct']:.0f}", ha="center", va="center", fontsize=TICKS,
+                      color=TEXT_COLOURS[key], fontweight="bold" if key == "Gn" else "normal")
     axis.set_yticks(ys, [LABELS[key] for key in ORDER])
     for label, key in zip(axis.get_yticklabels(), ORDER):
         label.set_color(TEXT_COLOURS[key])
     axis.set_ylim(0.3, len(ORDER) + 1.8)
-    # G_n: the share of the concordant clusters in which it is ahead, short and long, above its two dots.
-    top = len(ORDER)
-    for kind, align in (("brevi", "right"), ("lunghi", "left")):
-        row = frame.loc[(kind, "Gn")]
-        axis.annotate(f"davanti nel {row['ahead_pct']:.0f}%", (row["median_km"], top), xytext=(0, 6),
-                      textcoords="offset points", fontsize=TICKS - 1, color=TEXT_COLOURS["Gn"], ha=align,
-                      va="bottom", bbox=dict(facecolor="white", edgecolor="none", pad=0.6), zorder=6)
-    axis.set_xlim(-52, 60)
-    axis.set_xticks([-40, -20, 0, 20, 40])
+    axis.set_xlim(-22, 60)
+    axis.set_xticks([-20, -10, 0, 10, 20, 30, 40, 50])
     axis.set_xlabel("spostamento lungo il moto (km)", fontsize=TICKS)
     axis.tick_params(labelsize=TICKS, length=0)
     axis.grid(axis="x", color=GRID, linewidth=0.6)
     axis.set_axisbelow(True)
     clean(axis, "top", "right", "left")
     axis.text(59, 0.35, "davanti", fontsize=TICKS - 1, color=MUTED, ha="right", va="bottom")
-    axis.text(-51, 0.35, "dietro", fontsize=TICKS - 1, color=MUTED, ha="left", va="bottom")
+    axis.text(-21, 0.35, "dietro", fontsize=TICKS - 1, color=MUTED, ha="left", va="bottom")
+    side.set_xlim(0, 1)
+    side.text(0.53, len(ORDER) + 1.75, "davanti (%)", ha="center", va="top", fontsize=TICKS - 1, color=MUTED)
+    side.text(0.28, len(ORDER) + 1.0, "brevi", ha="center", va="center", fontsize=TICKS - 1, color=MUTED)
+    side.text(0.78, len(ORDER) + 1.0, "lunghi", ha="center", va="center", fontsize=TICKS - 1, color=MUTED)
+    side.axis("off")
     short_handle = plt.Line2D([], [], color=MUTED, linewidth=1.3, marker="o", markersize=6, markerfacecolor="white",
                               markeredgecolor=MUTED, markeredgewidth=1.4)
     long_handle = (plt.Line2D([], [], color=MUTED, linewidth=7, alpha=0.3, solid_capstyle="butt"),
@@ -91,6 +95,50 @@ def motion_figure():
                   handler_map={tuple: HandlerTuple(ndivide=None, pad=0)}, loc="outside lower center", ncol=2,
                   fontsize=TICKS - 1, frameon=False, handletextpad=0.5, handlelength=2.2, columnspacing=2.0)
     figure.savefig(HERE / "era5_concordate_moto.pdf")
+    plt.close(figure)
+
+
+def spread_figure():
+    """How the displacement varies from cluster to cluster: histogram of G_n and of the two baselines ahead, short and
+    long clusters, bars of 10 km, with the mean and the 20th and 80th percentiles (Leonardo and Colle 2017, Fig. 3a;
+    2020, Fig. 3). The clusters beyond +-150 km are not drawn; their share is written at the two ends."""
+    table = pd.read_csv(SPREAD)
+    keys = list(dict.fromkeys(table["detector"]))
+    width, height = size(0.5)
+    figure, axes = plt.subplots(len(keys), 2, figsize=(width, height * 1.15), sharex=True, sharey="col",
+                                constrained_layout=True)
+    for col, kind in enumerate(("brevi", "lunghi")):
+        for row, key in enumerate(keys):
+            axis = axes[row, col]
+            part = table[(table["kind"] == kind) & (table["detector"] == key)]
+            first = part.iloc[0]
+            axis.bar(part["bin_from_km"] + 5, part["percent"], width=10, color=COLOURS[key], alpha=0.75)
+            axis.axvline(0, color=TEXT, linewidth=0.8)
+            for q in (first["q20_km"], first["q80_km"]):
+                axis.axvline(q, color=TEXT_COLOURS[key], linewidth=1.0, linestyle=(0, (3, 2)))
+            axis.axvline(first["mean_km"], color=TEXT_COLOURS[key], linewidth=1.8)
+            axis.text(0.01, 0.97, f"← {first['below_pct']:.1f}%", transform=axis.transAxes, ha="left",
+                      va="top", fontsize=TICKS - 2, color=MUTED)
+            axis.text(0.99, 0.97, f"{first['above_pct']:.1f}% →", transform=axis.transAxes, ha="right",
+                      va="top", fontsize=TICKS - 2, color=MUTED)
+            if col == 0:
+                axis.text(-0.13, 0.5, LABELS[key], transform=axis.transAxes, ha="right", va="center", fontsize=TICKS,
+                          color=TEXT_COLOURS[key])
+            axis.tick_params(labelsize=TICKS - 1, length=0)
+            axis.grid(axis="y", color=GRID, linewidth=0.5)
+            axis.set_axisbelow(True)
+            clean(axis, "top", "right")
+            if row == 0:
+                axis.set_title(f"cluster {kind}", fontsize=TICKS)
+    for axis in axes[-1]:
+        axis.set_xlabel("spostamento lungo il moto (km)", fontsize=TICKS - 1)
+        axis.set_xticks([-150, -100, -50, 0, 50, 100, 150])
+        axis.set_xlim(-155, 155)
+    handles = [plt.Line2D([], [], color=MUTED, linewidth=1.8),
+               plt.Line2D([], [], color=MUTED, linewidth=1.0, linestyle=(0, (3, 2)))]
+    figure.legend(handles, ["media", "20-esimo e 80-esimo percentile"], loc="outside lower center", ncol=2,
+                  fontsize=TICKS - 1, frameon=False)
+    figure.savefig(HERE / "era5_concordate_moto_distribuzione.pdf")
     plt.close(figure)
 
 
@@ -142,4 +190,5 @@ def pr_figure():
 
 if __name__ == "__main__":
     motion_figure()
+    spread_figure()
     pr_figure()
