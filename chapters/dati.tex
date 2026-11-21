@@ -60,7 +60,7 @@ La griglia contiene $81\times131=10611$ celle. Nel seguito i dati sono indicati 
 % dominio, scala 1:50m) non è nel repository. Il rettangolo è l'area delle
 % località PVGIS: se la figura viene rigenerata, si può togliere.
 
-Sono conservate le celle per le quali tutte le variabili sono definite nel primo istante dei dati, e si verifica che questo insieme rimanga identico in tutto il periodo; se cambia, la preparazione si interrompe, e non viene applicata imputazione. Il criterio è la completezza delle variabili, non una classificazione terra--mare: nei dati usati tutte le variabili, anche l'umidità del suolo, sono definite su tutte le celle, mare compreso, e nessuna cella è esclusa.
+Sono conservate le celle per le quali tutte le variabili sono definite nel primo istante dei dati, e si verifica che questo insieme rimanga identico in tutto il periodo; se cambia, la preparazione si interrompe, e non viene applicata imputazione. Il criterio è la completezza delle variabili, non una classificazione terra--mare: nei dati usati tutte le variabili, anche l'umidità del suolo, sono definite su tutte le celle, mare compreso, e nessuna cella è esclusa; sul mare, però, l'umidità del suolo non ha un significato fisico (Sezione~\ref{sec:conc-limiti}).
 
 \section{Acquisizione e preparazione dei dati}
 \label{sec:dati-pipeline}
