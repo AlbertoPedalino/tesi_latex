@@ -258,14 +258,19 @@ Lo scopo è rendere confrontabili celle e stagioni in cui l'errore di ricostruzi
     \caption{Le grandezze lette nei risultati e il significato di un loro valore alto. Tutte sono calcolate per ogni cella e ogni istante.}
     \label{tab:ris-score}
     \vspace{0.6em}
-    \begin{tabular}{@{}L{0.16}L{0.44}L{0.32}@{}}
+    \renewcommand{\arraystretch}{1.15}
+    \begin{tabular}{@{}L{0.14}L{0.46}L{0.32}@{}}
         \toprule
         Grandezza & Che cosa misura & Se è alto \\
         \midrule
         G ($\bar{s}_G$) & errore di ricostruzione del generatore, medio sulla patch della cella & osservazione più insolita \\
+        \addlinespace
         $G_{\mathrm{n}}$ & lo score del rilevatore (equazione~\eqref{eq:score-finale}): G rispetto a ciò che è abituale per quella cella, giorno dell'anno e ora & osservazione più insolita per quel luogo e periodo \\
+        \addlinespace
         $D_{\mathrm{oss}}$ & giudizio del discriminatore sull'osservazione, fra 0 e 1 & osservazione giudicata generata \\
+        \addlinespace
         $D_{\mathrm{ric}}$ & giudizio del discriminatore sulla ricostruzione, fra 0 e 1 & ricostruzione giudicata generata \\
+        \addlinespace
         D & $D_{\mathrm{oss}}-D_{\mathrm{ric}}$, la componente del discriminatore & osservazione più insolita \\
         \bottomrule
     \end{tabular}

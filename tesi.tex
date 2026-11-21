@@ -13,10 +13,13 @@
 \DeclareCaptionListFormat{sottolista}{\thefigure#2}
 \captionsetup[sub]{font=small, labelformat=sottofigura, labelsep=colon, list=true, listformat=sottolista}
 \makeatletter\renewcommand*\l@subfigure{\@dottedtocline{1}{1.5em}{2.6em}}\makeatother  % room for "6.12b"
+\PassOptionsToPackage{table}{xcolor}  % \rowcolor for the group rows of the tables
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,fit}
 \usepackage{booktabs}
 \usepackage{array}
+% Group row of a table: a light grey band with the title in bold, across #1 columns.
+\newcommand{\gruppo}[2]{\rowcolor{black!8}\multicolumn{#1}{@{}l}{\textbf{#2}}\\}
 % Come placeins (non installato): manda in pagina i float in sospeso prima di proseguire.
 \makeatletter
 \newcommand\FloatBarrier{\par\begingroup\let\@elt\relax\edef\@tempa{\@botlist\@deferlist\@dbldeferlist}\ifx\@tempa\@empty\else\clearpage\fi\endgroup}
