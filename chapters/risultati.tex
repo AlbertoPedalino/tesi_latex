@@ -271,7 +271,7 @@ Le stesse analisi, ripetute sugli anni di test 2005--2025 con la climatologia e 
 
 
 \FloatBarrier
-\section{Che cosa segnala $G_{\mathrm{n}}$}
+\section{Segnalazioni e cluster di $G_{\mathrm{n}}$}
 \label{sec:ris-eventi}
 
 Scelto lo score, resta da descrivere che cosa segnala: quanto sono grandi i cluster, quali variabili vi si allontanano di più dal normale e quanto sono estremi i valori segnalati. Le segnalazioni sono raggruppate in cluster (Sezione~\ref{sec:exp-misure}): sugli anni di test se ne contano 794206, con 36.1 milioni di valori. Per confronto, le stesse misure sono ripetute sui cluster che ciascuna delle otto baseline della Sezione~\ref{sec:exp-baseline} forma con le proprie segnalazioni, anch'esse al 5\% con la soglia stimata sugli anni di validazione. Le baseline leggono una cella alla volta, senza le celle vicine, e non dipendono dal modello addestrato.
@@ -333,7 +333,7 @@ Dei valori segnalati da $G_{\mathrm{n}}$ solo il 41\% supera la soglia della dis
 % 93.8%), velocità verticale 555 ore (23.1 giorni, 186 istanti, mediana 723, 2.2%, 95.7%), copertura
 % nuvolosa 603 ore (25.1 giorni, 202 istanti, mediana 689, 5.9%, 92.6%).
 
-\subsection{Un cluster per tipo}
+\subsection{Esempi di cluster per tipo}
 \label{sec:ris-esempi}
 
 Questa sottosezione mostra su una mappa, per ciascuno dei tre tipi con più valori, cioè velocità verticale, precipitazione e copertura nuvolosa, il cluster scelto con la regola della Sezione~\ref{sec:exp-misure}. Nell'istante delle mappe $G_{\mathrm{n}}$ ha un percentile mediano fra 97 e 98 nelle celle del cluster. Nelle figure la fascia ``segnalato'' parte dal 95-esimo percentile dello score sugli anni di test, vicino alla soglia ma non uguale, perché la soglia viene dagli anni di validazione.
@@ -561,7 +561,7 @@ Il tipo dei cluster lunghi, definito come nella Sezione~\ref{sec:exp-misure}, è
 % di check_era5_event_zones). Catene: overlap 0/20/50% -> 86.2/84.7/78.9% dei valori in cluster > 3 giorni
 % (il 86.2 e' la percentuale con la sola durata, senza il minimo di 20 valori), piu' lungo 97.9 giorni.
 
-\subsection{Quanto ogni metodo concorda}
+\subsection{Sovrapposizione con il riferimento concordato}
 \label{sec:ris-concordate-sovrapposizione}
 
 Un cluster concordato è rilevato da un metodo quando un cluster del metodo gli corrisponde, entro 300~km negli stessi istanti; la copertura è la parte del cluster concordato che il metodo segnala, l'eccedenza quanto segnala attorno, fuori dal cubo concordato, per ogni valore concordato.
@@ -652,7 +652,7 @@ Sommando i valori di tutti i cluster concordati, invece di prendere la mediana p
 % flags them" (variazione in 3 h: G_n mancati 1.73-2.19, visti 3.07-3.33; variazione in 3 h mancati 1.54-1.59).
 % "Visti %" e' la copertura sommata sui cluster; la copertura della tabella e' la mediana per cluster (0.69 / 0.71).
 
-\subsection{Inizio, fine e direzione}
+\subsection{Inizio, fine e spostamento lungo il moto}
 \label{sec:ris-concordate-inizio}
 
 Inizio e fine confrontano il primo e l'ultimo istante del cluster del metodo corrispondente al cluster concordato con quelli del cluster concordato; lo spostamento lungo il moto è la distanza media, lungo la direzione del moto medio del cluster concordato, fra il centroide delle segnalazioni del metodo nel suo intorno e il centroide del cluster.
@@ -730,7 +730,7 @@ Nei cluster brevi lo spostamento lungo il moto di $G_{\mathrm{n}}$ è in media d
 
 Rispetto al cubo concordato, formato soprattutto da metodi che leggono una cella in un istante, le segnalazioni di $G_{\mathrm{n}}$ nei cluster lunghi stanno di poco davanti lungo il moto. In parte è atteso, per la stessa ragione dei cambiamenti rapidi (Sezione~\ref{sec:ris-concordate-attorno}): davanti al cluster il campo cambia, e stanno davanti anche MCD e la variazione in tre ore. Con MCD il confronto ha due lati: nei cluster lunghi MCD comincia più spesso prima di $G_{\mathrm{n}}$, mentre $G_{\mathrm{n}}$ segnala più avanti lungo il moto medio. Lo spostamento lungo il moto è piccolo, una frazione di cella, e la direzione del moto è quella media fra il primo e l'ultimo istante, grossolana per sistemi che in cinque giorni cambiano direzione.
 
-\subsection{Che cosa c'è attorno ai cluster concordati}
+\subsection{Segnalazioni attorno ai cluster concordati}
 \label{sec:ris-concordate-attorno}
 
 Questa sottosezione guarda le segnalazioni non concordate di ogni metodo nell'intorno dei cluster concordati, davanti e dietro rispetto al moto: quanto i valori sono lontani dal normale nell'istante del valore, come cambiano nelle ore dopo e quanto sono cambiati nelle tre ore prima (Figura~\ref{fig:ris-concordate-attorno}), con le misure della Sezione~\ref{sec:exp-concordate}. Il termine di confronto sono i valori degli stessi intorni, nelle stesse posizioni, che nessun metodo segnala. Per ogni valore si prendono lo scarto standardizzato più grande in valore assoluto fra le variabili d'ingresso, nell'istante del valore e nelle ore dopo, e il salto più grande in tre ore, cioè la variazione più grande di uno scarto standardizzato nelle tre ore prima. Di entrambi si riporta la media; quella del salto è separata per i valori lontani dal normale, con almeno una variabile oltre due deviazioni standard, e per quelli moderati.
