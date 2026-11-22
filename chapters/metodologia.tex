@@ -221,7 +221,7 @@ La componente cresce quindi sia quando la ricostruzione si allontana dall'osserv
 
 \subsection{Score combinato e score del rilevatore}
 
-Dalle stesse estrazioni sono ricavati due score. Lo \emph{score combinato} è quello dell'articolo; non è usato come score del rilevatore, ed è confrontato con le due componenti (Sezione~\ref{sec:ris-combinato}). Le due componenti sono riportate su una scala comune con un min--max e sommate con peso unitario, estrazione per estrazione:
+Dalle stesse estrazioni sono ricavati due score. Lo \emph{score combinato} è quello dell'articolo; non è usato come score del rilevatore, ed è confrontato con le due componenti (Sezione~\ref{sec:ris-combinato}). Le due componenti sono riportate su una scala comune con il \emph{min--max delle componenti} e sommate con peso unitario, estrazione per estrazione:
 \begin{equation}
 a^{(j)}_{tn}=
 \frac{s^{(j)}_{G,tn}-r_{\min}}{r_{\max}-r_{\min}}
