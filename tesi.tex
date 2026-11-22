@@ -20,6 +20,8 @@
 \usepackage{array}
 % Group row of a table: a light grey band with the title in bold, across #1 columns.
 \newcommand{\gruppo}[2]{\rowcolor{black!8}\multicolumn{#1}{@{}l}{\textbf{#2}}\\}
+% Light rule between two rows of the same group.
+\newcommand{\rigasottile}{\arrayrulecolor{black!18}\specialrule{0.3pt}{1.5pt}{1.5pt}\arrayrulecolor{black}}
 % Come placeins (non installato): manda in pagina i float in sospeso prima di proseguire.
 \makeatletter
 \newcommand\FloatBarrier{\par\begingroup\let\@elt\relax\edef\@tempa{\@botlist\@deferlist\@dbldeferlist}\ifx\@tempa\@empty\else\clearpage\fi\endgroup}

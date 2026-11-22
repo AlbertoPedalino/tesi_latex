@@ -100,41 +100,49 @@ Gli ottimizzatori Adam hanno $\beta_1=0.9$, il valore del codice degli autori, e
     \caption[Configurazione del rilevatore su ERA5.]{Configurazione del rilevatore su ERA5: valori fissati e iperparametri cercati, con il valore scelto e, fra parentesi, l'intervallo esplorato.}
     \label{tab:configurazioni}
     \vspace{0.6em}
-    \begin{tabular}{@{}L{0.18}L{0.38}L{0.36}@{}}
+    \begin{tabular}{@{}L{0.48}L{0.46}@{}}
         \toprule
-        & Parametro & Valore \\
+        Parametro & Valore \\
         \midrule
-        Dati & Anni di addestramento, validazione, test & 1980--1999, 2000--2004, 2005--2025 \\
-             & Istanti per batch & 1 \\
-             & Storia recente $R$, trend $L$ & 16 e 56 istanti (48 e 168 ore) \\
+        \gruppo{2}{Dati}
+        Anni di addestramento, validazione, test & 1980--1999, 2000--2004, 2005--2025 \\ \rigasottile
+        Istanti per batch & 1 \\ \rigasottile
+        Storia recente $R$, trend $L$ & 16 e 56 istanti (48 e 168 ore) \\
         \addlinespace
-        Generatore & ConvGRU & 2 strati da 32 canali, kernel $3\times3$ \\
-                   & LSTM del trend & 2 strati da 64 \\
-                   & Ramo del calendario & strato lineare da 64 \\
+        \gruppo{2}{Generatore}
+        ConvGRU & 2 strati da 32 canali, kernel $3\times3$ \\ \rigasottile
+        LSTM del trend & 2 strati da 64 \\ \rigasottile
+        Ramo del calendario & strato lineare da 64 \\
         \addlinespace
-        Discriminatore & Patch & $P=3$ \\
-                       & ConvGRU & 2 strati da 32 canali \\
-                       & Strato nascosto & 64 \\
+        \gruppo{2}{Discriminatore}
+        Patch & $P=3$ \\ \rigasottile
+        ConvGRU & 2 strati da 32 canali \\ \rigasottile
+        Strato nascosto & 64 \\
         \addlinespace
-        Normalizzazioni & Finestra delle due normalizzazioni & 31 giorni \\
-                        & Minimo della deviazione standard & 0.1 per precipitazione e umidità del suolo, 0.01 per le altre \\
-                        & Variabili con tendenza sottratta & temperatura a due metri e a 850~hPa, umidità del suolo \\
-                        & Numero minimo di valori della climatologia dello score & 30 \\
+        \gruppo{2}{Normalizzazioni}
+        Finestra delle due normalizzazioni & 31 giorni \\ \rigasottile
+        Minimo della deviazione standard & 0.1 per precipitazione e umidità del suolo, 0.01 per le altre \\ \rigasottile
+        Variabili con tendenza sottratta & temperatura a due metri e a 850~hPa, umidità del suolo \\ \rigasottile
+        Numero minimo di valori della climatologia dello score & 30 \\
         \addlinespace
-        Valori esclusi e soglia & Soglia del criterio dei valori esclusi & 5\% dei valori degli anni di addestramento \\
-                                & Soglia $\tau$ & 95-esimo percentile di ogni score sugli anni di validazione \\
+        \gruppo{2}{Valori esclusi e soglia}
+        Soglia del criterio dei valori esclusi & 5\% dei valori degli anni di addestramento \\ \rigasottile
+        Soglia $\tau$ & 95-esimo percentile di ogni score sugli anni di validazione \\
         \addlinespace
-        Dropout & Probabilità di dropout $p$ & 0.2 \\
-                & Estrazioni Monte Carlo $J$ & 20 \\
+        \gruppo{2}{Dropout}
+        Probabilità di dropout $p$ & 0.2 \\ \rigasottile
+        Estrazioni Monte Carlo $J$ & 20 \\
         \addlinespace
-        Addestramento & Ottimizzatore & Adam, $\beta_1=0.9$, $\beta_2=0.999$, tasso costante \\
-                      & Epoche & 6 \\
-                      & Precisione & BF16 nei calcoli, parametri FP32 \\
+        \gruppo{2}{Addestramento}
+        Ottimizzatore & Adam, $\beta_1=0.9$, $\beta_2=0.999$, tasso costante \\ \rigasottile
+        Epoche & 6 \\ \rigasottile
+        Precisione & BF16 nei calcoli, parametri FP32 \\
         \addlinespace
-        Iperparametri cercati & Tasso di apprendimento del generatore & $7.65\times10^{-4}$ (da $10^{-4}$ a $3\times10^{-3}$) \\
-        & Tasso di apprendimento del discriminatore & $3.06\times10^{-3}$ (da $2.5\times10^{-5}$ a $5\times10^{-3}$) \\
-        & Peso di ricostruzione $\lambda_G$ & 63.7 (da 25 a 2000) \\
-        & Aggiornamenti D:G, $n_D{:}n_G$ & 1:1 (1:1, 2:1, 1:2) \\
+        \gruppo{2}{Iperparametri cercati}
+        Tasso di apprendimento del generatore & $7.65\times10^{-4}$ (da $10^{-4}$ a $3\times10^{-3}$) \\ \rigasottile
+        Tasso di apprendimento del discriminatore & $3.06\times10^{-3}$ (da $2.5\times10^{-5}$ a $5\times10^{-3}$) \\ \rigasottile
+        Peso di ricostruzione $\lambda_G$ & 63.7 (da 25 a 2000) \\ \rigasottile
+        Aggiornamenti D:G, $n_D{:}n_G$ & 1:1 (1:1, 2:1, 1:2) \\
         \bottomrule
     \end{tabular}
 \end{table}
