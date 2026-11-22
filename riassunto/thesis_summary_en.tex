@@ -80,6 +80,6 @@ Around the concordant clusters, \Gn{} mostly flags rapid changes rather than sta
 
 This thesis adapts STGAN to unlabelled ERA5 fields and finds that on these fields its combined score, normalised and added as in STGAN, reduces in practice to the discriminator component; the detector therefore uses the generator error, referred to the climatology of each cell, which makes the flag rate nearly uniform across places and seasons. Compared with simpler methods, \Gn{} overlaps with them only in part and mostly flags rapid changes rather than states far from normal, including moderate values that changed quickly.
 
-Beyond the choice of score, the work offers a way to study a detector without labels: check the components of a combined score, such as that of STGAN, before adding them, and describe what the detector flags against simple baselines and a concordant reference.
+Beyond the choice of score, the work offers a way to study a detector without labels: check the components of a GAN-based score, such as that of STGAN, before combining them, and describe what the detector flags against simple baselines and a concordant reference.
 
 \end{document}
