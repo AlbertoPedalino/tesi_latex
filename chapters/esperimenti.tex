@@ -219,10 +219,10 @@ Le baseline sono otto. Sei sono modelli shallow, scelti fra i metodi valutati in
 
 \begin{itemize}
     \item \emph{Legge le celle vicine e gli istanti prima.} $G_{\mathrm{n}}$: errore di ricostruzione del generatore (Sezioni~\ref{sec:score-dropout-montecarlo} e~\ref{sec:normalizzazione-climatologica-score}).
-    \item \emph{Legge una cella, ora e tre ore prima.} Variazione in tre ore: errore della risposta ``valore di tre ore prima''.
+    \item \emph{Legge una cella, ora e tre ore prima.} Variazione in tre ore: errore della previsione di persistenza, la risposta ``valore di tre ore prima''.
     \item \emph{Leggono una cella in un istante.}
     \begin{itemize}
-        \item Distanza dal normale: errore della risposta ``normale stagionale per quel giorno e quell'ora''.
+        \item Distanza dal normale: errore della previsione climatologica, la risposta ``normale stagionale per quel giorno e quell'ora''.
         \item PCA: distanza dal centro lungo le componenti principali, ciascuna divisa per la percentuale di varianza che spiega.
         \item CBLOF: distanza dal centro del proprio gruppo (8 gruppi), o del gruppo grande più vicino se il proprio è piccolo.
         \item MCD: distanza dal centro dei dati che tiene conto di come le variabili variano insieme (distanza di Mahalanobis con stime robuste).
@@ -231,6 +231,8 @@ Le baseline sono otto. Sei sono modelli shallow, scelti fra i metodi valutati in
         \item Isolation Forest: brevità del percorso che isola il valore in 100 alberi casuali, di 256 valori ciascuno.
     \end{itemize}
 \end{itemize}
+% Previsione di persistenza e climatologica come riferimenti: Rasp et al. 2020 (WeatherBench) e WeatherBench 2,
+% Sez. 3.2 (climatologia per punto di griglia, giorno dell'anno e ora del giorno).
 
 Ogni metodo è trattato come il rilevatore: il suo score è espresso rispetto alla propria climatologia per cella, giorno dell'anno e ora (Sezione~\ref{sec:normalizzazione-climatologica-score}), e la sua soglia è il 95-esimo percentile dello stesso score sugli anni di validazione (equazione~\eqref{eq:soglia}). Se due metodi segnalano gli insiemi di valori $A$ e $B$, la percentuale delle segnalazioni di $A$ condivise con $B$ è $100\,|A\cap B|/|A|$; l'indice di Jaccard,
 \begin{equation}
