@@ -54,15 +54,16 @@ La griglia contiene $81\times131=10611$ celle. Nel seguito i dati sono indicati 
 \begin{figure}[htbp]
     \centering
     \includegraphics{dominio_era5}
-    \caption{Dominio dei campi ERA5: $81\times131$ celle di $0.5^\circ$, fra $20^\circ$ e $60^\circ$ di latitudine nord e fra $15^\circ$ di longitudine ovest e $50^\circ$ di longitudine est. Il rettangolo indica l'area delle località PVGIS, in Piemonte.}
+    \caption{Dominio dei campi ERA5: $81\times131$ celle di $0.5^\circ$, fra $20^\circ$ e $60^\circ$ di latitudine nord e fra $15^\circ$ di longitudine ovest e $50^\circ$ di longitudine est. I due rettangoli tratteggiati indicano il dominio ERA5 e l'area delle località PVGIS, in Piemonte.}
     \label{fig:dominio-era5}
 \end{figure}
 % Confini del dominio riletti il 21 ottobre 2026 nei dati preparati usati da
 % tutte le run, data/era5_prepared/metadata.json (campo grid): 81 latitudini da
 % 60 a 20, 131 longitudini da -15 a 50. Figura generata da
 % figures/genera_mappa_era5.py; la linea di costa (Natural Earth, pubblico
-% dominio, scala 1:50m) non è nel repository. Il rettangolo è l'area delle
-% località PVGIS: se la figura viene rigenerata, si può togliere.
+% dominio, scala 1:50m) non è nel repository. Rigenerata il 23 novembre 2026 con una
+% mappa più ampia del dominio: il dominio ERA5 e l'area delle località PVGIS sono due
+% rettangoli tratteggiati, nominati nella legenda.
 
 Sono conservate le celle per le quali tutte le variabili sono definite nel primo istante dei dati, e si verifica che questo insieme rimanga identico in tutto il periodo; se cambia, la preparazione si interrompe, e non viene applicata imputazione. Il criterio è la completezza delle variabili, non una classificazione terra--mare: nei dati usati tutte le variabili, anche l'umidità del suolo, sono definite su tutte le celle, mare compreso, e nessuna cella è esclusa; sul mare, però, l'umidità del suolo non ha un significato fisico (Sezione~\ref{sec:conc-limiti}).
 
@@ -187,7 +188,7 @@ La tesi non separa quanta parte di queste derive venga dal clima e quanta dal si
 % globale è storico: i dati sono sul piano orizzontale. Testo ripreso dal Capitolo
 % 3 del backup del 16 ottobre 2026; il lavoro preliminare sui dati non è riportato nella tesi.
 
-Prima dei campi ERA5, il lavoro è partito, nell'ambito della previsione della produzione fotovoltaica, da serie orarie ottenute dal Photovoltaic Geographical Information System~\cite{huld2012pvgis} con la banca dati di radiazione SARAH3, provenienti dal progetto SentinelPV del Politecnico di Torino. Coprono 1149 località del Piemonte, comprese fra $44.08^\circ$ e $46.47^\circ$ di latitudine nord e fra $6.66^\circ$ e $9.20^\circ$ di longitudine est. Nella proiezione UTM del fuso 32 le località occupano 1149 delle $41\times54$ posizioni di un reticolo regolare con passo di 5~km: quelle che ricadono nel territorio regionale (Figura~\ref{fig:localita-pvgis}), racchiuso nel rettangolo della Figura~\ref{fig:dominio-era5}. Sono disponibili gli anni dal 2005 al 2023, compresi negli anni di test dei campi ERA5 (Sezione~\ref{sec:dati-split}), con 8760 ore per anno (8784 negli anni bisestili) e senza valori mancanti; i valori sono riferiti al minuto 10 di ciascuna ora, in tempo universale.
+Prima dei campi ERA5, il lavoro è partito, nell'ambito della previsione della produzione fotovoltaica, da serie orarie ottenute dal Photovoltaic Geographical Information System~\cite{huld2012pvgis} con la banca dati di radiazione SARAH3, provenienti dal progetto SentinelPV del Politecnico di Torino. Coprono 1149 località del Piemonte, comprese fra $44.08^\circ$ e $46.47^\circ$ di latitudine nord e fra $6.66^\circ$ e $9.20^\circ$ di longitudine est. Nella proiezione UTM del fuso 32 le località occupano 1149 delle $41\times54$ posizioni di un reticolo regolare con passo di 5~km: quelle che ricadono nel territorio regionale (Figura~\ref{fig:localita-pvgis}), racchiuso nel rettangolo blu della Figura~\ref{fig:dominio-era5}. Sono disponibili gli anni dal 2005 al 2023, compresi negli anni di test dei campi ERA5 (Sezione~\ref{sec:dati-split}), con 8760 ore per anno (8784 negli anni bisestili) e senza valori mancanti; i valori sono riferiti al minuto 10 di ciascuna ora, in tempo universale.
 
 \begin{table}[!b]
     \centering
