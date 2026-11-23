@@ -70,7 +70,7 @@ Sono conservate le celle per le quali tutte le variabili sono definite nel primo
 \section{Acquisizione e preparazione dei dati}
 \label{sec:dati-pipeline}
 
-I dati comprendono 134416 istanti, 10611 celle e 15 variabili: circa $2.1\times10^{10}$ numeri, 85.6~GB in precisione singola. Il passaggio dai file di ERA5 ai dati letti dal modello è quindi automatizzato, in modo che nessun passo richieda di tenere in memoria l'intero periodo. Si articola in quattro fasi: scarico, verifica, preparazione e lettura (Figura~\ref{fig:pipeline-era5}).
+I dati comprendono 134416 istanti, 10611 celle e 15 variabili: circa $2.1\times10^{10}$ numeri, 85.6~GB in precisione singola. Il passaggio dai file di ERA5 ai dati letti dal modello si articola in quattro fasi, scarico, verifica, preparazione e lettura (Figura~\ref{fig:pipeline-era5}), e nessuna richiede di tenere in memoria tutti questi dati insieme.
 
 \begin{figure}[htbp]
     \centering
@@ -80,15 +80,17 @@ I dati comprendono 134416 istanti, 10611 celle e 15 variabili: circa $2.1\times1
 \end{figure}
 
 \begin{itemize}
-    \item \emph{Scarico.} I campi sono richiesti al Climate Data Store di Copernicus attraverso la sua interfaccia di programmazione, con una richiesta per mese e per prodotto: 552 mesi e 1104 richieste. Ogni richiesta fissa le variabili, gli otto istanti del giorno, la griglia di $0.5^\circ$, il dominio e, per il secondo prodotto, il livello di 850~hPa. Il passaggio alla griglia di $0.5^\circ$ è svolto dal servizio; i file ricevuti, in formato NetCDF~\cite{rew1990netcdf}, non vengono riscritti. Prima dello scarico i nomi delle variabili sono confrontati con quelli accettati dal servizio. Fino a otto richieste sono eseguite in parallelo, e una richiesta respinta per un limite temporaneo del servizio viene ripetuta dopo un'attesa crescente.
-    \item \emph{Verifica.} Un mese è conservato solo se supera tutti i controlli. Gli istanti devono essere esattamente quelli richiesti, senza mancanti né duplicati; latitudini e longitudini devono essere quelle del dominio, con passo di $0.5^\circ$; il livello di pressione deve essere soltanto 850~hPa. Devono essere presenti tutte le variabili, senza valori infiniti e senza campi interamente mancanti in un istante. Per ogni mese è salvata una \emph{ricevuta}, un piccolo file con la richiesta e l'impronta SHA-256 di ciascun file scaricato, che permette di riconoscere i mesi già scaricati e integri. Quando lo scarico viene ripreso, i mesi con ricevuta e impronta corrette sono saltati e gli altri sono scaricati di nuovo.
-    \item \emph{Preparazione.} Un programma distinto da quello di scarico controlla prima che tutti i mesi del periodo siano presenti, poi legge i file mese per mese, a blocchi di 32 istanti. Ripete i controlli su istanti, griglia e livello di pressione, allinea i due prodotti sugli stessi istanti e sulle stesse coordinate, e ordina le latitudini da nord a sud e le longitudini da ovest a est. Ogni blocco diventa la parte corrispondente del tensore $X$, in precisione singola, senza conversioni di unità né imputazione, ed è scritto direttamente nella sua posizione in file in formato \texttt{.npy} di NumPy~\cite{harris2020numpy}. Un file di metadati registra la griglia, le variabili, gli anni e il numero di celle escluse.
-    \item \emph{Lettura.} I file sono aperti in mappatura di memoria: durante l'addestramento e il calcolo degli score si leggono dal disco soltanto gli istanti e le celle di ciascuna finestra. La suddivisione negli anni della Sezione~\ref{sec:dati-split} è applicata alla lettura.
+    \item \emph{Scarico.} I campi sono richiesti al Climate Data Store di Copernicus mese per mese, già sulla griglia di $0.5^\circ$ e sul dominio scelti, in formato NetCDF~\cite{rew1990netcdf}. Dividere lo scarico per mesi permette di riprenderlo da dove si era interrotto senza ripetere i mesi già ottenuti.
+    \item \emph{Verifica.} I file scaricati sono sottoposti a controlli di consistenza su istanti, griglia, livello di pressione e variabili. Nessun mese è escluso, e i dati coprono senza interruzioni gli anni dal 1980 al 2025.
+    \item \emph{Preparazione.} I due prodotti di ERA5, variabili a livello singolo e a 850~hPa, sono allineati sugli stessi istanti e sulle stesse coordinate e riuniti nel tensore $X$, senza imputare valori mancanti. Il tensore è salvato su disco in formato \texttt{.npy} di NumPy~\cite{harris2020numpy}.
+    \item \emph{Lettura.} Durante l'addestramento e il calcolo degli score si leggono dal disco soltanto gli istanti e le celle che servono a ciascuna finestra, così il periodo intero non deve mai stare in memoria. La suddivisione negli anni della Sezione~\ref{sec:dati-split} è applicata a questa fase.
 \end{itemize}
 % Fonti (22 ottobre 2026): scripts/download_era5.py e physiq_pv/era5/data.py
 % (prepare_era5, load_prepared) del repository del codice. 552 mesi = 46 anni
 % 1980-2025 per 12; due prodotti. 85.6 GB = 134416 x 10611 x 15 x 4 byte.
 % Il controllo sui campi interamente mancanti esclude volumetric_soil_water_layer_1.
+% Nessun mese escluso: prepare_era5 si ferma se manca un mese (FileNotFoundError "Missing ERA5
+% month" in physiq_pv/era5/data.py); 134416 istanti = 16802 giorni 1980-2025 x 8.
 
 \section{Anni di addestramento, di validazione e di test}
 \label{sec:dati-split}
