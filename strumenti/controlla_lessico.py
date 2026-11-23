@@ -179,6 +179,7 @@ RULES = [
     (r'riferimento per la validazione|osservazioni del riferimento', '"insieme di validazione" della MMD', ()),
     (r'\bprofond[aeio]', '"deep" ("con pochi strati" per poco profondo), come "modelli shallow"', ()),
     (r'\bstrat[oi] (lineare|nascost|ConvGRU|di dropout|di uscita|di attenzione|ricorrente|intermedio|con parametri|completamente|da \d)|(due|tre|pochi|ogni|negli|degli) strat[oi]\b(?! (limite|del suolo|vicino|più))', '"layer" per le reti neurali ("strato" resta per l\'atmosfera e il suolo)', ()),
+    (r"(?<![:\[-])\bingress[oi]\b(?!/)|(?<!correnti in )\buscit[ae]\b|\btass[oi] (di apprendimento|del (generatore|discriminatore))|apprendimento automatico|retropropagazion", '"input", "output", "learning rate", "machine learning", "backpropagation" ("in uscita" resta per le correnti dei sistemi convettivi)', ('risultati_fonti.tex', 'appendice_pvgis.tex', 'riassunto_tesi_it.tex')),
     (r'stabilità dei modelli', '"ripetibilità" dei modelli shallow ("stabile" è solo per la probabilità di superamento)', ()),
     (r'\bestremi (dello score|\$r_)', '"minimo e massimo" dello score combinato ("estremi" si legge come valori estremi)', ()),
     (r'\b(dati|serie|osservazioni|pattern|sequenze)( di addestramento)? normali\b|comportamento normale|dinamica normale|'

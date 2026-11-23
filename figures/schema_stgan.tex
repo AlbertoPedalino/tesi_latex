@@ -35,7 +35,7 @@
     \node[esito] (sd) at (10.5,-2.0) {$s_D=D_\phi(S_{v,t})-D_\phi(\hat{S}_{v,t})$};
     \node[esito] (sc) at (7.6,-3.2) {$\mathrm{score}=s_G+\lambda\,s_D$};
     \draw[freccia] (fu.south) -- (sg.north);
-    \draw[freccia] (d.south) -- node[left,align=right] {uscita in $[0,1]$:\\$0$ reale, $1$ generata} (sd.north);
+    \draw[freccia] (d.south) -- node[left,align=right] {output in $[0,1]$:\\$0$ reale, $1$ generata} (sd.north);
     \draw[freccia] (sg.south) |- (sc.west);
     \draw[freccia] (sd.south) |- (sc.east);
 \end{tikzpicture}
