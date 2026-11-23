@@ -177,6 +177,7 @@ RULES = [
      'la misura è il "salto più grande in tre ore"; "variazione in tre ore" è la baseline', ()),
     (r'[Vv]ariabili che nessuno score legge', '"grandezze che nessuno score legge"', ()),
     (r'riferimento per la validazione|osservazioni del riferimento', '"insieme di validazione" della MMD', ()),
+    (r'\bprofond[aeio]', '"deep" ("con pochi strati" per poco profondo), come "modelli shallow"', ()),
     (r'stabilità dei modelli', '"ripetibilità" dei modelli shallow ("stabile" è solo per la probabilità di superamento)', ()),
     (r'\bestremi (dello score|\$r_)', '"minimo e massimo" dello score combinato ("estremi" si legge come valori estremi)', ()),
     (r'\b(dati|serie|osservazioni|pattern|sequenze)( di addestramento)? normali\b|comportamento normale|dinamica normale|'
