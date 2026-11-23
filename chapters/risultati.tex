@@ -750,7 +750,8 @@ Questa sottosezione guarda le segnalazioni non concordate di ogni metodo nell'in
 % (variazione in 3 h, davanti + dietro pesati). Lunghi, variazione in 3 h lontani / moderati: G_n 2.72 / 2.72, variazione
 % 2.76 / 2.59, MCD 2.08 / 2.23, normale 1.38 / 1.39, termine di confronto 1.38 / 1.27. Dietro i brevi, G_n a 0/3/6/12/24 h:
 % 2.45 / 2.24 / 2.07 / 1.94 / 1.91; termine di confronto 1.92 / 1.95 / 1.94 / 1.90 / 1.86. Lunghi: G_n davanti 2.55 -> 2.41
-% a 24 h, termine di confronto 2.01 -> 2.31; G_n dietro 2.52 -> 2.22. Soglie 3% e 1%: risultati.md §18.
+% a 24 h, termine di confronto 2.01 -> 2.31; G_n dietro 2.52 -> 2.22, termine di confronto dietro
+% 2.01 -> 2.08 (excess_r300_long.csv, reference, behind, 24 h, media pesata per values, 23/11/2026). Soglie 3% e 1%: risultati.md §18.
 
 Per i sette metodi che leggono una cella in un istante, fra il 90\% e il 96\% delle segnalazioni non concordate davanti e dietro i cluster concordati ha almeno una variabile oltre due deviazioni standard, contro il 40--48\% del termine di confronto. Il criterio è largo, ma la differenza è netta: sono valori più lontani dal normale, che restano fuori dal cubo concordato solo perché meno di cinque metodi li segnalano. Per $G_{\mathrm{n}}$ la percentuale è il 74\% nei cluster brevi e il 78\% nei lunghi, per la variazione in tre ore il 66\% e il 72\%: una parte delle loro segnalazioni non concordate non è lontana dal normale.
 
@@ -762,9 +763,9 @@ Il salto più grande in tre ore è in media di 2.7--2.8 deviazioni standard per 
 % "the course before the value", davanti + dietro pesati sui valori (PCA 1.71 / 2.27, CBLOF 1.52 / 1.58, HBOS 1.56 / 1.68,
 % COPOD 1.62 / 1.70, iForest 1.65 / 1.85). Minimo 1.52, massimo 2.46.
 
-Dietro i cluster brevi lo scarto standardizzato più grande delle segnalazioni non concordate di $G_{\mathrm{n}}$ scende da 2.45 nell'istante del valore a 2.07 sei ore dopo e a 1.94 dopo dodici ore, vicino al termine di confronto, 1.86--1.95. La variazione in tre ore fa lo stesso. Le segnalazioni degli altri metodi restano più a lungo sopra il termine di confronto: dopo 24 ore sono fra 1.94 e 2.23, e quelle della distanza dal normale restano le più lontane, con 2.49. Dietro i cluster brevi, quindi, i metodi che leggono una cella in un istante, in parte meno MCD, segnalano soprattutto stati che durano, $G_{\mathrm{n}}$ e la variazione in tre ore cambiamenti che rientrano in poche ore.
+Il pannello di destra mostra le segnalazioni dietro i cluster brevi, dove il cluster concordato si è già spostato e il termine di confronto resta quasi costante nelle 24 ore; davanti, dove il cluster arriva, anche il termine di confronto cresce. I valori attorno ai cluster lunghi sono riportati nel paragrafo seguente. Dietro i cluster brevi lo scarto standardizzato più grande delle segnalazioni non concordate di $G_{\mathrm{n}}$ scende da 2.45 nell'istante del valore a 2.07 sei ore dopo e a 1.94 dopo dodici ore, vicino al termine di confronto, 1.86--1.95. La variazione in tre ore fa lo stesso. Le segnalazioni degli altri metodi restano più a lungo sopra il termine di confronto: dopo 24 ore sono fra 1.94 e 2.23, e quelle della distanza dal normale restano le più lontane, con 2.49. Dietro i cluster brevi, quindi, i metodi che leggono una cella in un istante, in parte meno MCD, segnalano soprattutto stati che durano, $G_{\mathrm{n}}$ e la variazione in tre ore cambiamenti che rientrano in poche ore.
 
-Davanti ai cluster lunghi lo scarto standardizzato più grande delle segnalazioni non concordate di $G_{\mathrm{n}}$ resta alto per un giorno, da 2.55 a 2.41 dopo 24 ore, mentre quello del termine di confronto sale da 2.01 a 2.31, come atteso se il cluster concordato arriva in quelle celle. Dietro scende da 2.52 a 2.22.
+Davanti ai cluster lunghi lo scarto standardizzato più grande delle segnalazioni non concordate di $G_{\mathrm{n}}$ resta alto per un giorno, da 2.55 a 2.41 dopo 24 ore, mentre quello del termine di confronto sale da 2.01 a 2.31, come atteso se il cluster concordato arriva in quelle celle. Dietro scende da 2.52 a 2.22, ancora sopra il termine di confronto, 2.08.
 
 \section{Grandezze che nessuno score legge direttamente}
 \label{sec:ris-giudici}
