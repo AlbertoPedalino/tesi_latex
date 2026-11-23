@@ -34,7 +34,7 @@ con la banda $\gamma$ uguale alla distanza euclidea mediana fra le coordinate de
 
 La configurazione del rilevatore è fissata, a eccezione di quattro iperparametri che regolano l'equilibrio fra generatore e discriminatore, scelti con una ricerca bayesiana. La Tabella~\ref{tab:configurazioni} riassume i valori fissati e gli iperparametri cercati.
 
-Gli anni di addestramento, di validazione e di test sono quelli della Sezione~\ref{sec:dati-split}: 1980--1999, 2000--2004 e 2005--2025. Ogni batch contiene un istante, cioè un campo intero. La storia recente comprende $R=16$ istanti, cioè 48 ore, e il trend $L=56$ istanti, cioè 168 ore, la stessa durata dell'articolo. Il generatore ha due strati ConvGRU da 32 canali con kernel $3\times3$, una LSTM del trend a due strati con stato nascosto di dimensione 64 e, nel ramo del calendario, uno strato lineare di dimensione 64. Il discriminatore giudica ogni cella sulla patch con $P=3$, che comprende la cella e le sue otto vicine dirette; la sua ConvGRU ha due strati da 32 canali e il suo strato nascosto ha dimensione 64.
+Gli anni di addestramento, di validazione e di test sono quelli della Sezione~\ref{sec:dati-split}: 1980--1999, 2000--2004 e 2005--2025. Ogni batch contiene un istante, cioè un campo intero. La storia recente comprende $R=16$ istanti, cioè 48 ore, e il trend $L=56$ istanti, cioè 168 ore, la stessa durata dell'articolo. Il generatore ha due layer ConvGRU da 32 canali con kernel $3\times3$, una LSTM del trend a due layer con stato nascosto di dimensione 64 e, nel ramo del calendario, un layer lineare di dimensione 64. Il discriminatore giudica ogni cella sulla patch con $P=3$, che comprende la cella e le sue otto vicine dirette; la sua ConvGRU ha due layer da 32 canali e il suo layer nascosto ha dimensione 64.
 
 Nella normalizzazione stagionale e nella normalizzazione climatologica dello score la finestra è di 31 giorni, i quindici che precedono il giorno e i quindici che lo seguono: è la finestra con cui Russo et al.\ stimano le soglie giornaliere della temperatura massima~\cite{russo2015heatwaves}, mentre WeatherBench~2 usa per la sola media una finestra mobile di 61 giorni~\cite{rasp2024weatherbench2}. Nella normalizzazione climatologica dello score una combinazione di cella, giorno dell'anno e ora riceve uno score solo se ha almeno trenta valori di riferimento. Il minimo della deviazione standard è 0.1 della deviazione standard complessiva per la precipitazione e per l'umidità del suolo, 0.01 per le altre tredici variabili; i due valori sono una scelta di questo lavoro.
 % Limiti allineati alla configurazione dello sweep (seasonal_std_floors in
@@ -110,14 +110,14 @@ Gli ottimizzatori Adam hanno $\beta_1=0.9$, il valore del codice degli autori, e
         Storia recente $R$, trend $L$ & 16 e 56 istanti (48 e 168 ore) \\
         \addlinespace
         \gruppo{2}{Generatore}
-        ConvGRU & 2 strati da 32 canali, kernel $3\times3$ \\ \rigasottile
-        LSTM del trend & 2 strati da 64 \\ \rigasottile
-        Ramo del calendario & strato lineare da 64 \\
+        ConvGRU & 2 layer da 32 canali, kernel $3\times3$ \\ \rigasottile
+        LSTM del trend & 2 layer da 64 \\ \rigasottile
+        Ramo del calendario & layer lineare da 64 \\
         \addlinespace
         \gruppo{2}{Discriminatore}
         Patch & $P=3$ \\ \rigasottile
-        ConvGRU & 2 strati da 32 canali \\ \rigasottile
-        Strato nascosto & 64 \\
+        ConvGRU & 2 layer da 32 canali \\ \rigasottile
+        Layer nascosto & 64 \\
         \addlinespace
         \gruppo{2}{Normalizzazioni}
         Finestra delle due normalizzazioni & 31 giorni \\ \rigasottile

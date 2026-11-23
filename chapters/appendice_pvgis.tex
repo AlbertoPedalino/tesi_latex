@@ -6,7 +6,7 @@ Il lavoro è partito, nell'ambito della previsione della produzione fotovoltaica
 \section{Previsore probabilistico della produzione}
 \label{app:pvgis-previsore}
 
-Il previsore stima la produzione dell'ora successiva in ogni località. Combina un encoder temporale, una LSTM bidirezionale con pooling ad attenzione, con uno strato di attenzione su grafo~\cite{velickovic2018gat} fra località vicine, su un grafo geografico con pesi decrescenti con la distanza. Per associare un intervallo alla previsione sono stati provati il dropout Monte Carlo~\cite{gal2016dropout} e il Deep Ensemble~\cite{lakshminarayanan2017ensembles}, descritti nella Sezione~\ref{sec:rw-sde}, e due varianti costruite sugli schemi di SDE-Net~\cite{kong2020sdenet} e di SDE U-Net~\cite{monaco2025sdeunet}, descritti di seguito; la variante basata su SDE-Net è stata provata anche con previsione diretta su più orizzonti.
+Il previsore stima la produzione dell'ora successiva in ogni località. Combina un encoder temporale, una LSTM bidirezionale con pooling ad attenzione, con un layer di attenzione su grafo~\cite{velickovic2018gat} fra località vicine, su un grafo geografico con pesi decrescenti con la distanza. Per associare un intervallo alla previsione sono stati provati il dropout Monte Carlo~\cite{gal2016dropout} e il Deep Ensemble~\cite{lakshminarayanan2017ensembles}, descritti nella Sezione~\ref{sec:rw-sde}, e due varianti costruite sugli schemi di SDE-Net~\cite{kong2020sdenet} e di SDE U-Net~\cite{monaco2025sdeunet}, descritti di seguito; la variante basata su SDE-Net è stata provata anche con previsione diretta su più orizzonti.
 
 \section{Equazioni differenziali stocastiche neurali}
 \label{app:pvgis-sde}
