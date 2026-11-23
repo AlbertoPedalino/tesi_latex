@@ -99,7 +99,7 @@ Il primo angolo rappresenta l'ora solare media locale, ottenuta dalla sola longi
 % Scelte di questa sottosezione: motivate nel testo, senza fonti (decisione del
 % 13 ottobre 2026, sul modello della tesi di riferimento).
 
-La normalizzazione dell'articolo è un min--max delle variabili, stimato sui dati di addestramento. Usa un solo intervallo per variabile, valido per tutte le celle e per tutto l'anno. Questo ha il limite già visto nella Sezione~\ref{sec:dati-caratteristiche}: lo stesso valore di una variabile riceve la stessa scala ovunque e in ogni stagione, anche dove è abituale in un luogo e insolito in un altro. La normalizzazione stagionale riferisce invece ogni valore di una variabile a ciò che è abituale nella stessa cella, nello stesso giorno dell'anno e alla stessa ora (Figura~\ref{fig:era5-cicli}). Per ogni cella $n$, variabile $f$, ora del giorno $o$ e giorno dell'anno $g$ il valore della variabile è standardizzato,
+La normalizzazione dell'articolo è un min--max delle variabili, stimato sui dati di addestramento. Usa un solo intervallo per variabile, valido per tutte le celle e per tutto l'anno. Questo ha il limite già visto nella Sezione~\ref{sec:dati-caratteristiche}: lo stesso valore di una variabile riceve la stessa scala ovunque e in ogni stagione, anche dove è abituale in un luogo e insolito in un altro. La normalizzazione stagionale riferisce invece ogni valore di una variabile a ciò che è abituale nella stessa cella, nello stesso giorno dell'anno e alla stessa ora. Per ogni cella $n$, variabile $f$, ora del giorno $o$ e giorno dell'anno $g$ il valore della variabile è standardizzato,
 \begin{equation}
 u_{tnf}=\frac{x_{tnf}-\mu_{nfog}}{\sigma_{nfog}}.
 \end{equation}
