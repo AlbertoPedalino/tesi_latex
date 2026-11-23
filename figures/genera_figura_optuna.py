@@ -32,7 +32,6 @@ BOUNDS = (0.0025, 0.0035, 0.004, 0.0045, 0.0055, 0.007)  # five classes of the M
 RAMP = ListedColormap(("#0d366b", "#1f5fae", "#3987e5", "#7fb2ef", "#c4dcf8"), name="mmd")
 RAMP.set_over("#eef4fc")
 BEST_REGION = ("serene-sweep-14", "optuna-26", "optuna-27")  # lr G 6-8e-4, lr D 1.5-3e-3, weight 60-170, 1:1
-LABELS = ("tasso di appr. G", "tasso di appr. D", r"peso $\lambda_G$", "aggiornamenti D:G")
 HALO = [effects.withStroke(linewidth=2.5, foreground="white")]
 REGION = "#e8a33d"
 UPDATES = {"1:2": -1.0, "1:1": 0.0, "2:1": 1.0}
@@ -54,12 +53,12 @@ def plane(trials):
 
 def main():
     trials = pd.read_csv(TRIALS)
-    coords, loadings, variance = plane(trials)
+    coords, _, variance = plane(trials)
     print(f"share of the variance: first {variance[0]:.2f}, second {variance[1]:.2f}, together {variance[:2].sum():.2f}")
-    # The key of the arrows in its own panel under the plane, so that it covers no trial.
-    figure = plt.figure(figsize=size(0.9), layout="constrained")
-    grid = figure.add_gridspec(2, 1, height_ratios=(1, 0.24))
-    axis, key = figure.add_subplot(grid[0]), figure.add_subplot(grid[1])
+    # Only the plane: the directions of the four parameters are not used by the text, and drawn apart from the
+    # trials they could not be read against them.
+    figure = plt.figure(figsize=size(0.73), layout="constrained")
+    axis = figure.add_subplot()
 
     # The best region is marked on its trials, not as an area: on two components of four, trials far apart in the
     # four parameters can fall close together.
@@ -81,24 +80,6 @@ def main():
     best = int(trials.mmd.idxmin())
     axis.annotate(f"migliore\nMMD {trials.mmd[best]:.5f}", coords[best], xytext=(10, -4), textcoords="offset points",
                   fontsize=7.5, color=TEXT, va="top", path_effects=HALO, zorder=4)
-
-    # How each parameter enters the two components: towards an arrow, that parameter grows.
-    for (dx, dy), label in zip(loadings, LABELS):
-        key.annotate("", (dx, dy), (0, 0), arrowprops=dict(arrowstyle="-|>", color=MUTED, linewidth=0.8, shrinkA=0,
-                                                           shrinkB=0))
-        side = "right" if dx < -0.3 else "left" if dx > 0.3 else "center"  # the label beyond the tip, not on it
-        key.annotate(label, (dx, dy), xytext=(4 * np.sign(dx) * (side != "center"), 4 * np.sign(dy) * (side == "center")),
-                     textcoords="offset points", ha=side, va="center" if side != "center" else
-                     ("bottom" if dy > 0 else "top"), fontsize=7, color=MUTED)
-    key.set_xlim(-4.8, 2.4)
-    key.set_ylim(-0.7, 1.3)
-    key.set_aspect("equal", adjustable="box")
-    key.set_xticks([])
-    key.set_yticks([])
-    key.text(0.02, 0.5, "verso dove cresce\nogni iperparametro", transform=key.transAxes, ha="left", va="center",
-             fontsize=6.5, color=MUTED)
-    for side in key.spines.values():
-        side.set_color("#d9d8d4")
 
     bar = figure.colorbar(mesh, ax=axis, shrink=0.85, pad=0.02, extend="max")
     bar.set_label("MMD sugli anni di validazione (più scuro = migliore)", fontsize=TICKS)
